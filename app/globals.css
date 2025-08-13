@@ -37,6 +37,13 @@
   --input: 214.3 31.8% 91.4%;
   --ring: 221.2 83.2% 53.3%;
   --radius: 0.5rem;
+
+  /* Enhanced glass effect variables */
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-card-bg: rgba(255, 255, 255, 0.8);
+  --glass-3d-bg: rgba(255, 255, 255, 0.05);
+  --glass-3d-border: rgba(255, 255, 255, 0.1);
 }
 
 .dark {
@@ -59,6 +66,13 @@
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
   --ring: 212.7 26.8% 83.9%;
+
+  /* Dark mode glass effect variables */
+  --glass-bg: rgba(0, 0, 0, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-card-bg: rgba(0, 0, 0, 0.8);
+  --glass-3d-bg: rgba(0, 0, 0, 0.05);
+  --glass-3d-border: rgba(255, 255, 255, 0.1);
 }
 
 @layer base {
@@ -71,6 +85,7 @@
     font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -84,38 +99,65 @@
 }
 
 @layer components {
-  /* Glass effects */
+  /* Enhanced Glass effects with dark mode support */
   .glass {
-    @apply backdrop-blur-md bg-white/10 dark:bg-black/10 border border-white/20 dark:border-gray-700/20;
+    @apply backdrop-blur-md border;
+    background-color: var(--glass-bg);
+    border-color: var(--glass-border);
+    transition: all 0.3s ease;
   }
 
   .glass-card {
-    @apply backdrop-blur-xl bg-white/80 dark:bg-gray-800/80 border border-white/20 dark:border-gray-700/20 shadow-xl;
+    @apply backdrop-blur-xl border shadow-xl;
+    background-color: var(--glass-card-bg);
+    border-color: var(--glass-border);
+    transition: all 0.3s ease;
   }
 
-  /* 3D Glass effects */
+  /* Enhanced 3D Glass effects */
   .glass-3d {
-    @apply backdrop-blur-lg bg-white/5 dark:bg-black/5 border border-white/10 dark:border-gray-700/10;
+    @apply backdrop-blur-lg border;
     backdrop-filter: blur(16px) saturate(180%);
+    background-color: var(--glass-3d-bg);
+    border-color: var(--glass-3d-border);
+    transition: all 0.3s ease;
   }
 
   .glass-hero {
     @apply backdrop-blur-2xl;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, var(--glass-3d-bg) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid var(--glass-3d-border);
     backdrop-filter: blur(32px) saturate(180%);
+    transition: all 0.3s ease;
   }
 
-  /* Button styles */
+  /* Enhanced Button styles */
   .btn-primary {
-    @apply inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-primary to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    @apply inline-flex items-center justify-center px-6 py-3 font-semibold rounded-xl shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    background: linear-gradient(to right, hsl(var(--primary)), #3b82f6);
+    color: hsl(var(--primary-foreground));
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform: translateZ(0);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px) scale(1.05);
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-6 py-3 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-primary/10 transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    @apply inline-flex items-center justify-center px-6 py-3 border-2 font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    border-color: hsl(var(--primary));
+    color: hsl(var(--primary));
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform: translateZ(0);
   }
 
-  /* 3D Button Enhancement */
+  .btn-secondary:hover {
+    @apply bg-primary/10;
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  /* Enhanced 3D Button */
   .btn-3d {
     @apply btn-primary relative overflow-hidden;
     background: linear-gradient(135deg, var(--viva-magenta), var(--lux-gold));
@@ -138,16 +180,23 @@
     left: 100%;
   }
 
-  /* Card components */
+  /* Enhanced Card components */
   .card {
     @apply bg-card text-card-foreground rounded-2xl shadow-lg border p-6;
+    transition: all 0.3s ease;
   }
 
   .card-hover {
-    @apply card hover:shadow-2xl hover:scale-105 transition-all duration-300;
+    @apply card;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
-  /* 3D Card Components */
+  .card-hover:hover {
+    @apply shadow-2xl;
+    transform: translateY(-5px) scale(1.02);
+  }
+
+  /* Enhanced 3D Card Components */
   .card-3d {
     @apply card relative;
     transform-style: preserve-3d;
@@ -159,42 +208,95 @@
   }
 
   .project-card-3d {
-    @apply glass-3d p-6 rounded-2xl border backdrop-blur-xl;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    @apply glass-3d p-6 rounded-2xl;
+    background: linear-gradient(135deg, var(--glass-3d-bg) 0%, rgba(255, 255, 255, 0.02) 100%);
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   .project-card-3d:hover {
     transform: translateY(-10px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--glass-3d-border);
   }
 
-  /* Status indicators */
+  /* Enhanced Status indicators with better dark mode support */
   .status-live {
-    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300;
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    background-color: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .dark .status-live {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border-color: rgba(34, 197, 94, 0.3);
   }
 
   .status-building {
-    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300;
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.2);
     animation: pulse 2s infinite;
+    transition: all 0.3s ease;
+  }
+
+  .dark .status-building {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.3);
   }
 
   .status-error {
-    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300;
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    transition: all 0.3s ease;
   }
 
+  .dark .status-error {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  /* Enhanced GitHub stats card */
   .github-stats-card {
-    @apply glass-3d p-4 rounded-xl border border-white/10 hover:border-primary/50 transition-all duration-300;
+    @apply glass-3d p-4 rounded-xl;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   .github-stats-card:hover {
+    border-color: rgba(190, 52, 85, 0.5);
     box-shadow: 0 10px 30px rgba(190, 52, 85, 0.2);
+    transform: translateY(-2px);
+  }
+
+  /* Dark mode toggle button */
+  .theme-toggle {
+    @apply relative inline-flex items-center justify-center w-10 h-10 rounded-full;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+  }
+
+  .theme-toggle:hover {
+    background: var(--glass-3d-bg);
+    transform: scale(1.1);
+  }
+
+  .theme-toggle svg {
+    @apply w-5 h-5;
+    color: hsl(var(--foreground));
+    transition: all 0.3s ease;
   }
 }
 
 @layer utilities {
-  /* 3D Transform Utilities */
+  /* Enhanced 3D Transform Utilities */
   .preserve-3d {
     transform-style: preserve-3d;
   }
@@ -216,10 +318,15 @@
     will-change: transform;
   }
 
-  /* Hero Background */
+  /* Enhanced Hero Background with dark mode support */
   .hero-3d {
     background: linear-gradient(135deg, var(--lux-black) 0%, #1e293b 50%, #334155 100%);
     position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .dark .hero-3d {
+    background: linear-gradient(135deg, #0f172a 0%, var(--lux-black) 50%, #1e293b 100%);
   }
 
   .hero-3d::before {
@@ -229,15 +336,26 @@
     background: radial-gradient(circle at 30% 20%, rgba(190, 52, 85, 0.1) 0%, transparent 50%),
                 radial-gradient(circle at 70% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%);
     pointer-events: none;
+    transition: opacity 0.3s ease;
   }
 
-  /* Particle Container */
+  .dark .hero-3d::before {
+    background: radial-gradient(circle at 30% 20%, rgba(190, 52, 85, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(212, 175, 55, 0.15) 0%, transparent 50%);
+  }
+
+  /* Enhanced Particle Container */
   .canvas-container {
     @apply relative w-full h-full overflow-hidden;
     background: radial-gradient(ellipse at center, rgba(190, 52, 85, 0.1) 0%, transparent 70%);
+    transition: all 0.3s ease;
   }
 
-  /* Gradient text */
+  .dark .canvas-container {
+    background: radial-gradient(ellipse at center, rgba(190, 52, 85, 0.15) 0%, transparent 70%);
+  }
+
+  /* Enhanced Gradient text */
   .gradient-text {
     @apply bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent;
   }
@@ -247,9 +365,10 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    animation: gradientShift 8s ease-in-out infinite;
   }
 
-  /* Animations */
+  /* Enhanced Animations */
   .animate-float-3d {
     animation: float3d 6s ease-in-out infinite;
   }
@@ -273,9 +392,13 @@
   .animate-code-glow {
     animation: codeGlow 3s ease-in-out infinite;
   }
+
+  .animate-theme-transition {
+    animation: themeTransition 0.5s ease-in-out;
+  }
 }
 
-/* 3D Keyframe Animations */
+/* Enhanced 3D Keyframe Animations */
 @keyframes float3d {
   0%, 100% { 
     transform: translateY(0px) rotateX(0deg) rotateY(0deg); 
@@ -325,7 +448,22 @@
   }
 }
 
-/* Responsive 3D Components */
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes themeTransition {
+  0% { opacity: 0.8; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Enhanced Responsive 3D Components */
 @media (max-width: 768px) {
   .card-3d:hover {
     transform: translateY(-5px) scale(1.01);
@@ -338,45 +476,62 @@
   .project-card-3d:hover {
     transform: translateY(-5px) scale(1.01);
   }
+
+  .theme-toggle {
+    @apply w-8 h-8;
+  }
+
+  .theme-toggle svg {
+    @apply w-4 h-4;
+  }
 }
 
-/* Reduce motion for accessibility */
+/* Enhanced accessibility - Reduce motion */
 @media (prefers-reduced-motion: reduce) {
   .card-3d,
   .btn-3d,
   .project-card-3d,
   .animate-float-3d,
   .animate-rotate-3d,
-  .animate-matrix-rain {
+  .animate-matrix-rain,
+  .animate-theme-transition {
     animation: none !important;
     transition: opacity 0.3s ease !important;
   }
   
   .card-3d:hover,
-  .project-card-3d:hover {
+  .project-card-3d:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover {
     transform: none !important;
+  }
+
+  .gradient-text-3d {
+    animation: none !important;
   }
 }
 
-/* Enhanced scrollbar */
+/* Enhanced scrollbar with dark mode support */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100 dark:bg-gray-800;
+  background-color: hsl(var(--muted));
+  transition: background-color 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(45deg, var(--viva-magenta), var(--lux-gold));
   border-radius: 4px;
+  transition: background 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(45deg, #a82d4a, #ca8a04);
 }
 
-/* Selection styles */
+/* Enhanced selection styles */
 ::selection {
   background-color: var(--viva-magenta);
   color: white;
@@ -385,4 +540,10 @@
 ::-moz-selection {
   background-color: var(--viva-magenta);
   color: white;
+}
+
+/* Focus states for better accessibility */
+.focusable:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
 }
