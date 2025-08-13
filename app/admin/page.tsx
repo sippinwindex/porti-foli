@@ -1,8 +1,8 @@
-// Move these exports to the VERY TOP - before any other code
+'use client'
+
+// Move these exports AFTER 'use client' directive
 export const dynamic = 'force-dynamic'
 export const revalidate = false
-
-'use client'
 
 import { useState, useEffect } from 'react'
 import { redirect } from 'next/navigation'
