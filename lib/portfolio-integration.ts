@@ -337,7 +337,7 @@ class RealPortfolioIntegration {
     return highlights
   }
   
-  private getBuildStatus(vercelState?: string): EnhancedProject['vercel']['buildStatus'] {
+  private getBuildStatus(vercelState?: string): 'success' | 'error' | 'building' | 'pending' | 'unknown' {
     switch (vercelState) {
       case 'READY': return 'success'
       case 'ERROR': return 'error'
