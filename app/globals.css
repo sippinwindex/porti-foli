@@ -81,7 +81,8 @@
   }
   
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -133,7 +134,15 @@
 
   /* Enhanced Button styles */
   .btn-primary {
-    @apply inline-flex items-center justify-center px-6 py-3 font-semibold rounded-xl shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    outline: 2px solid transparent;
+    outline-offset: 2px;
     background: linear-gradient(to right, hsl(var(--primary)), #3b82f6);
     color: hsl(var(--primary-foreground));
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -141,27 +150,68 @@
   }
 
   .btn-primary:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px) scale(1.05);
   }
 
+  .btn-primary:focus {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-6 py-3 border-2 font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
-    border-color: hsl(var(--primary));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border: 2px solid hsl(var(--primary));
     color: hsl(var(--primary));
+    font-weight: 600;
+    border-radius: 0.75rem;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     transform: translateZ(0);
   }
 
+  .btn-secondary:focus {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
   .btn-secondary:hover {
-    @apply bg-primary/10;
+    background-color: hsla(var(--primary), 0.1);
     transform: translateY(-2px) scale(1.05);
   }
 
   /* Enhanced 3D Button */
   .btn-3d {
-    @apply btn-primary relative overflow-hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    color: hsl(var(--primary-foreground));
+    position: relative;
+    overflow: hidden;
     background: linear-gradient(135deg, var(--viva-magenta), var(--lux-gold));
     transform-style: preserve-3d;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform: translateZ(0);
+  }
+
+  .btn-3d:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  .btn-3d:focus {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
 
   .btn-3d::before {
@@ -182,23 +232,39 @@
 
   /* Enhanced Card components */
   .card {
-    @apply bg-card text-card-foreground rounded-2xl shadow-lg border p-6;
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: 1px solid hsl(var(--border));
+    padding: 1.5rem;
     transition: all 0.3s ease;
   }
 
   .card-hover {
-    @apply card;
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: 1px solid hsl(var(--border));
+    padding: 1.5rem;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   .card-hover:hover {
-    @apply shadow-2xl;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     transform: translateY(-5px) scale(1.02);
   }
 
   /* Enhanced 3D Card Components */
   .card-3d {
-    @apply card relative;
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: 1px solid hsl(var(--border));
+    padding: 1.5rem;
+    position: relative;
     transform-style: preserve-3d;
     transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
@@ -208,7 +274,11 @@
   }
 
   .project-card-3d {
-    @apply glass-3d p-6 rounded-2xl;
+    backdrop-filter: blur(16px);
+    background-color: var(--glass-3d-bg);
+    border: 1px solid var(--glass-3d-border);
+    padding: 1.5rem;
+    border-radius: 1rem;
     background: linear-gradient(135deg, var(--glass-3d-bg) 0%, rgba(255, 255, 255, 0.02) 100%);
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
@@ -220,7 +290,12 @@
 
   /* Enhanced Status indicators with better dark mode support */
   .status-live {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
     background-color: rgba(34, 197, 94, 0.1);
     color: #16a34a;
     border: 1px solid rgba(34, 197, 94, 0.2);
@@ -234,7 +309,12 @@
   }
 
   .status-building {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
     background-color: rgba(59, 130, 246, 0.1);
     color: #2563eb;
     border: 1px solid rgba(59, 130, 246, 0.2);
@@ -249,7 +329,12 @@
   }
 
   .status-error {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
     background-color: rgba(239, 68, 68, 0.1);
     color: #dc2626;
     border: 1px solid rgba(239, 68, 68, 0.2);
@@ -264,7 +349,11 @@
 
   /* Enhanced GitHub stats card */
   .github-stats-card {
-    @apply glass-3d p-4 rounded-xl;
+    backdrop-filter: blur(16px);
+    background-color: var(--glass-3d-bg);
+    border: 1px solid var(--glass-3d-border);
+    padding: 1rem;
+    border-radius: 0.75rem;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
@@ -276,7 +365,13 @@
 
   /* Dark mode toggle button */
   .theme-toggle {
-    @apply relative inline-flex items-center justify-center w-10 h-10 rounded-full;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(10px);
@@ -289,7 +384,8 @@
   }
 
   .theme-toggle svg {
-    @apply w-5 h-5;
+    width: 1.25rem;
+    height: 1.25rem;
     color: hsl(var(--foreground));
     transition: all 0.3s ease;
   }
@@ -346,7 +442,10 @@
 
   /* Enhanced Particle Container */
   .canvas-container {
-    @apply relative w-full h-full overflow-hidden;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
     background: radial-gradient(ellipse at center, rgba(190, 52, 85, 0.1) 0%, transparent 70%);
     transition: all 0.3s ease;
   }
@@ -357,7 +456,10 @@
 
   /* Enhanced Gradient text */
   .gradient-text {
-    @apply bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent;
+    background: linear-gradient(to right, hsl(var(--primary)), #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .gradient-text-3d {
@@ -478,11 +580,13 @@
   }
 
   .theme-toggle {
-    @apply w-8 h-8;
+    width: 2rem;
+    height: 2rem;
   }
 
   .theme-toggle svg {
-    @apply w-4 h-4;
+    width: 1rem;
+    height: 1rem;
   }
 }
 
