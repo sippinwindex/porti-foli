@@ -192,19 +192,20 @@ class RealPortfolioIntegration {
         this.getRealGitHubProjects()
       ])
       
+      // FIXED: Add null checks for githubStats
       const stats: PortfolioStats = {
-        totalProjects: githubStats.totalRepositories,
+        totalProjects: githubStats?.totalRepositories || 0,
         featuredProjects: projects.filter(p => p.featured).length,
         liveProjects: projects.filter(p => p.vercel?.isLive || p.metadata.liveUrl).length,
-        totalStars: githubStats.totalStars,
-        totalForks: githubStats.totalForks,
-        languageStats: this.processLanguageStats(githubStats.languages),
+        totalStars: githubStats?.totalStars || 0,
+        totalForks: githubStats?.totalForks || 0,
+        languageStats: this.processLanguageStats(githubStats?.languages || {}),
         categoryStats: this.getCategoryStats(projects),
         deploymentStats: this.getDeploymentStats(projects),
         recentActivity: {
           lastCommit: projects[0]?.lastActivity || new Date().toISOString(),
           lastDeployment: projects.find(p => p.vercel?.lastDeployed)?.vercel?.lastDeployed || new Date().toISOString(),
-          activeProjects: githubStats.recentActivity.activeRepositories
+          activeProjects: githubStats?.recentActivity?.activeRepositories || 0
         }
       }
       
