@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect } from 'react'
-import { Navigation } from '@/components/Navigation'
-import { Footer } from '@/components/Footer'
+// FIX: Changed to default imports for Navigation and Footer
+import Navigation from '@/components/Navigation'
+import Footer from '@/components/Footer'
 
 export default function Error({
   error,

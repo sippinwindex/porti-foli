@@ -1,11 +1,15 @@
+'use client'
+
 import Navigation from '@/components/Navigation'
 import { AnimatedHero } from '@/components/AnimatedHero'
 import Footer from '@/components/Footer'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { getEnhancedProjects, getPortfolioStats } from '@/lib/portfolio-integration'
 import type { EnhancedProject, PortfolioStats } from '@/lib/portfolio-integration'
-import { Star } from 'lucide-react'
+import { Star, Gamepad2 } from 'lucide-react'
 
 // Dynamic imports for 3D components
 const Interactive3DHero = dynamic(
@@ -239,6 +243,48 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* Floating Dino Game Button */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ 
+            duration: 0.5, 
+            delay: 2,
+            type: "spring",
+            stiffness: 260,
+            damping: 20
+          }}
+          className="fixed bottom-8 right-8 z-50"
+        >
+          <Link href="/dinosaur">
+            <motion.button
+              whileHover={{ 
+                scale: 1.1,
+                rotate: [0, -10, 10, -10, 0],
+                transition: { duration: 0.5 }
+              }}
+              whileTap={{ scale: 0.9 }}
+              className="group relative bg-gradient-to-r from-cyan-500 via-blue-500 to-magenta-500 hover:from-cyan-400 hover:via-blue-400 hover:to-magenta-400 text-white p-4 rounded-full shadow-2xl hover:shadow-cyan-500/25 transition-all duration-300"
+              aria-label="Play Synthwave Dino Game"
+            >
+              {/* Cute dino using emoji + game icon combo */}
+              <div className="relative flex items-center justify-center">
+                <span className="text-2xl group-hover:animate-bounce">🦕</span>
+                <Gamepad2 className="w-3 h-3 absolute -top-1 -right-1 opacity-75" />
+              </div>
+              
+              {/* Tooltip */}
+              <div className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                Play Synthwave Dino! 🎮
+                <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+              </div>
+
+              {/* Pulse animation ring */}
+              <div className="absolute inset-0 rounded-full bg-cyan-400 opacity-20 animate-ping"></div>
+            </motion.button>
+          </Link>
+        </motion.div>
       </main>
       <Footer />
     </>

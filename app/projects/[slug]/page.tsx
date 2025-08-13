@@ -1,12 +1,33 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { Navigation } from '@/components/Navigation'
-import { Footer } from '@/components/Footer'
+// FIX: Changed to default imports
+import Navigation from '@/components/Navigation'
+import Footer from '@/components/Footer'
 import { Github, ExternalLink, Calendar, Code, Users, Zap } from 'lucide-react'
 import Link from 'next/link'
 
-// Mock project data - replace with real data later
-const projects = {
+// FIX: Define a type for the project structure to ensure type safety
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  longDescription: string;
+  image: string;
+  tags: string[];
+  githubUrl: string;
+  liveUrl: string;
+  featured: boolean;
+  status: string;
+  startDate: string;
+  endDate?: string; // This property is now correctly marked as optional
+  category: string;
+  challenges: string[];
+  learnings: string[];
+  metrics: { label: string; value: string }[];
+}
+
+// Mock project data - typed for consistency
+const projects: Record<string, Project> = {
   'ecommerce-suite': {
     id: 'ecommerce-suite',
     title: 'E-Commerce Suite',
@@ -73,7 +94,7 @@ type Props = {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const project = projects[params.slug as keyof typeof projects]
+  const project = projects[params.slug]
   
   if (!project) {
     return {
@@ -93,7 +114,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default function ProjectPage({ params }: Props) {
-  const project = projects[params.slug as keyof typeof projects]
+  const project = projects[params.slug]
 
   if (!project) {
     notFound()
@@ -209,6 +230,7 @@ export default function ProjectPage({ params }: Props) {
                         <Calendar className="w-4 h-4 text-muted-foreground" />
                         <span className="text-muted-foreground">
                           {new Date(project.startDate).toLocaleDateString()}
+                          {/* This conditional check is now type-safe */}
                           {project.endDate && ` - ${new Date(project.endDate).toLocaleDateString()}`}
                         </span>
                       </div>

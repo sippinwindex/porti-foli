@@ -1,5 +1,105 @@
 // lib/project-data.ts
-import { ProjectMetadata, CaseStudy, Skill, SocialLink, ContactMethod } from '@/types'
+
+// FIX: Define the types directly in this file since they are not exported from @/types
+
+// Represents a specific skill or technology
+export interface Skill {
+  name: string;
+  category: 'frontend' | 'backend' | 'tools' | 'design' | 'soft';
+  level: number;
+  years: number;
+  icon: string; // Ideally, this would be a specific IconName type
+  certified?: boolean;
+}
+
+// Represents a social media link
+export interface SocialLink {
+  platform: string;
+  url: string;
+  icon: string; // Ideally, an IconName type
+  color: string;
+}
+
+// Represents a method of contact
+export interface ContactMethod {
+  type: 'email' | 'calendar' | 'phone' | 'social';
+  label: string;
+  value: string;
+  icon: string; // Ideally, an IconName type
+  description: string;
+  primary?: boolean;
+}
+
+// Represents the detailed case study for a project
+export interface CaseStudy {
+  problem: string;
+  solution: string;
+  impact: string;
+  process: {
+    phase: string;
+    duration: string;
+    description: string;
+    activities: string[];
+    deliverables?: string[];
+  }[];
+  technical: {
+    architecture: {
+      frontend: string[];
+      backend: string[];
+      database: string[];
+      infrastructure: string[];
+      tools: string[];
+      apis?: string[];
+    };
+    challenges: {
+      challenge: string;
+      solution: string;
+      impact: string;
+      learnings?: string[];
+    }[];
+    decisions: {
+      decision: string;
+      reasoning: string;
+      alternatives: string[];
+      outcome: string;
+    }[];
+  };
+  results: {
+    metrics: {
+      label: string;
+      value: string;
+      description: string;
+      type: 'percentage' | 'number' | 'currency' | 'time';
+    }[];
+    feedback: {
+      quote: string;
+      author: string;
+      role: string;
+      company: string;
+    }[];
+    achievements: string[];
+    impact: string;
+  };
+  nextSteps?: string[];
+}
+
+// Represents the metadata for a single project
+export interface ProjectMetadata {
+  featured: boolean;
+  order: number;
+  customDescription: string;
+  caseStudy: CaseStudy;
+  images: string[];
+  liveUrl: string;
+  category: 'data' | 'fullstack';
+  status: 'completed';
+  client?: string;
+  teamSize: number;
+  role: string;
+  tags: string[];
+  highlights: string[];
+}
+
 
 // Project metadata for GitHub integration
 export const projectMetadata: Record<string, ProjectMetadata> = {

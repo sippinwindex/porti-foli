@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Metadata } from 'next'
-import { Navigation } from '@/components/Navigation'
-import { Footer } from '@/components/Footer'
+// FIX: The Metadata import is not needed in a 'use client' component and can be removed.
+// import { Metadata } from 'next' 
+// FIX: Changed to default imports for Navigation and Footer
+import Navigation from '@/components/Navigation'
+import Footer from '@/components/Footer'
 import { motion } from 'framer-motion'
 import { Mail, Github, Linkedin, Send } from 'lucide-react'
 

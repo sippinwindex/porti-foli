@@ -93,7 +93,8 @@ class GitHubAPI {
     direction?: 'asc' | 'desc'
     per_page?: number
     page?: number
-    type?: 'all' | 'owner' | 'public' | 'private' | 'member'
+    // FIX: Removed 'public' and 'private' to match the allowed types of the Octokit API.
+    type?: 'all' | 'owner' | 'member'
   } = {}): Promise<GitHubRepository[]> {
     try {
       const {

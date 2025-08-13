@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+// FIX: Combined the two framer-motion imports into a single line
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, Github, Linkedin, Twitter, Mail } from 'lucide-react'
-import { ThemeToggle } from './ThemeToggle'
+import ThemeToggle from './ThemeToggle'
 import { cn } from '@/lib/utils'
 
 const navigation = [
@@ -13,6 +14,7 @@ const navigation = [
   { name: 'About', href: '/about' },
   { name: 'Projects', href: '/projects' },
   { name: 'Contact', href: '/contact' },
+  { name: '🦕 Dino Game', href: '/dinosaur', special: true },
 ]
 
 const socialLinks = [
@@ -80,9 +82,11 @@ function Navigation() {
                 <Link
                   href={item.href}
                   className={cn(
-                    'relative px-3 py-2 text-sm font-medium transition-colors duration-200',
+                    'relative px-3 py-2 text-sm font-medium transition-all duration-200',
                     pathname === item.href
                       ? 'text-primary'
+                      : item.special
+                      ? 'text-cyan-400 hover:text-magenta-400 hover:scale-105'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
@@ -166,9 +170,11 @@ function Navigation() {
                       href={item.href}
                       onClick={closeMenu}
                       className={cn(
-                        'block px-3 py-2 text-base font-medium transition-colors duration-200',
+                        'block px-3 py-2 text-base font-medium transition-all duration-200',
                         pathname === item.href
                           ? 'text-primary bg-primary/10 rounded-lg'
+                          : item.special
+                          ? 'text-cyan-400 hover:text-magenta-400 hover:bg-magenta-400/10 rounded-lg'
                           : 'text-muted-foreground hover:text-foreground'
                       )}
                     >

@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
-import { Navigation } from '@/components/Navigation'
-import { Footer } from '@/components/Footer'
+// FIX: Changed to default imports for Navigation and Footer
+import Navigation from '@/components/Navigation'
+import Footer from '@/components/Footer'
 import { motion } from 'framer-motion'
 
 export const metadata: Metadata = {
