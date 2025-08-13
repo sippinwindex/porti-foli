@@ -107,9 +107,9 @@ class RealPortfolioIntegration {
         .slice(0, 20) // Limit to top 20 projects
         .map((repo, index) => {
           
-          // Find matching Vercel project
-          const vercelProject = vercelProjects.find(v => 
-            v.project.name.toLowerCase() === repo.name.toLowerCase()
+          // Find matching Vercel project - FIXED: Added proper type checking
+          const vercelProject = vercelProjects.find((v: any) => 
+            v?.project?.name?.toLowerCase() === repo.name.toLowerCase()
           )
           
           // Determine category based on languages and topics
