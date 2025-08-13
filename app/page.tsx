@@ -4,7 +4,7 @@ import Navigation from '@/components/Navigation'
 import { AnimatedHero } from '@/components/AnimatedHero'
 import Footer from '@/components/Footer'
 import { Suspense } from 'react'
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { getEnhancedProjects, getPortfolioStats } from '@/lib/portfolio-integration'
@@ -12,10 +12,10 @@ import type { EnhancedProject, PortfolioStats } from '@/lib/portfolio-integratio
 // FIX: Added more icons from lucide-react for the button and helpers
 import { Star, Gamepad2, Code, Zap, Globe, Rocket } from 'lucide-react'
 
-export const dynamicConfig = 'force-dynamic'
+export const dynamic = 'force-dynamic'
 
 // Dynamic imports for 3D components with better loading states
-const Interactive3DHero = dynamic(
+const Interactive3DHero = dynamicImport(
   () => import('@/components/3D/Interactive3DHero'),
   {
     ssr: false,
@@ -30,7 +30,7 @@ const Interactive3DHero = dynamic(
   }
 )
 
-const ScrollTriggered3DSections = dynamic(
+const ScrollTriggered3DSections = dynamicImport(
   () => import('@/components/3D/ScrollTriggered3DSections'),
   {
     ssr: false,
@@ -45,7 +45,7 @@ const ScrollTriggered3DSections = dynamic(
   }
 )
 
-const FloatingCodeBlocks = dynamic(
+const FloatingCodeBlocks = dynamicImport(
   () => import('@/components/3D/FloatingCodeBlocks'),
   {
     ssr: false,
@@ -60,7 +60,7 @@ const FloatingCodeBlocks = dynamic(
   }
 )
 
-const LanguageVisualization = dynamic(
+const LanguageVisualization = dynamicImport(
   () => import('@/components/3D/LanguageVisualization'),
   {
     ssr: false,
@@ -75,7 +75,7 @@ const LanguageVisualization = dynamic(
   }
 )
 
-const ParticleField = dynamic(
+const ParticleField = dynamicImport(
   () => import('@/components/3D/ParticleField'),
   {
     ssr: false,
