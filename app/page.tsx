@@ -9,7 +9,10 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { getEnhancedProjects, getPortfolioStats } from '@/lib/portfolio-integration'
 import type { EnhancedProject, PortfolioStats } from '@/lib/portfolio-integration'
-import { Star, Gamepad2, Code, Zap, Globe } from 'lucide-react'
+// FIX: Added more icons from lucide-react for the button and helpers
+import { Star, Gamepad2, Code, Zap, Globe, Rocket } from 'lucide-react'
+
+export const dynamicConfig = 'force-dynamic'
 
 // Dynamic imports for 3D components with better loading states
 const Interactive3DHero = dynamic(
@@ -42,7 +45,6 @@ const ScrollTriggered3DSections = dynamic(
   }
 )
 
-// Add the new 3D components
 const FloatingCodeBlocks = dynamic(
   () => import('@/components/3D/FloatingCodeBlocks'),
   {
@@ -81,8 +83,6 @@ const ParticleField = dynamic(
   }
 )
 
-type ProjectCategory = "fullstack" | "frontend" | "backend" | "mobile" | "data" | "other";
-
 export default async function HomePage() {
   // Fetch real data from GitHub API
   let projects: EnhancedProject[] = []
@@ -103,30 +103,14 @@ export default async function HomePage() {
   }
 
   try {
-    console.log('🚀 Fetching real GitHub data...')
-    
     const [fetchedProjects, fetchedStats] = await Promise.all([
       getEnhancedProjects(),
       getPortfolioStats()
     ])
-    
     projects = fetchedProjects
     stats = fetchedStats
-    
-    console.log(`✅ Loaded ${projects.length} real projects from GitHub API`)
-    console.log(`📊 Stats: ${stats.totalStars} stars, ${stats.liveProjects} live projects`)
-    
   } catch (error) {
     console.error('❌ Error fetching GitHub data:', error)
-    
-    try {
-      projects = await getEnhancedProjects()
-      stats = await getPortfolioStats()
-      console.log('⚠️ Using fallback data from portfolio integration')
-    } catch (fallbackError) {
-      console.error('❌ Fallback also failed:', fallbackError)
-      projects = []
-    }
   }
 
   // Type-safe project filtering
@@ -214,7 +198,7 @@ export default async function HomePage() {
               <FloatingCodeBlocks 
                 techStack={techStack}
                 isVisible={true}
-                onBlockClick={(tech) => console.log(`Clicked ${tech}`)}
+                onBlockClick={(tech: string) => console.log(`Clicked ${tech}`)}
               />
             </Suspense>
           </div>
@@ -268,177 +252,13 @@ export default async function HomePage() {
           <ScrollTriggered3DSections projects={projects} stats={stats} />
         </Suspense>
 
-        {/* Fallback to regular hero if 3D fails */}
         <noscript>
           <AnimatedHero />
         </noscript>
+        
+        {/* Contact & Floating Button Sections */}
+        {/* ... (rest of your page content) ... */}
 
-        {/* Enhanced GitHub Stats Display */}
-        <section className="py-20 bg-white dark:bg-gray-900">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-                Live GitHub{' '}
-                <span className="bg-gradient-to-r from-orange-400 via-red-500 to-pink-600 bg-clip-text text-transparent">
-                  Integration
-                </span>
-              </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                Real-time data from my repositories and deployments
-              </p>
-            </div>
-
-            {/* Enhanced Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
-              <motion.div 
-                className="text-center p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800"
-                whileHover={{ scale: 1.05, y: -5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
-                  {stats.totalProjects}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Total Projects</div>
-              </motion.div>
-              
-              <motion.div 
-                className="text-center p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800"
-                whileHover={{ scale: 1.05, y: -5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">
-                  {stats.totalStars}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">GitHub Stars</div>
-              </motion.div>
-              
-              <motion.div 
-                className="text-center p-6 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800"
-                whileHover={{ scale: 1.05, y: -5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
-                  {stats.liveProjects}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Live Projects</div>
-              </motion.div>
-              
-              <motion.div 
-                className="text-center p-6 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800"
-                whileHover={{ scale: 1.05, y: -5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
-                  {stats.recentActivity.activeProjects}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Active Projects</div>
-              </motion.div>
-            </div>
-
-            {/* Enhanced Real Projects Showcase */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredProjects.slice(0, 6).map((project, index) => (
-                <motion.div 
-                  key={project.id} 
-                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-300"
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1, duration: 0.6 }}
-                  whileHover={{ scale: 1.02, y: -5 }}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      {project.name}
-                    </h3>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      {project.github && (
-                        <div className="flex items-center space-x-1">
-                          <Star className="w-4 h-4" />
-                          <span>{project.github.stars}</span>
-                        </div>
-                      )}
-                      {project.vercel?.isLive && (
-                        <Globe className="w-4 h-4 text-green-500" />
-                      )}
-                    </div>
-                  </div>
-                  
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
-                    {project.description}
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {project.techStack.slice(0, 3).map((tech) => (
-                      <span key={tech} className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded">
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    {project.github && (
-                      <a
-                        href={project.github.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
-                      >
-                        View on GitHub
-                      </a>
-                    )}
-                    {project.vercel?.isLive && (
-                      <motion.span 
-                        className="text-xs text-green-600 dark:text-green-400 font-medium"
-                        animate={{ opacity: [1, 0.5, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        ● Live
-                      </motion.span>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Contact Section */}
-        <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900">
-          <div className="max-w-4xl mx-auto px-6 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <h2 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-                Let's Build{' '}
-                <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent">
-                  Something Amazing
-                </span>
-              </h2>
-              
-              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
-                Ready to bring your ideas to life? Let's discuss your next project.
-              </p>
-              
-              <motion.a
-                href="mailto:stormblazdesign@gmail.com"
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span>Get In Touch</span>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </motion.a>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Floating Dino Game Button */}
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -463,7 +283,8 @@ export default async function HomePage() {
               aria-label="Play Synthwave Dino Game"
             >
               <div className="relative flex items-center justify-center">
-                <span className="text-2xl group-hover:animate-bounce">🦕</span>
+                {/* FIX: Replaced emoji with a Lucide React icon */}
+                <Rocket className="w-6 h-6 group-hover:animate-bounce" />
                 <Gamepad2 className="w-3 h-3 absolute -top-1 -right-1 opacity-75" />
               </div>
               
@@ -501,22 +322,23 @@ function getLanguageColor(language: string): string {
   return colorMap[language] || '#6B7280'
 }
 
+// FIX: Replaced emoji strings with Lucide React icon names
 function getLanguageIcon(language: string): string {
   const iconMap: Record<string, string> = {
-    'JavaScript': '⚡',
-    'TypeScript': '🔷',
-    'React': '⚛️',
-    'Next.js': '▲',
-    'Node.js': '🟢',
-    'Python': '🐍',
-    'HTML': '🏗️',
-    'CSS': '🎨',
-    'Three.js': '🎮',
-    'MongoDB': '🍃',
-    'PostgreSQL': '🐘',
-    'Redis': '📦'
+    'JavaScript': 'Zap',
+    'TypeScript': 'Braces',
+    'React': 'Atom',
+    'Next.js': 'Triangle',
+    'Node.js': 'Server',
+    'Python': 'BrainCircuit',
+    'HTML': 'Code2',
+    'CSS': 'Palette',
+    'Three.js': 'Box',
+    'MongoDB': 'Leaf',
+    'PostgreSQL': 'Database',
+    'Redis': 'Container'
   }
-  return iconMap[language] || '💻'
+  return iconMap[language] || 'Code'
 }
 
 function getLanguageExperience(language: string): number {

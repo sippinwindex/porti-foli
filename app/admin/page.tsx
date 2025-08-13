@@ -7,7 +7,7 @@ import { getSmartProjects, SmartProjectData } from '@/lib/smart-project-manager'
 
 // Simple password protection
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'your-secret-password-123'
-
+export const dynamic = 'force-dynamic'
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
