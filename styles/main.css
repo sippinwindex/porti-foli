@@ -1,3 +1,9 @@
+/* Tailwind directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optimized Inter font loading (keep your existing font files) */
 @font-face {
   font-family: 'Inter var';
   font-style: normal;
@@ -5,6 +11,7 @@
   font-display: block;
   src: url(/fonts/Inter-roman.latin.var.woff2) format('woff2');
 }
+
 @font-face {
   font-family: 'Inter var';
   font-style: italic;
@@ -14,6 +21,19 @@
   font-named-instance: 'Italic';
 }
 
+/* CSS Variables for consistent theming */
+:root {
+  --viva-magenta: #BE3455;
+  --lux-gold: #D4AF37;
+  --lux-sage: #98A869;
+  --lux-teal: #008080;
+  --lux-brown: #4A2C2A;
+  --lux-gray: #A0A0A0;
+  --lux-black: #121212;
+  --lux-offwhite: #FAFAFA;
+}
+
+/* Enhanced body styles with Inter var */
 body {
   font-family: 'Inter var', system-ui, -apple-system, BlinkMacSystemFont,
     'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
@@ -24,22 +44,30 @@ body {
   font-variation-settings: 'wght' 450;
   font-variant: common-ligatures contextual;
   letter-spacing: -0.02em;
-}
-b,
-strong,
-h3,
-h4,
-h5,
-h6 {
-  font-variation-settings: 'wght' 650;
-}
-h1 {
-  font-variation-settings: 'wght' 850;
-}
-h2 {
-  font-variation-settings: 'wght' 750;
+  line-height: 1.6;
+  scroll-behavior: smooth;
+  /* Add theme-aware background */
+  @apply bg-lux-gray-50 dark:bg-lux-gray-900 text-lux-gray-900 dark:text-lux-gray-50;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Enhanced typography with theme-aware colors */
+b, strong, h3, h4, h5, h6 {
+  font-variation-settings: 'wght' 650;
+  @apply text-lux-gray-800 dark:text-lux-gray-100;
+}
+
+h1 {
+  font-variation-settings: 'wght' 850;
+  @apply text-lux-gray-900 dark:text-lux-gray-50;
+}
+
+h2 {
+  font-variation-settings: 'wght' 750;
+  @apply text-lux-gray-800 dark:text-lux-gray-100;
+}
+
+/* High DPI display optimization */
 @media screen and (min-device-pixel-ratio: 1.5),
   screen and (min-resolution: 1.5dppx) {
   body {
@@ -48,18 +76,217 @@ h2 {
   }
 }
 
-details summary {
-  cursor: pointer;
+/* Base element styles */
+* {
+  box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced selection styles */
+::selection {
+  background-color: var(--viva-magenta);
+  color: white;
+}
+
+::-moz-selection {
+  background-color: var(--viva-magenta);
+  color: white;
+}
+
+/* Custom scrollbar with theme support */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-lux-gray-100 dark:bg-lux-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, var(--viva-magenta), var(--lux-gold));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, #a82d4a, #ca8a04);
+}
+
+/* Interactive elements */
+details summary {
+  cursor: pointer;
+  @apply text-lux-gray-700 dark:text-lux-gray-300 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400;
+  transition: color 0.2s ease;
+}
+
+/* Image optimization */
 img.next-image {
   margin: 0;
 }
 
+/* Enhanced link styles with theme support */
 .prose a {
-  color: #0074de;
+  @apply text-viva-magenta-600 dark:text-viva-magenta-400 hover:text-viva-magenta-700 dark:hover:text-viva-magenta-300 no-underline;
+  transition: color 0.2s ease;
+  border-bottom: 1px solid transparent;
 }
 
+.prose a:hover {
+  @apply border-viva-magenta-300 dark:border-viva-magenta-600;
+}
+
+/* Navigation styles with enhanced theming */
 .nav-line .nav-link {
-  color: #69778c;
+  @apply text-lux-gray-600 dark:text-lux-gray-400 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400;
+  transition: color 0.2s ease;
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Line clamp utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, var(--viva-magenta), var(--lux-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Enhanced button styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-viva-magenta-500 to-viva-magenta-600 text-white font-semibold py-3 px-6 rounded-full shadow-lg hover:shadow-xl hover:from-viva-magenta-600 hover:to-viva-magenta-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-viva-magenta-500 focus:ring-offset-2;
+}
+
+.btn-secondary {
+  @apply border-2 border-viva-magenta-500 text-viva-magenta-600 dark:text-viva-magenta-400 font-semibold py-3 px-6 rounded-full hover:bg-viva-magenta-50 dark:hover:bg-viva-magenta-900/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-viva-magenta-500 focus:ring-offset-2;
+}
+
+/* Focus styles for accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px theme('colors.white'), 0 0 0 4px theme('colors.viva-magenta.500');
+}
+
+.dark button:focus-visible,
+.dark a:focus-visible,
+.dark input:focus-visible,
+.dark textarea:focus-visible,
+.dark select:focus-visible {
+  box-shadow: 0 0 0 2px theme('colors.lux-gray.900'), 0 0 0 4px theme('colors.viva-magenta.400');
+}
+
+/* Nextra blog theme enhancements */
+.nextra-container {
+  @apply max-w-6xl;
+}
+
+/* Enhanced article styling */
+article {
+  @apply text-lux-gray-700 dark:text-lux-gray-300;
+}
+
+article h1,
+article h2,
+article h3,
+article h4 {
+  @apply text-lux-gray-900 dark:text-lux-gray-50;
+}
+
+/* Code block styling with glassmorphism */
+pre {
+  @apply glass rounded-lg;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark pre {
+  background: rgba(23, 23, 23, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Blockquote styling */
+blockquote {
+  @apply border-l-4 border-viva-magenta-500 pl-4 italic text-lux-gray-600 dark:text-lux-gray-400;
+}
+
+/* Table styling */
+table {
+  @apply glass rounded-lg overflow-hidden;
+}
+
+th {
+  @apply bg-viva-magenta-50 dark:bg-viva-magenta-900/20 text-viva-magenta-900 dark:text-viva-magenta-100 font-semibold;
+}
+
+td {
+  @apply border-t border-lux-gray-200 dark:border-lux-gray-700;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .float {
+    animation: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .glass {
+    background: white !important;
+    backdrop-filter: none !important;
+    border: 1px solid #ccc !important;
+  }
+  
+  .gradient-text {
+    -webkit-text-fill-color: initial !important;
+    background: none !important;
+    color: var(--lux-black) !important;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    background: white !important;
+    color: black !important;
+    border: 1px solid black !important;
+  }
 }

@@ -1,7 +1,7 @@
+// pages/_app.js
 import 'nextra-theme-blog/style.css'
+import '../styles/globals.css'  // Your enhanced merged styles
 import Head from 'next/head'
-
-import '../styles/main.css'
 
 export default function Nextra({ Component, pageProps }) {
   return (
