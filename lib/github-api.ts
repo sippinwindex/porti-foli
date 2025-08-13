@@ -225,7 +225,7 @@ class GitHubAPI {
       })
       
       if (data.content && data.encoding === 'base64') {
-        return Buffer.from(data.content, 'base64').toString('utf-8')
+        return atob(data.content)
       }
       return undefined
     } catch (error) {
