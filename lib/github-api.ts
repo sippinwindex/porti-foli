@@ -62,29 +62,54 @@ export interface GitHubStats {
 }
 
 class GitHubAPI {
-  private octokit: Octokit
+  private octokit: Octokit | null = null
   private username: string
+  private isClientSide: boolean = false
 
   constructor(token?: string, username: string = 'sippinwindex') {
-    this.octokit = new Octokit({
-      auth: token || process.env.GITHUB_TOKEN,
-      userAgent: 'Portfolio-App/1.0.0',
-      request: {
-        timeout: 10000,
-      }
-    })
     this.username = username
+    this.isClientSide = typeof window !== 'undefined'
+    
+    // Only initialize Octokit on the client side
+    if (this.isClientSide) {
+      const authToken = token || process.env.GITHUB_TOKEN
+      if (authToken) {
+        this.octokit = new Octokit({
+          auth: authToken,
+          userAgent: 'Portfolio-App/1.0.0',
+          request: {
+            timeout: 10000,
+          }
+        })
+      }
+    }
   }
 
-  async getUser(): Promise<GitHubUser> {
+  private ensureClientSide(): boolean {
+    if (!this.isClientSide) {
+      console.warn('GitHub API not available during SSR/build time')
+      return false
+    }
+
+    if (!this.octokit) {
+      console.warn('GitHub API not properly initialized - token may be missing')
+      return false
+    }
+
+    return true
+  }
+
+  async getUser(): Promise<GitHubUser | null> {
+    if (!this.ensureClientSide()) return null
+
     try {
-      const { data } = await this.octokit.rest.users.getByUsername({
+      const { data } = await this.octokit!.rest.users.getByUsername({
         username: this.username,
       })
       return data as GitHubUser
     } catch (error) {
       console.error('Error fetching GitHub user:', error)
-      throw new Error('Failed to fetch GitHub user data')
+      return null
     }
   }
 
@@ -93,9 +118,10 @@ class GitHubAPI {
     direction?: 'asc' | 'desc'
     per_page?: number
     page?: number
-    // FIX: Removed 'public' and 'private' to match the allowed types of the Octokit API.
     type?: 'all' | 'owner' | 'member'
   } = {}): Promise<GitHubRepository[]> {
+    if (!this.ensureClientSide()) return []
+
     try {
       const {
         sort = 'updated',
@@ -104,7 +130,7 @@ class GitHubAPI {
         type = 'owner'
       } = options
 
-      const { data } = await this.octokit.rest.repos.listForUser({
+      const { data } = await this.octokit!.rest.repos.listForUser({
         username: this.username,
         sort,
         direction,
@@ -115,11 +141,11 @@ class GitHubAPI {
       // Filter out forks and archived repos by default
       const filteredRepos = data.filter(repo => !repo.fork && !repo.archived)
 
-      // Enhance repositories with additional data
-      const enhancedRepos = await Promise.all(
+      // Enhance repositories with additional data (with error handling)
+      const enhancedRepos = await Promise.allSettled(
         filteredRepos.map(async (repo) => {
           try {
-            const [languages, readme, latestCommit] = await Promise.all([
+            const [languages, readme, latestCommit] = await Promise.allSettled([
               this.getRepositoryLanguages(repo.name),
               this.getRepositoryReadme(repo.name),
               this.getLatestCommit(repo.name, repo.default_branch),
@@ -127,9 +153,9 @@ class GitHubAPI {
 
             return {
               ...repo,
-              languages,
-              readme,
-              latest_commit: latestCommit,
+              languages: languages.status === 'fulfilled' ? languages.value : {},
+              readme: readme.status === 'fulfilled' ? readme.value : undefined,
+              latest_commit: latestCommit.status === 'fulfilled' ? latestCommit.value : undefined,
             } as GitHubRepository
           } catch (error) {
             console.warn(`Error enhancing repo ${repo.name}:`, error)
@@ -139,20 +165,24 @@ class GitHubAPI {
       )
 
       return enhancedRepos
+        .filter(result => result.status === 'fulfilled')
+        .map(result => (result as PromiseFulfilledResult<GitHubRepository>).value)
     } catch (error) {
       console.error('Error fetching repositories:', error)
-      throw new Error('Failed to fetch GitHub repositories')
+      return []
     }
   }
 
   async getRepository(name: string): Promise<GitHubRepository | null> {
+    if (!this.ensureClientSide()) return null
+
     try {
-      const { data } = await this.octokit.rest.repos.get({
+      const { data } = await this.octokit!.rest.repos.get({
         owner: this.username,
         repo: name,
       })
 
-      const [languages, readme, latestCommit] = await Promise.all([
+      const [languages, readme, latestCommit] = await Promise.allSettled([
         this.getRepositoryLanguages(name),
         this.getRepositoryReadme(name),
         this.getLatestCommit(name, data.default_branch),
@@ -160,9 +190,9 @@ class GitHubAPI {
 
       return {
         ...data,
-        languages,
-        readme,
-        latest_commit: latestCommit,
+        languages: languages.status === 'fulfilled' ? languages.value : {},
+        readme: readme.status === 'fulfilled' ? readme.value : undefined,
+        latest_commit: latestCommit.status === 'fulfilled' ? latestCommit.value : undefined,
       } as GitHubRepository
     } catch (error) {
       console.error(`Error fetching repository ${name}:`, error)
@@ -171,8 +201,10 @@ class GitHubAPI {
   }
 
   private async getRepositoryLanguages(name: string): Promise<Record<string, number>> {
+    if (!this.ensureClientSide()) return {}
+
     try {
-      const { data } = await this.octokit.rest.repos.listLanguages({
+      const { data } = await this.octokit!.rest.repos.listLanguages({
         owner: this.username,
         repo: name,
       })
@@ -184,8 +216,10 @@ class GitHubAPI {
   }
 
   private async getRepositoryReadme(name: string): Promise<string | undefined> {
+    if (!this.ensureClientSide()) return undefined
+
     try {
-      const { data } = await this.octokit.rest.repos.getReadme({
+      const { data } = await this.octokit!.rest.repos.getReadme({
         owner: this.username,
         repo: name,
       })
@@ -201,8 +235,10 @@ class GitHubAPI {
   }
 
   private async getLatestCommit(name: string, branch: string = 'main') {
+    if (!this.ensureClientSide()) return undefined
+
     try {
-      const { data } = await this.octokit.rest.repos.listCommits({
+      const { data } = await this.octokit!.rest.repos.listCommits({
         owner: this.username,
         repo: name,
         sha: branch,
@@ -225,12 +261,16 @@ class GitHubAPI {
     }
   }
 
-  async getGitHubStats(): Promise<GitHubStats> {
+  async getGitHubStats(): Promise<GitHubStats | null> {
+    if (!this.ensureClientSide()) return null
+
     try {
       const [user, repositories] = await Promise.all([
         this.getUser(),
         this.getRepositories({ per_page: 100 })
       ])
+
+      if (!user) return null
 
       const totalStars = repositories.reduce((sum, repo) => sum + repo.stargazers_count, 0)
       const totalForks = repositories.reduce((sum, repo) => sum + repo.forks_count, 0)
@@ -266,7 +306,7 @@ class GitHubAPI {
       }
     } catch (error) {
       console.error('Error calculating GitHub stats:', error)
-      throw new Error('Failed to calculate GitHub statistics')
+      return null
     }
   }
 
@@ -275,12 +315,14 @@ class GitHubAPI {
     order?: 'desc' | 'asc'
     per_page?: number
   } = {}): Promise<GitHubRepository[]> {
+    if (!this.ensureClientSide()) return []
+
     try {
       const { sort = 'updated', order = 'desc', per_page = 30 } = options
       
       const searchQuery = `user:${this.username} ${query}`
       
-      const { data } = await this.octokit.rest.search.repos({
+      const { data } = await this.octokit!.rest.search.repos({
         q: searchQuery,
         sort,
         order,
@@ -290,14 +332,16 @@ class GitHubAPI {
       return data.items as GitHubRepository[]
     } catch (error) {
       console.error('Error searching repositories:', error)
-      throw new Error('Failed to search GitHub repositories')
+      return []
     }
   }
 
   // Rate limiting helpers
   async getRateLimit() {
+    if (!this.ensureClientSide()) return null
+
     try {
-      const { data } = await this.octokit.rest.rateLimit.get()
+      const { data } = await this.octokit!.rest.rateLimit.get()
       return data.rate
     } catch (error) {
       console.error('Error fetching rate limit:', error)
@@ -319,7 +363,7 @@ class GitHubAPI {
   }
 }
 
-// Export singleton instance
+// Export singleton instance - will be safe during build
 export const githubAPI = new GitHubAPI()
 
 // Utility functions for common operations
