@@ -7,19 +7,6 @@ import { getEnhancedProjects, getPortfolioStats } from '@/lib/portfolio-integrat
 import type { EnhancedProject, PortfolioStats } from '@/lib/portfolio-integration'
 import { Star } from 'lucide-react'
 
-// Define GitHubRepository type locally since it's not exported
-interface GitHubRepository {
-  id: number
-  name: string
-  full_name: string
-  html_url: string
-  description: string | null
-  owner: {
-    login: string
-    avatar_url: string
-  }
-}
-
 // Dynamic imports for 3D components
 const Interactive3DHero = dynamic(
   () => import('@/components/3D/Interactive3DHero'),
@@ -75,7 +62,9 @@ export default async function HomePage() {
   }
 
   try {
-    // Fetch real GitHub data
+    // Fetch real GitHub data using your portfolio integration
+    console.log('🚀 Fetching real GitHub data...')
+    
     const [fetchedProjects, fetchedStats] = await Promise.all([
       getEnhancedProjects(),
       getPortfolioStats()
@@ -84,60 +73,37 @@ export default async function HomePage() {
     projects = fetchedProjects
     stats = fetchedStats
     
-    console.log(`✅ Loaded ${projects.length} real projects from GitHub`)
+    console.log(`✅ Loaded ${projects.length} real projects from GitHub API`)
+    console.log(`📊 Stats: ${stats.totalStars} stars, ${stats.liveProjects} live projects`)
+    
   } catch (error) {
-    console.error('❌ Error fetching GitHub data, using fallback:', error)
+    console.error('❌ Error fetching GitHub data:', error)
     
-    // Fallback to mock data if GitHub API fails
-    const { mockProjects, mockStats } = await import('@/lib/mock-data')
-    
-    projects = mockProjects.map((p, index): EnhancedProject => {
-      const mockGithub = p.github ? {
-        ...p.github,
-        repository: {
-          id: index,
-          name: p.name.replace(/\s+/g, '-').toLowerCase(),
-          full_name: `mock-user/${p.name.replace(/\s+/g, '-').toLowerCase()}`,
-          html_url: p.github.url,
-          description: p.description,
-          owner: { login: 'mock-user', avatar_url: '' }
-        } as GitHubRepository,
-        language: p.techStack[0] || 'TypeScript',
-        languages: p.techStack.reduce((acc, tech) => ({ ...acc, [tech]: 100 }), {}),
-        topics: p.techStack,
-        lastUpdated: new Date().toISOString(),
-      } : undefined;
-
-      return {
-        ...p,
-        slug: p.id,
-        lastActivity: new Date().toISOString(),
-        deploymentScore: 85,
-        metadata: {
-          images: [],
-          tags: p.techStack,
-          highlights: [],
+    // The portfolio integration already handles fallback to mock data internally
+    // So we still try to get the projects even if there's an error
+    try {
+      projects = await getEnhancedProjects()
+      stats = await getPortfolioStats()
+      console.log('⚠️ Using fallback data from portfolio integration')
+    } catch (fallbackError) {
+      console.error('❌ Fallback also failed:', fallbackError)
+      // Use basic fallback with empty data
+      projects = []
+      stats = {
+        totalProjects: 0,
+        featuredProjects: 0,
+        liveProjects: 0,
+        totalStars: 0,
+        totalForks: 0,
+        languageStats: {},
+        categoryStats: {},
+        deploymentStats: { successful: 0, failed: 0, building: 0, pending: 0 },
+        recentActivity: {
+          lastCommit: new Date().toISOString(),
+          lastDeployment: new Date().toISOString(),
+          activeProjects: 0,
         },
-        techStack: p.techStack,
-        status: 'completed',
-        order: index,
-        category: p.category && isProjectCategory(p.category) ? p.category : 'other',
-        github: mockGithub,
-        // Fix the vercel property to match the expected type
-        vercel: p.vercel ? {
-          deploymentStatus: 'success' as const,
-          liveUrl: p.vercel.liveUrl,
-          isLive: p.vercel.isLive,
-          lastDeployed: new Date().toISOString(),
-          buildStatus: 'success' as const
-        } : undefined,
-      };
-    });
-    
-    stats = {
-      ...mockStats,
-      totalForks: mockStats.totalForks ?? 0,
-      featuredProjects: mockProjects.filter(p => p.featured).length
+      }
     }
   }
 
