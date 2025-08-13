@@ -1,8 +1,7 @@
 'use client'
 
-// Move these exports AFTER 'use client' directive
-export const dynamic = 'force-dynamic'
-export const revalidate = false
+// Remove these exports - they don't work in client components
+// Client components are always dynamic by default
 
 import { useState, useEffect } from 'react'
 import { redirect } from 'next/navigation'
