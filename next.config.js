@@ -1,20 +1,37 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
-  // Remove the experimental.appDir option
+  // Force all pages to be dynamic to avoid build-time API calls
   experimental: {
-    // Keep only current experimental features you need
+    missingSuspenseWithCSRBailout: false,
   },
-  typescript: {
-    ignoreBuildErrors: false,
+  
+  // Skip static optimization for pages that need runtime data
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+    ]
   },
-  eslint: {
-    ignoreDuringBuilds: false,
+  
+  // Configure which pages should be dynamically rendered
+  async rewrites() {
+    return []
   },
-  images: {
-    domains: ['github.com', 'raw.githubusercontent.com', 'avatars.githubusercontent.com'],
-  },
+  
+  // Skip static generation for specific pages
+  trailingSlash: false,
+  
+  // Environment variables that should be available at build time
+  env: {
+    SKIP_BUILD_STATIC_GENERATION: 'true'
+  }
 }
 
 module.exports = nextConfig

@@ -1,20 +1,19 @@
 'use client'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 import Navigation from '@/components/Navigation'
 import { AnimatedHero } from '@/components/AnimatedHero'
 import Footer from '@/components/Footer'
-import { Suspense } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import dynamicImport from 'next/dynamic'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { getEnhancedProjects, getPortfolioStats } from '@/lib/portfolio-integration'
 import type { EnhancedProject, PortfolioStats } from '@/lib/portfolio-integration'
-// FIX: Added more icons from lucide-react for the button and helpers
 import { Star, Gamepad2, Code, Zap, Globe, Rocket } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
-
-// Dynamic imports for 3D components with better loading states
+// Dynamic imports for 3D components
 const Interactive3DHero = dynamicImport(
   () => import('@/components/3D/Interactive3DHero'),
   {
@@ -30,63 +29,15 @@ const Interactive3DHero = dynamicImport(
   }
 )
 
-const ScrollTriggered3DSections = dynamicImport(
-  () => import('@/components/3D/ScrollTriggered3DSections'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="min-h-screen bg-slate-900/50 flex items-center justify-center">
-        <div className="text-center animate-pulse">
-          <div className="w-64 h-8 bg-white/20 rounded mb-4 mx-auto"></div>
-          <div className="w-96 h-6 bg-white/10 rounded mx-auto"></div>
-        </div>
-      </div>
-    )
-  }
-)
+const ScrollTriggered3DSections = dynamicImport(() => import('@/components/3D/ScrollTriggered3DSections'), { ssr: false })
+const FloatingCodeBlocks = dynamicImport(() => import('@/components/3D/FloatingCodeBlocks'), { ssr: false })
+const LanguageVisualization = dynamicImport(() => import('@/components/3D/LanguageVisualization'), { ssr: false })
+const ParticleField = dynamicImport(() => import('@/components/3D/ParticleField'), { ssr: false })
 
-const FloatingCodeBlocks = dynamicImport(
-  () => import('@/components/3D/FloatingCodeBlocks'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="min-h-screen bg-gradient-to-br from-viva-magenta-50/10 to-lux-gold-50/10 dark:from-viva-magenta-900/10 dark:to-lux-gold-900/10 flex items-center justify-center">
-        <div className="text-center">
-          <Code className="w-16 h-16 mx-auto mb-4 text-viva-magenta-500 animate-pulse" />
-          <p className="text-lux-gray-600 dark:text-lux-gray-400">Loading Tech Stack...</p>
-        </div>
-      </div>
-    )
-  }
-)
-
-const LanguageVisualization = dynamicImport(
-  () => import('@/components/3D/LanguageVisualization'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="min-h-screen bg-gradient-to-br from-lux-teal-50/10 to-viva-magenta-50/10 dark:from-lux-teal-900/10 dark:to-viva-magenta-900/10 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-lux-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lux-gray-600 dark:text-lux-gray-400">Loading Language Stats...</p>
-        </div>
-      </div>
-    )
-  }
-)
-
-const ParticleField = dynamicImport(
-  () => import('@/components/3D/ParticleField'),
-  {
-    ssr: false,
-    loading: () => null // Particles are background only
-  }
-)
-
-export default async function HomePage() {
-  // Fetch real data from GitHub API
-  let projects: EnhancedProject[] = []
-  let stats: PortfolioStats = {
+export default function HomePage() {
+  // State for real portfolio data
+  const [projects, setProjects] = useState<EnhancedProject[]>([])
+  const [stats, setStats] = useState<PortfolioStats>({
     totalProjects: 0,
     featuredProjects: 0,
     liveProjects: 0,
@@ -100,29 +51,76 @@ export default async function HomePage() {
       lastDeployment: new Date().toISOString(),
       activeProjects: 0,
     },
-  }
+  })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  try {
-    const [fetchedProjects, fetchedStats] = await Promise.all([
-      getEnhancedProjects(),
-      getPortfolioStats()
-    ])
-    projects = fetchedProjects
-    stats = fetchedStats
-  } catch (error) {
-    console.error('❌ Error fetching GitHub data:', error)
-  }
+  // Fetch real data client-side after component mounts
+  useEffect(() => {
+    async function fetchPortfolioData() {
+      try {
+        console.log('🔄 Fetching portfolio data client-side...')
+        
+        // Fetch from your API routes instead of direct lib calls
+        const [projectsRes, statsRes] = await Promise.all([
+          fetch('/api/projects').then(res => res.ok ? res.json() : { projects: [] }),
+          fetch('/api/portfolio-stats').then(res => res.ok ? res.json() : null)
+        ])
 
-  // Type-safe project filtering
-  const featuredProjects: EnhancedProject[] = projects.filter(project => project.featured)
-  const heroProjects: EnhancedProject[] = projects.slice(0, 8)
+        if (projectsRes?.projects) {
+          setProjects(projectsRes.projects)
+          console.log(`✅ Loaded ${projectsRes.projects.length} projects`)
+        }
 
-  const heroProjectsFor3D = heroProjects.map(p => ({
-    ...p,
-    title: p.name,
-  }))
+        if (statsRes) {
+          setStats(statsRes)
+          console.log('✅ Loaded portfolio stats')
+        }
 
-  // Prepare data for new 3D components
+      } catch (err) {
+        console.error('❌ Error fetching portfolio data:', err)
+        setError('Unable to load portfolio data')
+        
+        // Set some default/mock data so the site still works
+        setStats({
+          totalProjects: 12,
+          featuredProjects: 6,
+          liveProjects: 8,
+          totalStars: 150,
+          totalForks: 45,
+          languageStats: {
+            'JavaScript': 35,
+            'TypeScript': 25,
+            'React': 20,
+            'Python': 15,
+            'Node.js': 5
+          },
+          categoryStats: {
+            'fullstack': 5,
+            'frontend': 4,
+            'backend': 2,
+            'mobile': 1
+          },
+          deploymentStats: { successful: 8, failed: 1, building: 1, pending: 2 },
+          recentActivity: {
+            lastCommit: new Date().toISOString(),
+            lastDeployment: new Date().toISOString(),
+            activeProjects: 6,
+          },
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPortfolioData()
+  }, [])
+
+  // Process data for components
+  const featuredProjects = projects.filter(project => project.featured)
+  const heroProjects = projects.slice(0, 8)
+  const heroProjectsFor3D = heroProjects.map(p => ({ ...p, title: p.name }))
+  
   const techStack = Object.keys(stats.languageStats || {}).slice(0, 8)
   const languageData = Object.entries(stats.languageStats || {}).map(([name, percentage]) => ({
     name,
@@ -136,6 +134,27 @@ export default async function HomePage() {
     proficiency: getLanguageProficiency(percentage) as 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert',
     commits: Math.floor(percentage * 50)
   }))
+
+  // Show loading state while fetching real data
+  if (loading) {
+    return (
+      <>
+        <Navigation />
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mb-8"></div>
+            <h2 className="text-2xl font-bold text-white mb-4">Loading Portfolio</h2>
+            <p className="text-white/80">Fetching projects from GitHub & Vercel...</p>
+            {error && (
+              <p className="text-red-400 mt-4 max-w-md mx-auto">
+                {error} - Using fallback data
+              </p>
+            )}
+          </div>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
@@ -157,6 +176,18 @@ export default async function HomePage() {
       </div>
 
       <main className="relative z-10">
+        {/* Data Status Indicator */}
+        {error && (
+          <div className="fixed top-20 right-4 z-50 bg-yellow-500/90 text-black px-4 py-2 rounded-lg text-sm">
+            Using demo data - API unavailable
+          </div>
+        )}
+
+        {/* Stats Badge */}
+        <div className="fixed top-20 left-4 z-50 bg-black/20 backdrop-blur-md text-white px-4 py-2 rounded-lg text-sm">
+          {stats.totalProjects} Projects • {stats.totalStars} Stars • {stats.liveProjects} Live
+        </div>
+
         {/* 3D Interactive Hero Section */}
         <Suspense fallback={
           <div className="h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
@@ -169,7 +200,7 @@ export default async function HomePage() {
           <Interactive3DHero projects={heroProjectsFor3D} />
         </Suspense>
 
-        {/* Tech Stack Section with Floating Code Blocks */}
+        {/* Tech Stack Section */}
         <section id="skills" className="relative py-20">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
@@ -186,15 +217,11 @@ export default async function HomePage() {
                 </span>
               </h2>
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                Explore the technologies I work with through interactive 3D code blocks
+                Real-time data from GitHub showing {Object.keys(stats.languageStats).length} technologies
               </p>
             </motion.div>
 
-            <Suspense fallback={
-              <div className="h-96 flex items-center justify-center">
-                <Code className="w-16 h-16 text-primary animate-pulse" />
-              </div>
-            }>
+            <Suspense fallback={<div className="h-96 flex items-center justify-center"><Code className="w-16 h-16 text-primary animate-pulse" /></div>}>
               <FloatingCodeBlocks 
                 techStack={techStack}
                 isVisible={true}
@@ -221,15 +248,11 @@ export default async function HomePage() {
                 </span>
               </h2>
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                Interactive visualization of my programming language proficiency
+                Live GitHub statistics across {projects.length} active repositories
               </p>
             </motion.div>
 
-            <Suspense fallback={
-              <div className="h-96 flex items-center justify-center">
-                <Zap className="w-16 h-16 text-primary animate-pulse" />
-              </div>
-            }>
+            <Suspense fallback={<div className="h-96 flex items-center justify-center"><Zap className="w-16 h-16 text-primary animate-pulse" /></div>}>
               <LanguageVisualization 
                 languages={languageData}
                 showStats={true}
@@ -255,10 +278,8 @@ export default async function HomePage() {
         <noscript>
           <AnimatedHero />
         </noscript>
-        
-        {/* Contact & Floating Button Sections */}
-        {/* ... (rest of your page content) ... */}
 
+        {/* Floating Dino Game Button */}
         <motion.div
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -283,7 +304,6 @@ export default async function HomePage() {
               aria-label="Play Synthwave Dino Game"
             >
               <div className="relative flex items-center justify-center">
-                {/* FIX: Replaced emoji with a Lucide React icon */}
                 <Rocket className="w-6 h-6 group-hover:animate-bounce" />
                 <Gamepad2 className="w-3 h-3 absolute -top-1 -right-1 opacity-75" />
               </div>
@@ -303,7 +323,7 @@ export default async function HomePage() {
   )
 }
 
-// Helper functions for language data transformation
+// Helper functions (same as before)
 function getLanguageColor(language: string): string {
   const colorMap: Record<string, string> = {
     'JavaScript': '#F7DF1E',
@@ -322,7 +342,6 @@ function getLanguageColor(language: string): string {
   return colorMap[language] || '#6B7280'
 }
 
-// FIX: Replaced emoji strings with Lucide React icon names
 function getLanguageIcon(language: string): string {
   const iconMap: Record<string, string> = {
     'JavaScript': 'Zap',
