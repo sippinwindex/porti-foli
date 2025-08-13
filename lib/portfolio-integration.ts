@@ -150,7 +150,7 @@ class RealPortfolioIntegration {
               deploymentStatus: vercelProject.status,
               liveUrl: vercelProject.liveUrl,
               isLive: vercelProject.status?.state === 'READY',
-              lastDeployed: vercelProject.status ? new Date(vercelProject.status.createdAt).toISOString() : undefined,
+              lastDeployed: vercelProject.status ? new Date(vercelProject.status.created).toISOString() : undefined,
               buildStatus: this.getBuildStatus(vercelProject.status?.state)
             } : undefined,
             
