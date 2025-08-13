@@ -1,3 +1,7 @@
+// Move these exports to the VERY TOP - before any other code
+export const dynamic = 'force-dynamic'
+export const revalidate = false
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -7,8 +11,7 @@ import { getSmartProjects, SmartProjectData } from '@/lib/smart-project-manager'
 
 // Simple password protection
 const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'your-secret-password-123'
-export const dynamic = 'force-dynamic'
-export const revalidate = false
+
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
