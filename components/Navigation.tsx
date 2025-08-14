@@ -1,30 +1,13 @@
+// components/Navigation.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-// FIX: Combined the two framer-motion imports into a single line
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, Github, Linkedin, Twitter, Mail } from 'lucide-react'
-import ThemeToggle from './ThemeToggle'
-import { cn } from '@/lib/utils'
+import { Menu, X, Gamepad2 } from 'lucide-react'
 
-const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'About', href: '/about' },
-  { name: 'Projects', href: '/projects' },
-  { name: 'Contact', href: '/contact' },
-  { name: '🦕 Dino Game', href: '/dinosaur', special: true },
-]
-
-const socialLinks = [
-  { name: 'GitHub', href: 'https://github.com/sippinwindex', icon: Github },
-  { name: 'LinkedIn', href: 'https://www.linkedin.com/in/juan-fernandez-fullstack/', icon: Linkedin },
-  { name: 'Twitter', href: 'https://x.com/FullyStackedUp', icon: Twitter },
-  { name: 'Email', href: 'mailto:stormblazdesign@gmail.com', icon: Mail },
-]
-
-function Navigation() {
+export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
@@ -33,186 +16,116 @@ function Navigation() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50)
     }
-
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const closeMenu = () => setIsOpen(false)
+  const navItems = [
+    { name: 'Home', href: '/' },
+    { name: 'About', href: '/about' },
+    { name: 'Projects', href: '/projects' },
+    { name: 'Contact', href: '/contact' },
+  ]
 
   return (
-    <motion.header
+    <motion.nav
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-      className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        scrolled
-          ? 'bg-background/80 backdrop-blur-md border-b border-border'
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-lg' 
           : 'bg-transparent'
-      )}
+      }`}
     >
-      <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">JF</span>
-              </div>
-              <span className="font-bold text-xl tracking-tight hidden sm:block">
-                Juan Fernandez
-              </span>
-            </Link>
-          </motion.div>
+          <Link href="/" className="font-bold text-xl text-gray-900 dark:text-white">
+            <span className="text-primary">JF</span> Juan Fernandez
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navigation.map((item, index) => (
-              <motion.div
+            {navItems.map((item) => (
+              <Link
                 key={item.name}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 + index * 0.1 }}
+                href={item.href}
+                className={`relative px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                  pathname === item.href
+                    ? 'text-primary'
+                    : 'text-gray-700 dark:text-gray-300 hover:text-primary'
+                }`}
               >
-                <Link
-                  href={item.href}
-                  className={cn(
-                    'relative px-3 py-2 text-sm font-medium transition-all duration-200',
-                    pathname === item.href
-                      ? 'text-primary'
-                      : item.special
-                      ? 'text-cyan-400 hover:text-magenta-400 hover:scale-105'
-                      : 'text-muted-foreground hover:text-foreground'
-                  )}
-                >
-                  {item.name}
-                  {pathname === item.href && (
-                    <motion.div
-                      layoutId="activeNav"
-                      className="absolute inset-x-0 -bottom-1 h-0.5 bg-primary rounded-full"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                </Link>
-              </motion.div>
+                {item.name}
+                {pathname === item.href && (
+                  <motion.div
+                    layoutId="navbar-indicator"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                    initial={false}
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </Link>
             ))}
-          </div>
-
-          {/* Desktop Social Links & Theme Toggle */}
-          <div className="hidden md:flex items-center space-x-4">
-            {socialLinks.map((link, index) => {
-              const Icon = link.icon
-              return (
-                <motion.a
-                  key={link.name}
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
-                  className="p-2 text-muted-foreground hover:text-foreground transition-colors duration-200"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="sr-only">{link.name}</span>
-                </motion.a>
-              )
-            })}
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, delay: 0.7 }}
+            
+            {/* Dino Game Link - Fixed */}
+            <Link
+              href="/dinosaur"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 transform hover:scale-105"
             >
-              <ThemeToggle />
-            </motion.div>
+              <Gamepad2 className="w-4 h-4" />
+              <span className="hidden lg:inline">Dino Game</span>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center space-x-2">
-            <ThemeToggle />
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsOpen(!isOpen)}
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors duration-200"
-              aria-label="Toggle menu"
-            >
-              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </motion.button>
-          </div>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-primary"
+          >
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
+      </div>
 
-        {/* Mobile Navigation */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="md:hidden overflow-hidden bg-background/95 backdrop-blur-md border-t border-border"
-            >
-              <div className="px-4 py-6 space-y-4">
-                {navigation.map((item, index) => (
-                  <motion.div
-                    key={item.name}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                  >
-                    <Link
-                      href={item.href}
-                      onClick={closeMenu}
-                      className={cn(
-                        'block px-3 py-2 text-base font-medium transition-all duration-200',
-                        pathname === item.href
-                          ? 'text-primary bg-primary/10 rounded-lg'
-                          : item.special
-                          ? 'text-cyan-400 hover:text-magenta-400 hover:bg-magenta-400/10 rounded-lg'
-                          : 'text-muted-foreground hover:text-foreground'
-                      )}
-                    >
-                      {item.name}
-                    </Link>
-                  </motion.div>
-                ))}
-                
-                <div className="flex items-center justify-center space-x-6 pt-4">
-                  {socialLinks.map((link, index) => {
-                    const Icon = link.icon
-                    return (
-                      <motion.a
-                        key={link.name}
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.3, delay: 0.4 + index * 0.1 }}
-                        className="p-2 text-muted-foreground hover:text-foreground transition-colors duration-200"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={closeMenu}
-                      >
-                        <Icon className="w-5 h-5" />
-                        <span className="sr-only">{link.name}</span>
-                      </motion.a>
-                    )
-                  })}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
-    </motion.header>
+      {/* Mobile Navigation */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700"
+          >
+            <div className="px-4 py-4 space-y-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
+                  className={`block px-3 py-2 text-base font-medium rounded-md transition-colors ${
+                    pathname === item.href
+                      ? 'text-primary bg-primary/10'
+                      : 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              
+              {/* Mobile Dino Game Link - Fixed */}
+              <Link
+                href="/dinosaur"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-md hover:from-cyan-600 hover:to-blue-600 transition-all duration-200"
+              >
+                <Gamepad2 className="w-4 h-4" />
+                <span>Dino Game</span>
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.nav>
   )
 }
-
-export default Navigation
