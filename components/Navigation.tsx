@@ -135,25 +135,47 @@ export default function Navigation() {
                                ['about', 'projects', 'contact'].includes(item.name.toLowerCase()))
               
               return (
-                <button
+                <motion.button
                   key={item.name}
                   onClick={(e) => handleNavClick(item.href, e)}
-                  className={`relative px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                  className={`relative px-3 py-2 text-sm font-medium transition-all duration-300 group ${
                     isActive
                       ? 'text-viva-magenta-600 dark:text-viva-magenta-400'
                       : 'text-gray-700 dark:text-gray-300 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400'
                   }`}
+                  whileHover={{ scale: 1.05, y: -1 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  {item.name}
+                  <span className="relative z-10">{item.name}</span>
+                  
+                  {/* Hover background effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-viva-magenta-500/10 to-lux-gold-500/10 rounded-lg opacity-0 group-hover:opacity-100"
+                    initial={{ scale: 0.8 }}
+                    whileHover={{ scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                  />
+                  
+                  {/* Active indicator */}
                   {isActive && (
                     <motion.div
                       layoutId="navbar-indicator"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-viva-magenta-600"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 rounded-full"
                       initial={false}
                       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                     />
                   )}
-                </button>
+                  
+                  {/* Hover underline */}
+                  {!isActive && (
+                    <motion.div
+                      className="absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-viva-magenta-400 to-lux-gold-400 rounded-full opacity-0 group-hover:opacity-100"
+                      initial={{ width: 0, x: '-50%' }}
+                      whileHover={{ width: '80%' }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  )}
+                </motion.button>
               )
             })}
             
@@ -165,12 +187,41 @@ export default function Navigation() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`p-2 rounded-lg text-gray-600 dark:text-gray-400 transition-colors ${social.color}`}
-                  whileHover={{ scale: 1.1 }}
+                  className={`relative p-2 rounded-lg text-gray-600 dark:text-gray-400 transition-all duration-300 group overflow-hidden ${social.color}`}
+                  whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
                   whileTap={{ scale: 0.95 }}
                   title={social.label}
                 >
-                  <social.icon className="w-5 h-5" />
+                  {/* Hover background */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-br from-viva-magenta-500/20 to-lux-gold-500/20 rounded-lg opacity-0 group-hover:opacity-100"
+                    initial={{ scale: 0, rotate: 45 }}
+                    whileHover={{ scale: 1, rotate: 0 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                  
+                  {/* Icon with animation */}
+                  <motion.div
+                    className="relative z-10"
+                    whileHover={{ y: -1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <social.icon className="w-5 h-5" />
+                  </motion.div>
+                  
+                  {/* Sparkle effect */}
+                  <motion.div
+                    className="absolute top-1 right-1 w-1 h-1 bg-viva-magenta-400 rounded-full opacity-0 group-hover:opacity-100"
+                    animate={{ 
+                      scale: [0, 1, 0],
+                      rotate: [0, 180, 360]
+                    }}
+                    transition={{ 
+                      duration: 1.5, 
+                      repeat: Infinity,
+                      delay: 0.2
+                    }}
+                  />
                 </motion.a>
               ))}
             </div>
@@ -179,13 +230,61 @@ export default function Navigation() {
             <ThemeToggle />
             
             {/* Dino Game Link */}
-            <Link
-              href="/dinosaur"
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 transform hover:scale-105"
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <Gamepad2 className="w-4 h-4" />
-              <span className="hidden lg:inline">Dino Game</span>
-            </Link>
+              <Link
+                href="/dinosaur"
+                className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 transform group overflow-hidden"
+              >
+                {/* Animated background */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600 opacity-0 group-hover:opacity-100"
+                  initial={{ x: '-100%' }}
+                  whileHover={{ x: '0%' }}
+                  transition={{ duration: 0.3 }}
+                />
+                
+                {/* Content */}
+                <motion.div
+                  className="relative z-10 flex items-center gap-2"
+                  whileHover={{ x: 1 }}
+                >
+                  <motion.div
+                    animate={{ 
+                      rotate: [0, 10, -10, 0],
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{ 
+                      duration: 2, 
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <Gamepad2 className="w-4 h-4" />
+                  </motion.div>
+                  <span className="hidden lg:inline font-medium">Dino Game</span>
+                </motion.div>
+                
+                {/* Glowing effect */}
+                <motion.div
+                  className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-30"
+                  style={{
+                    background: 'radial-gradient(circle at center, rgba(59, 130, 246, 0.5) 0%, transparent 70%)',
+                    filter: 'blur(4px)'
+                  }}
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                  }}
+                  transition={{ 
+                    duration: 2, 
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+              </Link>
+            </motion.div>
           </div>
 
           {/* Mobile menu button */}
@@ -208,23 +307,38 @@ export default function Navigation() {
             className="md:hidden bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700"
           >
             <div className="px-4 py-4 space-y-2">
-              {navItems.map((item) => {
+              {navItems.map((item, index) => {
                 const isActive = pathname === item.href || 
                                 (pathname === '/' && item.href !== '/' && 
                                  ['about', 'projects', 'contact'].includes(item.name.toLowerCase()))
                 
                 return (
-                  <button
+                  <motion.button
                     key={item.name}
                     onClick={(e) => handleNavClick(item.href, e)}
-                    className={`block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-colors ${
+                    className={`relative block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-all duration-300 group overflow-hidden ${
                       isActive
                         ? 'text-viva-magenta-600 dark:text-viva-magenta-400 bg-viva-magenta-50 dark:bg-viva-magenta-900/20'
                         : 'text-gray-700 dark:text-gray-300 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                     }`}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ x: 5, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    {item.name}
-                  </button>
+                    <span className="relative z-10">{item.name}</span>
+                    
+                    {/* Hover effect */}
+                    {!isActive && (
+                      <motion.div
+                        className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-viva-magenta-500 to-lux-gold-500 opacity-0 group-hover:opacity-100"
+                        initial={{ scaleY: 0 }}
+                        whileHover={{ scaleY: 1 }}
+                        transition={{ duration: 0.2 }}
+                      />
+                    )}
+                  </motion.button>
                 )
               })}
               
