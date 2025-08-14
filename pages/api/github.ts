@@ -1,23 +1,23 @@
-// app/api/github/route.ts
-import { NextRequest, NextResponse } from 'next/server'
+// pages/api/github.ts
+import type { NextApiRequest, NextApiResponse } from 'next'
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN
 const GITHUB_USERNAME = 'sippinwindex'
 
-export async function GET(request: NextRequest) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   console.log('🔄 GitHub API called')
-  
+
   if (!GITHUB_TOKEN) {
     console.error('❌ No GitHub token found')
-    return NextResponse.json(
-      { error: 'GitHub token not configured' },
-      { status: 503 }
-    )
+    return res.status(503).json({ error: 'GitHub token not configured' })
   }
 
   try {
-    const { searchParams } = new URL(request.url)
-    const type = searchParams.get('type') || 'user'
+    const { type = 'user' } = req.query
     
     console.log(`🔄 Fetching GitHub ${type}...`)
     
@@ -35,13 +35,13 @@ export async function GET(request: NextRequest) {
       }
 
       const userData = await response.json()
-      console.log('✅ GitHub user data fetched')
+      console.log('✅ GitHub user data fetched:', userData.name)
       
-      return NextResponse.json(userData)
+      return res.status(200).json(userData)
     }
     
     if (type === 'repos' || type === 'featured') {
-      const response = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated&per_page=20`, {
+      const response = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated&per_page=20&type=owner`, {
         headers: {
           'Authorization': `Bearer ${GITHUB_TOKEN}`,
           'Accept': 'application/vnd.github+json',
@@ -62,16 +62,16 @@ export async function GET(request: NextRequest) {
       
       console.log(`✅ GitHub repos fetched: ${filteredRepos.length}`)
       
-      return NextResponse.json(filteredRepos)
+      return res.status(200).json(filteredRepos)
     }
 
-    return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
+    return res.status(400).json({ error: 'Invalid type parameter. Use: user, repos, or featured' })
     
   } catch (error) {
     console.error('❌ GitHub API Error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch GitHub data', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    )
+    return res.status(500).json({
+      error: 'Failed to fetch GitHub data',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    })
   }
 }
