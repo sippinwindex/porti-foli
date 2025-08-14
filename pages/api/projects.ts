@@ -1,175 +1,288 @@
 // pages/api/projects.ts
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { NextApiRequest, NextApiResponse } from 'next'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+interface GitHubRepository {
+  id: number
+  name: string
+  full_name: string
+  description: string | null
+  html_url: string
+  homepage: string | null
+  stargazers_count: number
+  forks_count: number
+  language: string | null
+  topics: string[]
+  created_at: string
+  updated_at: string
+  pushed_at: string
+  archived: boolean
+  disabled: boolean
+  visibility: 'public' | 'private'
+  fork: boolean
+}
+
+interface ProjectResponse {
+  id: string
+  name: string
+  description: string
+  githubUrl: string
+  liveUrl?: string
+  techStack: string[]
+  tags?: string[]
+  featured: boolean
+  github?: {
+    stars: number
+    forks: number
+    url: string
+    lastUpdated: string
+    language?: string
+    topics?: string[]
+  }
+  vercel?: {
+    isLive: boolean
+    liveUrl?: string
+  }
+  slug?: string
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<ProjectResponse[] | { error: string }>
+) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  console.log('🔄 Projects API called')
-  
   try {
-    // Try to fetch from GitHub API
-    const githubResponse = await fetch(`${req.headers.origin || 'http://localhost:3000'}/api/github?type=repos`)
-    
-    let repos = []
-    if (githubResponse.ok) {
-      repos = await githubResponse.json()
-      console.log(`📂 Fetched ${repos.length} repositories from GitHub`)
-    } else {
-      console.warn('⚠️ GitHub API failed, using fallback data')
+    // Set up GitHub API headers
+    const headers: Record<string, string> = {
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'Portfolio-Website'
     }
-    
-    // Transform GitHub repos to project format or use fallback
-    const projects = repos.length > 0 ? repos.map((repo: any, index: number) => {
-      const projectName = repo.name.replace(/[-_]/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())
-      const isFeatured = repo.stargazers_count > 0 || repo.forks_count > 0 || index < 3
-      
-      return {
+
+    if (process.env.GITHUB_TOKEN) {
+      headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`
+    }
+
+    // Fetch repositories from GitHub
+    const response = await fetch(
+      'https://api.github.com/users/sippinwindex/repos?type=owner&sort=updated&per_page=50',
+      { headers }
+    )
+
+    if (!response.ok) {
+      console.warn(`GitHub API error: ${response.status}`)
+      return res.status(200).json(getFallbackProjects())
+    }
+
+    const repositories: GitHubRepository[] = await response.json()
+
+    // Filter and transform repositories for your 3D components
+    const projects = repositories
+      .filter(repo => 
+        !repo.fork && 
+        !repo.archived && 
+        !repo.disabled && 
+        repo.visibility === 'public' &&
+        repo.name !== 'sippinwindex'
+      )
+      .map(repo => ({
         id: repo.id.toString(),
-        slug: repo.name.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
-        name: projectName,
-        title: projectName, // for compatibility
-        description: repo.description || 'A project built with modern technologies',
-        category: determineCategoryFromRepo(repo),
-        status: 'completed',
-        featured: isFeatured,
-        order: isFeatured ? index : index + 100,
-        techStack: [repo.language, ...(repo.topics || [])].filter(Boolean).slice(0, 5),
-        tags: [repo.language, ...(repo.topics || [])].filter(Boolean), // for compatibility
-        lastActivity: repo.updated_at,
-        deploymentScore: Math.min(80 + (repo.stargazers_count * 5) + (repo.forks_count * 2), 100),
+        name: repo.name,
+        description: repo.description || `A ${repo.language || 'web'} project showcasing modern development practices`,
+        githubUrl: repo.html_url,
+        liveUrl: repo.homepage || undefined,
+        techStack: [...(repo.topics || []), ...(repo.language ? [repo.language] : [])].slice(0, 6),
+        tags: repo.topics || [],
+        featured: determineFeatured(repo),
         github: {
-          url: repo.html_url,
           stars: repo.stargazers_count,
           forks: repo.forks_count,
+          url: repo.html_url,
+          lastUpdated: repo.updated_at,
           language: repo.language,
-          topics: repo.topics || [],
-          lastUpdated: repo.updated_at
+          topics: repo.topics
         },
-        githubUrl: repo.html_url, // for compatibility
-        liveUrl: repo.homepage || undefined, // for compatibility
-        image: `/images/projects/${repo.name.toLowerCase()}.jpg`, // for compatibility
-        metadata: {
-          images: [`/images/projects/${repo.name.toLowerCase()}.jpg`],
-          tags: repo.topics || [],
-          highlights: generateHighlights(repo),
+        vercel: {
+          isLive: !!(repo.homepage),
           liveUrl: repo.homepage || undefined
-        }
-      }
-    }) : [
-      // Fallback project data
-      {
-        id: '1',
-        slug: 'portfolio-website',
-        name: 'Portfolio Website',
-        title: 'Portfolio Website',
-        description: 'Modern portfolio website built with Next.js 14, TypeScript, and Framer Motion',
-        category: 'fullstack',
-        status: 'completed',
-        featured: true,
-        order: 1,
-        techStack: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
-        tags: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
-        lastActivity: new Date().toISOString(),
-        deploymentScore: 95,
-        github: {
-          url: 'https://github.com/sippinwindex/portfolio',
-          stars: 0,
-          forks: 0,
-          language: 'TypeScript',
-          topics: ['portfolio', 'nextjs', 'typescript'],
-          lastUpdated: new Date().toISOString()
         },
-        githubUrl: 'https://github.com/sippinwindex/portfolio',
-        liveUrl: req.headers.origin || 'https://workfolio-l051bapf-sippinwindex-projects.vercel.app',
-        image: '/images/projects/portfolio.jpg',
-        metadata: {
-          images: ['/images/projects/portfolio.jpg'],
-          tags: ['Next.js', 'TypeScript', 'Tailwind CSS'],
-          highlights: ['Live Portfolio', 'Modern Design', '3D Animations'],
-          liveUrl: req.headers.origin || 'https://workfolio-l051bapf-sippinwindex-projects.vercel.app'
+        slug: repo.name.toLowerCase().replace(/[^a-z0-9]/g, '-')
+      }))
+      .sort((a, b) => {
+        if (a.featured && !b.featured) return -1
+        if (!a.featured && b.featured) return 1
+        if (a.github!.stars !== b.github!.stars) {
+          return b.github!.stars - a.github!.stars
         }
-      }
-    ]
+        return new Date(b.github!.lastUpdated).getTime() - new Date(a.github!.lastUpdated).getTime()
+      })
+
+    // Set cache headers
+    res.setHeader('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=3600')
     
-    // Sort projects: featured first, then by deployment score
-    projects.sort((a, b) => {
-      if (a.featured && !b.featured) return -1
-      if (!a.featured && b.featured) return 1
-      return b.deploymentScore - a.deploymentScore
-    })
-    
-    console.log(`✅ Projects processed: ${projects.length} (${projects.filter(p => p.featured).length} featured)`)
-    
-    return res.status(200).json({ projects })
-    
+    return res.status(200).json(projects)
+
   } catch (error) {
-    console.error('❌ Projects API Error:', error)
-    
-    // Return fallback data
-    return res.status(200).json({
-      projects: [
-        {
-          id: '1',
-          slug: 'portfolio-website',
-          name: 'Portfolio Website',
-          title: 'Portfolio Website',
-          description: 'Modern portfolio website built with Next.js 14, TypeScript, and Framer Motion',
-          category: 'fullstack',
-          status: 'completed',
-          featured: true,
-          order: 1,
-          techStack: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
-          tags: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
-          lastActivity: new Date().toISOString(),
-          deploymentScore: 95,
-          github: {
-            url: 'https://github.com/sippinwindex/portfolio',
-            stars: 0,
-            forks: 0,
-            language: 'TypeScript',
-            topics: ['portfolio', 'nextjs', 'typescript'],
-            lastUpdated: new Date().toISOString()
-          },
-          githubUrl: 'https://github.com/sippinwindex/portfolio',
-          liveUrl: req.headers.origin || 'https://workfolio-l051bapf-sippinwindex-projects.vercel.app',
-          image: '/images/projects/portfolio.jpg',
-          metadata: {
-            images: ['/images/projects/portfolio.jpg'],
-            tags: ['Next.js', 'TypeScript', 'Tailwind CSS'],
-            highlights: ['Live Portfolio', 'Modern Design', '3D Animations'],
-            liveUrl: req.headers.origin || 'https://workfolio-l051bapf-sippinwindex-projects.vercel.app'
-          }
-        }
-      ]
-    })
+    console.error('Projects API error:', error)
+    return res.status(200).json(getFallbackProjects())
   }
 }
 
-// Helper functions
-function determineCategoryFromRepo(repo: any): string {
-  const language = repo.language?.toLowerCase() || ''
-  const topics = repo.topics || []
-  const description = repo.description?.toLowerCase() || ''
+function determineFeatured(repo: GitHubRepository): boolean {
+  const featuredKeywords = ['portfolio', 'website', 'app', 'dashboard', 'platform']
+  const repoName = repo.name.toLowerCase()
+  const repoDesc = (repo.description || '').toLowerCase()
   
-  if (topics.includes('mobile') || description.includes('mobile')) return 'mobile'
-  if (topics.includes('backend') || topics.includes('api')) return 'backend'
-  if (topics.includes('frontend') || language === 'css' || language === 'html') return 'frontend'
-  if (language === 'typescript' || language === 'javascript') return 'fullstack'
-  if (language === 'python') return 'data'
+  if (repo.stargazers_count >= 5) return true
+  if (repo.homepage && repo.homepage.trim()) return true
+  if (featuredKeywords.some(keyword => 
+    repoName.includes(keyword) || repoDesc.includes(keyword)
+  )) return true
+  if (repo.topics && repo.topics.some(topic => 
+    ['react', 'nextjs', 'typescript', 'portfolio', 'webapp'].includes(topic)
+  )) return true
   
-  return 'other'
+  return false
 }
 
-function generateHighlights(repo: any): string[] {
-  const highlights: string[] = []
-  
-  if (repo.stargazers_count > 0) highlights.push(`${repo.stargazers_count} GitHub Stars`)
-  if (repo.forks_count > 0) highlights.push(`${repo.forks_count} Forks`)
-  if (repo.homepage) highlights.push('Live Demo Available')
-  if (repo.language) highlights.push(`Built with ${repo.language}`)
-  if (repo.topics?.length > 0) highlights.push('Well Tagged')
-  
-  return highlights.slice(0, 3) // Limit to 3 highlights
+function getFallbackProjects(): ProjectResponse[] {
+  return [
+    {
+      id: 'portfolio-website',
+      name: 'portfolio-website',
+      description: 'Modern 3D portfolio website with interactive animations, built using Next.js, Three.js, and Framer Motion',
+      githubUrl: 'https://github.com/sippinwindex',
+      liveUrl: 'https://juanfernandez.dev',
+      techStack: ['React', 'Next.js', 'TypeScript', 'Three.js', 'Framer Motion', 'Tailwind CSS'],
+      tags: ['react', 'nextjs', 'typescript', 'threejs', 'portfolio'],
+      featured: true,
+      github: {
+        stars: 25,
+        forks: 8,
+        url: 'https://github.com/sippinwindex',
+        lastUpdated: new Date().toISOString(),
+        language: 'TypeScript',
+        topics: ['react', 'nextjs', 'portfolio', 'threejs']
+      },
+      vercel: {
+        isLive: true,
+        liveUrl: 'https://juanfernandez.dev'
+      },
+      slug: 'portfolio-website'
+    },
+    {
+      id: 'ecommerce-suite',
+      name: 'ecommerce-suite',
+      description: 'Full-stack e-commerce platform with advanced shopping cart, payment integration, and admin dashboard',
+      githubUrl: 'https://github.com/sippinwindex',
+      liveUrl: 'https://ecommerce-demo.vercel.app',
+      techStack: ['React', 'Node.js', 'PostgreSQL', 'Stripe', 'Redux', 'Express'],
+      tags: ['react', 'nodejs', 'ecommerce', 'postgresql'],
+      featured: true,
+      github: {
+        stars: 18,
+        forks: 5,
+        url: 'https://github.com/sippinwindex',
+        lastUpdated: new Date(Date.now() - 86400000).toISOString(),
+        language: 'JavaScript',
+        topics: ['react', 'nodejs', 'ecommerce']
+      },
+      vercel: {
+        isLive: true,
+        liveUrl: 'https://ecommerce-demo.vercel.app'
+      },
+      slug: 'ecommerce-suite'
+    },
+    {
+      id: 'healthcare-dashboard',
+      name: 'healthcare-dashboard',
+      description: 'Healthcare management dashboard with patient records, appointment scheduling, and data visualization',
+      githubUrl: 'https://github.com/sippinwindex',
+      liveUrl: 'https://healthcare-dash.vercel.app',
+      techStack: ['React', 'Next.js', 'MongoDB', 'Chart.js', 'TypeScript', 'Tailwind'],
+      tags: ['react', 'nextjs', 'healthcare', 'dashboard'],
+      featured: true,
+      github: {
+        stars: 12,
+        forks: 3,
+        url: 'https://github.com/sippinwindex',
+        lastUpdated: new Date(Date.now() - 172800000).toISOString(),
+        language: 'TypeScript',
+        topics: ['react', 'dashboard', 'healthcare']
+      },
+      vercel: {
+        isLive: true,
+        liveUrl: 'https://healthcare-dash.vercel.app'
+      },
+      slug: 'healthcare-dashboard'
+    },
+    {
+      id: 'financial-analysis',
+      name: 'financial-analysis',
+      description: 'Financial analysis tool with real-time stock data, portfolio tracking, and investment insights',
+      githubUrl: 'https://github.com/sippinwindex',
+      techStack: ['Python', 'React', 'FastAPI', 'PostgreSQL', 'Chart.js', 'Pandas'],
+      tags: ['python', 'react', 'finance', 'analytics'],
+      featured: false,
+      github: {
+        stars: 8,
+        forks: 2,
+        url: 'https://github.com/sippinwindex',
+        lastUpdated: new Date(Date.now() - 259200000).toISOString(),
+        language: 'Python',
+        topics: ['finance', 'analytics', 'python']
+      },
+      vercel: {
+        isLive: false
+      },
+      slug: 'financial-analysis'
+    },
+    {
+      id: 'task-manager-pro',
+      name: 'task-manager-pro',
+      description: 'Advanced task management application with team collaboration, real-time updates, and project tracking',
+      githubUrl: 'https://github.com/sippinwindex',
+      liveUrl: 'https://taskmanager-pro.vercel.app',
+      techStack: ['React', 'Node.js', 'Socket.io', 'MongoDB', 'Redux', 'Material-UI'],
+      tags: ['react', 'nodejs', 'realtime', 'collaboration'],
+      featured: false,
+      github: {
+        stars: 6,
+        forks: 1,
+        url: 'https://github.com/sippinwindex',
+        lastUpdated: new Date(Date.now() - 345600000).toISOString(),
+        language: 'JavaScript',
+        topics: ['react', 'collaboration', 'productivity']
+      },
+      vercel: {
+        isLive: true,
+        liveUrl: 'https://taskmanager-pro.vercel.app'
+      },
+      slug: 'task-manager-pro'
+    },
+    {
+      id: 'weather-insights',
+      name: 'weather-insights',
+      description: 'Weather application with detailed forecasts, location-based alerts, and beautiful data visualizations',
+      githubUrl: 'https://github.com/sippinwindex',
+      liveUrl: 'https://weather-insights.vercel.app',
+      techStack: ['React', 'TypeScript', 'Weather API', 'Chart.js', 'Tailwind CSS', 'Framer Motion'],
+      tags: ['react', 'typescript', 'weather', 'api'],
+      featured: false,
+      github: {
+        stars: 4,
+        forks: 1,
+        url: 'https://github.com/sippinwindex',
+        lastUpdated: new Date(Date.now() - 432000000).toISOString(),
+        language: 'TypeScript',
+        topics: ['weather', 'api', 'visualization']
+      },
+      vercel: {
+        isLive: true,
+        liveUrl: 'https://weather-insights.vercel.app'
+      },
+      slug: 'weather-insights'
+    }
+  ]
 }

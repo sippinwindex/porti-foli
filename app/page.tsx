@@ -1,285 +1,570 @@
 'use client'
 
+import React, { useEffect, useState } from 'react'
 import Navigation from '@/components/Navigation'
+import Footer from '@/components/Footer'
 import DinoGameButton from '@/components/DinoGameButton'
-import { motion } from 'framer-motion'
-import { Github, ExternalLink, Download, ArrowRight, Code, Zap, Users } from 'lucide-react'
-import Link from 'next/link'
+import Interactive3DHero from '@/components/3D/Interactive3DHero'
+import ScrollTriggered3DSections from '@/components/3D/ScrollTriggered3DSections'
+import FloatingCodeBlocks from '@/components/3D/FloatingCodeBlocks'
+import LanguageVisualization from '@/components/3D/LanguageVisualization'
+import ParticleField from '@/components/3D/ParticleField'
+import { motion, useScroll, useTransform } from 'framer-motion'
+import usePortfolioData from '@/hooks/usePortfolioData'
 
 export default function HomePage() {
+  const { projects, stats, loading } = usePortfolioData()
+  const [currentSection, setCurrentSection] = useState('hero')
+  const { scrollYProgress } = useScroll()
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "100%"])
+  
+  // Transform projects data for Interactive3DHero component
+  const heroProjects = projects.length > 0 
+    ? projects.slice(0, 1).map(project => ({
+        id: project.id,
+        title: project.name,
+        description: project.description,
+        techStack: project.techStack,
+        featured: project.featured,
+        github: {
+          stars: project.github?.stars || 0,
+          forks: project.github?.forks || 0,
+          url: project.github?.url || project.githubUrl
+        },
+        vercel: {
+          isLive: project.vercel?.isLive || false,
+          liveUrl: project.vercel?.liveUrl || project.liveUrl
+        }
+      }))
+    : [
+        {
+          id: 'portfolio',
+          title: 'Portfolio Website',
+          description: 'Modern 3D portfolio with live GitHub integration, interactive animations, and cutting-edge web technologies',
+          techStack: ['Next.js', 'Three.js', 'TypeScript', 'Framer Motion', 'Tailwind CSS'],
+          featured: true,
+          github: { stars: 25, forks: 8, url: 'https://github.com/sippinwindex' },
+          vercel: { isLive: true, liveUrl: 'https://juanfernandez.dev' }
+        }
+      ]
+
+  // Tech stack for floating code blocks
+  const techStack = ['React', 'Next.js', 'TypeScript', 'Node.js', 'Python', 'Three.js']
+
+  // Track scroll position for section detection
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrolled = window.scrollY
+      const sections = ['hero', 'code-showcase', 'about', 'languages', 'projects', 'contact']
+      const sectionHeight = window.innerHeight
+      const currentIndex = Math.min(Math.floor(scrolled / sectionHeight), sections.length - 1)
+      setCurrentSection(sections[currentIndex])
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   return (
     <>
       <Navigation />
-      <main className="pt-16"> {/* Add padding-top to account for fixed navigation */}
-        {/* Hero Section */}
-        <section className="min-h-screen flex items-center justify-center relative overflow-hidden bg-background">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20">
-            <div className="max-w-4xl mx-auto text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-              >
-                <h1 className="text-5xl md:text-7xl font-bold mb-6">
-                  <span className="bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-600 bg-clip-text text-transparent">
-                    Juan Fernandez
-                  </span>
-                </h1>
-                <h2 className="text-2xl md:text-3xl text-muted-foreground mb-8">
-                  Full Stack Developer & Digital Innovator
-                </h2>
-                <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
-                  Crafting exceptional digital experiences with React, Next.js, and modern web technologies. 
-                  Passionate about clean code, user experience, and innovative solutions.
-                </p>
-                
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  <Link
-                    href="/projects"
-                    className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white rounded-lg font-semibold hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                  >
-                    <Code className="w-5 h-5" />
-                    View My Work
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                  
-                  <Link
-                    href="/contact"
-                    className="flex items-center gap-2 px-8 py-4 border-2 border-viva-magenta-500 text-viva-magenta-600 dark:text-viva-magenta-400 rounded-lg font-semibold hover:bg-viva-magenta-50 dark:hover:bg-viva-magenta-900/20 transition-all duration-300"
-                  >
-                    Let's Connect
-                  </Link>
-                </div>
-              </motion.div>
-            </div>
+      
+      {/* Particle Field Background */}
+      <div className="fixed inset-0 z-0">
+        <ParticleField 
+          particleCount={80}
+          colorScheme="viva-magenta"
+          animation="constellation"
+          interactive={true}
+          showConnections={true}
+          mouseInfluence={120}
+          speed={1}
+        />
+      </div>
+
+      <main className="relative z-10">
+        {/* Enhanced 3D Hero Section */}
+        <section id="hero" className="relative min-h-screen overflow-hidden">
+          <motion.div
+            className="absolute inset-0 hero-3d"
+            style={{ y: backgroundY }}
+          >
+            {/* Dynamic gradient background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-lux-black via-viva-magenta-900/20 to-lux-gold-900/20" />
+            <motion.div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `radial-gradient(circle at 30% 20%, rgba(190, 52, 85, 0.15) 0%, transparent 50%),
+                                 radial-gradient(circle at 70% 80%, rgba(212, 175, 55, 0.15) 0%, transparent 50%)`
+              }}
+              animate={{
+                backgroundPosition: ['0% 0%', '100% 100%', '0% 0%']
+              }}
+              transition={{ duration: 20, repeat: Infinity }}
+            />
+          </motion.div>
+          <Interactive3DHero projects={heroProjects} />
+        </section>
+
+        {/* Floating Code Blocks Section */}
+        <section id="code-showcase" className="relative h-screen">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 1 }}
+            viewport={{ once: true }}
+            className="absolute inset-0"
+          >
+            <FloatingCodeBlocks 
+              techStack={techStack}
+              isVisible={true}
+              onBlockClick={(language) => {
+                console.log(`Exploring ${language} technology...`)
+                // Could trigger modal or navigation
+              }}
+            />
+          </motion.div>
+          
+          <div className="absolute inset-0 flex items-center justify-center z-20">
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              viewport={{ once: true }}
+              className="text-center glass-hero rounded-2xl p-8 max-w-2xl mx-4"
+            >
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 gradient-text-3d">
+                Technologies I Master
+              </h2>
+              <p className="text-lg text-lux-gray-600 dark:text-lux-gray-300">
+                Interactive showcase of the cutting-edge technologies I use to build extraordinary digital experiences
+              </p>
+            </motion.div>
           </div>
         </section>
 
-        {/* About Preview Section */}
-        <section className="py-20 bg-muted/20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto">
+        {/* About Preview Section with Enhanced 3D Animations */}
+        <section id="about" className="py-20 bg-gradient-to-br from-lux-offwhite via-viva-magenta-50/10 to-lux-gold-50/10 dark:from-lux-black dark:via-viva-magenta-900/5 dark:to-lux-gold-900/5 relative overflow-hidden">
+          {/* Animated background elements */}
+          <div className="absolute inset-0 pointer-events-none">
+            {Array.from({ length: 15 }).map((_, i) => (
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                viewport={{ once: true }}
-                className="text-center mb-16"
-              >
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">About Me</h2>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                  With over 5 years of experience in full-stack development, I specialize in creating 
-                  scalable web applications that deliver exceptional user experiences. I'm passionate 
-                  about modern technologies and always eager to tackle new challenges.
-                </p>
-              </motion.div>
-
-              <div className="grid md:grid-cols-3 gap-8">
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.1 }}
-                  viewport={{ once: true }}
-                  className="text-center p-6 glass rounded-xl border border-border"
-                >
-                  <Code className="w-12 h-12 mx-auto mb-4 text-viva-magenta-600" />
-                  <h3 className="text-xl font-semibold mb-2 text-foreground">Frontend</h3>
-                  <p className="text-muted-foreground">React, Next.js, TypeScript, Tailwind CSS</p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  viewport={{ once: true }}
-                  className="text-center p-6 glass rounded-xl border border-border"
-                >
-                  <Zap className="w-12 h-12 mx-auto mb-4 text-viva-magenta-600" />
-                  <h3 className="text-xl font-semibold mb-2 text-foreground">Backend</h3>
-                  <p className="text-muted-foreground">Node.js, PostgreSQL, MongoDB, APIs</p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.3 }}
-                  viewport={{ once: true }}
-                  className="text-center p-6 glass rounded-xl border border-border"
-                >
-                  <Users className="w-12 h-12 mx-auto mb-4 text-viva-magenta-600" />
-                  <h3 className="text-xl font-semibold mb-2 text-foreground">Collaboration</h3>
-                  <p className="text-muted-foreground">Git, Docker, Agile, Code Reviews</p>
-                </motion.div>
-              </div>
-
-              <div className="text-center mt-12">
-                <Link
-                  href="/about"
-                  className="inline-flex items-center gap-2 px-6 py-3 border border-border rounded-lg hover:bg-muted transition-colors"
-                >
-                  Learn More About Me
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </div>
+                key={i}
+                className="absolute w-2 h-2 bg-viva-magenta-400/20 rounded-full"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                animate={{
+                  y: [0, -30, 0],
+                  x: [0, Math.random() * 40 - 20, 0],
+                  opacity: [0.2, 0.6, 0.2],
+                  scale: [0.5, 1.5, 0.5],
+                }}
+                transition={{
+                  duration: 4 + Math.random() * 4,
+                  repeat: Infinity,
+                  delay: Math.random() * 2,
+                  ease: "easeInOut"
+                }}
+              />
+            ))}
           </div>
-        </section>
 
-        {/* Featured Projects Section */}
-        <section className="py-20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="max-w-6xl mx-auto">
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
                 viewport={{ once: true }}
                 className="text-center mb-16"
               >
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">Featured Projects</h2>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                  A selection of projects that showcase my skills in full-stack development, 
-                  fetched live from GitHub and Vercel.
+                <motion.div
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-viva-magenta-50 dark:bg-viva-magenta-900/30 text-viva-magenta-700 dark:text-viva-magenta-300 rounded-full border border-viva-magenta-200 dark:border-viva-magenta-700 mb-6"
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  <div className="w-2 h-2 bg-viva-magenta-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-medium">Available for new opportunities</span>
+                </motion.div>
+
+                <h2 className="text-4xl md:text-6xl font-bold mb-6">
+                  About{' '}
+                  <span className="bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-600 bg-clip-text text-transparent">
+                    Me
+                  </span>
+                </h2>
+                <p className="text-xl text-lux-gray-600 dark:text-lux-gray-300 max-w-3xl mx-auto leading-relaxed">
+                  With over 5 years of experience in full-stack development, I specialize in creating 
+                  scalable web applications with cutting-edge 3D technologies and immersive user experiences.
                 </p>
               </motion.div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                {/* Project cards will be populated by your existing hooks */}
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.1 }}
-                  viewport={{ once: true }}
-                  className="glass rounded-xl overflow-hidden hover:shadow-lg transition-shadow border border-border"
-                >
-                  <div className="h-48 bg-gradient-to-br from-viva-magenta-500/20 to-lux-gold-500/20 flex items-center justify-center">
-                    <Code className="w-16 h-16 text-viva-magenta-400" />
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold mb-2 text-foreground">Portfolio Website</h3>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Modern portfolio website built with Next.js 14, TypeScript, and Framer Motion
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <span className="px-2 py-1 bg-viva-magenta-100 dark:bg-viva-magenta-900/30 text-viva-magenta-700 dark:text-viva-magenta-300 text-xs rounded">Next.js</span>
-                      <span className="px-2 py-1 bg-viva-magenta-100 dark:bg-viva-magenta-900/30 text-viva-magenta-700 dark:text-viva-magenta-300 text-xs rounded">TypeScript</span>
-                      <span className="px-2 py-1 bg-viva-magenta-100 dark:bg-viva-magenta-900/30 text-viva-magenta-700 dark:text-viva-magenta-300 text-xs rounded">Tailwind</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex gap-2">
-                        <a href="#" className="p-2 bg-muted rounded-full hover:bg-muted/80">
-                          <Github className="w-4 h-4" />
-                        </a>
-                        <a href="#" className="p-2 bg-muted rounded-full hover:bg-muted/80">
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
+              <div className="grid md:grid-cols-3 gap-8 mb-16">
+                {[
+                  {
+                    icon: '🚀',
+                    title: 'Frontend Excellence',
+                    description: 'React, Next.js, TypeScript, Three.js, Framer Motion',
+                    color: 'from-viva-magenta-500 to-viva-magenta-700',
+                    delay: 0.1
+                  },
+                  {
+                    icon: '⚡',
+                    title: 'Backend Mastery',
+                    description: 'Node.js, PostgreSQL, MongoDB, GraphQL APIs',
+                    color: 'from-lux-teal-500 to-lux-teal-700',
+                    delay: 0.2
+                  },
+                  {
+                    icon: '🎨',
+                    title: '3D & Animation',
+                    description: 'Three.js, WebGL, GSAP, Interactive Experiences',
+                    color: 'from-lux-gold-500 to-lux-gold-700',
+                    delay: 0.3
+                  }
+                ].map((skill, index) => (
+                  <motion.div
+                    key={skill.title}
+                    initial={{ opacity: 0, y: 50, rotateY: -15 }}
+                    whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
+                    transition={{ duration: 0.8, delay: skill.delay }}
+                    viewport={{ once: true }}
+                    whileHover={{ 
+                      scale: 1.05, 
+                      rotateY: 5,
+                      z: 50
+                    }}
+                    className="group card-3d relative overflow-hidden preserve-3d"
+                  >
+                    <div className="relative p-8 glass-card border border-lux-gray-200/50 dark:border-lux-gray-700/50 rounded-2xl h-full">
+                      {/* Animated Background Gradient */}
+                      <motion.div
+                        className={`absolute inset-0 bg-gradient-to-br ${skill.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-2xl`}
+                        animate={{
+                          background: [
+                            `linear-gradient(45deg, ${skill.color.split(' ')[1]} 0%, transparent 100%)`,
+                            `linear-gradient(225deg, ${skill.color.split(' ')[1]} 0%, transparent 100%)`,
+                            `linear-gradient(45deg, ${skill.color.split(' ')[1]} 0%, transparent 100%)`
+                          ]
+                        }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                      />
+                      
+                      <motion.div 
+                        className="relative z-10 text-center"
+                        animate={{ 
+                          y: [0, -5, 0],
+                        }}
+                        transition={{ 
+                          duration: 4, 
+                          repeat: Infinity,
+                          delay: index * 0.5,
+                          ease: "easeInOut"
+                        }}
+                      >
+                        <motion.div 
+                          className="text-4xl mb-4"
+                          animate={{ 
+                            rotate: [0, 10, -10, 0],
+                            scale: [1, 1.1, 1]
+                          }}
+                          transition={{ 
+                            duration: 3, 
+                            repeat: Infinity,
+                            delay: index * 0.3
+                          }}
+                        >
+                          {skill.icon}
+                        </motion.div>
+                        <h3 className="text-2xl font-bold mb-4 text-lux-gray-900 dark:text-lux-gray-50">{skill.title}</h3>
+                        <p className="text-lux-gray-600 dark:text-lux-gray-400 leading-relaxed">{skill.description}</p>
+                      </motion.div>
 
-                {/* Placeholder for more projects */}
-                <div className="md:col-span-2 lg:col-span-2 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-muted-foreground mb-4">More projects loading from GitHub...</p>
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-viva-magenta-600 mx-auto"></div>
-                  </div>
-                </div>
+                      {/* Floating particles */}
+                      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
+                        {Array.from({ length: 8 }).map((_, i) => (
+                          <motion.div
+                            key={i}
+                            className="absolute w-1 h-1 bg-viva-magenta-400/30 rounded-full"
+                            style={{
+                              left: `${20 + Math.random() * 60}%`,
+                              top: `${20 + Math.random() * 60}%`,
+                            }}
+                            animate={{
+                              y: [0, -20, 0],
+                              opacity: [0.3, 0.8, 0.3],
+                              scale: [0.5, 1, 0.5],
+                            }}
+                            transition={{
+                              duration: 3 + Math.random() * 2,
+                              repeat: Infinity,
+                              delay: Math.random() * 2,
+                              ease: "easeInOut"
+                            }}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Scan line effect */}
+                      <motion.div
+                        className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-viva-magenta-500 to-transparent opacity-0 group-hover:opacity-100"
+                        animate={{
+                          top: ['0%', '100%'],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "linear"
+                        }}
+                      />
+                    </div>
+                  </motion.div>
+                ))}
               </div>
 
-              <div className="text-center">
-                <Link
-                  href="/projects"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white rounded-lg font-semibold hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              {/* Live Stats Section */}
+              {stats && (
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  viewport={{ once: true }}
+                  className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12"
                 >
-                  View All Projects
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                  {[
+                    { label: 'Projects Built', value: stats.totalProjects, icon: '💻', color: 'viva-magenta' },
+                    { label: 'GitHub Stars', value: stats.totalStars, icon: '⭐', color: 'lux-gold' },
+                    { label: 'Live Applications', value: stats.liveProjects, icon: '🚀', color: 'lux-teal' },
+                    { label: 'Years Experience', value: '5+', icon: '📅', color: 'lux-sage' }
+                  ].map((stat, index) => (
+                    <motion.div
+                      key={stat.label}
+                      className="text-center p-6 glass-card rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 group"
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      initial={{ scale: 0, rotateY: -180 }}
+                      whileInView={{ scale: 1, rotateY: 0 }}
+                      transition={{ 
+                        delay: index * 0.1, 
+                        type: "spring", 
+                        stiffness: 300,
+                        duration: 0.6
+                      }}
+                      viewport={{ once: true }}
+                    >
+                      <motion.div 
+                        className="text-3xl mb-3"
+                        animate={{ 
+                          rotate: [0, 10, -10, 0],
+                          scale: [1, 1.2, 1]
+                        }}
+                        transition={{ 
+                          duration: 3, 
+                          repeat: Infinity,
+                          delay: index * 0.2
+                        }}
+                      >
+                        {stat.icon}
+                      </motion.div>
+                      <motion.div 
+                        className="text-3xl font-bold text-lux-gray-900 dark:text-lux-gray-50 mb-1"
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        transition={{ delay: index * 0.1 + 0.5 }}
+                        viewport={{ once: true }}
+                      >
+                        {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
+                      </motion.div>
+                      <div className="text-sm text-lux-gray-600 dark:text-lux-gray-400">{stat.label}</div>
+                      
+                      {/* Hover glow effect */}
+                      <motion.div
+                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-500/10 to-lux-gold-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        initial={{ scale: 0.8 }}
+                        whileHover={{ scale: 1 }}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+
+              <div className="text-center">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.6 }}
+                  viewport={{ once: true }}
+                >
+                  <motion.button
+                    className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform-gpu"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <span>Discover My Journey</span>
+                    <motion.span
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      →
+                    </motion.span>
+                  </motion.button>
+                </motion.div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-20 bg-muted/20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Language Visualization Section */}
+        <section id="languages" className="relative h-screen">
+          <LanguageVisualization 
+            showStats={true}
+            interactive={true}
+            layout="circle"
+          />
+        </section>
+
+        {/* Projects Section with 3D Effects */}
+        <ScrollTriggered3DSections 
+          projects={projects} 
+          stats={{
+            totalProjects: stats?.totalProjects || 25,
+            totalStars: stats?.totalStars || 150,
+            liveProjects: stats?.liveProjects || 12,
+            recentActivity: {
+              activeProjects: stats?.recentActivity?.activeProjects || 8
+            }
+          }} 
+        />
+
+        {/* Enhanced CTA Section */}
+        <section id="contact" className="py-20 bg-gradient-to-br from-viva-magenta-900/10 via-lux-black/50 to-lux-gold-900/10 relative overflow-hidden">
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-viva-magenta-500/5 to-lux-gold-500/5" />
+            <motion.div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `radial-gradient(circle at 25% 25%, rgba(190, 52, 85, 0.1) 0%, transparent 50%),
+                                 radial-gradient(circle at 75% 75%, rgba(212, 175, 55, 0.1) 0%, transparent 50%)`
+              }}
+              animate={{
+                backgroundPosition: ['0% 0%', '100% 100%', '0% 0%']
+              }}
+              transition={{ duration: 20, repeat: Infinity }}
+            />
+          </div>
+
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="max-w-4xl mx-auto text-center">
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
                 viewport={{ once: true }}
               >
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-foreground">Ready to Work Together?</h2>
-                <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  I'm always interested in new opportunities and exciting projects. 
-                  Let's discuss how we can bring your ideas to life.
+                <h2 className="text-4xl md:text-6xl font-bold mb-6">
+                  Ready to{' '}
+                  <span className="bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-600 bg-clip-text text-transparent">
+                    Collaborate?
+                  </span>
+                </h2>
+                <p className="text-xl text-lux-gray-600 dark:text-lux-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
+                  I'm always excited about new opportunities and innovative projects. 
+                  Let's create something extraordinary together with cutting-edge technology.
                 </p>
                 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  <Link
-                    href="/contact"
-                    className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white rounded-lg font-semibold hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                  <motion.button
+                    className="group relative px-8 py-4 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    Get In Touch
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
+                    <span className="relative z-10 flex items-center gap-2">
+                      <span>Get In Touch</span>
+                      <motion.span
+                        animate={{ x: [0, 5, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      >
+                        →
+                      </motion.span>
+                    </span>
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-lux-gold-600 to-viva-magenta-600"
+                      initial={{ x: "-100%" }}
+                      whileHover={{ x: "0%" }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </motion.button>
                   
-                  <a
+                  <motion.a
                     href="/resume.pdf"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-8 py-4 border border-border rounded-lg font-semibold hover:bg-muted transition-colors"
+                    className="group flex items-center gap-2 px-8 py-4 glass-card border border-lux-gray-300 dark:border-lux-gray-600 text-lux-gray-900 dark:text-lux-gray-50 font-semibold rounded-xl hover:border-viva-magenta-400 dark:hover:border-viva-magenta-600 transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <Download className="w-4 h-4" />
+                    <motion.span
+                      animate={{ y: [0, -2, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      📄
+                    </motion.span>
                     Download Resume
-                  </a>
+                  </motion.a>
                 </div>
+
+                {/* Social Links with 3D Effects */}
+                <motion.div 
+                  className="flex justify-center gap-6 mt-12"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  viewport={{ once: true }}
+                >
+                  {[
+                    { href: "https://github.com/sippinwindex", icon: "🐙", label: "GitHub" },
+                    { href: "https://www.linkedin.com/in/juan-fernandez-fullstack/", icon: "💼", label: "LinkedIn" },
+                    { href: "mailto:stormblazdesign@gmail.com", icon: "✉️", label: "Email" }
+                  ].map((social, index) => (
+                    <motion.a
+                      key={index}
+                      href={social.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-4 glass-card rounded-xl border border-lux-gray-200 dark:border-lux-gray-700 hover:border-viva-magenta-300 dark:hover:border-viva-magenta-700 transition-all duration-300 group"
+                      whileHover={{ scale: 1.1, y: -5, rotateY: 10 }}
+                      whileTap={{ scale: 0.95 }}
+                      aria-label={social.label}
+                      initial={{ opacity: 0, scale: 0 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.8 + index * 0.1 }}
+                      viewport={{ once: true }}
+                    >
+                      <motion.span 
+                        className="text-2xl block"
+                        animate={{ 
+                          rotate: [0, 10, -10, 0],
+                          scale: [1, 1.1, 1]
+                        }}
+                        transition={{ 
+                          duration: 3, 
+                          repeat: Infinity,
+                          delay: index * 0.5
+                        }}
+                      >
+                        {social.icon}
+                      </motion.span>
+                    </motion.a>
+                  ))}
+                </motion.div>
               </motion.div>
             </div>
           </div>
         </section>
       </main>
       
-      {/* Fixed Footer */}
-      <footer className="border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center gap-3 mb-4 md:mb-0">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-viva-magenta-600 to-lux-gold-600 flex items-center justify-center font-bold text-white text-sm">
-                JF
-              </div>
-              <span className="font-bold text-foreground">Juan Fernandez</span>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <a
-                href="https://github.com/sippinwindex"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-muted hover:bg-viva-magenta-50 dark:hover:bg-viva-magenta-900/20 transition-colors"
-              >
-                <Github className="w-5 h-5" />
-              </a>
-              <a
-                href="https://www.linkedin.com/in/juan-fernandez-fullstack/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-muted hover:bg-viva-magenta-50 dark:hover:bg-viva-magenta-900/20 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.338 16.338H13.67V12.16c0-.995-.017-2.277-1.387-2.277-1.39 0-1.601 1.086-1.601 2.207v4.248H8.014v-8.59h2.559v1.174h.037c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v4.711zM5.005 6.575a1.548 1.548 0 11-.003-3.096 1.548 1.548 0 01.003 3.096zm-1.337 9.763H6.34v-8.59H3.667v8.59zM17.668 1H2.328C1.595 1 1 1.581 1 2.298v15.403C1 18.418 1.595 19 2.328 19h15.34c.734 0 1.332-.582 1.332-1.299V2.298C19 1.581 18.402 1 17.668 1z" clipRule="evenodd" />
-                </svg>
-              </a>
-            </div>
-          </div>
-          
-          <div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} Juan Fernandez. Full Stack Developer passionate about creating exceptional digital experiences.</p>
-          </div>
-        </div>
-      </footer>
-
+      <Footer />
       <DinoGameButton />
     </>
   )
