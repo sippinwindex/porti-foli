@@ -1,6 +1,13 @@
 // app/api/debug/route.ts
 import { NextResponse } from 'next/server'
 
+interface GitHubUser {
+  name: string
+  public_repos: number
+  followers: number
+  login: string
+}
+
 export async function GET() {
   const envVars = {
     GITHUB_TOKEN: !!process.env.GITHUB_TOKEN,
@@ -26,9 +33,9 @@ export async function GET() {
       statusText: githubResponse.statusText
     }
 
-    let githubData = null
+    let githubData: GitHubUser | null = null
     if (githubResponse.ok) {
-      githubData = await githubResponse.json()
+      githubData = await githubResponse.json() as GitHubUser
     }
 
     return NextResponse.json({
