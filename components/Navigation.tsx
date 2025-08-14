@@ -54,6 +54,48 @@ export default function Navigation() {
     }
   ]
 
+  // Smooth scroll function for in-page navigation
+  const scrollToSection = (sectionId: string) => {
+    if (pathname === '/') {
+      // If we're on the home page, scroll to section
+      const element = document.getElementById(sectionId)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' })
+        setIsOpen(false) // Close mobile menu
+      }
+    } else {
+      // If we're on a different page, navigate to home first then scroll
+      window.location.href = `/#${sectionId}`
+    }
+  }
+
+  // Handle navigation based on current page
+  const handleNavClick = (href: string, e?: React.MouseEvent) => {
+    if (href === '/') {
+      if (pathname === '/') {
+        // Already on home page, scroll to top
+        e?.preventDefault()
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        setIsOpen(false)
+      }
+      // Let Next.js handle navigation to home for other pages
+    } else if (href === '/about' && pathname === '/') {
+      // On home page, scroll to about section
+      e?.preventDefault()
+      scrollToSection('about')
+    } else if (href === '/projects' && pathname === '/') {
+      // On home page, scroll to projects section
+      e?.preventDefault()
+      scrollToSection('projects')
+    } else if (href === '/contact' && pathname === '/') {
+      // On home page, scroll to contact section
+      e?.preventDefault()
+      scrollToSection('contact')
+    }
+    // For other cases, let Next.js handle normal routing
+    setIsOpen(false)
+  }
+
   return (
     <motion.nav
       initial={{ y: -100 }}
@@ -67,8 +109,12 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           
-          {/* Logo - Fixed to work properly */}
-          <Link href="/" className="font-bold text-xl text-gray-900 dark:text-white hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 transition-colors">
+          {/* Logo */}
+          <Link 
+            href="/" 
+            className="font-bold text-xl text-gray-900 dark:text-white hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 transition-colors"
+            onClick={(e) => handleNavClick('/', e)}
+          >
             <motion.div 
               className="flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
@@ -83,27 +129,33 @@ export default function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`relative px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                  pathname === item.href
-                    ? 'text-viva-magenta-600 dark:text-viva-magenta-400'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400'
-                }`}
-              >
-                {item.name}
-                {pathname === item.href && (
-                  <motion.div
-                    layoutId="navbar-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-viva-magenta-600"
-                    initial={false}
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  />
-                )}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || 
+                              (pathname === '/' && item.href !== '/' && 
+                               ['about', 'projects', 'contact'].includes(item.name.toLowerCase()))
+              
+              return (
+                <button
+                  key={item.name}
+                  onClick={(e) => handleNavClick(item.href, e)}
+                  className={`relative px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                    isActive
+                      ? 'text-viva-magenta-600 dark:text-viva-magenta-400'
+                      : 'text-gray-700 dark:text-gray-300 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400'
+                  }`}
+                >
+                  {item.name}
+                  {isActive && (
+                    <motion.div
+                      layoutId="navbar-indicator"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-viva-magenta-600"
+                      initial={false}
+                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                </button>
+              )
+            })}
             
             {/* Social Links */}
             <div className="flex items-center gap-2 border-l border-gray-200 dark:border-gray-700 pl-6">
@@ -126,7 +178,7 @@ export default function Navigation() {
             {/* Theme Toggle */}
             <ThemeToggle />
             
-            {/* Dino Game Link - Fixed */}
+            {/* Dino Game Link */}
             <Link
               href="/dinosaur"
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 transform hover:scale-105"
@@ -156,20 +208,25 @@ export default function Navigation() {
             className="md:hidden bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700"
           >
             <div className="px-4 py-4 space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className={`block px-3 py-2 text-base font-medium rounded-md transition-colors ${
-                    pathname === item.href
-                      ? 'text-viva-magenta-600 dark:text-viva-magenta-400 bg-viva-magenta-50 dark:bg-viva-magenta-900/20'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                const isActive = pathname === item.href || 
+                                (pathname === '/' && item.href !== '/' && 
+                                 ['about', 'projects', 'contact'].includes(item.name.toLowerCase()))
+                
+                return (
+                  <button
+                    key={item.name}
+                    onClick={(e) => handleNavClick(item.href, e)}
+                    className={`block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-colors ${
+                      isActive
+                        ? 'text-viva-magenta-600 dark:text-viva-magenta-400 bg-viva-magenta-50 dark:bg-viva-magenta-900/20'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    {item.name}
+                  </button>
+                )
+              })}
               
               {/* Mobile Social Links */}
               <div className="flex justify-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">

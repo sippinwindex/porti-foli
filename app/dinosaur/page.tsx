@@ -696,14 +696,14 @@ export default function Enhanced404WithProfessionalGame() {
               onClick={scrollToGame}
               className="btn-secondary group relative overflow-hidden px-8 py-4 text-lg font-semibold border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-500/10"
             >
-              <span className="flex items-center">
+              <span className="flex items-center gap-2">
+                <Play className="w-5 h-5" />
                 Play Synthwave Runner
                 <motion.div
                   animate={{ y: [0, 5, 0] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
-                  className="ml-2"
                 >
-                  🎮
+                  <Zap className="w-5 h-5" />
                 </motion.div>
               </span>
             </button>
@@ -766,9 +766,13 @@ export default function Enhanced404WithProfessionalGame() {
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-pink-500 via-cyan-500 to-yellow-500 bg-clip-text text-transparent">
-            🎮 Synthwave Runner
-          </h2>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <Play className="w-12 h-12 text-cyan-500" />
+            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-pink-500 via-cyan-500 to-yellow-500 bg-clip-text text-transparent">
+              Synthwave Runner
+            </h2>
+            <Zap className="w-12 h-12 text-yellow-500" />
+          </div>
           <p className="text-lg text-gray-400">
             Professional endless runner with power-ups, physics, and synthwave aesthetics!
           </p>

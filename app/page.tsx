@@ -10,6 +10,7 @@ import FloatingCodeBlocks from '@/components/3D/FloatingCodeBlocks'
 import LanguageVisualization from '@/components/3D/LanguageVisualization'
 import ParticleField from '@/components/3D/ParticleField'
 import { motion, useScroll, useTransform } from 'framer-motion'
+import { Code, Zap, Palette, Github, Star, Rocket, Calendar, Mail, ArrowRight, Download, Globe, Users, Activity } from 'lucide-react'
 import usePortfolioData from '@/hooks/usePortfolioData'
 
 export default function HomePage() {
@@ -64,6 +65,14 @@ export default function HomePage() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Smooth scroll function for navigation
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
 
   return (
     <>
@@ -185,7 +194,7 @@ export default function HomePage() {
                   animate={{ y: [0, -5, 0] }}
                   transition={{ duration: 3, repeat: Infinity }}
                 >
-                  <div className="w-2 h-2 bg-viva-magenta-500 rounded-full animate-pulse" />
+                  <Activity className="w-4 h-4 animate-pulse" />
                   <span className="text-sm font-medium">Available for new opportunities</span>
                 </motion.div>
 
@@ -204,21 +213,21 @@ export default function HomePage() {
               <div className="grid md:grid-cols-3 gap-8 mb-16">
                 {[
                   {
-                    icon: '🚀',
+                    icon: Rocket,
                     title: 'Frontend Excellence',
                     description: 'React, Next.js, TypeScript, Three.js, Framer Motion',
                     color: 'from-viva-magenta-500 to-viva-magenta-700',
                     delay: 0.1
                   },
                   {
-                    icon: '⚡',
+                    icon: Zap,
                     title: 'Backend Mastery',
                     description: 'Node.js, PostgreSQL, MongoDB, GraphQL APIs',
                     color: 'from-lux-teal-500 to-lux-teal-700',
                     delay: 0.2
                   },
                   {
-                    icon: '🎨',
+                    icon: Palette,
                     title: '3D & Animation',
                     description: 'Three.js, WebGL, GSAP, Interactive Experiences',
                     color: 'from-lux-gold-500 to-lux-gold-700',
@@ -265,7 +274,7 @@ export default function HomePage() {
                         }}
                       >
                         <motion.div 
-                          className="text-4xl mb-4"
+                          className="flex justify-center mb-4"
                           animate={{ 
                             rotate: [0, 10, -10, 0],
                             scale: [1, 1.1, 1]
@@ -276,7 +285,7 @@ export default function HomePage() {
                             delay: index * 0.3
                           }}
                         >
-                          {skill.icon}
+                          <skill.icon className="w-12 h-12 text-viva-magenta-600 dark:text-viva-magenta-400" />
                         </motion.div>
                         <h3 className="text-2xl font-bold mb-4 text-lux-gray-900 dark:text-lux-gray-50">{skill.title}</h3>
                         <p className="text-lux-gray-600 dark:text-lux-gray-400 leading-relaxed">{skill.description}</p>
@@ -334,10 +343,10 @@ export default function HomePage() {
                   className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12"
                 >
                   {[
-                    { label: 'Projects Built', value: stats.totalProjects, icon: '💻', color: 'viva-magenta' },
-                    { label: 'GitHub Stars', value: stats.totalStars, icon: '⭐', color: 'lux-gold' },
-                    { label: 'Live Applications', value: stats.liveProjects, icon: '🚀', color: 'lux-teal' },
-                    { label: 'Years Experience', value: '5+', icon: '📅', color: 'lux-sage' }
+                    { label: 'Projects Built', value: stats.totalProjects, icon: Code, color: 'viva-magenta' },
+                    { label: 'GitHub Stars', value: stats.totalStars, icon: Star, color: 'lux-gold' },
+                    { label: 'Live Applications', value: stats.liveProjects, icon: Globe, color: 'lux-teal' },
+                    { label: 'Years Experience', value: '5+', icon: Calendar, color: 'lux-sage' }
                   ].map((stat, index) => (
                     <motion.div
                       key={stat.label}
@@ -354,7 +363,7 @@ export default function HomePage() {
                       viewport={{ once: true }}
                     >
                       <motion.div 
-                        className="text-3xl mb-3"
+                        className="flex justify-center mb-3"
                         animate={{ 
                           rotate: [0, 10, -10, 0],
                           scale: [1, 1.2, 1]
@@ -365,7 +374,7 @@ export default function HomePage() {
                           delay: index * 0.2
                         }}
                       >
-                        {stat.icon}
+                        <stat.icon className="w-8 h-8 text-viva-magenta-600 dark:text-viva-magenta-400" />
                       </motion.div>
                       <motion.div 
                         className="text-3xl font-bold text-lux-gray-900 dark:text-lux-gray-50 mb-1"
@@ -397,17 +406,18 @@ export default function HomePage() {
                   viewport={{ once: true }}
                 >
                   <motion.button
+                    onClick={() => scrollToSection('projects')}
                     className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform-gpu"
                     whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <span>Discover My Journey</span>
-                    <motion.span
+                    <motion.div
                       animate={{ x: [0, 5, 0] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     >
-                      →
-                    </motion.span>
+                      <ArrowRight className="w-4 h-4" />
+                    </motion.div>
                   </motion.button>
                 </motion.div>
               </div>
@@ -475,18 +485,20 @@ export default function HomePage() {
                 
                 <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                   <motion.button
+                    onClick={() => scrollToSection('contact')}
                     className="group relative px-8 py-4 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <span className="relative z-10 flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
                       <span>Get In Touch</span>
-                      <motion.span
+                      <motion.div
                         animate={{ x: [0, 5, 0] }}
                         transition={{ duration: 1.5, repeat: Infinity }}
                       >
-                        →
-                      </motion.span>
+                        <ArrowRight className="w-4 h-4" />
+                      </motion.div>
                     </span>
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-lux-gold-600 to-viva-magenta-600"
@@ -504,12 +516,12 @@ export default function HomePage() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <motion.span
+                    <motion.div
                       animate={{ y: [0, -2, 0] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      📄
-                    </motion.span>
+                      <Download className="w-4 h-4" />
+                    </motion.div>
                     Download Resume
                   </motion.a>
                 </div>
@@ -523,9 +535,9 @@ export default function HomePage() {
                   viewport={{ once: true }}
                 >
                   {[
-                    { href: "https://github.com/sippinwindex", icon: "🐙", label: "GitHub" },
-                    { href: "https://www.linkedin.com/in/juan-fernandez-fullstack/", icon: "💼", label: "LinkedIn" },
-                    { href: "mailto:stormblazdesign@gmail.com", icon: "✉️", label: "Email" }
+                    { href: "https://github.com/sippinwindex", icon: Github, label: "GitHub" },
+                    { href: "https://www.linkedin.com/in/juan-fernandez-fullstack/", icon: Users, label: "LinkedIn" },
+                    { href: "mailto:stormblazdesign@gmail.com", icon: Mail, label: "Email" }
                   ].map((social, index) => (
                     <motion.a
                       key={index}
@@ -541,8 +553,8 @@ export default function HomePage() {
                       transition={{ delay: 0.8 + index * 0.1 }}
                       viewport={{ once: true }}
                     >
-                      <motion.span 
-                        className="text-2xl block"
+                      <motion.div 
+                        className="flex justify-center"
                         animate={{ 
                           rotate: [0, 10, -10, 0],
                           scale: [1, 1.1, 1]
@@ -553,8 +565,8 @@ export default function HomePage() {
                           delay: index * 0.5
                         }}
                       >
-                        {social.icon}
-                      </motion.span>
+                        <social.icon className="w-6 h-6 text-lux-gray-600 dark:text-lux-gray-400 group-hover:text-viva-magenta-600 dark:group-hover:text-viva-magenta-400 transition-colors" />
+                      </motion.div>
                     </motion.a>
                   ))}
                 </motion.div>
