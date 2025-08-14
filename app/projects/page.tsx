@@ -1,3 +1,4 @@
+// app/projects/page.tsx
 'use client'
 
 import React, { useState } from 'react'
@@ -5,61 +6,106 @@ import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { ExternalLink, Github, Filter, Grid, List } from 'lucide-react'
+import { ExternalLink, Github, Filter, Grid, List, Star, GitFork, Calendar, Code, Zap } from 'lucide-react'
+import usePortfolioData from '@/hooks/usePortfolioData'
 
-// Mock Data for the showcase
-const projects = [
-  {
-    id: 'ecommerce-suite',
-    title: 'E-Commerce Suite',
-    description: 'Full-stack e-commerce platform with React, Node.js, and Stripe integration.',
-    image: '/projects/ecommerce.jpg',
-    tags: ['React', 'Node.js', 'MongoDB', 'Stripe', 'TypeScript'],
-    githubUrl: 'https://github.com/sippinwindex/ecommerce-suite',
-    liveUrl: 'https://ecommerce-demo.vercel.app',
-    featured: true
-  },
-  {
-    id: 'portfolio-website',
-    title: 'Portfolio Website',
-    description: 'Modern portfolio website built with Next.js 14, TypeScript, and Framer Motion.',
-    image: '/projects/portfolio.jpg',
-    tags: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
-    githubUrl: 'https://github.com/sippinwindex/portfolio',
-    liveUrl: 'https://juan-fernandez.dev',
-    featured: true
-  },
-  {
-    id: 'dino-game',
-    title: 'Synthwave Dino Game',
-    description: 'A retro-style endless runner game with a synthwave aesthetic, built with React.',
-    image: '/projects/dino-game.jpg',
-    tags: ['React', 'TypeScript', 'Framer Motion', 'Web Audio API'],
-    githubUrl: 'https://github.com/sippinwindex/portfolio',
-    liveUrl: '/dinosaur',
-    featured: false
-  },
-]
-
-const allTags = ['All', 'React', 'Next.js', 'Node.js', 'TypeScript', 'Framer Motion', 'Web Audio API']
-
-// Define the showcase component here
 function ProjectShowcase() {
+  const { projects, loading, error, refetch } = usePortfolioData()
   const [filteredProjects, setFilteredProjects] = useState(projects)
   const [activeTag, setActiveTag] = useState('All')
   const [viewMode, setViewMode] = useState('grid')
 
-  const handleTagClick = (tag: string) => {
-    setActiveTag(tag)
-    if (tag === 'All') {
+  // Update filtered projects when projects data changes
+  React.useEffect(() => {
+    if (activeTag === 'All') {
       setFilteredProjects(projects)
     } else {
-      setFilteredProjects(projects.filter(project => project.tags.includes(tag)))
+      setFilteredProjects(projects.filter(project => 
+        project.tags?.includes(activeTag) || 
+        project.techStack?.includes(activeTag) ||
+        project.github?.topics?.includes(activeTag.toLowerCase())
+      ))
     }
+  }, [projects, activeTag])
+
+  // Get all unique tags from projects
+  const allTags = React.useMemo(() => {
+    const tagSet = new Set(['All'])
+    projects.forEach(project => {
+      project.tags?.forEach(tag => tagSet.add(tag))
+      project.techStack?.forEach(tech => tagSet.add(tech))
+      project.github?.topics?.forEach(topic => tagSet.add(topic))
+    })
+    return Array.from(tagSet).slice(0, 15) // Limit to prevent overflow
+  }, [projects])
+
+  const handleTagClick = (tag: string) => {
+    setActiveTag(tag)
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl font-bold mb-4">My Projects</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Loading projects from GitHub and Vercel...
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-card border rounded-xl p-6 animate-pulse">
+              <div className="h-4 bg-muted rounded w-3/4 mb-3"></div>
+              <div className="h-3 bg-muted rounded w-full mb-2"></div>
+              <div className="h-3 bg-muted rounded w-2/3 mb-4"></div>
+              <div className="flex space-x-2 mb-4">
+                <div className="h-6 bg-muted rounded w-16"></div>
+                <div className="h-6 bg-muted rounded w-12"></div>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="h-4 bg-muted rounded w-20"></div>
+                <div className="h-8 bg-muted rounded w-24"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">My Projects</h1>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 max-w-md mx-auto">
+            <p className="text-red-600 dark:text-red-400 mb-4">
+              Failed to load projects: {error}
+            </p>
+            <button
+              onClick={refetch}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div>
+      {/* Success indicator */}
+      {projects.length > 0 && (
+        <div className="text-center mb-8">
+          <p className="text-sm text-green-600 dark:text-green-400">
+            ✅ Successfully loaded {projects.length} projects from GitHub
+          </p>
+        </div>
+      )}
+
       {/* Filters and View Toggle */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-12">
         <div className="flex flex-wrap gap-2 mb-4 md:mb-0">
@@ -117,57 +163,102 @@ function ProjectShowcase() {
                 viewMode === 'list' ? 'flex flex-col sm:flex-row' : ''
               }`}
             >
-              {/* Image */}
-              <div className={`relative ${viewMode === 'list' ? 'sm:w-1/3' : 'h-56'}`}>
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              {/* Project Header */}
+              <div className={`relative ${viewMode === 'list' ? 'sm:w-1/3 h-48' : 'h-56'}`}>
+                {/* Placeholder image with gradient */}
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Code className="w-16 h-16 text-primary/40" />
+                </div>
+                
+                {/* Project status badges */}
+                <div className="absolute top-4 left-4 flex flex-col gap-2">
+                  {project.featured && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
+                      <Star className="w-3 h-3 mr-1" />
+                      Featured
+                    </span>
+                  )}
+                  {(project.liveUrl || project.vercel?.isLive) && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+                      <Zap className="w-3 h-3 mr-1" />
+                      Live
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Content */}
               <div className="p-6 flex flex-col justify-between flex-1">
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">{project.title}</h3>
-                  <p className="text-muted-foreground text-sm mb-4">
+                  <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+                    {project.name.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </h3>
+                  <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
                     {project.description}
                   </p>
                   
+                  {/* Tech stack */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {project.tags.slice(0, 3).map(tag => (
+                    {project.techStack?.slice(0, 3).map(tech => (
                       <span
-                        key={tag}
+                        key={tech}
                         className="px-2 py-1 bg-primary/10 text-primary text-xs rounded"
                       >
-                        {tag}
+                        {tech}
                       </span>
                     ))}
+                    {project.techStack && project.techStack.length > 3 && (
+                      <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">
+                        +{project.techStack.length - 3}
+                      </span>
+                    )}
                   </div>
+
+                  {/* GitHub stats */}
+                  {project.github && (
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4" />
+                        <span>{project.github.stars}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <GitFork className="w-4 h-4" />
+                        <span>{project.github.forks}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>{new Date(project.github.lastUpdated).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
+                {/* Actions */}
                 <div className="flex items-center justify-between mt-4">
                   <div className="flex gap-2">
-                    <a
-                      href={project.githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 bg-muted rounded-full hover:bg-muted/80"
-                    >
-                      <Github className="w-5 h-5" />
-                    </a>
-                    <a
-                      href={project.liveUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 bg-muted rounded-full hover:bg-muted/80"
-                    >
-                      <ExternalLink className="w-5 h-5" />
-                    </a>
+                    {project.githubUrl && (
+                      <a
+                        href={project.githubUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 bg-muted rounded-full hover:bg-muted/80"
+                      >
+                        <Github className="w-5 h-5" />
+                      </a>
+                    )}
+                    {project.liveUrl && (
+                      <a
+                        href={project.liveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 bg-muted rounded-full hover:bg-muted/80"
+                      >
+                        <ExternalLink className="w-5 h-5" />
+                      </a>
+                    )}
                   </div>
                   <Link
-                    href={`/projects/${project.id}`}
+                    href={`/projects/${project.slug || project.id}`}
                     className="text-sm text-primary hover:underline"
                   >
                     View Details →
@@ -178,11 +269,20 @@ function ProjectShowcase() {
           ))}
         </AnimatePresence>
       </motion.div>
+
+      {/* Empty state */}
+      {filteredProjects.length === 0 && projects.length > 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">
+            No projects found for "{activeTag}". Try a different filter.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
 
-// Define the main page component
+// Main page component
 export default function ProjectsPage() {
   return (
     <>
@@ -194,7 +294,7 @@ export default function ProjectsPage() {
               <h1 className="text-4xl font-bold mb-4">My Projects</h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 A collection of projects that showcase my skills in full-stack development, 
-                UI/UX design, and modern web technologies.
+                fetched live from GitHub and Vercel.
               </p>
             </div>
             <ProjectShowcase />

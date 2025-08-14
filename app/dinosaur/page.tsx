@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useRef, useEffect, useState, useCallback } from 'react'
-import { motion } from 'framer-motion'
-import { Play, Pause, RotateCcw, Volume2, VolumeX, Zap, Shield, Star, Magnet } from 'lucide-react'
+import { motion, useAnimation, useScroll, useTransform } from 'framer-motion'
+import { ChevronDown, Home, ArrowUp, Play, Pause, RotateCcw, Volume2, VolumeX, Zap, Shield, Star, Magnet } from 'lucide-react'
 
 // Interfaces for game objects
 interface Obstacle {
@@ -16,10 +16,17 @@ interface Collectible {
   id: number; x: number; y: number; collected: boolean; value: number;
 }
 
-export default function ProfessionalSynthwaveRunner() {
+export default function Enhanced404WithProfessionalGame() {
   const gameRef = useRef<HTMLDivElement>(null)
   const animationRef = useRef<number | null>(null)
   const lastTimeRef = useRef<number>(0)
+  const { scrollYProgress } = useScroll()
+  
+  // Transform values for scroll animations
+  const headerY = useTransform(scrollYProgress, [0, 0.5], [0, -100])
+  const headerOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0])
+  const gameY = useTransform(scrollYProgress, [0.3, 1], [100, 0])
+  const gameOpacity = useTransform(scrollYProgress, [0.3, 0.6], [0, 1])
   
   // Game state
   const [gameState, setGameState] = useState<'menu' | 'playing' | 'paused' | 'gameOver'>('menu')
@@ -106,40 +113,61 @@ export default function ProfessionalSynthwaveRunner() {
   const playPowerUpSound = useCallback(() => playSound(660, 0.2, 'sine'), [playSound])
   const playHitSound = useCallback(() => playSound(164, 0.4, 'sawtooth'), [playSound])
 
+  // Game actions
+  const startGame = useCallback(() => { 
+    initGame(); 
+    setGameState('playing') 
+  }, [initGame])
+
+  const pauseGame = useCallback(() => setGameState('paused'), [])
+  
+  const resumeGame = useCallback(() => { 
+    lastTimeRef.current = performance.now(); 
+    setGameState('playing') 
+  }, [])
+  
+  const restartGame = useCallback(() => { 
+    initGame(); 
+    setGameState('playing') 
+  }, [initGame])
+  
+  const jump = useCallback(() => { 
+    if (!isJumping && playerY <= 0) { 
+      setIsJumping(true); 
+      setJumpVelocity(JUMP_FORCE); 
+      playJumpSound() 
+    } 
+  }, [isJumping, playerY, playJumpSound])
+
   // Input handling
   const handleAction = useCallback(() => {
       if (gameState === 'menu') startGame()
       else if (gameState === 'playing' && !isJumping) jump()
       else if (gameState === 'gameOver') restartGame()
-  }, [gameState, isJumping]);
+  }, [gameState, isJumping, startGame, jump, restartGame])
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
       if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); handleAction() }
       if (e.code === 'ArrowDown') { e.preventDefault(); if(gameState === 'playing') setIsDucking(true) }
       if (e.code === 'KeyP') { if (gameState === 'playing') pauseGame(); else if (gameState === 'paused') resumeGame() }
-  }, [gameState, handleAction]);
+  }, [gameState, handleAction, pauseGame, resumeGame])
 
   const handleKeyUp = useCallback((e: KeyboardEvent) => {
       if (e.code === 'ArrowDown') setIsDucking(false)
-  }, []);
+  }, [])
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
-    gameRef.current?.addEventListener('click', handleAction)
+    const currentGameRef = gameRef.current
+    currentGameRef?.addEventListener('click', handleAction)
+    
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
-      gameRef.current?.removeEventListener('click', handleAction)
+      currentGameRef?.removeEventListener('click', handleAction)
     }
   }, [handleKeyDown, handleKeyUp, handleAction])
-
-  // Game actions
-  const startGame = () => { initGame(); setGameState('playing') }
-  const pauseGame = () => setGameState('paused')
-  const resumeGame = () => { lastTimeRef.current = performance.now(); setGameState('playing') }
-  const restartGame = () => { initGame(); setGameState('playing') }
-  const jump = () => { if (!isJumping && playerY <= 0) { setIsJumping(true); setJumpVelocity(JUMP_FORCE); playJumpSound() } }
 
   // Collision detection
   const checkCollision = useCallback((rect1: any, rect2: any) => (
@@ -149,7 +177,10 @@ export default function ProfessionalSynthwaveRunner() {
 
   // Main game loop
   const gameLoop = useCallback((currentTime: number) => {
-    if (gameState !== 'playing') { animationRef.current = requestAnimationFrame(gameLoop); return }
+    if (gameState !== 'playing') { 
+      animationRef.current = requestAnimationFrame(gameLoop); 
+      return 
+    }
     if (lastTimeRef.current === 0) lastTimeRef.current = currentTime
     const deltaTime = currentTime - lastTimeRef.current
     lastTimeRef.current = currentTime
@@ -201,7 +232,12 @@ export default function ProfessionalSynthwaveRunner() {
         if (checkCollision(playerRect, obstacleRect)) {
           playHitSound()
           setGameState('gameOver')
-          if (score > highScore) { setHighScore(score); localStorage.setItem('synthwave-runner-high', score.toString()) }
+          if (score > highScore) { 
+            setHighScore(score); 
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('synthwave-runner-high', score.toString()) 
+            }
+          }
         }
       })
     }
@@ -231,13 +267,27 @@ export default function ProfessionalSynthwaveRunner() {
     const dayPhase = Math.floor(distance / 1000) % 4
     setTimeOfDay(['night', 'sunrise', 'day', 'sunset'][dayPhase] as any)
     animationRef.current = requestAnimationFrame(gameLoop)
-  }, [gameState, speed, playerY, isDucking, obstacles, powerUps, collectibles, shieldActive, magnetActive, score, highScore, distance, checkCollision, playHitSound, playPowerUpSound, playCollectSound])
+  }, [gameState, speed, playerY, isDucking, obstacles, powerUps, collectibles, shieldActive, magnetActive, score, highScore, distance, checkCollision, playHitSound, playPowerUpSound, playCollectSound, jumpVelocity])
 
   useEffect(() => {
     lastTimeRef.current = 0
     animationRef.current = requestAnimationFrame(gameLoop)
-    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current) }
+    return () => { 
+      if (animationRef.current) cancelAnimationFrame(animationRef.current) 
+    }
   }, [gameLoop])
+
+  // Scroll functions
+  const scrollToGame = () => {
+    gameRef.current?.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    })
+  }
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
   
   const getBackgroundStyle = () => ({
     night: 'linear-gradient(180deg, #0a0015 0%, #1a0033 50%, #2d0052 100%)',
@@ -273,7 +323,6 @@ export default function ProfessionalSynthwaveRunner() {
         <p className="text-sm opacity-80">{Math.floor(distance)}m</p>
       </div>
       <div className="absolute top-4 right-4 z-30 space-y-2 flex flex-col items-end">
-        {/* FIX: Replaced incorrect dynamic component syntax with a standard ternary operator */}
         <motion.button onClick={() => setSoundEnabled(!soundEnabled)} className="p-2 bg-black/30 rounded-full" whileHover={{ scale: 1.1 }}>
           {soundEnabled ? <Volume2 size={20} className="text-white" /> : <VolumeX size={20} className="text-white" />}
         </motion.button>
@@ -305,18 +354,284 @@ export default function ProfessionalSynthwaveRunner() {
   }
 
   return (
-    <div ref={gameRef} className="w-full h-screen overflow-hidden relative cursor-pointer select-none" style={{ background: getBackgroundStyle(), filter: 'contrast(1.1)' }}>
-      <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `linear-gradient(90deg, #ff00ff 1px, transparent 1px), linear-gradient(180deg, #00ffff 1px, transparent 1px)`, backgroundSize: '50px 50px', width: `${GAME_WIDTH*2}px`, transform: `translate(-${backgroundOffset}px, 0)` }} />
-      <div className="relative w-full h-full">
-        {gameState !== 'playing' && renderMenu(gameState)}
-        {(gameState === 'playing' || gameState === 'paused') && renderUI()}
-        {renderGround()}
-        {renderPlayer()}
-        {obstacles.map(o => <div key={o.id} className="absolute z-10" style={{left: `${o.x}px`, bottom: o.flying ? `${GROUND_Y + 60}px` : `${GROUND_Y}px`, width: `${o.width}px`, height: `${o.height}px`, filter: `drop-shadow(0 0 8px #000)`}}>{o.type === 'cactus' && (<div className="w-full h-full bg-gradient-to-t from-green-700 to-green-500 rounded-t-lg border-2 border-green-300" />)}{o.type === 'rock' && (<div className="w-full h-full bg-gradient-to-t from-gray-700 to-gray-500 rounded-lg border-2 border-gray-400" />)}{o.type === 'bird' && (<motion.div className="w-full h-full bg-gradient-to-t from-purple-700 to-purple-500 rounded-full border-2 border-purple-300" animate={{ y: [0, -15, 0] }} transition={{ duration: 1, repeat: Infinity }} />)}</div>)}
-        {powerUps.map(p => p.collected ? null : <motion.div key={p.id} className="absolute z-20" style={{left: `${p.x}px`, bottom: `${p.y}px`, width: '30px', height: '30px'}} animate={{scale: [1, 1.2, 1], rotate: [0, 360]}} transition={{duration: 2, repeat: Infinity, ease: "easeInOut"}}><div className="w-full h-full bg-yellow-500 rounded-full border-2 border-white/50 flex items-center justify-center text-white">{p.type === 'shield' && <Shield size={16}/>}{p.type === 'magnet' && <Magnet size={16}/>}{p.type === 'star' && <Star size={16}/>}</div></motion.div>)}
-        {collectibles.map(c => c.collected ? null : <motion.div key={c.id} className="absolute z-20" style={{left: `${c.x}px`, bottom: `${c.y}px`, width: '20px', height: '20px'}} animate={{rotate: [0, 360], scale: [0.8, 1.2, 0.8]}} transition={{duration: 1.5, repeat: Infinity, ease: "easeInOut"}}><Star className="w-full h-full text-yellow-400" fill="currentColor" /></motion.div>)}
-      </div>
-      <div className="absolute inset-0 pointer-events-none opacity-5" style={{ background: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.5) 2px, rgba(0, 0, 0, 0.5) 4px)` }} />
+    <div className="min-h-[200vh] bg-gradient-to-br from-lux-black via-dark-900 to-lux-gray-900 text-white overflow-x-hidden">
+      {/* Enhanced 404 Hero Section */}
+      <motion.section 
+        style={{ y: headerY, opacity: headerOpacity }}
+        className="min-h-screen flex flex-col items-center justify-center relative px-4"
+      >
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <motion.div
+            className="absolute top-20 left-10 w-32 h-32 rounded-full bg-gradient-to-r from-viva-magenta-500/20 to-lux-gold-500/20 blur-xl"
+            animate={{
+              scale: [1, 1.2, 1],
+              rotate: [0, 180, 360],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <motion.div
+            className="absolute bottom-20 right-10 w-48 h-48 rounded-full bg-gradient-to-r from-lux-teal-500/20 to-lux-sage-500/20 blur-2xl"
+            animate={{
+              scale: [1.2, 1, 1.2],
+              rotate: [360, 180, 0],
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        </div>
+
+        {/* Main 404 Content */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center relative z-10"
+        >
+          {/* 404 Title */}
+          <motion.h1
+            className="text-8xl md:text-9xl font-bold mb-6 relative"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 1, type: "spring", bounce: 0.3 }}
+          >
+            <span className="bg-gradient-to-r from-viva-magenta-500 via-lux-gold-500 to-lux-teal-500 bg-clip-text text-transparent animate-gradient bg-300% bg-gradient-conic">
+              404
+            </span>
+          </motion.h1>
+
+          {/* Error Message */}
+          <motion.p
+            className="text-2xl md:text-3xl mb-4 text-lux-gray-300 font-light"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          >
+            Oops! Page Not Found
+          </motion.p>
+
+          <motion.p
+            className="text-lg text-lux-gray-400 mb-12 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+          >
+            The page you're looking for has wandered off into the digital wilderness. 
+            But hey, why not take a break and play our professional synthwave runner?
+          </motion.p>
+
+          {/* Action Buttons */}
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.6 }}
+          >
+            <button
+              onClick={() => window.location.href = '/'}
+              className="btn-3d group relative overflow-hidden px-8 py-4 text-lg font-semibold"
+            >
+              <Home className="w-5 h-5 mr-2 inline" />
+              Go Home
+            </button>
+
+            <button
+              onClick={scrollToGame}
+              className="btn-secondary group relative overflow-hidden px-8 py-4 text-lg font-semibold border-2 border-lux-gold-500 text-lux-gold-500 hover:bg-lux-gold-500/10"
+            >
+              <span className="flex items-center">
+                Play Synthwave Runner
+                <motion.div
+                  animate={{ y: [0, 5, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="ml-2"
+                >
+                  🎮
+                </motion.div>
+              </span>
+            </button>
+          </motion.div>
+
+          {/* Scroll Indicator */}
+          <motion.div
+            className="flex flex-col items-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1, duration: 0.8 }}
+          >
+            <p className="text-lux-gray-400 mb-4 text-sm">Scroll down to play</p>
+            <motion.button
+              onClick={scrollToGame}
+              className="p-3 rounded-full glass-3d hover:bg-white/10 transition-colors group"
+              animate={{ y: [0, 10, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <ChevronDown className="w-6 h-6 text-lux-gold-500 group-hover:text-lux-gold-400" />
+            </motion.button>
+          </motion.div>
+        </motion.div>
+
+        {/* Floating Particles */}
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-viva-magenta-500/30 rounded-full"
+              initial={{
+                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
+                y: typeof window !== 'undefined' ? window.innerHeight : 800,
+              }}
+              animate={{
+                y: -100,
+                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
+              }}
+              transition={{
+                duration: Math.random() * 10 + 10,
+                repeat: Infinity,
+                delay: Math.random() * 5,
+              }}
+            />
+          ))}
+        </div>
+      </motion.section>
+
+      {/* Professional Synthwave Runner Game Section */}
+      <motion.section
+        ref={gameRef}
+        style={{ y: gameY, opacity: gameOpacity }}
+        className="min-h-screen flex flex-col items-center justify-center px-4 relative"
+      >
+        {/* Game Title */}
+        <motion.div
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+        >
+          <h2 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-pink-500 via-cyan-500 to-yellow-500 bg-clip-text text-transparent">
+            🎮 Synthwave Runner
+          </h2>
+          <p className="text-lg text-lux-gray-400">
+            Professional endless runner with power-ups, physics, and synthwave aesthetics!
+          </p>
+        </motion.div>
+
+        {/* Game Container - Your Professional Game */}
+        <motion.div
+          className="w-full max-w-4xl h-[600px] relative"
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          viewport={{ once: true }}
+        >
+          <div className="w-full h-full overflow-hidden relative cursor-pointer select-none rounded-2xl border-2 border-white/20" style={{ background: getBackgroundStyle(), filter: 'contrast(1.1)' }}>
+            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `linear-gradient(90deg, #ff00ff 1px, transparent 1px), linear-gradient(180deg, #00ffff 1px, transparent 1px)`, backgroundSize: '50px 50px', width: `${GAME_WIDTH*2}px`, transform: `translate(-${backgroundOffset}px, 0)` }} />
+            <div className="relative w-full h-full">
+              {gameState !== 'playing' && renderMenu(gameState)}
+              {(gameState === 'playing' || gameState === 'paused') && renderUI()}
+              {renderGround()}
+              {renderPlayer()}
+              {obstacles.map(o => <div key={o.id} className="absolute z-10" style={{left: `${o.x}px`, bottom: o.flying ? `${GROUND_Y + 60}px` : `${GROUND_Y}px`, width: `${o.width}px`, height: `${o.height}px`, filter: `drop-shadow(0 0 8px #000)`}}>{o.type === 'cactus' && (<div className="w-full h-full bg-gradient-to-t from-green-700 to-green-500 rounded-t-lg border-2 border-green-300" />)}{o.type === 'rock' && (<div className="w-full h-full bg-gradient-to-t from-gray-700 to-gray-500 rounded-lg border-2 border-gray-400" />)}{o.type === 'bird' && (<motion.div className="w-full h-full bg-gradient-to-t from-purple-700 to-purple-500 rounded-full border-2 border-purple-300" animate={{ y: [0, -15, 0] }} transition={{ duration: 1, repeat: Infinity }} />)}</div>)}
+              {powerUps.map(p => p.collected ? null : <motion.div key={p.id} className="absolute z-20" style={{left: `${p.x}px`, bottom: `${p.y}px`, width: '30px', height: '30px'}} animate={{scale: [1, 1.2, 1], rotate: [0, 360]}} transition={{duration: 2, repeat: Infinity, ease: "easeInOut"}}><div className="w-full h-full bg-yellow-500 rounded-full border-2 border-white/50 flex items-center justify-center text-white">{p.type === 'shield' && <Shield size={16}/>}{p.type === 'magnet' && <Magnet size={16}/>}{p.type === 'star' && <Star size={16}/>}</div></motion.div>)}
+              {collectibles.map(c => c.collected ? null : <motion.div key={c.id} className="absolute z-20" style={{left: `${c.x}px`, bottom: `${c.y}px`, width: '20px', height: '20px'}} animate={{rotate: [0, 360], scale: [0.8, 1.2, 0.8]}} transition={{duration: 1.5, repeat: Infinity, ease: "easeInOut"}}><Star className="w-full h-full text-yellow-400" fill="currentColor" /></motion.div>)}
+            </div>
+            <div className="absolute inset-0 pointer-events-none opacity-5" style={{ background: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.5) 2px, rgba(0, 0, 0, 0.5) 4px)` }} />
+          </div>
+        </motion.div>
+
+        {/* Game Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
+          <button
+            onClick={handleAction}
+            disabled={gameState === 'paused'}
+            className="btn-secondary px-6 py-3 disabled:opacity-50"
+          >
+            {gameState === 'menu' ? 'Start Game' : gameState === 'playing' ? 'Jump (Space)' : 'Play Again'}
+          </button>
+          
+          <button
+            onClick={() => setGameState('menu')}
+            className="btn-ghost px-6 py-3 flex items-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Reset
+          </button>
+
+          <button
+            onClick={scrollToTop}
+            className="btn-ghost px-6 py-3 flex items-center gap-2"
+          >
+            <ArrowUp className="w-4 h-4" />
+            Back to Top
+          </button>
+        </div>
+
+        {/* Instructions */}
+        <motion.div
+          className="text-center mt-8 text-lux-gray-400"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          viewport={{ once: true }}
+        >
+          <p>SPACE: Jump | DOWN: Duck | P: Pause | Collect power-ups and avoid obstacles!</p>
+        </motion.div>
+      </motion.section>
+
+      {/* Custom CSS */}
+      <style jsx>{`
+        .btn-3d {
+          background: linear-gradient(135deg, var(--viva-magenta), var(--lux-gold));
+          color: white;
+          border: none;
+          border-radius: 12px;
+          transition: all 0.3s ease;
+        }
+
+        .btn-3d:hover {
+          transform: translateY(-2px) scale(1.05);
+          box-shadow: 0 10px 30px rgba(190, 52, 85, 0.4);
+        }
+
+        .btn-secondary {
+          background: transparent;
+          color: var(--lux-gold);
+          border: 2px solid var(--lux-gold);
+          border-radius: 12px;
+          transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+          background: rgba(212, 175, 55, 0.1);
+          transform: translateY(-2px) scale(1.05);
+        }
+
+        .btn-ghost {
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 12px;
+          transition: all 0.3s ease;
+        }
+
+        .btn-ghost:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-3d {
+          backdrop-filter: blur(16px) saturate(180%);
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+      `}</style>
     </div>
   )
 }

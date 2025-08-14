@@ -1,3 +1,4 @@
+// app/page.tsx
 'use client'
 
 // Force dynamic rendering
@@ -6,12 +7,12 @@ export const dynamic = 'force-dynamic'
 import Navigation from '@/components/Navigation'
 import { AnimatedHero } from '@/components/AnimatedHero'
 import Footer from '@/components/Footer'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense } from 'react'
 import dynamicImport from 'next/dynamic'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import type { EnhancedProject, PortfolioStats } from '@/lib/portfolio-integration'
 import { Star, Gamepad2, Code, Zap, Globe, Rocket } from 'lucide-react'
+import usePortfolioData from '@/hooks/usePortfolioData'
 
 // Dynamic imports for 3D components
 const Interactive3DHero = dynamicImport(
@@ -35,86 +36,8 @@ const LanguageVisualization = dynamicImport(() => import('@/components/3D/Langua
 const ParticleField = dynamicImport(() => import('@/components/3D/ParticleField'), { ssr: false })
 
 export default function HomePage() {
-  // State for real portfolio data
-  const [projects, setProjects] = useState<EnhancedProject[]>([])
-  const [stats, setStats] = useState<PortfolioStats>({
-    totalProjects: 0,
-    featuredProjects: 0,
-    liveProjects: 0,
-    totalStars: 0,
-    totalForks: 0,
-    languageStats: {},
-    categoryStats: {},
-    deploymentStats: { successful: 0, failed: 0, building: 0, pending: 0 },
-    recentActivity: {
-      lastCommit: new Date().toISOString(),
-      lastDeployment: new Date().toISOString(),
-      activeProjects: 0,
-    },
-  })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  // Fetch real data client-side after component mounts
-  useEffect(() => {
-    async function fetchPortfolioData() {
-      try {
-        console.log('🔄 Fetching portfolio data client-side...')
-        
-        // Fetch from your API routes instead of direct lib calls
-        const [projectsRes, statsRes] = await Promise.all([
-          fetch('/api/projects').then(res => res.ok ? res.json() : { projects: [] }),
-          fetch('/api/portfolio-stats').then(res => res.ok ? res.json() : null)
-        ])
-
-        if (projectsRes?.projects) {
-          setProjects(projectsRes.projects)
-          console.log(`✅ Loaded ${projectsRes.projects.length} projects`)
-        }
-
-        if (statsRes) {
-          setStats(statsRes)
-          console.log('✅ Loaded portfolio stats')
-        }
-
-      } catch (err) {
-        console.error('❌ Error fetching portfolio data:', err)
-        setError('Unable to load portfolio data')
-        
-        // Set some default/mock data so the site still works
-        setStats({
-          totalProjects: 12,
-          featuredProjects: 6,
-          liveProjects: 8,
-          totalStars: 150,
-          totalForks: 45,
-          languageStats: {
-            'JavaScript': 35,
-            'TypeScript': 25,
-            'React': 20,
-            'Python': 15,
-            'Node.js': 5
-          },
-          categoryStats: {
-            'fullstack': 5,
-            'frontend': 4,
-            'backend': 2,
-            'mobile': 1
-          },
-          deploymentStats: { successful: 8, failed: 1, building: 1, pending: 2 },
-          recentActivity: {
-            lastCommit: new Date().toISOString(),
-            lastDeployment: new Date().toISOString(),
-            activeProjects: 6,
-          },
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchPortfolioData()
-  }, [])
+  // Use the portfolio data hook
+  const { projects, stats, loading, error } = usePortfolioData()
 
   // Process data for components
   const featuredProjects = projects.filter(project => project.featured)
@@ -128,7 +51,7 @@ export default function HomePage() {
     color: getLanguageColor(name),
     icon: getLanguageIcon(name),
     projects: projects.filter(p => 
-      p.techStack.some(tech => tech.toLowerCase() === name.toLowerCase())
+      p.techStack?.some(tech => tech.toLowerCase() === name.toLowerCase())
     ).length,
     experience: getLanguageExperience(name),
     proficiency: getLanguageProficiency(percentage) as 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert',
@@ -176,10 +99,16 @@ export default function HomePage() {
       </div>
 
       <main className="relative z-10">
-        {/* Data Status Indicator */}
+        {/* Data Status Indicators */}
         {error && (
           <div className="fixed top-20 right-4 z-50 bg-yellow-500/90 text-black px-4 py-2 rounded-lg text-sm">
             Using demo data - API unavailable
+          </div>
+        )}
+
+        {!error && projects.length > 0 && (
+          <div className="fixed top-20 right-4 z-50 bg-green-500/90 text-white px-4 py-2 rounded-lg text-sm">
+            ✅ Live GitHub data loaded
           </div>
         )}
 
