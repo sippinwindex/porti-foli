@@ -87,12 +87,6 @@
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
-  "overrides": {
-    "three": "^0.168.0"
-  },
-  "resolutions": {
-    "three": "^0.168.0"
-  },
   "browserslist": {
     "production": [
       ">0.2%",
