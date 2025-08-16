@@ -157,8 +157,8 @@ export default function HomePage() {
           <Interactive3DHero projects={heroProjects} />
         </section>
 
-        {/* FIXED: Floating Code Blocks Section - Reduced height and improved positioning */}
-        <section id="code-showcase" className="relative h-[80vh] z-20">
+        {/* FIXED: Floating Code Blocks Section - Better spacing and z-index */}
+        <section id="code-showcase" className="relative min-h-[80vh] z-20 py-20">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -176,7 +176,7 @@ export default function HomePage() {
             />
           </motion.div>
           
-          <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+          <div className="relative z-30 container mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-center">
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -467,14 +467,37 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* FIXED: Language Visualization Section - Separate positioning and z-index */}
-        <section id="languages" className="relative h-screen z-40 bg-gradient-to-br from-lux-gray-50 to-lux-gray-100 dark:from-lux-gray-900 dark:to-lux-black">
-          <div className="absolute inset-0 z-10">
-            <LanguageVisualization 
-              showStats={true}
-              interactive={true}
-              layout="circle"
-            />
+        {/* FIXED: Language Visualization Section - Better separation and spacing */}
+        <section id="languages" className="relative min-h-screen z-40 py-20 bg-gradient-to-br from-lux-gray-50 to-lux-gray-100 dark:from-lux-gray-900 dark:to-lux-black">
+          {/* Clear visual separator */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500"></div>
+          
+          <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 h-full">
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-4xl md:text-6xl font-bold mb-6">
+                Language{' '}
+                <span className="bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-600 bg-clip-text text-transparent">
+                  Expertise
+                </span>
+              </h2>
+              <p className="text-xl text-lux-gray-600 dark:text-lux-gray-300 max-w-3xl mx-auto leading-relaxed">
+                Interactive visualization of my programming language proficiency and project distribution
+              </p>
+            </motion.div>
+            
+            <div className="relative h-[600px]">
+              <LanguageVisualization 
+                showStats={true}
+                interactive={true}
+                layout="circle"
+              />
+            </div>
           </div>
         </section>
 

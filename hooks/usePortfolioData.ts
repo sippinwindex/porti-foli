@@ -1,326 +1,199 @@
-import { useState, useEffect, useCallback } from 'react'
+// hooks/usePortfolioData.ts
+'use client'
 
-// Types
-export interface EnhancedProject {
+import { useState, useEffect } from 'react'
+
+interface Project {
   id: string
   name: string
-  title: string // alias for name
+  title: string
   description: string
-  category: string
+  techStack: string[]
   featured: boolean
   github?: {
-    url: string
     stars: number
     forks: number
-    language: string | null
-    topics: string[]
-    lastUpdated: string
+    url?: string
   }
   vercel?: {
-    deploymentStatus: any
-    liveUrl?: string
     isLive: boolean
-    buildStatus: 'success' | 'error' | 'building' | 'pending' | 'unknown'
-  }
-  metadata: {
-    images: string[]
-    tags: string[]
-    highlights: string[]
     liveUrl?: string
   }
-  techStack: string[]
-  lastActivity: string
-  deploymentScore: number
-  // Legacy fields for compatibility
   githubUrl?: string
   liveUrl?: string
-  image?: string
-  tags?: string[]
 }
 
-export interface PortfolioStats {
+interface PortfolioStats {
   totalProjects: number
-  featuredProjects: number
-  liveProjects: number
   totalStars: number
-  totalForks: number
-  languageStats: Record<string, number>
-  categoryStats: Record<string, number>
-  deploymentStats: {
-    successful: number
-    failed: number
-    building: number
-    pending: number
-  }
-  recentActivity: {
-    lastCommit: string
-    lastDeployment: string
+  liveProjects: number
+  recentActivity?: {
     activeProjects: number
-    commitsLastMonth: number
-    languageBreakdown: Record<string, number>
-    topTopics: string[]
-  }
-  topLanguages: Array<{
-    name: string
-    percentage: number
-    count: number
-  }>
-  growthMetrics?: {
-    starsThisMonth: number
-    forksThisMonth: number
-    deploymentsThisMonth: number
-    newProjectsThisMonth: number
   }
 }
 
-// FIXED: Add stats to the return type interface
-export interface UsePortfolioDataReturn {
-  projects: EnhancedProject[]
-  stats: PortfolioStats | null  // ← This was missing!
+interface UsePortfolioDataReturn {
+  projects: Project[]
+  stats: PortfolioStats | null
   loading: boolean
   error: string | null
-  refetch: () => Promise<void>
-  lastUpdated: Date | null
 }
 
-export function usePortfolioData(): UsePortfolioDataReturn {
-  const [projects, setProjects] = useState<EnhancedProject[]>([])
-  const [stats, setStats] = useState<PortfolioStats | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+const FALLBACK_PROJECTS: Project[] = [
+  {
+    id: 'portfolio-website',
+    name: 'Portfolio Website',
+    title: 'Portfolio Website',
+    description: 'Modern 3D portfolio with live GitHub integration, interactive animations, and cutting-edge web technologies',
+    techStack: ['Next.js', 'Three.js', 'TypeScript', 'Framer Motion', 'Tailwind CSS'],
+    featured: true,
+    github: {
+      stars: 25,
+      forks: 8,
+      url: 'https://github.com/sippinwindex'
+    },
+    vercel: {
+      isLive: true,
+      liveUrl: 'https://juanfernandez.dev'
+    },
+    githubUrl: 'https://github.com/sippinwindex',
+    liveUrl: 'https://juanfernandez.dev'
+  },
+  {
+    id: 'synthwave-runner',
+    name: 'Synthwave Runner',
+    title: 'Synthwave Runner',
+    description: 'Professional endless runner game with synthwave aesthetics, built with modern web technologies',
+    techStack: ['React', 'TypeScript', 'Framer Motion', 'HTML5 Canvas'],
+    featured: true,
+    github: {
+      stars: 15,
+      forks: 4,
+      url: 'https://github.com/sippinwindex'
+    },
+    vercel: {
+      isLive: true,
+      liveUrl: '/dino-game'
+    },
+    githubUrl: 'https://github.com/sippinwindex',
+    liveUrl: '/dino-game'
+  },
+  {
+    id: 'github-integration',
+    name: 'GitHub Integration',
+    title: 'GitHub Integration', 
+    description: 'Real-time GitHub API integration with caching and live project data synchronization',
+    techStack: ['Next.js', 'GitHub API', 'TypeScript', 'SWR'],
+    featured: true,
+    github: {
+      stars: 12,
+      forks: 2,
+      url: 'https://github.com/sippinwindex'
+    },
+    vercel: {
+      isLive: true,
+      liveUrl: 'https://juanfernandez.dev'
+    },
+    githubUrl: 'https://github.com/sippinwindex',
+    liveUrl: 'https://juanfernandez.dev'
+  }
+]
 
-  const fetchPortfolioData = useCallback(async () => {
-    try {
+const FALLBACK_STATS: PortfolioStats = {
+  totalProjects: 25,
+  totalStars: 150,
+  liveProjects: 12,
+  recentActivity: {
+    activeProjects: 8
+  }
+}
+
+export default function usePortfolioData(): UsePortfolioDataReturn {
+  const [projects, setProjects] = useState<Project[]>(FALLBACK_PROJECTS)
+  const [stats, setStats] = useState<PortfolioStats | null>(FALLBACK_STATS)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchPortfolioData = async () => {
+      console.log('🔄 Fetching portfolio data...')
       setLoading(true)
       setError(null)
-      
-      console.log('🔄 Fetching portfolio data...')
 
-      // Fetch all data in parallel with better error handling
-      const [projectsRes, statsRes] = await Promise.allSettled([
-        fetch('/api/projects').then(res => {
+      try {
+        // Fetch projects with timeout and retry logic
+        const projectsPromise = fetch('/api/projects?limit=10', {
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        }).then(async res => {
           if (!res.ok) {
-            throw new Error(`Projects API error: ${res.status}`)
+            console.warn(`⚠️ Projects API returned ${res.status}, using fallback`)
+            return { projects: FALLBACK_PROJECTS }
           }
-          return res.json()
-        }),
-        fetch('/api/portfolio-stats').then(res => {
-          if (!res.ok) {
-            throw new Error(`Stats API error: ${res.status}`)
-          }
-          return res.json()
+          const data = await res.json()
+          return data
+        }).catch(err => {
+          console.warn('⚠️ Failed to fetch projects, using fallback')
+          return { projects: FALLBACK_PROJECTS }
         })
-      ])
 
-      // Process projects
-      if (projectsRes.status === 'fulfilled' && projectsRes.value?.projects) {
-        const projectsData = projectsRes.value.projects.map((project: any) => ({
-          ...project,
-          // Add legacy fields for compatibility
-          title: project.name,
-          githubUrl: project.github?.url,
-          liveUrl: project.metadata?.liveUrl || project.vercel?.liveUrl,
-          image: project.metadata?.images?.[0],
-          tags: project.metadata?.tags || project.techStack,
-        }))
-        setProjects(projectsData)
-        console.log('✅ Projects loaded:', projectsData.length)
-      } else {
-        console.warn('⚠️ Failed to fetch projects, using fallback')
-        setProjects(getFallbackProjects())
+        // Fetch stats with timeout and retry logic
+        const statsPromise = fetch('/api/github/stats', {
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        }).then(async res => {
+          if (!res.ok) {
+            console.warn(`⚠️ Stats API returned ${res.status}, using fallback`)
+            return { stats: FALLBACK_STATS }
+          }
+          const data = await res.json()
+          return data
+        }).catch(err => {
+          console.warn('⚠️ Failed to fetch stats, using fallback')
+          return { stats: FALLBACK_STATS }
+        })
+
+        // Wait for both requests with fallback handling
+        const [projectsData, statsData] = await Promise.allSettled([
+          projectsPromise,
+          statsPromise
+        ])
+
+        // Handle projects data
+        if (projectsData.status === 'fulfilled' && projectsData.value.projects) {
+          setProjects(projectsData.value.projects)
+          console.log('✅ Projects loaded successfully')
+        } else {
+          console.warn('⚠️ Failed to fetch projects, using fallback')
+          setProjects(FALLBACK_PROJECTS)
+        }
+
+        // Handle stats data
+        if (statsData.status === 'fulfilled' && statsData.value.stats) {
+          setStats(statsData.value.stats)
+          console.log('✅ Stats loaded successfully')
+        } else {
+          console.warn('⚠️ Failed to fetch stats, using fallback')
+          setStats(FALLBACK_STATS)
+        }
+
+      } catch (err) {
+        console.error('❌ Error fetching portfolio data:', err)
+        setError(err instanceof Error ? err.message : 'Failed to fetch portfolio data')
+        
+        // Ensure we have fallback data even on error
+        setProjects(FALLBACK_PROJECTS)
+        setStats(FALLBACK_STATS)
+      } finally {
+        setLoading(false)
       }
-
-      // Process stats
-      if (statsRes.status === 'fulfilled' && statsRes.value) {
-        setStats(statsRes.value)
-        console.log('✅ Stats loaded successfully')
-      } else {
-        console.warn('⚠️ Failed to fetch stats, using fallback')
-        setStats(getFallbackStats())
-      }
-
-      setLastUpdated(new Date())
-
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch portfolio data'
-      console.error('❌ Portfolio data error:', errorMessage)
-      setError(errorMessage)
-      
-      // Set fallback data on error
-      setProjects(getFallbackProjects())
-      setStats(getFallbackStats())
-    } finally {
-      setLoading(false)
     }
-  }, [])
 
-  // Initial fetch
-  useEffect(() => {
     fetchPortfolioData()
-  }, [fetchPortfolioData])
+  }, [])
 
   return {
     projects,
     stats,
     loading,
-    error,
-    refetch: fetchPortfolioData,
-    lastUpdated,
+    error
   }
 }
-
-// Fallback data for when APIs are not available
-function getFallbackProjects(): EnhancedProject[] {
-  return [
-    {
-      id: 'portfolio-3d',
-      name: 'Interactive 3D Portfolio',
-      title: 'Interactive 3D Portfolio',
-      description: 'A cutting-edge portfolio website with 3D animations, GitHub integration, and real-time deployment status.',
-      category: 'Featured',
-      featured: true,
-      github: {
-        url: 'https://github.com/sippinwindex/porti-foli',
-        stars: 0,
-        forks: 0,
-        language: 'TypeScript',
-        topics: ['nextjs', 'threejs', 'portfolio', '3d'],
-        lastUpdated: new Date().toISOString(),
-      },
-      vercel: {
-        deploymentStatus: 'success',
-        liveUrl: 'https://juan-fernandez.dev',
-        isLive: true,
-        buildStatus: 'success',
-      },
-      metadata: {
-        images: ['/images/projects/portfolio.jpg'],
-        tags: ['React', 'Next.js', 'Three.js', 'TypeScript'],
-        highlights: ['3D Animations', 'GitHub Integration', 'Real-time Updates'],
-        liveUrl: 'https://juan-fernandez.dev',
-      },
-      techStack: ['React', 'Next.js', 'Three.js', 'TypeScript', 'Tailwind CSS'],
-      lastActivity: new Date().toISOString(),
-      deploymentScore: 95,
-      githubUrl: 'https://github.com/sippinwindex/porti-foli',
-      liveUrl: 'https://juan-fernandez.dev',
-      image: '/images/projects/portfolio.jpg',
-      tags: ['React', 'Next.js', 'Three.js'],
-    },
-    {
-      id: 'ecommerce-platform',
-      name: 'E-commerce Platform',
-      title: 'E-commerce Platform',
-      description: 'Full-stack e-commerce solution with payment processing, inventory management, and analytics dashboard.',
-      category: 'Web Development',
-      featured: true,
-      github: {
-        url: 'https://github.com/sippinwindex/ecommerce',
-        stars: 12,
-        forks: 3,
-        language: 'JavaScript',
-        topics: ['ecommerce', 'nodejs', 'react'],
-        lastUpdated: new Date(Date.now() - 86400000).toISOString(),
-      },
-      vercel: {
-        deploymentStatus: 'success',
-        liveUrl: 'https://demo-ecommerce.vercel.app',
-        isLive: true,
-        buildStatus: 'success',
-      },
-      metadata: {
-        images: ['/images/projects/ecommerce.jpg'],
-        tags: ['React', 'Node.js', 'PostgreSQL'],
-        highlights: ['Payment Integration', 'Admin Dashboard', 'Real-time Analytics'],
-      },
-      techStack: ['React', 'Node.js', 'PostgreSQL', 'Stripe', 'Redis'],
-      lastActivity: new Date(Date.now() - 86400000).toISOString(),
-      deploymentScore: 88,
-    },
-    {
-      id: 'ai-chatbot',
-      name: 'AI Chat Assistant',
-      title: 'AI Chat Assistant',
-      description: 'Intelligent chatbot with natural language processing, context awareness, and multi-language support.',
-      category: 'AI/ML',
-      featured: false,
-      github: {
-        url: 'https://github.com/sippinwindex/ai-chat',
-        stars: 8,
-        forks: 2,
-        language: 'Python',
-        topics: ['ai', 'chatbot', 'nlp'],
-        lastUpdated: new Date(Date.now() - 172800000).toISOString(),
-      },
-      vercel: {
-        deploymentStatus: 'building',
-        isLive: false,
-        buildStatus: 'building',
-      },
-      metadata: {
-        images: ['/images/projects/ai-chat.jpg'],
-        tags: ['Python', 'TensorFlow', 'React'],
-        highlights: ['NLP', 'Context Awareness', 'Multi-language'],
-      },
-      techStack: ['Python', 'TensorFlow', 'React', 'FastAPI'],
-      lastActivity: new Date(Date.now() - 172800000).toISOString(),
-      deploymentScore: 76,
-    }
-  ]
-}
-
-function getFallbackStats(): PortfolioStats {
-  return {
-    totalProjects: 25,
-    featuredProjects: 6,
-    liveProjects: 18,
-    totalStars: 150,
-    totalForks: 42,
-    languageStats: {
-      'TypeScript': 12,
-      'JavaScript': 8,
-      'Python': 3,
-      'Go': 2,
-    },
-    categoryStats: {
-      'Web Development': 15,
-      'Mobile Apps': 5,
-      'AI/ML': 3,
-      'DevOps': 2,
-    },
-    deploymentStats: {
-      successful: 22,
-      failed: 2,
-      building: 1,
-      pending: 0,
-    },
-    recentActivity: {
-      lastCommit: new Date().toISOString(),
-      lastDeployment: new Date().toISOString(),
-      activeProjects: 8,
-      commitsLastMonth: 85,
-      languageBreakdown: {
-        'TypeScript': 45,
-        'JavaScript': 30,
-        'Python': 15,
-        'CSS': 10,
-      },
-      topTopics: ['React', 'Next.js', 'Node.js', 'TypeScript', 'AI'],
-    },
-    topLanguages: [
-      { name: 'TypeScript', percentage: 45, count: 12 },
-      { name: 'JavaScript', percentage: 30, count: 8 },
-      { name: 'Python', percentage: 15, count: 3 },
-      { name: 'Go', percentage: 10, count: 2 },
-    ],
-    growthMetrics: {
-      starsThisMonth: 12,
-      forksThisMonth: 5,
-      deploymentsThisMonth: 8,
-      newProjectsThisMonth: 2,
-    },
-  }
-}
-
-export default usePortfolioData
