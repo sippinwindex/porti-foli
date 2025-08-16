@@ -97,15 +97,15 @@ export async function fetchGitHubRepositories(username: string = 'sippinwindex')
       full_name: repo.full_name,
       html_url: repo.html_url,
       description: repo.description,
-      stargazers_count: repo.stargazers_count,
-      forks_count: repo.forks_count,
+      stargazers_count: repo.stargazers_count || 0,
+      forks_count: repo.forks_count || 0,
       language: repo.language,
       topics: repo.topics || [],
       pushed_at: repo.pushed_at || '',
       updated_at: repo.updated_at,
       homepage: repo.homepage,
-      archived: repo.archived,
-      private: repo.private,
+      archived: repo.archived || false,
+      private: repo.private || false,
     }))
   } catch (error) {
     console.error('Error fetching GitHub repositories:', error)
