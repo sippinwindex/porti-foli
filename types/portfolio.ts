@@ -15,6 +15,7 @@ export interface PortfolioProject {
     forks: number
     url: string  // Always required for consistency
     topics?: string[]  // ← ADD THIS LINE - for GitHub topics
+    lastUpdated?: string  // ← ADD THIS LINE - for last update timestamp
   }
   vercel?: {
     isLive: boolean
