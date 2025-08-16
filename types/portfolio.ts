@@ -36,6 +36,7 @@ export interface UsePortfolioDataReturn {
   stats: PortfolioStats | null
   loading: boolean
   error: string | null
+  refetch: () => Promise<void>  // ← ADD THIS LINE - the missing refetch function
 }
 
 // Interface that matches ScrollTriggered3DSections expectations
