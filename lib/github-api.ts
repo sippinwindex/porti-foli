@@ -230,12 +230,18 @@ export async function getPortfolioRepositories(username: string = 'sippinwindex'
   return getCachedRepositories(username)
 }
 
+// ADDED: Missing getCachedGitHubStats export (alias for fetchGitHubStats)
+export async function getCachedGitHubStats(username: string = 'sippinwindex') {
+  return fetchGitHubStats(username)
+}
+
 // Export default for backward compatibility
 const githubAPI = {
   fetchGitHubUser,
   fetchGitHubRepositories,
   getCachedRepositories,
   fetchGitHubStats,
+  getCachedGitHubStats,
   calculateLanguagePercentages,
   clearRepositoriesCache,
   createGitHubAPI,
