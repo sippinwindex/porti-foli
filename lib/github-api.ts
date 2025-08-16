@@ -102,7 +102,7 @@ export async function fetchGitHubRepositories(username: string = 'sippinwindex')
       language: repo.language || null,
       topics: repo.topics || [],
       pushed_at: repo.pushed_at || '',
-      updated_at: repo.updated_at,
+      updated_at: repo.updated_at || new Date().toISOString(),
       homepage: repo.homepage,
       archived: repo.archived || false,
       private: repo.private || false,
