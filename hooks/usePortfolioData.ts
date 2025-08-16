@@ -2,44 +2,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import type { PortfolioProject, PortfolioStats, UsePortfolioDataReturn } from '@/types/portfolio'
 
-interface Project {
-  id: string
-  name: string
-  title: string
-  description: string
-  techStack: string[]
-  featured: boolean
-  github?: {
-    stars: number
-    forks: number
-    url?: string
-  }
-  vercel?: {
-    isLive: boolean
-    liveUrl?: string
-  }
-  githubUrl?: string
-  liveUrl?: string
-}
-
-interface PortfolioStats {
-  totalProjects: number
-  totalStars: number
-  liveProjects: number
-  recentActivity?: {
-    activeProjects: number
-  }
-}
-
-interface UsePortfolioDataReturn {
-  projects: Project[]
-  stats: PortfolioStats | null
-  loading: boolean
-  error: string | null
-}
-
-const FALLBACK_PROJECTS: Project[] = [
+const FALLBACK_PROJECTS: PortfolioProject[] = [
   {
     id: 'portfolio-website',
     name: 'Portfolio Website',
@@ -109,7 +74,7 @@ const FALLBACK_STATS: PortfolioStats = {
 }
 
 export default function usePortfolioData(): UsePortfolioDataReturn {
-  const [projects, setProjects] = useState<Project[]>(FALLBACK_PROJECTS)
+  const [projects, setProjects] = useState<PortfolioProject[]>(FALLBACK_PROJECTS)
   const [stats, setStats] = useState<PortfolioStats | null>(FALLBACK_STATS)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

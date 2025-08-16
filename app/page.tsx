@@ -12,9 +12,10 @@ import ParticleField from '@/components/3D/ParticleField'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { Code, Zap, Palette, Github, Star, Rocket, Calendar, Mail, ArrowRight, Download, Globe, Users, Activity } from 'lucide-react'
 import usePortfolioData from '@/hooks/usePortfolioData'
+import type { ScrollProject } from '@/types/portfolio'
 
-// Project interface definition
-interface Project {
+// FIXED: Use shared type and ensure URL is always string
+interface HeroProject {
   id: string
   title: string
   description: string
@@ -23,11 +24,11 @@ interface Project {
   github: {
     stars: number
     forks: number
-    url?: string  // Made optional
+    url: string  // Always required
   }
   vercel: {
     isLive: boolean
-    liveUrl?: string  // Made optional
+    liveUrl?: string
   }
 }
 
@@ -37,8 +38,27 @@ export default function HomePage() {
   const { scrollYProgress } = useScroll()
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "100%"])
   
+  // Transform projects data for ScrollTriggered3DSections component
+  const transformedProjects: ScrollProject[] = projects.map(project => ({
+    id: project.id,
+    name: project.name, // FIXED: Include required name property
+    title: project.title || project.name,
+    description: project.description,
+    techStack: project.techStack,
+    featured: project.featured,
+    github: {
+      stars: project.github?.stars || 0,
+      forks: project.github?.forks || 0,
+      url: project.github?.url || project.githubUrl || 'https://github.com/sippinwindex'
+    },
+    vercel: {
+      isLive: project.vercel?.isLive || false,
+      liveUrl: project.vercel?.liveUrl || project.liveUrl
+    }
+  }))
+  
   // Transform projects data for Interactive3DHero component - FIXED VERSION
-  const heroProjects = projects.length > 0 
+  const heroProjects: HeroProject[] = projects.length > 0 
     ? projects.slice(0, 3).map(project => ({
         id: project.id,
         title: project.title || project.name,
@@ -48,11 +68,11 @@ export default function HomePage() {
         github: {
           stars: project.github?.stars || 0,
           forks: project.github?.forks || 0,
-          url: project.github?.url || project.githubUrl || '' // Added '' fallback
+          url: project.github?.url || project.githubUrl || 'https://github.com/sippinwindex' // FIXED: Ensure always string
         },
         vercel: {
           isLive: project.vercel?.isLive || false,
-          liveUrl: project.vercel?.liveUrl || project.liveUrl || '' // Added '' fallback
+          liveUrl: project.vercel?.liveUrl || project.liveUrl || undefined // Can be undefined
         }
       }))
     : [
@@ -503,7 +523,7 @@ export default function HomePage() {
 
         {/* Projects Section with 3D Effects */}
         <ScrollTriggered3DSections 
-          projects={projects} 
+          projects={transformedProjects} 
           stats={{
             totalProjects: stats?.totalProjects || 25,
             totalStars: stats?.totalStars || 150,
