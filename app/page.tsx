@@ -72,6 +72,9 @@ export default function HomePage() {
 
   // Track scroll position for section detection - FIXED: Updated section heights
   useEffect(() => {
+    // FIXED: Only run on client side
+    if (typeof window === 'undefined') return
+    
     const handleScroll = () => {
       const scrolled = window.scrollY
       const sections = ['hero', 'code-showcase', 'about', 'languages', 'projects', 'contact']
@@ -104,6 +107,9 @@ export default function HomePage() {
 
   // Smooth scroll function for navigation
   const scrollToSection = (sectionId: string) => {
+    // FIXED: Only run on client side
+    if (typeof window === 'undefined') return
+    
     const element = document.getElementById(sectionId)
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' })

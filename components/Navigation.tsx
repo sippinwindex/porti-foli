@@ -10,6 +10,7 @@ import ThemeToggle from './ThemeToggle'
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [currentHash, setCurrentHash] = useState('')
   const pathname = usePathname()
 
   useEffect(() => {
@@ -19,6 +20,20 @@ export default function Navigation() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // FIXED: Handle hash changes on client side only
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentHash(window.location.hash)
+      
+      const handleHashChange = () => {
+        setCurrentHash(window.location.hash)
+      }
+      
+      window.addEventListener('hashchange', handleHashChange)
+      return () => window.removeEventListener('hashchange', handleHashChange)
+    }
+  }, [pathname])
 
   const socialLinks = [
     { 
@@ -59,6 +74,9 @@ export default function Navigation() {
   // FIXED: Handle navigation based on current page and sections
   const handleNavClick = (section: string, e?: React.MouseEvent) => {
     e?.preventDefault()
+    
+    // Check if window is available (client-side only)
+    if (typeof window === 'undefined') return
     
     if (pathname !== '/') {
       // If not on home page, navigate to home with hash
@@ -111,9 +129,9 @@ export default function Navigation() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => {
-              // Check if we're on the section (for home page) or if it's the active page
-              const isActive = (pathname === '/' && item.section === 'hero') || 
-                              (pathname === '/' && window.location.hash === `#${item.section}`)
+              // FIXED: Use currentHash state instead of direct window access
+              const isActive = (pathname === '/' && item.section === 'hero' && !currentHash) || 
+                              (pathname === '/' && currentHash === `#${item.section}`)
               
               return (
                 <motion.button
@@ -289,8 +307,9 @@ export default function Navigation() {
           >
             <div className="px-4 py-4 space-y-2">
               {navItems.map((item, index) => {
-                const isActive = (pathname === '/' && item.section === 'hero') || 
-                                (pathname === '/' && window.location.hash === `#${item.section}`)
+                // FIXED: Use currentHash state instead of direct window access
+                const isActive = (pathname === '/' && item.section === 'hero' && !currentHash) || 
+                                (pathname === '/' && currentHash === `#${item.section}`)
                 
                 return (
                   <motion.button
