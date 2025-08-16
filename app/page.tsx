@@ -13,28 +13,46 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { Code, Zap, Palette, Github, Star, Rocket, Calendar, Mail, ArrowRight, Download, Globe, Users, Activity } from 'lucide-react'
 import usePortfolioData from '@/hooks/usePortfolioData'
 
+// Project interface definition
+interface Project {
+  id: string
+  title: string
+  description: string
+  techStack: string[]
+  featured: boolean
+  github: {
+    stars: number
+    forks: number
+    url?: string  // Made optional
+  }
+  vercel: {
+    isLive: boolean
+    liveUrl?: string  // Made optional
+  }
+}
+
 export default function HomePage() {
   const { projects, stats, loading } = usePortfolioData()
   const [currentSection, setCurrentSection] = useState('hero')
   const { scrollYProgress } = useScroll()
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "100%"])
   
-  // Transform projects data for Interactive3DHero component
+  // Transform projects data for Interactive3DHero component - FIXED VERSION
   const heroProjects = projects.length > 0 
-    ? projects.slice(0, 1).map(project => ({
+    ? projects.slice(0, 3).map(project => ({
         id: project.id,
-        title: project.name,
+        title: project.title || project.name,
         description: project.description,
         techStack: project.techStack,
         featured: project.featured,
         github: {
           stars: project.github?.stars || 0,
           forks: project.github?.forks || 0,
-          url: project.github?.url || project.githubUrl
+          url: project.github?.url || project.githubUrl || '' // Added '' fallback
         },
         vercel: {
           isLive: project.vercel?.isLive || false,
-          liveUrl: project.vercel?.liveUrl || project.liveUrl
+          liveUrl: project.vercel?.liveUrl || project.liveUrl || '' // Added '' fallback
         }
       }))
     : [

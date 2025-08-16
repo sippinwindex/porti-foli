@@ -216,12 +216,30 @@ export function clearRepositoriesCache() {
   console.log('🗑️ Repository cache cleared')
 }
 
+// ADDED: Missing exports for API routes
+export function createGitHubAPI() {
+  return {
+    fetchUser: fetchGitHubUser,
+    fetchRepositories: getCachedRepositories,
+    fetchStats: fetchGitHubStats,
+    clearCache: clearRepositoriesCache,
+  }
+}
+
+export async function getPortfolioRepositories(username: string = 'sippinwindex') {
+  return getCachedRepositories(username)
+}
+
 // Export default for backward compatibility
-export default {
+const githubAPI = {
   fetchGitHubUser,
   fetchGitHubRepositories,
   getCachedRepositories,
   fetchGitHubStats,
   calculateLanguagePercentages,
   clearRepositoriesCache,
+  createGitHubAPI,
+  getPortfolioRepositories,
 }
+
+export default githubAPI
