@@ -47,6 +47,7 @@ export interface GitHubUser {
   following: number
   created_at: string
   updated_at: string
+  avatar_url: string
 }
 
 export interface GitHubStats {
@@ -64,43 +65,34 @@ export interface GitHubStats {
 class GitHubAPI {
   private octokit: Octokit | null = null
   private username: string
-  private isClientSide: boolean = false
+  private token: string | undefined
 
   constructor(token?: string, username: string = 'sippinwindex') {
     this.username = username
-    this.isClientSide = typeof window !== 'undefined'
+    this.token = token || process.env.GITHUB_TOKEN
     
-    // Only initialize Octokit on the client side
-    if (this.isClientSide) {
-      const authToken = token || process.env.GITHUB_TOKEN
-      if (authToken) {
-        this.octokit = new Octokit({
-          auth: authToken,
-          userAgent: 'Portfolio-App/1.0.0',
-          request: {
-            timeout: 10000,
-          }
-        })
-      }
+    // Initialize Octokit if we have a token
+    if (this.token) {
+      this.octokit = new Octokit({
+        auth: this.token,
+        userAgent: 'Portfolio-App/1.0.0',
+        request: {
+          timeout: 10000,
+        }
+      })
     }
   }
 
-  private ensureClientSide(): boolean {
-    if (!this.isClientSide) {
-      console.warn('GitHub API not available during SSR/build time')
-      return false
-    }
-
+  private ensureAuthenticated(): boolean {
     if (!this.octokit) {
-      console.warn('GitHub API not properly initialized - token may be missing')
+      console.warn('GitHub API not initialized - token may be missing')
       return false
     }
-
     return true
   }
 
   async getUser(): Promise<GitHubUser | null> {
-    if (!this.ensureClientSide()) return null
+    if (!this.ensureAuthenticated()) return null
 
     try {
       const { data } = await this.octokit!.rest.users.getByUsername({
@@ -120,7 +112,7 @@ class GitHubAPI {
     page?: number
     type?: 'all' | 'owner' | 'member'
   } = {}): Promise<GitHubRepository[]> {
-    if (!this.ensureClientSide()) return []
+    if (!this.ensureAuthenticated()) return []
 
     try {
       const {
@@ -141,32 +133,7 @@ class GitHubAPI {
       // Filter out forks and archived repos by default
       const filteredRepos = data.filter(repo => !repo.fork && !repo.archived)
 
-      // Enhance repositories with additional data (with error handling)
-      const enhancedRepos = await Promise.allSettled(
-        filteredRepos.map(async (repo) => {
-          try {
-            const [languages, readme, latestCommit] = await Promise.allSettled([
-              this.getRepositoryLanguages(repo.name),
-              this.getRepositoryReadme(repo.name),
-              this.getLatestCommit(repo.name, repo.default_branch),
-            ])
-
-            return {
-              ...repo,
-              languages: languages.status === 'fulfilled' ? languages.value : {},
-              readme: readme.status === 'fulfilled' ? readme.value : undefined,
-              latest_commit: latestCommit.status === 'fulfilled' ? latestCommit.value : undefined,
-            } as GitHubRepository
-          } catch (error) {
-            console.warn(`Error enhancing repo ${repo.name}:`, error)
-            return repo as GitHubRepository
-          }
-        })
-      )
-
-      return enhancedRepos
-        .filter(result => result.status === 'fulfilled')
-        .map(result => (result as PromiseFulfilledResult<GitHubRepository>).value)
+      return filteredRepos as GitHubRepository[]
     } catch (error) {
       console.error('Error fetching repositories:', error)
       return []
@@ -174,7 +141,7 @@ class GitHubAPI {
   }
 
   async getRepository(name: string): Promise<GitHubRepository | null> {
-    if (!this.ensureClientSide()) return null
+    if (!this.ensureAuthenticated()) return null
 
     try {
       const { data } = await this.octokit!.rest.repos.get({
@@ -182,26 +149,15 @@ class GitHubAPI {
         repo: name,
       })
 
-      const [languages, readme, latestCommit] = await Promise.allSettled([
-        this.getRepositoryLanguages(name),
-        this.getRepositoryReadme(name),
-        this.getLatestCommit(name, data.default_branch),
-      ])
-
-      return {
-        ...data,
-        languages: languages.status === 'fulfilled' ? languages.value : {},
-        readme: readme.status === 'fulfilled' ? readme.value : undefined,
-        latest_commit: latestCommit.status === 'fulfilled' ? latestCommit.value : undefined,
-      } as GitHubRepository
+      return data as GitHubRepository
     } catch (error) {
       console.error(`Error fetching repository ${name}:`, error)
       return null
     }
   }
 
-  private async getRepositoryLanguages(name: string): Promise<Record<string, number>> {
-    if (!this.ensureClientSide()) return {}
+  async getRepositoryLanguages(name: string): Promise<Record<string, number>> {
+    if (!this.ensureAuthenticated()) return {}
 
     try {
       const { data } = await this.octokit!.rest.repos.listLanguages({
@@ -215,54 +171,8 @@ class GitHubAPI {
     }
   }
 
-  private async getRepositoryReadme(name: string): Promise<string | undefined> {
-    if (!this.ensureClientSide()) return undefined
-
-    try {
-      const { data } = await this.octokit!.rest.repos.getReadme({
-        owner: this.username,
-        repo: name,
-      })
-      
-      if (data.content && data.encoding === 'base64') {
-        return atob(data.content)
-      }
-      return undefined
-    } catch (error) {
-      // README not found is common, don't log as error
-      return undefined
-    }
-  }
-
-  private async getLatestCommit(name: string, branch: string = 'main') {
-    if (!this.ensureClientSide()) return undefined
-
-    try {
-      const { data } = await this.octokit!.rest.repos.listCommits({
-        owner: this.username,
-        repo: name,
-        sha: branch,
-        per_page: 1,
-      })
-
-      if (data.length > 0) {
-        const commit = data[0]
-        return {
-          sha: commit.sha,
-          message: commit.commit.message.split('\n')[0], // First line only
-          author: commit.commit.author?.name || 'Unknown',
-          date: commit.commit.author?.date || new Date().toISOString(),
-        }
-      }
-      return undefined
-    } catch (error) {
-      console.warn(`Error fetching latest commit for ${name}:`, error)
-      return undefined
-    }
-  }
-
   async getGitHubStats(): Promise<GitHubStats | null> {
-    if (!this.ensureClientSide()) return null
+    if (!this.ensureAuthenticated()) return null
 
     try {
       const [user, repositories] = await Promise.all([
@@ -274,16 +184,6 @@ class GitHubAPI {
 
       const totalStars = repositories.reduce((sum, repo) => sum + repo.stargazers_count, 0)
       const totalForks = repositories.reduce((sum, repo) => sum + repo.forks_count, 0)
-
-      // Aggregate language statistics
-      const languages: Record<string, number> = {}
-      repositories.forEach(repo => {
-        if (repo.languages) {
-          Object.entries(repo.languages).forEach(([lang, bytes]) => {
-            languages[lang] = (languages[lang] || 0) + bytes
-          })
-        }
-      })
 
       // Calculate recent activity (last week)
       const lastWeek = new Date()
@@ -297,7 +197,7 @@ class GitHubAPI {
         totalRepositories: user.public_repos,
         totalStars,
         totalForks,
-        languages,
+        languages: {}, // Would need to fetch languages for each repo
         recentActivity: {
           totalCommits: 0, // Would need commits API for accurate count
           lastWeekCommits: 0, // Would need commits API for accurate count
@@ -310,35 +210,9 @@ class GitHubAPI {
     }
   }
 
-  async searchRepositories(query: string, options: {
-    sort?: 'stars' | 'forks' | 'help-wanted-issues' | 'updated'
-    order?: 'desc' | 'asc'
-    per_page?: number
-  } = {}): Promise<GitHubRepository[]> {
-    if (!this.ensureClientSide()) return []
-
-    try {
-      const { sort = 'updated', order = 'desc', per_page = 30 } = options
-      
-      const searchQuery = `user:${this.username} ${query}`
-      
-      const { data } = await this.octokit!.rest.search.repos({
-        q: searchQuery,
-        sort,
-        order,
-        per_page,
-      })
-
-      return data.items as GitHubRepository[]
-    } catch (error) {
-      console.error('Error searching repositories:', error)
-      return []
-    }
-  }
-
   // Rate limiting helpers
   async getRateLimit() {
-    if (!this.ensureClientSide()) return null
+    if (!this.ensureAuthenticated()) return null
 
     try {
       const { data } = await this.octokit!.rest.rateLimit.get()
@@ -348,26 +222,18 @@ class GitHubAPI {
       return null
     }
   }
-
-  async waitForRateLimit() {
-    const rateLimit = await this.getRateLimit()
-    if (rateLimit && rateLimit.remaining === 0) {
-      const resetTime = new Date(rateLimit.reset * 1000)
-      const waitTime = resetTime.getTime() - Date.now()
-      
-      if (waitTime > 0) {
-        console.log(`Rate limit exceeded. Waiting ${Math.ceil(waitTime / 1000)} seconds...`)
-        await new Promise(resolve => setTimeout(resolve, waitTime + 1000))
-      }
-    }
-  }
 }
 
-// Export singleton instance - will be safe during build
+// Create server-side instance for API routes
+export function createGitHubAPI(token?: string): GitHubAPI {
+  return new GitHubAPI(token)
+}
+
+// Client-side instance (for browser use)
 export const githubAPI = new GitHubAPI()
 
-// Utility functions for common operations
-export async function getPortfolioRepositories() {
+// Utility functions for portfolio projects
+export async function getPortfolioRepositories(githubAPI: GitHubAPI) {
   try {
     const repositories = await githubAPI.getRepositories({
       sort: 'updated',
@@ -380,9 +246,9 @@ export async function getPortfolioRepositories() {
       // Skip if no description
       if (!repo.description) return false
       
-      // Skip if less than 2 stars and not recently updated
+      // Skip if less than 1 star and not recently updated
       const isRecent = new Date(repo.updated_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-      if (repo.stargazers_count < 2 && !isRecent) return false
+      if (repo.stargazers_count < 1 && !isRecent) return false
       
       // Skip common non-portfolio repos
       const skipPatterns = [
@@ -405,9 +271,9 @@ export async function getPortfolioRepositories() {
   }
 }
 
-export async function getFeaturedRepositories() {
+export async function getFeaturedRepositories(githubAPI: GitHubAPI) {
   try {
-    const repositories = await getPortfolioRepositories()
+    const repositories = await getPortfolioRepositories(githubAPI)
     
     // Sort by combination of stars, forks, and recent activity
     return repositories
@@ -421,49 +287,4 @@ export async function getFeaturedRepositories() {
     console.error('Error fetching featured repositories:', error)
     return []
   }
-}
-
-// Cache implementation for better performance
-const cache = new Map<string, { data: any; timestamp: number; ttl: number }>()
-
-export function getCachedData<T>(key: string): T | null {
-  const cached = cache.get(key)
-  if (cached && Date.now() - cached.timestamp < cached.ttl) {
-    return cached.data
-  }
-  cache.delete(key)
-  return null
-}
-
-export function setCachedData<T>(key: string, data: T, ttlMinutes: number = 60) {
-  cache.set(key, {
-    data,
-    timestamp: Date.now(),
-    ttl: ttlMinutes * 60 * 1000
-  })
-}
-
-// Cached versions of main functions
-export async function getCachedRepositories() {
-  const cacheKey = 'github-repositories'
-  let repositories = getCachedData<GitHubRepository[]>(cacheKey)
-  
-  if (!repositories) {
-    repositories = await getPortfolioRepositories()
-    setCachedData(cacheKey, repositories, 30) // Cache for 30 minutes
-  }
-  
-  return repositories
-}
-
-export async function getCachedGitHubStats() {
-  const cacheKey = 'github-stats'
-  let stats = getCachedData<GitHubStats>(cacheKey)
-  
-  if (!stats) {
-    stats = await githubAPI.getGitHubStats()
-    setCachedData(cacheKey, stats, 60) // Cache for 1 hour
-  }
-  
-  return stats
 }

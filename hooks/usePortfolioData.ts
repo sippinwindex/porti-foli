@@ -1,225 +1,154 @@
 // hooks/usePortfolioData.ts
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 
-interface GitHubStats {
-  stars: number
-  forks: number
-  url: string
-  lastUpdated: string
-  language?: string
-  topics?: string[]
-}
-
-interface VercelStats {
-  isLive: boolean
-  liveUrl?: string
-  deploymentStatus?: 'ready' | 'building' | 'error'
-}
-
-interface Project {
+interface PortfolioProject {
   id: string
   name: string
   description: string
   githubUrl: string
   liveUrl?: string
   techStack: string[]
-  tags?: string[]
+  tags: string[]
   featured: boolean
-  github?: GitHubStats
-  vercel?: VercelStats
-  slug?: string
-}
-
-// For 3D components compatibility
-interface EnhancedProject extends Project {
-  title?: string // Optional title that can be derived from name
-}
-
-interface PortfolioStats {
-  totalProjects: number
-  totalStars: number
-  totalForks: number
-  liveProjects: number
-  recentActivity: {
-    commitsLastMonth: number
-    activeProjects: number
-    languageBreakdown: Record<string, number>
-    topTopics: string[]
+  github: {
+    stars: number
+    forks: number
+    url: string
+    lastUpdated: string
+    language?: string
+    topics: string[]
   }
-  topLanguages: Array<{
-    name: string
-    percentage: number
-    count: number
-  }>
+  vercel?: {
+    url?: string
+    status?: string
+    lastDeployed?: string
+    isLive?: boolean
+  }
+  slug: string
+}
+
+interface UsePortfolioDataOptions {
+  autoFetch?: boolean
+  filterFeatured?: boolean
+  limit?: number
 }
 
 interface UsePortfolioDataReturn {
-  projects: EnhancedProject[]
-  stats: PortfolioStats | null
+  projects: PortfolioProject[]
+  featuredProjects: PortfolioProject[]
   loading: boolean
   error: string | null
-  refetch: () => void
+  refetch: () => Promise<void>
+  clearError: () => void
 }
 
-const usePortfolioData = (): UsePortfolioDataReturn => {
-  const [projects, setProjects] = useState<EnhancedProject[]>([])
-  const [stats, setStats] = useState<PortfolioStats | null>(null)
-  const [loading, setLoading] = useState(true)
+export function usePortfolioData(options: UsePortfolioDataOptions = {}): UsePortfolioDataReturn {
+  const { autoFetch = true, filterFeatured = false, limit } = options
+
+  const [projects, setProjects] = useState<PortfolioProject[]>([])
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchData = useCallback(async () => {
+  const fetchProjects = async () => {
     try {
-      setLoading(true)
       setError(null)
+      console.log('🔄 Fetching portfolio projects...')
 
-      // Fetch projects and stats in parallel
-      const [projectsResponse, statsResponse] = await Promise.all([
-        fetch('/api/projects'),
-        fetch('/api/portfolio-stats')
-      ])
-
-      if (!projectsResponse.ok) {
-        throw new Error(`Projects API error: ${projectsResponse.status}`)
+      const response = await fetch('/api/projects')
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to fetch projects: ${response.status}`)
       }
 
-      if (!statsResponse.ok) {
-        throw new Error(`Stats API error: ${statsResponse.status}`)
+      let projectsData = await response.json()
+      
+      // Ensure we have an array
+      if (!Array.isArray(projectsData)) {
+        console.warn('⚠️ Projects API returned non-array data, using empty array')
+        projectsData = []
       }
 
-      const [projectsData, statsData] = await Promise.all([
-        projectsResponse.json(),
-        statsResponse.json()
-      ])
+      // Apply filters
+      if (filterFeatured) {
+        projectsData = projectsData.filter((p: PortfolioProject) => p.featured)
+      }
 
-      // Transform and enhance project data
-      const enhancedProjects: EnhancedProject[] = projectsData.map((project: any) => ({
-        id: project.id?.toString() || project.name,
-        name: project.name,
-        title: project.name.replace(/[-_]/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()), // Add title for 3D components
-        description: project.description || 'No description available',
-        githubUrl: project.html_url || project.githubUrl || '',
-        liveUrl: project.homepage || project.liveUrl || '',
-        techStack: project.topics || project.techStack || [],
-        tags: project.topics || project.tags || [],
-        featured: project.featured || false,
-        github: {
-          stars: project.stargazers_count || 0,
-          forks: project.forks_count || 0,
-          url: project.html_url || '',
-          lastUpdated: project.updated_at || project.pushed_at || new Date().toISOString(),
-          language: project.language,
-          topics: project.topics || []
-        },
-        vercel: {
-          isLive: !!(project.homepage || project.liveUrl),
-          liveUrl: project.homepage || project.liveUrl,
-          deploymentStatus: project.homepage ? 'ready' : undefined
-        },
-        slug: project.name?.toLowerCase().replace(/[^a-z0-9]/g, '-') || project.id
-      }))
+      if (limit && limit > 0) {
+        projectsData = projectsData.slice(0, limit)
+      }
 
-      // Sort projects: featured first, then by stars, then by last updated
-      enhancedProjects.sort((a, b) => {
-        if (a.featured && !b.featured) return -1
-        if (!a.featured && b.featured) return 1
-        
-        const starsA = a.github?.stars || 0
-        const starsB = b.github?.stars || 0
-        if (starsA !== starsB) return starsB - starsA
-        
-        const dateA = new Date(a.github?.lastUpdated || 0).getTime()
-        const dateB = new Date(b.github?.lastUpdated || 0).getTime()
-        return dateB - dateA
-      })
-
-      setProjects(enhancedProjects)
-      setStats(statsData)
+      setProjects(projectsData)
+      console.log(`✅ Successfully loaded ${projectsData.length} portfolio projects`)
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch portfolio data'
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch portfolio projects'
+      console.error('❌ Error fetching portfolio projects:', errorMessage)
       setError(errorMessage)
-      console.error('Portfolio data fetch error:', err)
-
-      // Set fallback data on error
+      
+      // Fallback to sample data to prevent total failure
       setProjects([
         {
-          id: 'portfolio',
+          id: 'portfolio-website',
           name: 'Portfolio Website',
-          title: 'Portfolio Website',
-          description: 'Modern 3D portfolio website built with Next.js, Three.js, and Framer Motion',
-          githubUrl: 'https://github.com/sippinwindex',
-          liveUrl: 'https://juanfernandez.dev',
-          techStack: ['Next.js', 'React', 'TypeScript', 'Three.js', 'Framer Motion', 'Tailwind CSS'],
-          tags: ['react', 'nextjs', 'typescript', 'threejs'],
+          description: 'Personal portfolio website built with Next.js, TypeScript, and Framer Motion',
+          githubUrl: 'https://github.com/sippinwindex/portfolio',
+          liveUrl: window.location.origin,
+          techStack: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
+          tags: ['web', 'portfolio', 'frontend'],
           featured: true,
           github: {
-            stars: 25,
-            forks: 8,
-            url: 'https://github.com/sippinwindex',
+            stars: 0,
+            forks: 0,
+            url: 'https://github.com/sippinwindex/portfolio',
             lastUpdated: new Date().toISOString(),
             language: 'TypeScript',
-            topics: ['react', 'nextjs', 'portfolio']
+            topics: ['portfolio', 'nextjs', 'typescript']
           },
           vercel: {
+            url: window.location.origin,
+            status: 'ready',
             isLive: true,
-            liveUrl: 'https://juanfernandez.dev',
-            deploymentStatus: 'ready'
+            lastDeployed: new Date().toISOString()
           },
           slug: 'portfolio-website'
         }
       ])
+    }
+  }
 
-      setStats({
-        totalProjects: 25,
-        totalStars: 150,
-        totalForks: 45,
-        liveProjects: 12,
-        recentActivity: {
-          commitsLastMonth: 85,
-          activeProjects: 8,
-          languageBreakdown: {
-            'TypeScript': 12,
-            'JavaScript': 8,
-            'Python': 3,
-            'CSS': 2
-          },
-          topTopics: ['react', 'nextjs', 'typescript', 'tailwindcss']
-        },
-        topLanguages: [
-          { name: 'TypeScript', percentage: 48, count: 12 },
-          { name: 'JavaScript', percentage: 32, count: 8 },
-          { name: 'Python', percentage: 12, count: 3 },
-          { name: 'CSS', percentage: 8, count: 2 }
-        ]
-      })
+  const refetch = async () => {
+    if (loading) return
+    
+    setLoading(true)
+    try {
+      await fetchProjects()
     } finally {
       setLoading(false)
     }
-  }, [])
+  }
 
-  const refetch = useCallback(() => {
-    fetchData()
-  }, [fetchData])
+  const clearError = () => {
+    setError(null)
+  }
 
+  // Auto-fetch on mount
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    if (autoFetch) {
+      refetch()
+    }
+  }, [autoFetch])
 
-  // Auto-refresh data every 5 minutes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchData()
-    }, 5 * 60 * 1000) // 5 minutes
-
-    return () => clearInterval(interval)
-  }, [fetchData])
+  // Derived data
+  const featuredProjects = projects.filter(project => project.featured)
 
   return {
     projects,
-    stats,
+    featuredProjects,
     loading,
     error,
-    refetch
+    refetch,
+    clearError
   }
 }
 
