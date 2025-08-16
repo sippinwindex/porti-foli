@@ -8,11 +8,13 @@ export interface PortfolioProject {
   title: string
   description: string
   techStack: string[]
+  tags?: string[]  // ← ADD THIS LINE - missing tags property
   featured: boolean
   github?: {
     stars: number
     forks: number
     url: string  // Always required for consistency
+    topics?: string[]  // ← ADD THIS LINE - for GitHub topics
   }
   vercel?: {
     isLive: boolean
