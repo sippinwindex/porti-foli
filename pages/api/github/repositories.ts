@@ -1,6 +1,6 @@
 // pages/api/github/repositories.ts
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { createGitHubAPI, getPortfolioRepositories, GitHubRepository } from '@/lib/github-api'
+import { getCachedRepositories, GitHubRepository } from '@/lib/github-api'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -20,32 +20,66 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Create GitHub API instance with server-side token
-    const githubAPI = createGitHubAPI(GITHUB_TOKEN)
+    // FIXED: Use getCachedRepositories directly instead of createGitHubAPI
+    console.log('🔄 Fetching repositories with cached function...')
     
     // Get query parameters
     const { 
       type = 'portfolio',
       limit = '20',
-      sort = 'updated' 
+      sort = 'updated'
     } = req.query
 
     let repositories: GitHubRepository[] = []
 
     if (type === 'portfolio') {
       console.log('🔄 Fetching portfolio repositories...')
-      repositories = await getPortfolioRepositories(githubAPI)
+      // FIXED: Call getCachedRepositories directly
+      const allRepos = await getCachedRepositories()
+      
+      // Filter for portfolio-worthy repositories
+      repositories = allRepos.filter(repo => {
+        // Skip if no description
+        if (!repo.description) return false
+        
+        // Skip if less than 2 stars and not recently updated
+        const isRecent = new Date(repo.updated_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        if (repo.stargazers_count < 2 && !isRecent) return false
+        
+        // Skip common non-portfolio repos
+        const skipPatterns = [
+          /^dotfiles$/i,
+          /^\.github$/i,
+          /^config$/i,
+          /test/i,
+          /playground/i,
+          /sandbox/i,
+          /learning/i,
+          /tutorial/i,
+          /practice/i
+        ]
+        
+        return !skipPatterns.some(pattern => pattern.test(repo.name))
+      })
+      
     } else if (type === 'all') {
       console.log('🔄 Fetching all repositories...')
-      repositories = await githubAPI.getRepositories({
-        sort: sort as any,
-        per_page: parseInt(limit as string)
-      })
+      repositories = await getCachedRepositories()
+      
     } else {
       return res.status(400).json({ 
-        error: 'Invalid type parameter', 
-        details: 'Type must be "portfolio" or "all"' 
+        error: 'Invalid type parameter',
+        details: 'Type must be "portfolio" or "all"'
       })
+    }
+
+    // Apply sorting
+    if (sort === 'stars') {
+      repositories.sort((a, b) => b.stargazers_count - a.stargazers_count)
+    } else if (sort === 'updated') {
+      repositories.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+    } else if (sort === 'created') {
+      repositories.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
     }
 
     // Apply limit if specified
