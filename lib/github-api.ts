@@ -99,7 +99,7 @@ export async function fetchGitHubRepositories(username: string = 'sippinwindex')
       description: repo.description,
       stargazers_count: repo.stargazers_count || 0,
       forks_count: repo.forks_count || 0,
-      language: repo.language,
+      language: repo.language || null,
       topics: repo.topics || [],
       pushed_at: repo.pushed_at || '',
       updated_at: repo.updated_at,
