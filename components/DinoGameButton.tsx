@@ -18,7 +18,8 @@ export default function DinoGameButton() {
       }}
       className="fixed bottom-8 right-8 z-50"
     >
-      <Link href="/dinosaur" className="block">
+      {/* FIXED: Changed href from /dinosaur to /dino-game */}
+      <Link href="/dino-game" className="block">
         <motion.div
           whileHover={{
             scale: 1.15,

@@ -70,13 +70,31 @@ export default function HomePage() {
   // Tech stack for floating code blocks
   const techStack = ['React', 'Next.js', 'TypeScript', 'Node.js', 'Python', 'Three.js']
 
-  // Track scroll position for section detection
+  // Track scroll position for section detection - FIXED: Updated section heights
   useEffect(() => {
     const handleScroll = () => {
       const scrolled = window.scrollY
       const sections = ['hero', 'code-showcase', 'about', 'languages', 'projects', 'contact']
-      const sectionHeight = window.innerHeight
-      const currentIndex = Math.min(Math.floor(scrolled / sectionHeight), sections.length - 1)
+      
+      // Define section boundaries based on actual content
+      const heroHeight = window.innerHeight
+      const codeShowcaseHeight = window.innerHeight * 0.8 // Reduced height
+      const aboutSectionTop = heroHeight + codeShowcaseHeight
+      
+      let currentIndex = 0
+      
+      if (scrolled < heroHeight) {
+        currentIndex = 0 // hero
+      } else if (scrolled < heroHeight + codeShowcaseHeight) {
+        currentIndex = 1 // code-showcase
+      } else if (scrolled < aboutSectionTop + 800) { // About section height
+        currentIndex = 2 // about
+      } else if (scrolled < aboutSectionTop + 800 + window.innerHeight) {
+        currentIndex = 3 // languages
+      } else {
+        currentIndex = Math.min(Math.floor((scrolled - aboutSectionTop - 800 - window.innerHeight) / 600) + 4, sections.length - 1)
+      }
+      
       setCurrentSection(sections[currentIndex])
     }
 
@@ -133,14 +151,14 @@ export default function HomePage() {
           <Interactive3DHero projects={heroProjects} />
         </section>
 
-        {/* Floating Code Blocks Section */}
-        <section id="code-showcase" className="relative h-screen">
+        {/* FIXED: Floating Code Blocks Section - Reduced height and improved positioning */}
+        <section id="code-showcase" className="relative h-[80vh] z-20">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ duration: 1 }}
             viewport={{ once: true }}
-            className="absolute inset-0"
+            className="absolute inset-0 z-10"
           >
             <FloatingCodeBlocks 
               techStack={techStack}
@@ -152,7 +170,7 @@ export default function HomePage() {
             />
           </motion.div>
           
-          <div className="absolute inset-0 flex items-center justify-center z-20">
+          <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -171,7 +189,7 @@ export default function HomePage() {
         </section>
 
         {/* About Preview Section with Enhanced 3D Animations */}
-        <section id="about" className="py-20 bg-gradient-to-br from-lux-offwhite via-viva-magenta-50/10 to-lux-gold-50/10 dark:from-lux-black dark:via-viva-magenta-900/5 dark:to-lux-gold-900/5 relative overflow-hidden">
+        <section id="about" className="py-20 bg-gradient-to-br from-lux-offwhite via-viva-magenta-50/10 to-lux-gold-50/10 dark:from-lux-black dark:via-viva-magenta-900/5 dark:to-lux-gold-900/5 relative overflow-hidden z-30">
           {/* Animated background elements */}
           <div className="absolute inset-0 pointer-events-none">
             {Array.from({ length: 15 }).map((_, i) => (
@@ -443,13 +461,15 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Language Visualization Section */}
-        <section id="languages" className="relative h-screen">
-          <LanguageVisualization 
-            showStats={true}
-            interactive={true}
-            layout="circle"
-          />
+        {/* FIXED: Language Visualization Section - Separate positioning and z-index */}
+        <section id="languages" className="relative h-screen z-40 bg-gradient-to-br from-lux-gray-50 to-lux-gray-100 dark:from-lux-gray-900 dark:to-lux-black">
+          <div className="absolute inset-0 z-10">
+            <LanguageVisualization 
+              showStats={true}
+              interactive={true}
+              layout="circle"
+            />
+          </div>
         </section>
 
         {/* Projects Section with 3D Effects */}
@@ -466,7 +486,7 @@ export default function HomePage() {
         />
 
         {/* Enhanced CTA Section */}
-        <section id="contact" className="py-20 bg-gradient-to-br from-viva-magenta-900/10 via-lux-black/50 to-lux-gold-900/10 relative overflow-hidden">
+        <section id="contact" className="py-20 bg-gradient-to-br from-viva-magenta-900/10 via-lux-black/50 to-lux-gold-900/10 relative overflow-hidden z-50">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-br from-viva-magenta-500/5 to-lux-gold-500/5" />
             <motion.div

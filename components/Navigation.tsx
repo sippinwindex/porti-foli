@@ -20,13 +20,6 @@ export default function Navigation() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const navItems = [
-    { name: 'Home', href: '/' },
-    { name: 'About', href: '/about' },
-    { name: 'Projects', href: '/projects' },
-    { name: 'Contact', href: '/contact' },
-  ]
-
   const socialLinks = [
     { 
       href: 'https://github.com/sippinwindex', 
@@ -54,47 +47,36 @@ export default function Navigation() {
     }
   ]
 
-  // Smooth scroll function for in-page navigation
+  // FIXED: Smooth scroll function for in-page navigation
   const scrollToSection = (sectionId: string) => {
-    if (pathname === '/') {
-      // If we're on the home page, scroll to section
-      const element = document.getElementById(sectionId)
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' })
-        setIsOpen(false) // Close mobile menu
-      }
-    } else {
-      // If we're on a different page, navigate to home first then scroll
-      window.location.href = `/#${sectionId}`
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+      setIsOpen(false) // Close mobile menu
     }
   }
 
-  // Handle navigation based on current page
-  const handleNavClick = (href: string, e?: React.MouseEvent) => {
-    if (href === '/') {
-      if (pathname === '/') {
-        // Already on home page, scroll to top
-        e?.preventDefault()
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-        setIsOpen(false)
-      }
-      // Let Next.js handle navigation to home for other pages
-    } else if (href === '/about' && pathname === '/') {
-      // On home page, scroll to about section
-      e?.preventDefault()
-      scrollToSection('about')
-    } else if (href === '/projects' && pathname === '/') {
-      // On home page, scroll to projects section
-      e?.preventDefault()
-      scrollToSection('projects')
-    } else if (href === '/contact' && pathname === '/') {
-      // On home page, scroll to contact section
-      e?.preventDefault()
-      scrollToSection('contact')
+  // FIXED: Handle navigation based on current page and sections
+  const handleNavClick = (section: string, e?: React.MouseEvent) => {
+    e?.preventDefault()
+    
+    if (pathname !== '/') {
+      // If not on home page, navigate to home with hash
+      window.location.href = `/#${section}`
+    } else {
+      // If on home page, scroll to section
+      scrollToSection(section)
     }
-    // For other cases, let Next.js handle normal routing
     setIsOpen(false)
   }
+
+  // FIXED: Define navigation items with proper sections
+  const navItems = [
+    { name: 'Home', section: 'hero' },
+    { name: 'About', section: 'about' },
+    { name: 'Projects', section: 'projects' },
+    { name: 'Contact', section: 'contact' },
+  ]
 
   return (
     <motion.nav
@@ -113,7 +95,6 @@ export default function Navigation() {
           <Link 
             href="/" 
             className="font-bold text-xl text-gray-900 dark:text-white hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 transition-colors"
-            onClick={(e) => handleNavClick('/', e)}
           >
             <motion.div 
               className="flex items-center gap-2"
@@ -130,14 +111,14 @@ export default function Navigation() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => {
-              const isActive = pathname === item.href || 
-                              (pathname === '/' && item.href !== '/' && 
-                               ['about', 'projects', 'contact'].includes(item.name.toLowerCase()))
+              // Check if we're on the section (for home page) or if it's the active page
+              const isActive = (pathname === '/' && item.section === 'hero') || 
+                              (pathname === '/' && window.location.hash === `#${item.section}`)
               
               return (
                 <motion.button
                   key={item.name}
-                  onClick={(e) => handleNavClick(item.href, e)}
+                  onClick={(e) => handleNavClick(item.section, e)}
                   className={`relative px-3 py-2 text-sm font-medium transition-all duration-300 group ${
                     isActive
                       ? 'text-viva-magenta-600 dark:text-viva-magenta-400'
@@ -229,13 +210,13 @@ export default function Navigation() {
             {/* Theme Toggle */}
             <ThemeToggle />
             
-            {/* Dino Game Link */}
+            {/* FIXED: Dino Game Link */}
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <Link
-                href="/dinosaur"
+                href="/dino-game"
                 className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 transform group overflow-hidden"
               >
                 {/* Animated background */}
@@ -308,14 +289,13 @@ export default function Navigation() {
           >
             <div className="px-4 py-4 space-y-2">
               {navItems.map((item, index) => {
-                const isActive = pathname === item.href || 
-                                (pathname === '/' && item.href !== '/' && 
-                                 ['about', 'projects', 'contact'].includes(item.name.toLowerCase()))
+                const isActive = (pathname === '/' && item.section === 'hero') || 
+                                (pathname === '/' && window.location.hash === `#${item.section}`)
                 
                 return (
                   <motion.button
                     key={item.name}
-                    onClick={(e) => handleNavClick(item.href, e)}
+                    onClick={(e) => handleNavClick(item.section, e)}
                     className={`relative block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-all duration-300 group overflow-hidden ${
                       isActive
                         ? 'text-viva-magenta-600 dark:text-viva-magenta-400 bg-viva-magenta-50 dark:bg-viva-magenta-900/20'
@@ -360,9 +340,9 @@ export default function Navigation() {
                 ))}
               </div>
               
-              {/* Mobile Dino Game Link */}
+              {/* FIXED: Mobile Dino Game Link */}
               <Link
-                href="/dinosaur"
+                href="/dino-game"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-md hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 mt-4"
               >
