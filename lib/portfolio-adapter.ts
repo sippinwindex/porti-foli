@@ -1,12 +1,11 @@
 // lib/portfolio-adapter.ts - Bridge between legacy and enhanced portfolio types
 
 import type { 
-  Project as LegacyProject, 
-  EnhancedProject, 
+  PortfolioProject as LegacyProject,
+  EnhancedPortfolioProject as EnhancedProject,
   PortfolioStats,
   GitHubRepository,
-  ProjectMetric 
-} from '@/types'
+} from '@/types/portfolio'
 
 import { getEnhancedProjects, getPortfolioStats, EnhancedProject as SourceEnhancedProject } from './portfolio-integration'
 
@@ -21,22 +20,36 @@ import { getEnhancedProjects, getPortfolioStats, EnhancedProject as SourceEnhanc
 export function convertToLegacyProject(enhanced: SourceEnhancedProject): LegacyProject {
   return {
     id: enhanced.id,
-    title: enhanced.name,
+    name: enhanced.name,  // ← FIX: Add required name property
+    title: enhanced.name,  // ← FIX: Use name since title doesn't exist
     description: enhanced.description,
     longDescription: enhanced.longDescription || enhanced.description,
-    image: enhanced.metadata.images[0] || '/images/projects/placeholder.jpg',
-    tags: enhanced.techStack.length > 0 ? enhanced.techStack : enhanced.metadata.tags,
+    techStack: enhanced.techStack || [],  // ← FIX: Add required techStack property
+    tags: enhanced.techStack?.length > 0 ? enhanced.techStack : (enhanced.metadata?.tags || []),
+    image: enhanced.metadata?.images?.[0] || '/images/projects/placeholder.jpg',
     githubUrl: enhanced.github?.url || '',
-    liveUrl: enhanced.metadata.liveUrl || enhanced.vercel?.liveUrl || '',
+    liveUrl: enhanced.metadata?.liveUrl || enhanced.vercel?.liveUrl || '',
     featured: enhanced.featured,
     status: enhanced.status,
-    // FIX: These properties do not exist on enhanced.metadata. Provide defaults instead.
-    startDate: new Date().toISOString(), // Default to now
-    endDate: undefined, // Default to undefined
     category: enhanced.category,
-    challenges: [], // Default to an empty array
-    learnings: [], // Default to an empty array
-    metrics: [] // Default to an empty array
+    // FIX: Use safe property access and provide defaults
+    startDate: new Date().toISOString(), // Default since startDate doesn't exist in metadata
+    endDate: undefined, // Default since endDate doesn't exist in metadata
+    challenges: [], // Default since challenges doesn't exist in metadata
+    learnings: [], // Default since learnings doesn't exist in metadata
+    metrics: {}, // Default since metrics doesn't exist on enhanced
+    github: enhanced.github ? {
+      stars: enhanced.github.stars,  // ← FIX: Use stars directly, not stats.stars
+      forks: enhanced.github.forks,  // ← FIX: Use forks directly, not stats.forks
+      url: enhanced.github.url || '',
+      topics: enhanced.github.topics || [],
+      lastUpdated: enhanced.github.lastUpdated
+    } : undefined,
+    vercel: enhanced.vercel ? {
+      isLive: enhanced.vercel.isLive,
+      liveUrl: enhanced.vercel.liveUrl,  // ← FIX: Use liveUrl directly, not project.name
+      deploymentStatus: enhanced.vercel.deploymentStatus
+    } : undefined
   }
 }
 
@@ -48,48 +61,62 @@ export function convertToEnhancedProject(legacy: LegacyProject): EnhancedProject
   return {
     id: legacy.id,
     slug: legacy.id.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
-    name: legacy.title,
+    name: legacy.name || legacy.title,
     title: legacy.title,
     description: legacy.description,
     longDescription: legacy.longDescription,
-    category: mapLegacyCategory(legacy.category),
-    status: mapLegacyStatus(legacy.status),
+    category: mapLegacyCategory(legacy.category || 'other'),
+    status: mapLegacyStatus(legacy.status || 'completed'),
     featured: legacy.featured,
     order: 0,
     
     github: legacy.githubUrl ? {
-      url: legacy.githubUrl,
-      stars: 0,
-      forks: 0,
-      language: '',
-      languages: {},
-      topics: legacy.tags,
-      lastUpdated: legacy.endDate || new Date().toISOString(),
       repository: {} as GitHubRepository,
+      url: legacy.githubUrl,  // ← FIX: Add url property
+      stats: {  // ← FIX: Use stats object structure
+        stars: legacy.github?.stars || 0,
+        forks: legacy.github?.forks || 0,
+        watchers: 0,
+        issues: 0,
+        prs: 0
+      },
+      activity: {  // ← FIX: Use activity object structure
+        lastCommit: legacy.github?.lastUpdated || legacy.endDate || new Date().toISOString(),
+        commitsThisMonth: 0,
+        contributors: 1
+      }
     } : undefined,
     
     vercel: legacy.liveUrl ? {
-      deploymentStatus: 'READY',
-      liveUrl: legacy.liveUrl,
-      isLive: true,
-      buildStatus: 'success'
+      project: {} as any,  // ← FIX: Add required project property
+      deployments: 1,
+      deploymentStatus: legacy.vercel?.deploymentStatus || 'ready',
+      lastDeployment: {
+        state: 'READY',
+        url: legacy.liveUrl,
+        createdAt: new Date().toISOString()
+      },
+      customDomains: [],
+      isLive: true
+      // ← REMOVE: liveUrl doesn't exist in this interface
     } : undefined,
     
     metadata: {
-      images: [legacy.image],
-      tags: legacy.tags,
+      customDescription: legacy.longDescription,
+      images: [legacy.image || '/images/projects/placeholder.jpg'],
+      tags: legacy.tags || [],
       highlights: generateHighlights(legacy),
+      challenges: legacy.challenges || [],  // ← ADD: Now that we added it to metadata interface
+      learnings: legacy.learnings || [],    // ← ADD: Now that we added it to metadata interface
       liveUrl: legacy.liveUrl,
-      startDate: legacy.startDate,
-      endDate: legacy.endDate,
-      challenges: legacy.challenges,
-      learnings: legacy.learnings,
-      metrics: legacy.metrics
+      startDate: legacy.startDate,          // ← ADD: Now that we added it to metadata interface
+      endDate: legacy.endDate               // ← ADD: Now that we added it to metadata interface
     },
     
-    techStack: legacy.tags,
+    techStack: legacy.techStack || legacy.tags || [],
     lastActivity: legacy.endDate || new Date().toISOString(),
-    deploymentScore: calculateDeploymentScore(legacy)
+    deploymentScore: calculateDeploymentScore(legacy),
+    popularity: legacy.github?.stars || 0
   }
 }
 
@@ -135,7 +162,7 @@ export async function getLegacyPortfolioStats() {
       totalProjects: stats.totalProjects,
       totalCommits: 500, // Placeholder
       totalStars: stats.totalStars,
-      languagesUsed: Object.keys(stats.languageStats),
+      languagesUsed: Object.keys(stats.languageStats || {}),
       lastUpdated: new Date().toISOString()
     }
   } catch (error) {
@@ -168,7 +195,7 @@ function mapLegacyCategory(category: string): EnhancedProject['category'] {
     'ai': 'data',
     'data-science': 'data'
   }
-  return categoryMap[category.toLowerCase()] || 'other'
+  return categoryMap[category?.toLowerCase()] || 'other'
 }
 
 function mapLegacyStatus(status: string): EnhancedProject['status'] {
@@ -184,7 +211,7 @@ function mapLegacyStatus(status: string): EnhancedProject['status'] {
     'archived': 'archived',
     'deprecated': 'archived'
   }
-  return statusMap[status.toLowerCase()] || 'completed'
+  return statusMap[status?.toLowerCase()] || 'completed'
 }
 
 function generateHighlights(project: LegacyProject): string[] {
@@ -192,29 +219,29 @@ function generateHighlights(project: LegacyProject): string[] {
   if (project.featured) highlights.push('Featured Project')
   if (project.liveUrl) highlights.push('Live Demo Available')
   if (project.githubUrl) highlights.push('Open Source')
-  if (project.metrics.length > 0) highlights.push('Performance Metrics Tracked')
-  if (project.challenges.length > 3) highlights.push('Complex Technical Challenges')
-  if (project.tags.includes('TypeScript')) highlights.push('Built with TypeScript')
-  if (project.tags.includes('React')) highlights.push('React Application')
+  if (project.metrics && Object.keys(project.metrics).length > 0) highlights.push('Performance Metrics Tracked')
+  if (project.challenges && project.challenges.length > 3) highlights.push('Complex Technical Challenges')
+  if (project.tags?.includes('TypeScript')) highlights.push('Built with TypeScript')
+  if (project.tags?.includes('React')) highlights.push('React Application')
   return highlights
 }
 
 function calculateDeploymentScore(project: LegacyProject): number {
   let score = 60
-  if (project.description.length > 50) score += 5
-  if (project.longDescription.length > 100) score += 5
+  if (project.description?.length > 50) score += 5
+  if (project.longDescription?.length > 100) score += 5
   if (project.image && project.image !== '/images/projects/placeholder.jpg') score += 5
-  if (project.tags.length >= 3) score += 5
-  if (project.tags.length >= 5) score += 5
-  if (project.tags.includes('TypeScript')) score += 10
-  if (project.tags.includes('React')) score += 5
-  if (project.tags.includes('Next.js')) score += 10
+  if (project.tags?.length >= 3) score += 5
+  if (project.tags?.length >= 5) score += 5
+  if (project.tags?.includes('TypeScript')) score += 10
+  if (project.tags?.includes('React')) score += 5
+  if (project.tags?.includes('Next.js')) score += 10
   if (project.liveUrl) score += 15
   if (project.githubUrl) score += 10
   if (project.featured) score += 10
-  if (project.challenges.length > 0) score += 5
-  if (project.learnings.length > 0) score += 5
-  if (project.metrics.length > 0) score += 10
+  if (project.challenges?.length > 0) score += 5
+  if (project.learnings?.length > 0) score += 5
+  if (project.metrics && Object.keys(project.metrics).length > 0) score += 10
   if (project.status === 'completed') score += 10
   return Math.min(score, 100)
 }
@@ -226,21 +253,23 @@ function calculateDeploymentScore(project: LegacyProject): number {
 export function createProject(data: Partial<LegacyProject>): LegacyProject {
   return {
     id: data.id || generateProjectId(),
-    title: data.title || 'Untitled Project',
+    name: data.name || data.title || 'Untitled Project',  // ← FIX: Ensure name exists
+    title: data.title || data.name || 'Untitled Project',
     description: data.description || '',
     longDescription: data.longDescription || data.description || '',
+    techStack: data.techStack || data.tags || [],  // ← FIX: Ensure techStack exists
     image: data.image || '/images/projects/placeholder.jpg',
-    tags: data.tags || [],
+    tags: data.tags || data.techStack || [],
     githubUrl: data.githubUrl || '',
     liveUrl: data.liveUrl || '',
     featured: data.featured || false,
     status: data.status || 'completed',
+    category: data.category || 'other',
     startDate: data.startDate || new Date().toISOString(),
     endDate: data.endDate,
-    category: data.category || 'other',
     challenges: data.challenges || [],
     learnings: data.learnings || [],
-    metrics: data.metrics || []
+    metrics: data.metrics || {}
   }
 }
 
@@ -257,19 +286,21 @@ export function generateMockLegacyProjects(count: number = 6): LegacyProject[] {
   for (let i = 0; i < count; i++) {
     mockProjects.push(createProject({
       id: `mock-project-${i + 1}`,
+      name: `Mock Project ${i + 1}`,  // ← FIX: Add name property
       title: `Mock Project ${i + 1}`,
       description: `This is a mock project for development and testing purposes. Project ${i + 1} demonstrates various features.`,
       longDescription: `Extended description for mock project ${i + 1}. This project showcases modern web development practices and technologies.`,
+      techStack: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS'],  // ← FIX: Use techStack instead of tags
       tags: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS'],
       featured: i < 3,
       status: 'completed',
       category: i % 2 === 0 ? 'fullstack' : 'frontend',
       githubUrl: `https://github.com/sippinwindex/mock-project-${i + 1}`,
       liveUrl: i % 2 === 0 ? `https://mock-project-${i + 1}.vercel.app` : '',
-      metrics: [
-        { label: 'Performance Score', value: `${85 + i * 2}%` },
-        { label: 'Build Time', value: `${20 + i}s` }
-      ]
+      metrics: {
+        performanceScore: `${85 + i * 2}%`,
+        buildTime: `${20 + i}s`
+      }
     }))
   }
   return mockProjects
@@ -293,16 +324,16 @@ export function searchLegacyProjects(
   if (query.trim()) {
     const searchTerm = query.toLowerCase()
     filtered = filtered.filter(project =>
-      project.title.toLowerCase().includes(searchTerm) ||
-      project.description.toLowerCase().includes(searchTerm) ||
-      project.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+      project.title?.toLowerCase().includes(searchTerm) ||
+      project.description?.toLowerCase().includes(searchTerm) ||
+      project.tags?.some(tag => tag.toLowerCase().includes(searchTerm))
     )
   }
   if (filters.category) {
-    filtered = filtered.filter(project => project.category.toLowerCase() === filters.category!.toLowerCase())
+    filtered = filtered.filter(project => project.category?.toLowerCase() === filters.category!.toLowerCase())
   }
   if (filters.status) {
-    filtered = filtered.filter(project => project.status.toLowerCase() === filters.status!.toLowerCase())
+    filtered = filtered.filter(project => project.status?.toLowerCase() === filters.status!.toLowerCase())
   }
   if (typeof filters.featured === 'boolean') {
     filtered = filtered.filter(project => project.featured === filters.featured)
@@ -310,7 +341,7 @@ export function searchLegacyProjects(
   if (filters.tags && filters.tags.length > 0) {
     filtered = filtered.filter(project =>
       filters.tags!.some(tag => 
-        project.tags.some(projectTag => 
+        project.tags?.some(projectTag => 
           projectTag.toLowerCase().includes(tag.toLowerCase())
         )
       )

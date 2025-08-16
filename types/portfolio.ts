@@ -2,24 +2,38 @@
 import type { GitHubRepository, GitHubStats } from './github'
 import type { VercelProjectWithStatus, VercelStats } from './vercel'
 
+// Re-export types that are needed by other modules
+export type { GitHubRepository, GitHubStats } from './github'  // ← ADD THIS LINE
+export type { VercelProjectWithStatus, VercelStats } from './vercel'  // ← ADD THIS LINE
+
 export interface PortfolioProject {
   id: string
   name: string
   title: string
   description: string
+  longDescription?: string  // ← ADD - for detailed descriptions
   techStack: string[]
-  tags?: string[]  // ← ADD THIS LINE - missing tags property
+  tags?: string[]
   featured: boolean
+  category?: 'fullstack' | 'frontend' | 'backend' | 'mobile' | 'data' | 'other'  // ← ADD
+  status?: 'completed' | 'in-progress' | 'planning' | 'archived'  // ← ADD
+  image?: string  // ← ADD - for project images
+  startDate?: string  // ← ADD - project start date
+  endDate?: string  // ← ADD - project end date
+  challenges?: string[]  // ← ADD - project challenges
+  learnings?: string[]  // ← ADD - lessons learned
+  metrics?: Record<string, any>  // ← ADD - project metrics
   github?: {
     stars: number
     forks: number
-    url: string  // Always required for consistency
-    topics?: string[]  // ← ADD THIS LINE - for GitHub topics
-    lastUpdated?: string  // ← ADD THIS LINE - for last update timestamp
+    url: string
+    topics?: string[]
+    lastUpdated?: string
   }
   vercel?: {
     isLive: boolean
     liveUrl?: string
+    deploymentStatus?: string  // ← ADD - deployment status
   }
   githubUrl?: string
   liveUrl?: string
@@ -95,6 +109,7 @@ export interface EnhancedPortfolioProject {
   // GitHub integration
   github?: {
     repository: GitHubRepository
+    url?: string  // ← ADD - URL property for compatibility
     stats: {
       stars: number
       forks: number
@@ -113,6 +128,7 @@ export interface EnhancedPortfolioProject {
   vercel?: {
     project: VercelProjectWithStatus
     deployments: number
+    deploymentStatus?: string  // ← ADD - deployment status property
     lastDeployment?: {
       state: string
       url: string
@@ -128,12 +144,16 @@ export interface EnhancedPortfolioProject {
     images: string[]
     tags: string[]
     highlights: string[]
+    challenges?: string[]  // ← ADD - project challenges
+    learnings?: string[]   // ← ADD - project learnings
     client?: string
     teamSize?: number
     role?: string
     liveUrl?: string
     demoUrl?: string
     caseStudyUrl?: string
+    startDate?: string
+    endDate?: string
   }
   
   // Computed properties
