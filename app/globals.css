@@ -651,3 +651,158 @@
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }
+
+/* Add these CSS fixes to your globals.css file */
+
+/* Prevent layout shifts and stacking issues */
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Ensure proper z-index stacking */
+.fixed {
+  z-index: 50;
+}
+
+/* Prevent Three.js canvas from interfering with layout */
+canvas {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ensure sections have proper spacing and don't overlap */
+section {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  clear: both;
+}
+
+/* Fix for navigation spacing */
+nav + main,
+nav + div {
+  padding-top: 0;
+}
+
+/* Ensure proper section spacing */
+#hero {
+  margin-top: 0;
+  padding-top: 4rem; /* Account for fixed navbar */
+}
+
+#about,
+#projects,
+#contact {
+  margin-top: 0;
+  position: relative;
+  z-index: 10;
+}
+
+/* Fix container overflow issues */
+.container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Prevent horizontal scroll */
+* {
+  box-sizing: border-box;
+}
+
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+/* Fix for mobile layout issues */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+  
+  section {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Fix for Framer Motion layout shifts */
+[data-framer-appear-id] {
+  transform-origin: center center;
+}
+
+/* Ensure proper z-index layering */
+.relative {
+  z-index: auto;
+}
+
+.absolute {
+  z-index: auto;
+}
+
+/* Fix for backdrop blur elements */
+.backdrop-blur-sm,
+.backdrop-blur-md,
+.backdrop-blur-lg {
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+/* Smooth transitions */
+* {
+  transition-property: transform, opacity, background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Fix for layout shift on load */
+.min-h-screen {
+  min-height: 100vh;
+  min-height: 100dvh; /* Modern browsers */
+}
+
+/* Prevent content jumping */
+img {
+  height: auto;
+  max-width: 100%;
+}
+
+/* Fix for Three.js performance */
+.webgl-container {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Ensure proper scroll behavior */
+html {
+  scroll-padding-top: 4rem; /* Account for fixed navbar */
+}
+
+/* Fix for mobile viewport */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Layout debugging (remove in production) */
+/* 
+.debug * {
+  outline: 1px solid red;
+}
+*/

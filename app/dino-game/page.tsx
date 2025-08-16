@@ -1,3 +1,5 @@
+'use client'
+
 // app/dino-game/page.tsx
 'use client'
 

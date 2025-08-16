@@ -1,5 +1,7 @@
 'use client'
 
+'use client'
+
 import { useState } from 'react'
 // FIX: The Metadata import is not needed in a 'use client' component and can be removed.
 // import { Metadata } from 'next' 

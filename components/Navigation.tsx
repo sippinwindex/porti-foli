@@ -21,7 +21,7 @@ export default function Navigation() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // FIXED: Handle hash changes on client side only
+  // Handle hash changes on client side only
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setCurrentHash(window.location.hash)
@@ -40,7 +40,7 @@ export default function Navigation() {
       href: 'https://github.com/sippinwindex', 
       icon: Github, 
       label: 'GitHub',
-      color: 'hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400'
+      color: 'hover:text-gray-800 dark:hover:text-gray-200'
     },
     { 
       href: 'https://www.linkedin.com/in/juan-fernandez-fullstack/', 
@@ -49,7 +49,7 @@ export default function Navigation() {
       color: 'hover:text-blue-600 dark:hover:text-blue-400'
     },
     { 
-      href: 'mailto:stormblazdesign@gmail.com', 
+      href: 'mailto:jafernandez94@gmail.com', 
       icon: Mail, 
       label: 'Email',
       color: 'hover:text-green-600 dark:hover:text-green-400'
@@ -58,11 +58,11 @@ export default function Navigation() {
       href: '/resume.pdf', 
       icon: FileText, 
       label: 'Resume',
-      color: 'hover:text-lux-gold-600 dark:hover:text-lux-gold-400'
+      color: 'hover:text-purple-600 dark:hover:text-purple-400'
     }
   ]
 
-  // FIXED: Smooth scroll function for in-page navigation
+  // Smooth scroll function for in-page navigation
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId)
     if (element) {
@@ -71,7 +71,7 @@ export default function Navigation() {
     }
   }
 
-  // FIXED: Handle navigation based on current page and sections
+  // Handle navigation based on current page and sections
   const handleNavClick = (section: string, e?: React.MouseEvent) => {
     e?.preventDefault()
     
@@ -88,12 +88,13 @@ export default function Navigation() {
     setIsOpen(false)
   }
 
-  // FIXED: Define navigation items with proper sections
+  // Navigation items with both section-based and page-based navigation
   const navItems = [
-    { name: 'Home', section: 'hero' },
-    { name: 'About', section: 'about' },
-    { name: 'Projects', section: 'projects' },
-    { name: 'Contact', section: 'contact' },
+    { name: 'Home', section: 'hero', type: 'section' },
+    { name: 'About', section: 'about', type: 'section' },
+    { name: 'Projects', section: 'projects', type: 'section' },
+    { name: 'Blog', href: '/blog', type: 'page' },
+    { name: 'Contact', section: 'contact', type: 'section' },
   ]
 
   return (
@@ -112,14 +113,14 @@ export default function Navigation() {
           {/* Logo */}
           <Link 
             href="/" 
-            className="font-bold text-xl text-gray-900 dark:text-white hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 transition-colors"
+            className="font-bold text-xl text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
             <motion.div 
               className="flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-viva-magenta-600 to-lux-gold-600 flex items-center justify-center font-bold text-white text-sm">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center font-bold text-white text-sm">
                 JF
               </div>
               <span>Juan Fernandez</span>
@@ -129,52 +130,103 @@ export default function Navigation() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => {
-              // FIXED: Use currentHash state instead of direct window access
-              const isActive = (pathname === '/' && item.section === 'hero' && !currentHash) || 
-                              (pathname === '/' && currentHash === `#${item.section}`)
+              // Handle both section and page navigation
+              let isActive = false
+              
+              if (item.type === 'section') {
+                isActive = (pathname === '/' && item.section === 'hero' && !currentHash) || 
+                          (pathname === '/' && currentHash === `#${item.section}`)
+              } else if (item.type === 'page') {
+                isActive = pathname === item.href
+              }
               
               return (
-                <motion.button
-                  key={item.name}
-                  onClick={(e) => handleNavClick(item.section, e)}
-                  className={`relative px-3 py-2 text-sm font-medium transition-all duration-300 group ${
-                    isActive
-                      ? 'text-viva-magenta-600 dark:text-viva-magenta-400'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400'
-                  }`}
-                  whileHover={{ scale: 1.05, y: -1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <span className="relative z-10">{item.name}</span>
-                  
-                  {/* Hover background effect */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-viva-magenta-500/10 to-lux-gold-500/10 rounded-lg opacity-0 group-hover:opacity-100"
-                    initial={{ scale: 0.8 }}
-                    whileHover={{ scale: 1 }}
-                    transition={{ duration: 0.2 }}
-                  />
-                  
-                  {/* Active indicator */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="navbar-indicator"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 rounded-full"
-                      initial={false}
-                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    />
+                <motion.div key={item.name}>
+                  {item.type === 'section' ? (
+                    <motion.button
+                      onClick={(e) => handleNavClick(item.section!, e)}
+                      className={`relative px-3 py-2 text-sm font-medium transition-all duration-300 group ${
+                        isActive
+                          ? 'text-blue-600 dark:text-blue-400'
+                          : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
+                      }`}
+                      whileHover={{ scale: 1.05, y: -1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <span className="relative z-10">{item.name}</span>
+                      
+                      {/* Hover background effect */}
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg opacity-0 group-hover:opacity-100"
+                        initial={{ scale: 0.8 }}
+                        whileHover={{ scale: 1 }}
+                        transition={{ duration: 0.2 }}
+                      />
+                      
+                      {/* Active indicator */}
+                      {isActive && (
+                        <motion.div
+                          layoutId="navbar-indicator"
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"
+                          initial={false}
+                          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                        />
+                      )}
+                      
+                      {/* Hover underline */}
+                      {!isActive && (
+                        <motion.div
+                          className="absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-0 group-hover:opacity-100"
+                          initial={{ width: 0, x: '-50%' }}
+                          whileHover={{ width: '80%' }}
+                          transition={{ duration: 0.3 }}
+                        />
+                      )}
+                    </motion.button>
+                  ) : (
+                    <Link href={item.href!}>
+                      <motion.div
+                        className={`relative px-3 py-2 text-sm font-medium transition-all duration-300 group ${
+                          isActive
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
+                        }`}
+                        whileHover={{ scale: 1.05, y: -1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span className="relative z-10">{item.name}</span>
+                        
+                        {/* Hover background effect */}
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg opacity-0 group-hover:opacity-100"
+                          initial={{ scale: 0.8 }}
+                          whileHover={{ scale: 1 }}
+                          transition={{ duration: 0.2 }}
+                        />
+                        
+                        {/* Active indicator */}
+                        {isActive && (
+                          <motion.div
+                            layoutId="navbar-indicator"
+                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"
+                            initial={false}
+                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                          />
+                        )}
+                        
+                        {/* Hover underline */}
+                        {!isActive && (
+                          <motion.div
+                            className="absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-0 group-hover:opacity-100"
+                            initial={{ width: 0, x: '-50%' }}
+                            whileHover={{ width: '80%' }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        )}
+                      </motion.div>
+                    </Link>
                   )}
-                  
-                  {/* Hover underline */}
-                  {!isActive && (
-                    <motion.div
-                      className="absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-viva-magenta-400 to-lux-gold-400 rounded-full opacity-0 group-hover:opacity-100"
-                      initial={{ width: 0, x: '-50%' }}
-                      whileHover={{ width: '80%' }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  )}
-                </motion.button>
+                </motion.div>
               )
             })}
             
@@ -193,7 +245,7 @@ export default function Navigation() {
                 >
                   {/* Hover background */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-br from-viva-magenta-500/20 to-lux-gold-500/20 rounded-lg opacity-0 group-hover:opacity-100"
+                    className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg opacity-0 group-hover:opacity-100"
                     initial={{ scale: 0, rotate: 45 }}
                     whileHover={{ scale: 1, rotate: 0 }}
                     transition={{ duration: 0.3 }}
@@ -210,7 +262,7 @@ export default function Navigation() {
                   
                   {/* Sparkle effect */}
                   <motion.div
-                    className="absolute top-1 right-1 w-1 h-1 bg-viva-magenta-400 rounded-full opacity-0 group-hover:opacity-100"
+                    className="absolute top-1 right-1 w-1 h-1 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100"
                     animate={{ 
                       scale: [0, 1, 0],
                       rotate: [0, 180, 360]
@@ -228,14 +280,12 @@ export default function Navigation() {
             {/* Theme Toggle */}
             <ThemeToggle />
             
-            {/* FIXED: Dino Game Link */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Link
-                href="/dino-game"
-                className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 transform group overflow-hidden"
+            {/* Dino Game Link */}
+            <Link href="/dino-game">
+              <motion.div
+                className="relative flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 transform group overflow-hidden cursor-pointer"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 {/* Animated background */}
                 <motion.div
@@ -282,14 +332,14 @@ export default function Navigation() {
                     ease: "easeInOut"
                   }}
                 />
-              </Link>
-            </motion.div>
+              </motion.div>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400"
+            className="md:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -307,18 +357,24 @@ export default function Navigation() {
           >
             <div className="px-4 py-4 space-y-2">
               {navItems.map((item, index) => {
-                // FIXED: Use currentHash state instead of direct window access
-                const isActive = (pathname === '/' && item.section === 'hero' && !currentHash) || 
-                                (pathname === '/' && currentHash === `#${item.section}`)
+                // Handle both section and page navigation for mobile
+                let isActive = false
                 
-                return (
+                if (item.type === 'section') {
+                  isActive = (pathname === '/' && item.section === 'hero' && !currentHash) || 
+                            (pathname === '/' && currentHash === `#${item.section}`)
+                } else if (item.type === 'page') {
+                  isActive = pathname === item.href
+                }
+                
+                return item.type === 'section' ? (
                   <motion.button
                     key={item.name}
-                    onClick={(e) => handleNavClick(item.section, e)}
+                    onClick={(e) => handleNavClick(item.section!, e)}
                     className={`relative block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-all duration-300 group overflow-hidden ${
                       isActive
-                        ? 'text-viva-magenta-600 dark:text-viva-magenta-400 bg-viva-magenta-50 dark:bg-viva-magenta-900/20'
-                        : 'text-gray-700 dark:text-gray-300 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                        ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                     }`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -331,13 +387,40 @@ export default function Navigation() {
                     {/* Hover effect */}
                     {!isActive && (
                       <motion.div
-                        className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-viva-magenta-500 to-lux-gold-500 opacity-0 group-hover:opacity-100"
+                        className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-purple-500 opacity-0 group-hover:opacity-100"
                         initial={{ scaleY: 0 }}
                         whileHover={{ scaleY: 1 }}
                         transition={{ duration: 0.2 }}
                       />
                     )}
                   </motion.button>
+                ) : (
+                  <Link key={item.name} href={item.href!} onClick={() => setIsOpen(false)}>
+                    <motion.div
+                      className={`relative block w-full text-left px-3 py-2 text-base font-medium rounded-md transition-all duration-300 group overflow-hidden ${
+                        isActive
+                          ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                          : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ x: 5, scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <span className="relative z-10">{item.name}</span>
+                      
+                      {/* Hover effect */}
+                      {!isActive && (
+                        <motion.div
+                          className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-purple-500 opacity-0 group-hover:opacity-100"
+                          initial={{ scaleY: 0 }}
+                          whileHover={{ scaleY: 1 }}
+                          transition={{ duration: 0.2 }}
+                        />
+                      )}
+                    </motion.div>
+                  </Link>
                 )
               })}
               
@@ -359,14 +442,17 @@ export default function Navigation() {
                 ))}
               </div>
               
-              {/* FIXED: Mobile Dino Game Link */}
-              <Link
-                href="/dino-game"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-md hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 mt-4"
-              >
-                <Gamepad2 className="w-4 h-4" />
-                <span>Dino Game</span>
+              {/* Mobile Dino Game Link */}
+              <Link href="/dino-game">
+                <motion.div
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-md hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 mt-4 cursor-pointer"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Gamepad2 className="w-4 h-4" />
+                  <span>Dino Game</span>
+                </motion.div>
               </Link>
 
               {/* Mobile Theme Toggle */}

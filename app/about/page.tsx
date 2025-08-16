@@ -1,5 +1,7 @@
 'use client'
 
+'use client'
+
 import { Metadata } from 'next'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'

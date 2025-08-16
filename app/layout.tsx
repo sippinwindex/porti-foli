@@ -75,17 +75,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+      <body className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans antialiased overflow-x-hidden`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          <div className="relative flex min-h-screen flex-col bg-background">
-            <div className="flex-1">
+          {/* Fixed layout structure */}
+          <div className="relative min-h-screen bg-background">
+            {/* Main content wrapper */}
+            <main className="relative z-10">
               {children}
-            </div>
+            </main>
           </div>
         </ThemeProvider>
         <Analytics />

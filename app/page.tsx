@@ -1,670 +1,396 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+// app/page.tsx - Fixed with 'use client' directive
+import { Suspense } from 'react'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
-import DinoGameButton from '@/components/DinoGameButton'
-import Interactive3DHero from '@/components/3D/Interactive3DHero'
 import ScrollTriggered3DSections from '@/components/3D/ScrollTriggered3DSections'
-import FloatingCodeBlocks from '@/components/3D/FloatingCodeBlocks'
-import LanguageVisualization from '@/components/3D/LanguageVisualization'
-import ParticleField from '@/components/3D/ParticleField'
-import { motion, useScroll, useTransform } from 'framer-motion'
-import { Code, Zap, Palette, Github, Star, Rocket, Calendar, Mail, ArrowRight, Download, Globe, Users, Activity } from 'lucide-react'
-import usePortfolioData from '@/hooks/usePortfolioData'
-import type { ScrollProject } from '@/types/portfolio'
+import { motion } from 'framer-motion'
+import { Mail, Linkedin, Github, ExternalLink, Download, ArrowRight, Code, Palette, Database, Globe } from 'lucide-react'
 
-// FIXED: Use shared type and ensure URL is always string
-interface HeroProject {
-  id: string
-  title: string
-  description: string
-  techStack: string[]
-  featured: boolean
-  github: {
-    stars: number
-    forks: number
-    url: string  // Always required
+// Enhanced loading component with better animation
+function SectionLoading() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="relative">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-blue-600 border-r-4 border-r-transparent"></div>
+        <div className="absolute inset-0 animate-pulse rounded-full h-32 w-32 border-2 border-blue-300 opacity-30"></div>
+      </div>
+    </div>
+  )
+}
+
+// Enhanced skill data with icons
+const skills = [
+  { name: 'React/Next.js', icon: Code, color: 'from-blue-500 to-cyan-500' },
+  { name: 'TypeScript', icon: Code, color: 'from-blue-600 to-indigo-600' },
+  { name: 'Python/Flask', icon: Database, color: 'from-green-500 to-emerald-500' },
+  { name: 'PostgreSQL', icon: Database, color: 'from-blue-700 to-blue-800' },
+  { name: 'Tailwind CSS', icon: Palette, color: 'from-cyan-500 to-blue-500' },
+  { name: 'Three.js', icon: Globe, color: 'from-purple-500 to-pink-500' },
+  { name: 'AWS/Azure', icon: Globe, color: 'from-orange-500 to-red-500' },
+  { name: 'UI/UX Design', icon: Palette, color: 'from-pink-500 to-rose-500' }
+]
+
+// Enhanced project data
+const projects = [
+  {
+    title: 'Portfolio Website',
+    description: 'Modern 3D portfolio with Three.js, featuring interactive animations and real-time GitHub integration.',
+    tech: ['Next.js', 'Three.js', 'TypeScript'],
+    gradient: 'from-blue-500 via-purple-500 to-pink-500',
+    delay: 0
+  },
+  {
+    title: 'GameGraft',
+    description: 'Game discovery app with real-time API integration and dynamic user interfaces.',
+    tech: ['React', 'Flask', 'PostgreSQL'],
+    gradient: 'from-green-500 via-teal-500 to-cyan-500',
+    delay: 0.1
+  },
+  {
+    title: 'SquadUp',
+    description: 'Gaming collaboration app with real-time features and live voting system using SSE.',
+    tech: ['React', 'Flask', 'JWT'],
+    gradient: 'from-orange-500 via-red-500 to-pink-500',
+    delay: 0.2
   }
-  vercel: {
-    isLive: boolean
-    liveUrl?: string
+]
+
+// Enhanced contact options
+const contactOptions = [
+  {
+    icon: Mail,
+    title: 'Email',
+    description: 'jafernandez94@gmail.com',
+    href: 'mailto:jafernandez94@gmail.com',
+    color: 'from-blue-500 to-indigo-600',
+    delay: 0
+  },
+  {
+    icon: Linkedin,
+    title: 'LinkedIn',
+    description: 'Connect with me',
+    href: 'https://www.linkedin.com/in/juan-fernandez-fullstack/',
+    color: 'from-blue-600 to-blue-700',
+    delay: 0.1
+  },
+  {
+    icon: Github,
+    title: 'GitHub',
+    description: 'View my code',
+    href: 'https://github.com/sippinwindex',
+    color: 'from-gray-700 to-gray-900',
+    delay: 0.2
+  }
+]
+
+// Animation variants
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6 }
+}
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
   }
 }
 
 export default function HomePage() {
-  const { projects, stats, loading } = usePortfolioData()
-  const [currentSection, setCurrentSection] = useState('hero')
-  const { scrollYProgress } = useScroll()
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "100%"])
-  
-  // Transform projects data for ScrollTriggered3DSections component
-  const transformedProjects: ScrollProject[] = projects.map(project => ({
-    id: project.id,
-    name: project.name, // FIXED: Include required name property
-    title: project.title || project.name,
-    description: project.description,
-    techStack: project.techStack,
-    featured: project.featured,
-    github: {
-      stars: project.github?.stars || 0,
-      forks: project.github?.forks || 0,
-      url: project.github?.url || project.githubUrl || 'https://github.com/sippinwindex'
-    },
-    vercel: {
-      isLive: project.vercel?.isLive || false,
-      liveUrl: project.vercel?.liveUrl || project.liveUrl
-    }
-  }))
-  
-  // Transform projects data for Interactive3DHero component - FIXED VERSION
-  const heroProjects: HeroProject[] = projects.length > 0 
-    ? projects.slice(0, 3).map(project => ({
-        id: project.id,
-        title: project.title || project.name,
-        description: project.description,
-        techStack: project.techStack,
-        featured: project.featured,
-        github: {
-          stars: project.github?.stars || 0,
-          forks: project.github?.forks || 0,
-          url: project.github?.url || project.githubUrl || 'https://github.com/sippinwindex' // FIXED: Ensure always string
-        },
-        vercel: {
-          isLive: project.vercel?.isLive || false,
-          liveUrl: project.vercel?.liveUrl || project.liveUrl || undefined // Can be undefined
-        }
-      }))
-    : [
-        {
-          id: 'portfolio',
-          title: 'Portfolio Website',
-          description: 'Modern 3D portfolio with live GitHub integration, interactive animations, and cutting-edge web technologies',
-          techStack: ['Next.js', 'Three.js', 'TypeScript', 'Framer Motion', 'Tailwind CSS'],
-          featured: true,
-          github: { stars: 25, forks: 8, url: 'https://github.com/sippinwindex' },
-          vercel: { isLive: true, liveUrl: 'https://juanfernandez.dev' }
-        }
-      ]
-
-  // Tech stack for floating code blocks
-  const techStack = ['React', 'Next.js', 'TypeScript', 'Node.js', 'Python', 'Three.js']
-
-  // Track scroll position for section detection - FIXED: Updated section heights
-  useEffect(() => {
-    // FIXED: Only run on client side
-    if (typeof window === 'undefined') return
-    
-    const handleScroll = () => {
-      const scrolled = window.scrollY
-      const sections = ['hero', 'code-showcase', 'about', 'languages', 'projects', 'contact']
-      
-      // Define section boundaries based on actual content
-      const heroHeight = window.innerHeight
-      const codeShowcaseHeight = window.innerHeight * 0.8 // Reduced height
-      const aboutSectionTop = heroHeight + codeShowcaseHeight
-      
-      let currentIndex = 0
-      
-      if (scrolled < heroHeight) {
-        currentIndex = 0 // hero
-      } else if (scrolled < heroHeight + codeShowcaseHeight) {
-        currentIndex = 1 // code-showcase
-      } else if (scrolled < aboutSectionTop + 800) { // About section height
-        currentIndex = 2 // about
-      } else if (scrolled < aboutSectionTop + 800 + window.innerHeight) {
-        currentIndex = 3 // languages
-      } else {
-        currentIndex = Math.min(Math.floor((scrolled - aboutSectionTop - 800 - window.innerHeight) / 600) + 4, sections.length - 1)
-      }
-      
-      setCurrentSection(sections[currentIndex])
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  // Smooth scroll function for navigation
-  const scrollToSection = (sectionId: string) => {
-    // FIXED: Only run on client side
-    if (typeof window === 'undefined') return
-    
-    const element = document.getElementById(sectionId)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
-    }
-  }
-
   return (
-    <>
+    <div className="relative min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Fixed Navigation */}
       <Navigation />
       
-      {/* Particle Field Background */}
-      <div className="fixed inset-0 z-0">
-        <ParticleField 
-          particleCount={80}
-          colorScheme="viva-magenta"
-          animation="constellation"
-          interactive={true}
-          showConnections={true}
-          mouseInfluence={120}
-          speed={1}
-        />
-      </div>
-
-      <main className="relative z-10">
-        {/* Enhanced 3D Hero Section */}
-        <section id="hero" className="relative min-h-screen overflow-hidden">
-          <motion.div
-            className="absolute inset-0 hero-3d"
-            style={{ y: backgroundY }}
-          >
-            {/* Dynamic gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-lux-black via-viva-magenta-900/20 to-lux-gold-900/20" />
-            <motion.div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `radial-gradient(circle at 30% 20%, rgba(190, 52, 85, 0.15) 0%, transparent 50%),
-                                 radial-gradient(circle at 70% 80%, rgba(212, 175, 55, 0.15) 0%, transparent 50%)`
-              }}
-              animate={{
-                backgroundPosition: ['0% 0%', '100% 100%', '0% 0%']
-              }}
-              transition={{ duration: 20, repeat: Infinity }}
-            />
-          </motion.div>
-          <Interactive3DHero projects={heroProjects} />
-        </section>
-
-        {/* FIXED: Floating Code Blocks Section - Better spacing and z-index */}
-        <section id="code-showcase" className="relative min-h-[80vh] z-20 py-20">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-            viewport={{ once: true }}
-            className="absolute inset-0 z-10"
-          >
-            <FloatingCodeBlocks 
-              techStack={techStack}
-              isVisible={true}
-              onBlockClick={(language) => {
-                console.log(`Exploring ${language} technology...`)
-                // Could trigger modal or navigation
-              }}
-            />
-          </motion.div>
+      {/* Main Content Container */}
+      <div className="relative">
+        {/* Hero Section - Enhanced with better layout */}
+        <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden">
+          {/* Background gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 opacity-50"></div>
           
-          <div className="relative z-30 container mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-center">
+          <Suspense fallback={<SectionLoading />}>
+            <ScrollTriggered3DSections />
+          </Suspense>
+
+          {/* Hero content overlay */}
+          <div className="absolute inset-0 flex items-center justify-center z-20 px-4">
             <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
-              viewport={{ once: true }}
-              className="text-center glass-hero rounded-2xl p-8 max-w-2xl mx-4"
+              className="text-center max-w-4xl mx-auto"
             >
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 gradient-text-3d">
-                Technologies I Master
-              </h2>
-              <p className="text-lg text-lux-gray-600 dark:text-lux-gray-300">
-                Interactive showcase of the cutting-edge technologies I use to build extraordinary digital experiences
-              </p>
+              <motion.h1 
+                className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-6"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.7 }}
+              >
+                Juan A. Fernandez
+              </motion.h1>
+              <motion.p 
+                className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-8 font-light"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.9 }}
+              >
+                Full-Stack Developer & UI/UX Designer
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 1.1 }}
+                className="flex flex-col sm:flex-row gap-4 justify-center"
+              >
+                <a
+                  href="#contact"
+                  className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                >
+                  Get In Touch
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </a>
+                <a
+                  href="/resume.pdf"
+                  className="group inline-flex items-center gap-2 px-8 py-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white rounded-full font-semibold border border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Resume
+                </a>
+              </motion.div>
             </motion.div>
           </div>
         </section>
 
-        {/* About Preview Section with Enhanced 3D Animations */}
-        <section id="about" className="py-20 bg-gradient-to-br from-lux-offwhite via-viva-magenta-50/10 to-lux-gold-50/10 dark:from-lux-black dark:via-viva-magenta-900/5 dark:to-lux-gold-900/5 relative overflow-hidden z-30">
-          {/* Animated background elements */}
-          <div className="absolute inset-0 pointer-events-none">
-            {Array.from({ length: 15 }).map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-2 h-2 bg-viva-magenta-400/20 rounded-full"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                }}
-                animate={{
-                  y: [0, -30, 0],
-                  x: [0, Math.random() * 40 - 20, 0],
-                  opacity: [0.2, 0.6, 0.2],
-                  scale: [0.5, 1.5, 0.5],
-                }}
-                transition={{
-                  duration: 4 + Math.random() * 4,
-                  repeat: Infinity,
-                  delay: Math.random() * 2,
-                  ease: "easeInOut"
-                }}
-              />
-            ))}
-          </div>
-
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* About Section - Enhanced with better visuals */}
+        <section id="about" className="relative min-h-screen py-20 bg-white dark:bg-gray-900">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-6xl mx-auto">
               <motion.div
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
+                variants={staggerContainer}
+                initial="initial"
+                whileInView="animate"
                 viewport={{ once: true }}
                 className="text-center mb-16"
               >
-                <motion.div
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-viva-magenta-50 dark:bg-viva-magenta-900/30 text-viva-magenta-700 dark:text-viva-magenta-300 rounded-full border border-viva-magenta-200 dark:border-viva-magenta-700 mb-6"
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 3, repeat: Infinity }}
+                <motion.h2 
+                  variants={fadeInUp}
+                  className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-8"
                 >
-                  <Activity className="w-4 h-4 animate-pulse" />
-                  <span className="text-sm font-medium">Available for new opportunities</span>
+                  About Me
+                </motion.h2>
+                <motion.div 
+                  variants={fadeInUp}
+                  className="prose prose-lg dark:prose-invert max-w-4xl mx-auto"
+                >
+                  <p className="text-xl text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                    Hi, I'm Juan A. Fernandez, a Full-Stack Developer based in Miami, Florida. 
+                    With a strong foundation in software development and UI/UX design, I blend 
+                    analytical precision from my background as a healthcare data analyst with 
+                    creative, user-centered design from UX research.
+                  </p>
+                  <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
+                    I'm passionate about creating seamless digital experiences that prioritize 
+                    accessibility and performance. I have hands-on experience developing applications 
+                    that integrate real-time APIs, authentication systems, and dynamic interfaces.
+                  </p>
                 </motion.div>
+              </motion.div>
+                
+              {/* Enhanced Skills Grid with icons and animations */}
+              <motion.div
+                variants={staggerContainer}
+                initial="initial"
+                whileInView="animate"
+                viewport={{ once: true }}
+                className="grid grid-cols-2 md:grid-cols-4 gap-6"
+              >
+                {skills.map((skill, index) => {
+                  const IconComponent = skill.icon
+                  return (
+                    <motion.div
+                      key={skill.name}
+                      variants={{
+                        initial: { opacity: 0, scale: 0.8, y: 20 },
+                        animate: { opacity: 1, scale: 1, y: 0 }
+                      }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      className="group relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 hover:border-blue-500/50 dark:hover:border-blue-400/50 transition-all duration-300 hover:shadow-xl"
+                    >
+                      <div className={`absolute inset-0 bg-gradient-to-br ${skill.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+                      <div className="relative z-10">
+                        <IconComponent className="w-8 h-8 text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 mb-3" />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-300">
+                          {skill.name}
+                        </span>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </motion.div>
+            </div>
+          </div>
+        </section>
 
-                <h2 className="text-4xl md:text-6xl font-bold mb-6">
-                  About{' '}
-                  <span className="bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-600 bg-clip-text text-transparent">
-                    Me
-                  </span>
+        {/* Projects Section - Enhanced with better animations */}
+        <section id="projects" className="relative min-h-screen py-20 bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 dark:from-gray-800 dark:via-blue-900 dark:to-indigo-900">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-6xl mx-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="text-center mb-16"
+              >
+                <h2 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-8">
+                  Featured Projects
                 </h2>
-                <p className="text-xl text-lux-gray-600 dark:text-lux-gray-300 max-w-3xl mx-auto leading-relaxed">
-                  With over 5 years of experience in full-stack development, I specialize in creating 
-                  scalable web applications with cutting-edge 3D technologies and immersive user experiences.
+                <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                  Here are some of my recent projects showcasing my skills in full-stack development, 
+                  UI/UX design, and modern web technologies.
                 </p>
               </motion.div>
 
-              <div className="grid md:grid-cols-3 gap-8 mb-16">
-                {[
-                  {
-                    icon: Rocket,
-                    title: 'Frontend Excellence',
-                    description: 'React, Next.js, TypeScript, Three.js, Framer Motion',
-                    color: 'from-viva-magenta-500 to-viva-magenta-700',
-                    delay: 0.1
-                  },
-                  {
-                    icon: Zap,
-                    title: 'Backend Mastery',
-                    description: 'Node.js, PostgreSQL, MongoDB, GraphQL APIs',
-                    color: 'from-lux-teal-500 to-lux-teal-700',
-                    delay: 0.2
-                  },
-                  {
-                    icon: Palette,
-                    title: '3D & Animation',
-                    description: 'Three.js, WebGL, GSAP, Interactive Experiences',
-                    color: 'from-lux-gold-500 to-lux-gold-700',
-                    delay: 0.3
-                  }
-                ].map((skill, index) => (
+              {/* Enhanced Projects Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+                {projects.map((project, index) => (
                   <motion.div
-                    key={skill.title}
-                    initial={{ opacity: 0, y: 50, rotateY: -15 }}
-                    whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
-                    transition={{ duration: 0.8, delay: skill.delay }}
+                    key={project.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    whileHover={{ 
-                      scale: 1.05, 
-                      rotateY: 5,
-                      z: 50
-                    }}
-                    className="group card-3d relative overflow-hidden preserve-3d"
+                    transition={{ duration: 0.6, delay: project.delay }}
+                    whileHover={{ scale: 1.02, y: -5 }}
+                    className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-8 border border-gray-200 dark:border-gray-700 hover:border-blue-500/50 dark:hover:border-blue-400/50 transition-all duration-300 hover:shadow-2xl"
                   >
-                    <div className="relative p-8 glass-card border border-lux-gray-200/50 dark:border-lux-gray-700/50 rounded-2xl h-full">
-                      {/* Animated Background Gradient */}
-                      <motion.div
-                        className={`absolute inset-0 bg-gradient-to-br ${skill.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-2xl`}
-                        animate={{
-                          background: [
-                            `linear-gradient(45deg, ${skill.color.split(' ')[1]} 0%, transparent 100%)`,
-                            `linear-gradient(225deg, ${skill.color.split(' ')[1]} 0%, transparent 100%)`,
-                            `linear-gradient(45deg, ${skill.color.split(' ')[1]} 0%, transparent 100%)`
-                          ]
-                        }}
-                        transition={{ duration: 3, repeat: Infinity }}
-                      />
-                      
-                      <motion.div 
-                        className="relative z-10 text-center"
-                        animate={{ 
-                          y: [0, -5, 0],
-                        }}
-                        transition={{ 
-                          duration: 4, 
-                          repeat: Infinity,
-                          delay: index * 0.5,
-                          ease: "easeInOut"
-                        }}
-                      >
-                        <motion.div 
-                          className="flex justify-center mb-4"
-                          animate={{ 
-                            rotate: [0, 10, -10, 0],
-                            scale: [1, 1.1, 1]
-                          }}
-                          transition={{ 
-                            duration: 3, 
-                            repeat: Infinity,
-                            delay: index * 0.3
-                          }}
-                        >
-                          <skill.icon className="w-12 h-12 text-viva-magenta-600 dark:text-viva-magenta-400" />
-                        </motion.div>
-                        <h3 className="text-2xl font-bold mb-4 text-lux-gray-900 dark:text-lux-gray-50">{skill.title}</h3>
-                        <p className="text-lux-gray-600 dark:text-lux-gray-400 leading-relaxed">{skill.description}</p>
-                      </motion.div>
-
-                      {/* Floating particles */}
-                      <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-                        {Array.from({ length: 8 }).map((_, i) => (
-                          <motion.div
-                            key={i}
-                            className="absolute w-1 h-1 bg-viva-magenta-400/30 rounded-full"
-                            style={{
-                              left: `${20 + Math.random() * 60}%`,
-                              top: `${20 + Math.random() * 60}%`,
-                            }}
-                            animate={{
-                              y: [0, -20, 0],
-                              opacity: [0.3, 0.8, 0.3],
-                              scale: [0.5, 1, 0.5],
-                            }}
-                            transition={{
-                              duration: 3 + Math.random() * 2,
-                              repeat: Infinity,
-                              delay: Math.random() * 2,
-                              ease: "easeInOut"
-                            }}
-                          />
+                    <div className={`absolute inset-0 bg-gradient-to-br ${project.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+                    <div className="relative z-10">
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {project.title}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                        {project.description}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        {project.tech.map((tech) => (
+                          <span key={tech} className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm font-medium">
+                            {tech}
+                          </span>
                         ))}
                       </div>
-
-                      {/* Scan line effect */}
-                      <motion.div
-                        className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-viva-magenta-500 to-transparent opacity-0 group-hover:opacity-100"
-                        animate={{
-                          top: ['0%', '100%'],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "linear"
-                        }}
-                      />
+                      <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium group-hover:gap-3 transition-all">
+                        <span>View Project</span>
+                        <ExternalLink className="w-4 h-4" />
+                      </div>
                     </div>
                   </motion.div>
                 ))}
               </div>
 
-              {/* Live Stats Section */}
-              {stats && (
-                <motion.div
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                  viewport={{ once: true }}
-                  className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12"
-                >
-                  {[
-                    { label: 'Projects Built', value: stats.totalProjects, icon: Code, color: 'viva-magenta' },
-                    { label: 'GitHub Stars', value: stats.totalStars, icon: Star, color: 'lux-gold' },
-                    { label: 'Live Applications', value: stats.liveProjects, icon: Globe, color: 'lux-teal' },
-                    { label: 'Years Experience', value: '5+', icon: Calendar, color: 'lux-sage' }
-                  ].map((stat, index) => (
-                    <motion.div
-                      key={stat.label}
-                      className="text-center p-6 glass-card rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 group"
-                      whileHover={{ scale: 1.05, y: -5 }}
-                      initial={{ scale: 0, rotateY: -180 }}
-                      whileInView={{ scale: 1, rotateY: 0 }}
-                      transition={{ 
-                        delay: index * 0.1, 
-                        type: "spring", 
-                        stiffness: 300,
-                        duration: 0.6
-                      }}
-                      viewport={{ once: true }}
-                    >
-                      <motion.div 
-                        className="flex justify-center mb-3"
-                        animate={{ 
-                          rotate: [0, 10, -10, 0],
-                          scale: [1, 1.2, 1]
-                        }}
-                        transition={{ 
-                          duration: 3, 
-                          repeat: Infinity,
-                          delay: index * 0.2
-                        }}
-                      >
-                        <stat.icon className="w-8 h-8 text-viva-magenta-600 dark:text-viva-magenta-400" />
-                      </motion.div>
-                      <motion.div 
-                        className="text-3xl font-bold text-lux-gray-900 dark:text-lux-gray-50 mb-1"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        transition={{ delay: index * 0.1 + 0.5 }}
-                        viewport={{ once: true }}
-                      >
-                        {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
-                      </motion.div>
-                      <div className="text-sm text-lux-gray-600 dark:text-lux-gray-400">{stat.label}</div>
-                      
-                      {/* Hover glow effect */}
-                      <motion.div
-                        className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-500/10 to-lux-gold-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        initial={{ scale: 0.8 }}
-                        whileHover={{ scale: 1 }}
-                      />
-                    </motion.div>
-                  ))}
-                </motion.div>
-              )}
-
+              {/* Enhanced View All Projects Button */}
               <div className="text-center">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8, delay: 0.6 }}
+                <motion.a
+                  href="/projects"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:shadow-xl"
                 >
-                  <motion.button
-                    onClick={() => scrollToSection('projects')}
-                    className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform-gpu"
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <span>Discover My Journey</span>
-                    <motion.div
-                      animate={{ x: [0, 5, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      <ArrowRight className="w-4 h-4" />
-                    </motion.div>
-                  </motion.button>
-                </motion.div>
+                  View All Projects
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </motion.a>
               </div>
             </div>
           </div>
         </section>
 
-        {/* FIXED: Language Visualization Section - Better separation and spacing */}
-        <section id="languages" className="relative min-h-screen z-40 py-20 bg-gradient-to-br from-lux-gray-50 to-lux-gray-100 dark:from-lux-gray-900 dark:to-lux-black">
-          {/* Clear visual separator */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500"></div>
-          
-          <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 h-full">
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-              className="text-center mb-16"
-            >
-              <h2 className="text-4xl md:text-6xl font-bold mb-6">
-                Language{' '}
-                <span className="bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-600 bg-clip-text text-transparent">
-                  Expertise
-                </span>
-              </h2>
-              <p className="text-xl text-lux-gray-600 dark:text-lux-gray-300 max-w-3xl mx-auto leading-relaxed">
-                Interactive visualization of my programming language proficiency and project distribution
-              </p>
-            </motion.div>
-            
-            <div className="relative h-[600px]">
-              <LanguageVisualization 
-                showStats={true}
-                interactive={true}
-                layout="circle"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Projects Section with 3D Effects */}
-        <ScrollTriggered3DSections 
-          projects={transformedProjects} 
-          stats={{
-            totalProjects: stats?.totalProjects || 25,
-            totalStars: stats?.totalStars || 150,
-            liveProjects: stats?.liveProjects || 12,
-            recentActivity: {
-              activeProjects: stats?.recentActivity?.activeProjects || 8
-            }
-          }} 
-        />
-
-        {/* Enhanced CTA Section */}
-        <section id="contact" className="py-20 bg-gradient-to-br from-viva-magenta-900/10 via-lux-black/50 to-lux-gold-900/10 relative overflow-hidden z-50">
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-viva-magenta-500/5 to-lux-gold-500/5" />
-            <motion.div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `radial-gradient(circle at 25% 25%, rgba(190, 52, 85, 0.1) 0%, transparent 50%),
-                                 radial-gradient(circle at 75% 75%, rgba(212, 175, 55, 0.1) 0%, transparent 50%)`
-              }}
-              animate={{
-                backgroundPosition: ['0% 0%', '100% 100%', '0% 0%']
-              }}
-              transition={{ duration: 20, repeat: Infinity }}
-            />
-          </div>
-
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="max-w-4xl mx-auto text-center">
+        {/* Contact Section - Enhanced with better layout */}
+        <section id="contact" className="relative min-h-screen py-20 bg-white dark:bg-gray-900">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-6xl mx-auto">
               <motion.div
-                initial={{ opacity: 0, y: 50 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
                 viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="text-center mb-16"
               >
-                <h2 className="text-4xl md:text-6xl font-bold mb-6">
-                  Ready to{' '}
-                  <span className="bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-600 bg-clip-text text-transparent">
-                    Collaborate?
-                  </span>
+                <h2 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-8">
+                  Let's Build Something Amazing
                 </h2>
-                <p className="text-xl text-lux-gray-600 dark:text-lux-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-                  I'm always excited about new opportunities and innovative projects. 
-                  Let's create something extraordinary together with cutting-edge technology.
+                <p className="text-xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
+                  Ready to bring your ideas to life? I'm available for freelance projects 
+                  and full-time opportunities. Let's create something extraordinary together.
                 </p>
-                
-                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                  <motion.button
-                    onClick={() => scrollToSection('contact')}
-                    className="group relative px-8 py-4 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      <span>Get In Touch</span>
-                      <motion.div
-                        animate={{ x: [0, 5, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      >
-                        <ArrowRight className="w-4 h-4" />
-                      </motion.div>
-                    </span>
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-lux-gold-600 to-viva-magenta-600"
-                      initial={{ x: "-100%" }}
-                      whileHover={{ x: "0%" }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </motion.button>
-                  
-                  <motion.a
-                    href="/resume.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-center gap-2 px-8 py-4 glass-card border border-lux-gray-300 dark:border-lux-gray-600 text-lux-gray-900 dark:text-lux-gray-50 font-semibold rounded-xl hover:border-viva-magenta-400 dark:hover:border-viva-magenta-600 transition-all duration-300"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <motion.div
-                      animate={{ y: [0, -2, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <Download className="w-4 h-4" />
-                    </motion.div>
-                    Download Resume
-                  </motion.a>
-                </div>
-
-                {/* Social Links with 3D Effects */}
-                <motion.div 
-                  className="flex justify-center gap-6 mt-12"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
-                  viewport={{ once: true }}
-                >
-                  {[
-                    { href: "https://github.com/sippinwindex", icon: Github, label: "GitHub" },
-                    { href: "https://www.linkedin.com/in/juan-fernandez-fullstack/", icon: Users, label: "LinkedIn" },
-                    { href: "mailto:stormblazdesign@gmail.com", icon: Mail, label: "Email" }
-                  ].map((social, index) => (
-                    <motion.a
-                      key={index}
-                      href={social.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-4 glass-card rounded-xl border border-lux-gray-200 dark:border-lux-gray-700 hover:border-viva-magenta-300 dark:hover:border-viva-magenta-700 transition-all duration-300 group"
-                      whileHover={{ scale: 1.1, y: -5, rotateY: 10 }}
-                      whileTap={{ scale: 0.95 }}
-                      aria-label={social.label}
-                      initial={{ opacity: 0, scale: 0 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.8 + index * 0.1 }}
-                      viewport={{ once: true }}
-                    >
-                      <motion.div 
-                        className="flex justify-center"
-                        animate={{ 
-                          rotate: [0, 10, -10, 0],
-                          scale: [1, 1.1, 1]
-                        }}
-                        transition={{ 
-                          duration: 3, 
-                          repeat: Infinity,
-                          delay: index * 0.5
-                        }}
-                      >
-                        <social.icon className="w-6 h-6 text-lux-gray-600 dark:text-lux-gray-400 group-hover:text-viva-magenta-600 dark:group-hover:text-viva-magenta-400 transition-colors" />
-                      </motion.div>
-                    </motion.a>
-                  ))}
-                </motion.div>
               </motion.div>
+
+              {/* Enhanced Contact Options */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                {contactOptions.map((contact, index) => {
+                  const IconComponent = contact.icon
+                  return (
+                    <motion.a
+                      key={contact.title}
+                      href={contact.href}
+                      target={contact.href.startsWith('http') ? '_blank' : undefined}
+                      rel={contact.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: contact.delay }}
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="group relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl p-8 border border-gray-200 dark:border-gray-600 hover:border-blue-500/50 dark:hover:border-blue-400/50 transition-all duration-300 hover:shadow-xl"
+                    >
+                      <div className={`absolute inset-0 bg-gradient-to-br ${contact.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+                      <div className="relative z-10 text-center">
+                        <div className="flex justify-center mb-4">
+                          <div className="p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg group-hover:shadow-xl transition-shadow">
+                            <IconComponent className="w-8 h-8 text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                          </div>
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {contact.title}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-300">
+                          {contact.description}
+                        </p>
+                      </div>
+                    </motion.a>
+                  )
+                })}
+              </div>
+
+              {/* Enhanced CTA Button */}
+              <div className="text-center">
+                <motion.a
+                  href="mailto:jafernandez94@gmail.com"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="group inline-flex items-center gap-2 px-12 py-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white rounded-full font-bold text-lg hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 transition-all duration-300 hover:shadow-2xl"
+                >
+                  Start a Project
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </motion.a>
+              </div>
             </div>
           </div>
         </section>
-      </main>
-      
+      </div>
+
+      {/* Footer */}
       <Footer />
-      <DinoGameButton />
-    </>
+    </div>
   )
 }
