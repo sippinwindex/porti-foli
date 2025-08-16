@@ -228,19 +228,19 @@ function generateHighlights(project: LegacyProject): string[] {
 
 function calculateDeploymentScore(project: LegacyProject): number {
   let score = 60
-  if (project.description?.length > 50) score += 5
-  if (project.longDescription?.length > 100) score += 5
+  if ((project.description?.length ?? 0) > 50) score += 5
+  if ((project.longDescription?.length ?? 0) > 100) score += 5
   if (project.image && project.image !== '/images/projects/placeholder.jpg') score += 5
-  if (project.tags?.length >= 3) score += 5
-  if (project.tags?.length >= 5) score += 5
+  if ((project.tags?.length ?? 0) >= 3) score += 5
+  if ((project.tags?.length ?? 0) >= 5) score += 5
   if (project.tags?.includes('TypeScript')) score += 10
   if (project.tags?.includes('React')) score += 5
   if (project.tags?.includes('Next.js')) score += 10
   if (project.liveUrl) score += 15
   if (project.githubUrl) score += 10
   if (project.featured) score += 10
-  if (project.challenges?.length > 0) score += 5
-  if (project.learnings?.length > 0) score += 5
+  if ((project.challenges?.length ?? 0) > 0) score += 5
+  if ((project.learnings?.length ?? 0) > 0) score += 5
   if (project.metrics && Object.keys(project.metrics).length > 0) score += 10
   if (project.status === 'completed') score += 10
   return Math.min(score, 100)
@@ -350,7 +350,7 @@ export function searchLegacyProjects(
   return filtered
 }
 
-export default {
+const portfolioAdapter = {
   convertToLegacyProject,
   convertToEnhancedProject,
   getLegacyProjects,
@@ -360,3 +360,5 @@ export default {
   generateMockLegacyProjects,
   searchLegacyProjects
 }
+
+export default portfolioAdapter
