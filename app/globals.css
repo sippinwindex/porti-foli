@@ -1122,6 +1122,25 @@ select:focus-visible {
   z-index: 10;
 }
 
+/* GPU Acceleration */
+.glass-card {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Prevent horizontal scroll */
+html, body {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Mobile performance */
+@media (max-width: 768px) {
+  .glass-card {
+    backdrop-filter: blur(8px) !important;
+  }
+}
+
 /* Debug utilities (comment out in production) */
 /*
 .debug * {

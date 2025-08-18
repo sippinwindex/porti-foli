@@ -1,7 +1,5 @@
 'use client'
 
-'use client'
-
 import React, { useState, useEffect, useRef } from 'react'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
@@ -13,10 +11,11 @@ import {
   Calendar, Code, Zap, Search, TrendingUp, Eye, Clock 
 } from 'lucide-react'
 import usePortfolioData from '@/hooks/usePortfolioData'
+import type { PortfolioProject } from '@/types/portfolio'
 
 function ProjectShowcase() {
   const { projects, loading, error, refetch } = usePortfolioData()
-  const [filteredProjects, setFilteredProjects] = useState(projects)
+  const [filteredProjects, setFilteredProjects] = useState<PortfolioProject[]>(projects)
   const [activeTag, setActiveTag] = useState('All')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchTerm, setSearchTerm] = useState('')
@@ -26,15 +25,27 @@ function ProjectShowcase() {
 
   // Update filtered projects when projects data changes
   useEffect(() => {
-    let filtered = projects
+    let filtered = [...projects]
 
-    // Filter by tag
+    // Filter by tag - FIXED: Safe property access
     if (activeTag !== 'All') {
-      filtered = filtered.filter(project => 
-        project.tags?.includes(activeTag) || 
-        project.techStack?.includes(activeTag) ||
-        project.github?.topics?.includes(activeTag.toLowerCase())
-      )
+      filtered = filtered.filter(project => {
+        // Safely access all possible tag sources
+        const projectTags = project.tags || []
+        const techStackTags = project.techStack || []
+        const githubTopics = project.github?.topics || []
+        const projectTopics = project.topics || []
+        
+        // Combine all tag sources and normalize to lowercase
+        const allTags = [
+          ...projectTags,
+          ...techStackTags,
+          ...githubTopics,
+          ...projectTopics
+        ].map(tag => tag.toLowerCase())
+        
+        return allTags.includes(activeTag.toLowerCase())
+      })
     }
 
     // Filter by search term
@@ -55,25 +66,35 @@ function ProjectShowcase() {
           return (b.github?.stars || 0) - (a.github?.stars || 0)
         case 'updated':
         default:
-          return new Date(b.github?.lastUpdated || 0).getTime() - new Date(a.github?.lastUpdated || 0).getTime()
+          const aDate = new Date(a.github?.lastUpdated || '2020-01-01').getTime()
+          const bDate = new Date(b.github?.lastUpdated || '2020-01-01').getTime()
+          return bDate - aDate
       }
     })
 
     setFilteredProjects(filtered)
   }, [projects, activeTag, searchTerm, sortBy])
 
-  // Get all unique tags from projects
+  // Get all unique tags from projects - FIXED: Safe property access
   const allTags = React.useMemo(() => {
     const tagSet = new Set(['All'])
     projects.forEach(project => {
-      project.tags?.forEach(tag => tagSet.add(tag))
-      project.techStack?.forEach(tech => tagSet.add(tech))
-      project.github?.topics?.forEach(topic => tagSet.add(topic))
+      // Safely add tags from all sources
+      const projectTags = project.tags || []
+      const techStackTags = project.techStack || []
+      const githubTopics = project.github?.topics || []
+      const projectTopics = project.topics || []
+      
+      // Add all tags to the set
+      projectTags.forEach(tag => tagSet.add(tag))
+      techStackTags.forEach(tech => tagSet.add(tech))
+      githubTopics.forEach(topic => tagSet.add(topic))
+      projectTopics.forEach(topic => tagSet.add(topic))
     })
     return Array.from(tagSet).slice(0, 15) // Limit to prevent overflow
   }, [projects])
 
-  const ProjectCard: React.FC<{ project: any; index: number }> = ({ project, index }) => {
+  const ProjectCard: React.FC<{ project: PortfolioProject; index: number }> = ({ project, index }) => {
     const cardRef = useRef<HTMLDivElement>(null)
     const [rotation, setRotation] = useState({ x: 0, y: 0 })
     const [glowPosition, setGlowPosition] = useState({ x: 50, y: 50 })
@@ -213,7 +234,7 @@ function ProjectShowcase() {
           <div className="p-6 flex flex-col justify-between flex-1 relative z-10">
             <div>
               <h3 className="text-xl font-bold mb-2 group-hover:text-viva-magenta-600 dark:group-hover:text-viva-magenta-400 transition-colors">
-                {project.name.replace(/[-_]/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                {project.title || project.name.replace(/[-_]/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
               </h3>
               <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mb-4 line-clamp-3">
                 {project.description}
@@ -242,7 +263,7 @@ function ProjectShowcase() {
                 <div className="flex items-center gap-4 text-xs text-lux-gray-500 dark:text-lux-gray-500 mb-4">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    <span>{new Date(project.github.lastUpdated).toLocaleDateString()}</span>
+                    <span>{new Date(project.github.lastUpdated || Date.now()).toLocaleDateString()}</span>
                   </div>
                   {project.github.language && (
                     <div className="flex items-center gap-1">
@@ -257,9 +278,9 @@ function ProjectShowcase() {
             {/* Actions */}
             <div className="flex items-center justify-between mt-4">
               <div className="flex gap-2">
-                {project.githubUrl && (
+                {(project.githubUrl || project.github?.url) && (
                   <motion.a
-                    href={project.githubUrl}
+                    href={project.githubUrl || project.github?.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 glass-card rounded-full border border-lux-gray-200 dark:border-lux-gray-700 hover:border-viva-magenta-400 dark:hover:border-viva-magenta-600 transition-all duration-300"
@@ -269,9 +290,9 @@ function ProjectShowcase() {
                     <Github className="w-4 h-4" />
                   </motion.a>
                 )}
-                {project.liveUrl && (
+                {(project.liveUrl || project.vercel?.liveUrl) && (
                   <motion.a
-                    href={project.liveUrl}
+                    href={project.liveUrl || project.vercel?.liveUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 glass-card rounded-full border border-lux-gray-200 dark:border-lux-gray-700 hover:border-lux-teal-400 dark:hover:border-lux-teal-600 transition-all duration-300"
@@ -284,7 +305,7 @@ function ProjectShowcase() {
               </div>
               <motion.div whileHover={{ x: 5 }}>
                 <Link
-                  href={`/projects/${project.slug || project.id}`}
+                  href={`/projects/${project.id}`}
                   className="text-sm text-viva-magenta-600 dark:text-viva-magenta-400 hover:text-viva-magenta-700 dark:hover:text-viva-magenta-300 font-medium transition-colors"
                 >
                   View Details →

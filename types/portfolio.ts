@@ -1,42 +1,50 @@
-// types/portfolio.ts
+// types/portfolio.ts - FIXED to match usePortfolioData hook
 import type { GitHubRepository, GitHubStats } from './github'
 import type { VercelProjectWithStatus, VercelStats } from './vercel'
 
 // Re-export types that are needed by other modules
-export type { GitHubRepository, GitHubStats } from './github'  // ← ADD THIS LINE
-export type { VercelProjectWithStatus, VercelStats } from './vercel'  // ← ADD THIS LINE
+export type { GitHubRepository, GitHubStats } from './github'
+export type { VercelProjectWithStatus, VercelStats } from './vercel'
 
 export interface PortfolioProject {
   id: string
   name: string
-  title: string
+  title?: string  // ← FIXED: Made optional to match hook
   description: string
-  longDescription?: string  // ← ADD - for detailed descriptions
+  longDescription?: string
   techStack: string[]
-  tags?: string[]
+  tags?: string[]  // ← FIXED: Made optional and added
   featured: boolean
-  category?: 'fullstack' | 'frontend' | 'backend' | 'mobile' | 'data' | 'other'  // ← ADD
-  status?: 'completed' | 'in-progress' | 'planning' | 'archived'  // ← ADD
-  image?: string  // ← ADD - for project images
-  startDate?: string  // ← ADD - project start date
-  endDate?: string  // ← ADD - project end date
-  challenges?: string[]  // ← ADD - project challenges
-  learnings?: string[]  // ← ADD - lessons learned
-  metrics?: Record<string, any>  // ← ADD - project metrics
+  category?: 'fullstack' | 'frontend' | 'backend' | 'mobile' | 'data' | 'other'
+  status?: 'completed' | 'in-progress' | 'planning' | 'archived'
+  image?: string
+  startDate?: string
+  endDate?: string
+  challenges?: string[]
+  learnings?: string[]
+  metrics?: Record<string, any>
   github?: {
     stars: number
     forks: number
     url: string
-    topics?: string[]
-    lastUpdated?: string
+    topics?: string[]  // ← FIXED: Added topics
+    lastUpdated?: string  // ← FIXED: Changed from updatedAt to lastUpdated
+    language?: string
   }
   vercel?: {
     isLive: boolean
     liveUrl?: string
-    deploymentStatus?: string  // ← ADD - deployment status
+    deploymentStatus?: string
   }
   githubUrl?: string
   liveUrl?: string
+  // ADDED: Additional properties for compatibility
+  topics?: string[]  // ← ADDED: For GitHub topics at project level
+  complexity?: 'beginner' | 'intermediate' | 'advanced'
+  teamSize?: number
+  role?: string
+  client?: string
+  highlights?: string[]
 }
 
 export interface PortfolioStats {
@@ -46,6 +54,10 @@ export interface PortfolioStats {
   recentActivity?: {
     activeProjects: number
   }
+  // Additional stats properties for compatibility
+  totalForks?: number
+  topLanguages?: string[]
+  deploymentSuccessRate?: number
 }
 
 export interface UsePortfolioDataReturn {
@@ -53,14 +65,14 @@ export interface UsePortfolioDataReturn {
   stats: PortfolioStats | null
   loading: boolean
   error: string | null
-  refetch: () => Promise<void>  // ← ADD THIS LINE - the missing refetch function
+  refetch: () => Promise<void>
 }
 
 // Interface that matches ScrollTriggered3DSections expectations
 export interface ScrollProject {
   id: string
-  name: string  // Required by ScrollTriggered3DSections
-  title: string
+  name: string
+  title?: string  // ← FIXED: Made optional
   description: string
   techStack: string[]
   featured: boolean
@@ -78,7 +90,7 @@ export interface ScrollProject {
 // Interface for Hero section projects
 export interface HeroProject {
   id: string
-  title: string
+  title?: string  // ← FIXED: Made optional
   description: string
   techStack: string[]
   featured: boolean
@@ -98,7 +110,7 @@ export interface EnhancedPortfolioProject {
   id: string
   slug: string
   name: string
-  title: string
+  title?: string  // ← FIXED: Made optional
   description: string
   longDescription?: string
   category: 'fullstack' | 'frontend' | 'backend' | 'mobile' | 'data' | 'other'
@@ -109,7 +121,7 @@ export interface EnhancedPortfolioProject {
   // GitHub integration
   github?: {
     repository: GitHubRepository
-    url?: string  // ← ADD - URL property for compatibility
+    url?: string
     stats: {
       stars: number
       forks: number
@@ -128,7 +140,7 @@ export interface EnhancedPortfolioProject {
   vercel?: {
     project: VercelProjectWithStatus
     deployments: number
-    deploymentStatus?: string  // ← ADD - deployment status property
+    deploymentStatus?: string
     lastDeployment?: {
       state: string
       url: string
@@ -144,8 +156,8 @@ export interface EnhancedPortfolioProject {
     images: string[]
     tags: string[]
     highlights: string[]
-    challenges?: string[]  // ← ADD - project challenges
-    learnings?: string[]   // ← ADD - project learnings
+    challenges?: string[]
+    learnings?: string[]
     client?: string
     teamSize?: number
     role?: string

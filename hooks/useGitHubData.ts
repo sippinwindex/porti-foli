@@ -1,4 +1,4 @@
-// hooks/useGitHubData.ts
+// hooks/useGitHubData.ts - UPDATED VERSION
 import { useState, useEffect } from 'react'
 
 interface GitHubRepo {
@@ -28,22 +28,13 @@ interface GitHubUser {
 }
 
 interface GitHubStats {
-  user: GitHubUser
-  repositories: {
-    total: number
-    analyzed: number
-    total_stars: number
-    total_forks: number
-    languages: Record<string, number>
-    recent_activity: {
-      active_repos_30_days: number
-      most_recent_push: string | null
-    }
-  }
-  portfolio: {
-    featured_repos: number
-    top_language: string
-  }
+  totalProjects: number
+  totalStars: number
+  totalForks: number
+  topLanguages: string[]
+  publicRepos: number
+  followers: number
+  following: number
 }
 
 interface UseGitHubDataOptions {
@@ -86,13 +77,14 @@ export function useGitHubData(options: UseGitHubDataOptions = {}): UseGitHubData
     return Date.now() - lastFetch > cacheTimeout
   }
 
-  // Fetch repositories
+  // Fetch repositories - UPDATED API CALL
   const fetchRepositories = async () => {
     try {
       setError(null)
       
       console.log('🔄 Fetching GitHub repositories...')
-      const response = await fetch('/api/github/repositories?type=portfolio&limit=20')
+      // Updated to match your current API structure
+      const response = await fetch('/api/github?type=repos')
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
@@ -100,9 +92,13 @@ export function useGitHubData(options: UseGitHubDataOptions = {}): UseGitHubData
       }
       
       const data = await response.json()
-      setRepositories(data.repositories || [])
       
-      console.log(`✅ Fetched ${data.repositories?.length || 0} repositories`)
+      if (data.success && data.repositories) {
+        setRepositories(data.repositories)
+        console.log(`✅ Fetched ${data.repositories.length} repositories`)
+      } else {
+        throw new Error(data.error || 'No repositories data received')
+      }
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch repositories'
@@ -111,7 +107,7 @@ export function useGitHubData(options: UseGitHubDataOptions = {}): UseGitHubData
     }
   }
 
-  // Fetch user data
+  // Fetch user data - UPDATED API CALL
   const fetchUser = async () => {
     try {
       setError(null)
@@ -124,10 +120,14 @@ export function useGitHubData(options: UseGitHubDataOptions = {}): UseGitHubData
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
       }
       
-      const userData = await response.json()
-      setUser(userData)
+      const data = await response.json()
       
-      console.log(`✅ Fetched user: ${userData.name || userData.login}`)
+      if (data.success && data.user) {
+        setUser(data.user)
+        console.log(`✅ Fetched user: ${data.user.name || data.user.login}`)
+      } else {
+        throw new Error(data.error || 'No user data received')
+      }
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch user data'
@@ -136,23 +136,27 @@ export function useGitHubData(options: UseGitHubDataOptions = {}): UseGitHubData
     }
   }
 
-  // Fetch stats
+  // Fetch stats - UPDATED API CALL
   const fetchStats = async () => {
     try {
       setError(null)
       
       console.log('🔄 Fetching GitHub stats...')
-      const response = await fetch('/api/github/stats')
+      const response = await fetch('/api/github?type=stats')
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
       }
       
-      const statsData = await response.json()
-      setStats(statsData)
+      const data = await response.json()
       
-      console.log(`✅ Fetched stats: ${statsData.repositories?.total || 0} repos, ${statsData.repositories?.total_stars || 0} stars`)
+      if (data.success && data.stats) {
+        setStats(data.stats)
+        console.log(`✅ Fetched stats: ${data.stats.totalProjects || 0} repos, ${data.stats.totalStars || 0} stars`)
+      } else {
+        throw new Error(data.error || 'No stats data received')
+      }
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch stats'
@@ -169,7 +173,7 @@ export function useGitHubData(options: UseGitHubDataOptions = {}): UseGitHubData
     setError(null)
     
     try {
-      await Promise.all([
+      await Promise.allSettled([
         fetchRepositories(),
         fetchUser(),
         fetchStats()
