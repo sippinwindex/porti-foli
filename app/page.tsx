@@ -1,396 +1,523 @@
 'use client'
 
-// app/page.tsx - Fixed with 'use client' directive
-import { Suspense } from 'react'
-import Navigation from '@/components/Navigation'
-import Footer from '@/components/Footer'
-import ScrollTriggered3DSections from '@/components/3D/ScrollTriggered3DSections'
-import { motion } from 'framer-motion'
-import { Mail, Linkedin, Github, ExternalLink, Download, ArrowRight, Code, Palette, Database, Globe } from 'lucide-react'
+import { Suspense, useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  Mail, 
+  Linkedin, 
+  Github, 
+  ExternalLink, 
+  Download, 
+  ArrowRight, 
+  Code, 
+  Star, 
+  GitBranch,
+  Calendar,
+  Play,
+  Zap,
+  Award,
+  Users,
+  TrendingUp,
+  Globe,
+  Menu,
+  X
+} from 'lucide-react'
 
-// Enhanced loading component with better animation
-function SectionLoading() {
+// Import your components
+import ThemeToggle from '@/components/ThemeToggle'
+import Enhanced3DNavigation from '@/components/3D/Enhanced3DNavigation'
+import Interactive3DHero from '@/components/3D/Interactive3DHero'
+import FloatingCodeBlocks from '@/components/3D/FloatingCodeBlocks'
+import LanguageVisualization from '@/components/3D/LanguageVisualization'
+import ScrollTriggered3DSections from '@/components/3D/ScrollTriggered3DSections'
+import ParticleField from '@/components/3D/ParticleField'
+
+// Loading component with your theme
+function PageLoading() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="fixed inset-0 bg-gradient-to-br from-lux-black via-viva-magenta-900/20 to-lux-gold-900/20 flex items-center justify-center z-50">
       <div className="relative">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-blue-600 border-r-4 border-r-transparent"></div>
-        <div className="absolute inset-0 animate-pulse rounded-full h-32 w-32 border-2 border-blue-300 opacity-30"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-4 border-viva-magenta-500 border-t-transparent"></div>
+        <div className="absolute inset-0 animate-pulse rounded-full h-32 w-32 border-2 border-lux-gold-400 opacity-30"></div>
+        <div className="absolute inset-4 flex items-center justify-center">
+          <Code className="w-8 h-8 text-viva-magenta-400 animate-pulse" />
+        </div>
       </div>
+      <motion.p 
+        className="absolute bottom-20 text-lux-offwhite font-medium"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      >
+        Initializing 3D Experience...
+      </motion.p>
     </div>
   )
 }
 
-// Enhanced skill data with icons
-const skills = [
-  { name: 'React/Next.js', icon: Code, color: 'from-blue-500 to-cyan-500' },
-  { name: 'TypeScript', icon: Code, color: 'from-blue-600 to-indigo-600' },
-  { name: 'Python/Flask', icon: Database, color: 'from-green-500 to-emerald-500' },
-  { name: 'PostgreSQL', icon: Database, color: 'from-blue-700 to-blue-800' },
-  { name: 'Tailwind CSS', icon: Palette, color: 'from-cyan-500 to-blue-500' },
-  { name: 'Three.js', icon: Globe, color: 'from-purple-500 to-pink-500' },
-  { name: 'AWS/Azure', icon: Globe, color: 'from-orange-500 to-red-500' },
-  { name: 'UI/UX Design', icon: Palette, color: 'from-pink-500 to-rose-500' }
-]
-
-// Enhanced project data
-const projects = [
+// Enhanced project data using your theme colors - Fixed to match component interfaces
+const featuredProjects = [
   {
-    title: 'Portfolio Website',
-    description: 'Modern 3D portfolio with Three.js, featuring interactive animations and real-time GitHub integration.',
-    tech: ['Next.js', 'Three.js', 'TypeScript'],
-    gradient: 'from-blue-500 via-purple-500 to-pink-500',
-    delay: 0
+    id: 'portfolio-3d',
+    title: '3D Portfolio Experience',
+    name: '3D Portfolio Experience',
+    description: 'Immersive portfolio showcasing cutting-edge web technologies with Three.js, dynamic animations, and real-time GitHub integration.',
+    techStack: ['Next.js', 'Three.js', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
+    github: {
+      stars: 42,
+      forks: 12,
+      url: 'https://github.com/sippinwindex/portfolio'
+    },
+    vercel: {
+      isLive: true,
+      liveUrl: 'https://portfolio.vercel.app'
+    },
+    deploymentScore: 98,
+    featured: true
   },
   {
+    id: 'gamegraft',
     title: 'GameGraft',
-    description: 'Game discovery app with real-time API integration and dynamic user interfaces.',
-    tech: ['React', 'Flask', 'PostgreSQL'],
-    gradient: 'from-green-500 via-teal-500 to-cyan-500',
-    delay: 0.1
+    name: 'GameGraft',
+    description: 'Game discovery platform with real-time API integration, advanced filtering, and dynamic user interfaces.',
+    techStack: ['React', 'Flask', 'PostgreSQL', 'RAWG API'],
+    github: {
+      stars: 28,
+      forks: 8,
+      url: 'https://github.com/sippinwindex/gamegraft'
+    },
+    vercel: {
+      isLive: true,
+      liveUrl: 'https://gamegraft.vercel.app'
+    },
+    deploymentScore: 95,
+    featured: true
   },
   {
+    id: 'squadup',
     title: 'SquadUp',
-    description: 'Gaming collaboration app with real-time features and live voting system using SSE.',
-    tech: ['React', 'Flask', 'JWT'],
-    gradient: 'from-orange-500 via-red-500 to-pink-500',
-    delay: 0.2
+    name: 'SquadUp',
+    description: 'Gaming collaboration platform with real-time features, live voting system using Server-Sent Events.',
+    techStack: ['React', 'Flask', 'JWT', 'SQLAlchemy', 'SSE'],
+    github: {
+      stars: 35,
+      forks: 15,
+      url: 'https://github.com/sippinwindex/squadup'
+    },
+    vercel: {
+      isLive: true,
+      liveUrl: 'https://squadup.vercel.app'
+    },
+    deploymentScore: 92,
+    featured: true
   }
 ]
 
-// Enhanced contact options
+// Portfolio stats
+const portfolioStats = {
+  totalProjects: featuredProjects.length,
+  totalStars: featuredProjects.reduce((acc, p) => acc + (p.github?.stars || 0), 0),
+  liveProjects: featuredProjects.filter(p => p.vercel?.isLive).length,
+  recentActivity: {
+    activeProjects: 3
+  }
+}
+
+// Enhanced language data using your color scheme
+const languageData = [
+  {
+    name: 'TypeScript',
+    percentage: 35,
+    color: '#3178C6',
+    icon: '⚡',
+    projects: 12,
+    experience: 3,
+    proficiency: 'Expert' as const,
+    commits: 1250
+  },
+  {
+    name: 'React',
+    percentage: 28,
+    color: '#BE3455', // Using your viva-magenta
+    icon: '⚛️',
+    projects: 15,
+    experience: 4,
+    proficiency: 'Expert' as const,
+    commits: 1100
+  },
+  {
+    name: 'Next.js',
+    percentage: 22,
+    color: '#121212', // Using your lux-black
+    icon: '▲',
+    projects: 8,
+    experience: 2,
+    proficiency: 'Advanced' as const,
+    commits: 890
+  },
+  {
+    name: 'Node.js',
+    percentage: 18,
+    color: '#98A869', // Using your lux-sage
+    icon: '🟢',
+    projects: 10,
+    experience: 3,
+    proficiency: 'Advanced' as const,
+    commits: 750
+  },
+  {
+    name: 'Python',
+    percentage: 15,
+    color: '#008080', // Using your lux-teal
+    icon: '🐍',
+    projects: 6,
+    experience: 2,
+    proficiency: 'Intermediate' as const,
+    commits: 420
+  },
+  {
+    name: 'Three.js',
+    percentage: 12,
+    color: '#D4AF37', // Using your lux-gold
+    icon: '🎮',
+    projects: 4,
+    experience: 1,
+    proficiency: 'Intermediate' as const,
+    commits: 320
+  }
+]
+
+// Tech stack for floating code blocks
+const techStack = ['React', 'TypeScript', 'Next.js', 'Node.js', 'Python', 'Three.js']
+
+// Contact options
 const contactOptions = [
   {
     icon: Mail,
     title: 'Email',
     description: 'jafernandez94@gmail.com',
     href: 'mailto:jafernandez94@gmail.com',
-    color: 'from-blue-500 to-indigo-600',
-    delay: 0
+    color: 'from-viva-magenta-500 to-lux-gold-500'
   },
   {
     icon: Linkedin,
     title: 'LinkedIn',
-    description: 'Connect with me',
+    description: 'Connect professionally',
     href: 'https://www.linkedin.com/in/juan-fernandez-fullstack/',
-    color: 'from-blue-600 to-blue-700',
-    delay: 0.1
+    color: 'from-viva-magenta-600 to-viva-magenta-700'
   },
   {
     icon: Github,
     title: 'GitHub',
-    description: 'View my code',
+    description: 'View my repositories',
     href: 'https://github.com/sippinwindex',
-    color: 'from-gray-700 to-gray-900',
-    delay: 0.2
+    color: 'from-lux-gray-700 to-lux-gray-900'
   }
 ]
 
-// Animation variants
-const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6 }
-}
-
-const staggerContainer = {
-  animate: {
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-}
-
 export default function HomePage() {
+  const [isLoading, setIsLoading] = useState(true)
+  const [currentSection, setCurrentSection] = useState('hero')
+
+  useEffect(() => {
+    // Simulate loading time for better UX
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 2500)
+
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    // Handle scroll-based section detection
+    const handleScroll = () => {
+      const sections = ['hero', 'code-showcase', 'about', 'languages', 'projects', 'contact']
+      const scrollPosition = window.scrollY + 100
+
+      for (const section of sections) {
+        const element = document.getElementById(section)
+        if (element) {
+          const { offsetTop, offsetHeight } = element
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            setCurrentSection(section)
+            break
+          }
+        }
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  if (isLoading) {
+    return <PageLoading />
+  }
+
   return (
-    <div className="relative min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Fixed Navigation */}
-      <Navigation />
+    <div className="relative min-h-screen bg-lux-offwhite dark:bg-lux-black text-lux-gray-900 dark:text-lux-offwhite overflow-x-hidden">
+      {/* Enhanced 3D Navigation */}
+      <Enhanced3DNavigation />
       
-      {/* Main Content Container */}
-      <div className="relative">
-        {/* Hero Section - Enhanced with better layout */}
-        <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden">
-          {/* Background gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 opacity-50"></div>
-          
-          <Suspense fallback={<SectionLoading />}>
-            <ScrollTriggered3DSections />
-          </Suspense>
-
-          {/* Hero content overlay */}
-          <div className="absolute inset-0 flex items-center justify-center z-20 px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="text-center max-w-4xl mx-auto"
-            >
-              <motion.h1 
-                className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-6"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.7 }}
-              >
-                Juan A. Fernandez
-              </motion.h1>
-              <motion.p 
-                className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-8 font-light"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.9 }}
-              >
-                Full-Stack Developer & UI/UX Designer
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 1.1 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center"
-              >
-                <a
-                  href="#contact"
-                  className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-105 hover:shadow-lg"
-                >
-                  Get In Touch
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </a>
-                <a
-                  href="/resume.pdf"
-                  className="group inline-flex items-center gap-2 px-8 py-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white rounded-full font-semibold border border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-lg"
-                >
-                  <Download className="w-4 h-4" />
-                  Download Resume
-                </a>
-              </motion.div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* About Section - Enhanced with better visuals */}
-        <section id="about" className="relative min-h-screen py-20 bg-white dark:bg-gray-900">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-6xl mx-auto">
-              <motion.div
-                variants={staggerContainer}
-                initial="initial"
-                whileInView="animate"
-                viewport={{ once: true }}
-                className="text-center mb-16"
-              >
-                <motion.h2 
-                  variants={fadeInUp}
-                  className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-8"
-                >
-                  About Me
-                </motion.h2>
-                <motion.div 
-                  variants={fadeInUp}
-                  className="prose prose-lg dark:prose-invert max-w-4xl mx-auto"
-                >
-                  <p className="text-xl text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-                    Hi, I'm Juan A. Fernandez, a Full-Stack Developer based in Miami, Florida. 
-                    With a strong foundation in software development and UI/UX design, I blend 
-                    analytical precision from my background as a healthcare data analyst with 
-                    creative, user-centered design from UX research.
-                  </p>
-                  <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-                    I'm passionate about creating seamless digital experiences that prioritize 
-                    accessibility and performance. I have hands-on experience developing applications 
-                    that integrate real-time APIs, authentication systems, and dynamic interfaces.
-                  </p>
-                </motion.div>
-              </motion.div>
-                
-              {/* Enhanced Skills Grid with icons and animations */}
-              <motion.div
-                variants={staggerContainer}
-                initial="initial"
-                whileInView="animate"
-                viewport={{ once: true }}
-                className="grid grid-cols-2 md:grid-cols-4 gap-6"
-              >
-                {skills.map((skill, index) => {
-                  const IconComponent = skill.icon
-                  return (
-                    <motion.div
-                      key={skill.name}
-                      variants={{
-                        initial: { opacity: 0, scale: 0.8, y: 20 },
-                        animate: { opacity: 1, scale: 1, y: 0 }
-                      }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      whileHover={{ scale: 1.05, y: -5 }}
-                      className="group relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 hover:border-blue-500/50 dark:hover:border-blue-400/50 transition-all duration-300 hover:shadow-xl"
-                    >
-                      <div className={`absolute inset-0 bg-gradient-to-br ${skill.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
-                      <div className="relative z-10">
-                        <IconComponent className="w-8 h-8 text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 mb-3" />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-300">
-                          {skill.name}
-                        </span>
-                      </div>
-                    </motion.div>
-                  )
-                })}
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* Projects Section - Enhanced with better animations */}
-        <section id="projects" className="relative min-h-screen py-20 bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 dark:from-gray-800 dark:via-blue-900 dark:to-indigo-900">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-6xl mx-auto">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="text-center mb-16"
-              >
-                <h2 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-8">
-                  Featured Projects
-                </h2>
-                <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                  Here are some of my recent projects showcasing my skills in full-stack development, 
-                  UI/UX design, and modern web technologies.
-                </p>
-              </motion.div>
-
-              {/* Enhanced Projects Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-                {projects.map((project, index) => (
-                  <motion.div
-                    key={project.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: project.delay }}
-                    whileHover={{ scale: 1.02, y: -5 }}
-                    className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-8 border border-gray-200 dark:border-gray-700 hover:border-blue-500/50 dark:hover:border-blue-400/50 transition-all duration-300 hover:shadow-2xl"
-                  >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${project.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
-                    <div className="relative z-10">
-                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                        {project.title}
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-                        {project.description}
-                      </p>
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        {project.tech.map((tech) => (
-                          <span key={tech} className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm font-medium">
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium group-hover:gap-3 transition-all">
-                        <span>View Project</span>
-                        <ExternalLink className="w-4 h-4" />
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Enhanced View All Projects Button */}
-              <div className="text-center">
-                <motion.a
-                  href="/projects"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:shadow-xl"
-                >
-                  View All Projects
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </motion.a>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Contact Section - Enhanced with better layout */}
-        <section id="contact" className="relative min-h-screen py-20 bg-white dark:bg-gray-900">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-6xl mx-auto">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="text-center mb-16"
-              >
-                <h2 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-8">
-                  Let's Build Something Amazing
-                </h2>
-                <p className="text-xl text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-                  Ready to bring your ideas to life? I'm available for freelance projects 
-                  and full-time opportunities. Let's create something extraordinary together.
-                </p>
-              </motion.div>
-
-              {/* Enhanced Contact Options */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-                {contactOptions.map((contact, index) => {
-                  const IconComponent = contact.icon
-                  return (
-                    <motion.a
-                      key={contact.title}
-                      href={contact.href}
-                      target={contact.href.startsWith('http') ? '_blank' : undefined}
-                      rel={contact.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: contact.delay }}
-                      whileHover={{ scale: 1.05, y: -5 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="group relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-2xl p-8 border border-gray-200 dark:border-gray-600 hover:border-blue-500/50 dark:hover:border-blue-400/50 transition-all duration-300 hover:shadow-xl"
-                    >
-                      <div className={`absolute inset-0 bg-gradient-to-br ${contact.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
-                      <div className="relative z-10 text-center">
-                        <div className="flex justify-center mb-4">
-                          <div className="p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg group-hover:shadow-xl transition-shadow">
-                            <IconComponent className="w-8 h-8 text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                          </div>
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          {contact.title}
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-300">
-                          {contact.description}
-                        </p>
-                      </div>
-                    </motion.a>
-                  )
-                })}
-              </div>
-
-              {/* Enhanced CTA Button */}
-              <div className="text-center">
-                <motion.a
-                  href="mailto:jafernandez94@gmail.com"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="group inline-flex items-center gap-2 px-12 py-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white rounded-full font-bold text-lg hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 transition-all duration-300 hover:shadow-2xl"
-                >
-                  Start a Project
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </motion.a>
-              </div>
-            </div>
-          </div>
-        </section>
+      {/* Theme Toggle - Fixed Position */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
       </div>
 
+      {/* Hero Section with Interactive 3D Elements */}
+      <section id="hero" className="relative min-h-screen">
+        {/* Particle Field Background */}
+        <ParticleField 
+          particleCount={80}
+          colorScheme="multi"
+          animation="constellation"
+          showConnections={true}
+          interactive={true}
+        />
+        
+        {/* Interactive 3D Hero */}
+        <div className="relative z-10">
+          <Interactive3DHero projects={featuredProjects} />
+        </div>
+      </section>
+
+      {/* Floating Code Blocks Section */}
+      <section id="code-showcase" className="relative min-h-screen hero-3d-container">
+        <div className="hero-3d-background" />
+        <div className="hero-particles">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div
+              key={i}
+              className="hero-particle"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 8}s`
+              }}
+            />
+          ))}
+        </div>
+        
+        <div className="hero-3d-content flex items-center justify-center min-h-screen">
+          <div className="text-center mb-16 hero-floating-element">
+            <motion.h2 
+              className="text-4xl md:text-6xl font-bold mb-6 hero-gradient-text"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              Interactive Code Showcase
+            </motion.h2>
+            <motion.p 
+              className="text-xl text-lux-gray-600 dark:text-lux-gray-400 max-w-2xl mx-auto mb-8"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              Explore my technology stack through interactive 3D code blocks
+            </motion.p>
+          </div>
+          
+          <FloatingCodeBlocks 
+            techStack={techStack}
+            isVisible={currentSection === 'code-showcase'}
+            onBlockClick={(language) => {
+              console.log(`Clicked on ${language}`)
+            }}
+          />
+        </div>
+      </section>
+
+      {/* About Section with 3D Cards */}
+      <section id="about" className="relative py-20 bg-gradient-to-br from-lux-offwhite via-viva-magenta-50/20 to-lux-gold-50/20 dark:from-lux-black dark:via-viva-magenta-900/10 dark:to-lux-gold-900/10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-4xl md:text-6xl font-bold text-lux-gray-900 dark:text-lux-offwhite mb-8">
+              About <span className="gradient-text">Me</span>
+            </h2>
+            <div className="max-w-4xl mx-auto">
+              <p className="text-xl text-lux-gray-700 dark:text-lux-gray-300 mb-6 leading-relaxed">
+                Hi, I'm Juan A. Fernandez, a Full-Stack Developer based in Miami, Florida. 
+                With a strong foundation in software development and UI/UX design, I blend 
+                analytical precision from my background as a healthcare data analyst with 
+                creative, user-centered design from UX research.
+              </p>
+              <p className="text-lg text-lux-gray-600 dark:text-lux-gray-400 leading-relaxed">
+                I'm passionate about creating seamless digital experiences that prioritize 
+                accessibility and performance. I have hands-on experience developing applications 
+                that integrate real-time APIs, authentication systems, and dynamic interfaces.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Stats Cards using your theme */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+            {[
+              { label: "Projects Built", value: "15+", icon: Code, color: "viva-magenta" },
+              { label: "GitHub Stars", value: "105+", icon: Star, color: "lux-gold" },
+              { label: "Years Experience", value: "5+", icon: Award, color: "lux-teal" },
+              { label: "Happy Clients", value: "12+", icon: Users, color: "lux-sage" }
+            ].map((stat, index) => {
+              const IconComponent = stat.icon
+              return (
+                <motion.div
+                  key={stat.label}
+                  className="hero-3d-card p-6 text-center"
+                  initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                  whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                >
+                  <div className="flex justify-center mb-4">
+                    <div className={`p-3 rounded-xl bg-${stat.color}-100 dark:bg-${stat.color}-900/30`}>
+                      <IconComponent className={`w-8 h-8 text-${stat.color}-600 dark:text-${stat.color}-400`} />
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-lux-gray-900 dark:text-lux-offwhite mb-2">{stat.value}</div>
+                  <div className="text-sm text-lux-gray-600 dark:text-lux-gray-400">{stat.label}</div>
+                </motion.div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Language Visualization Section */}
+      <section id="languages" className="relative">
+        <div className="text-center py-16">
+          <motion.h2 
+            className="text-4xl md:text-6xl font-bold text-lux-gray-900 dark:text-lux-offwhite mb-8"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            Technology <span className="gradient-text">Mastery</span>
+          </motion.h2>
+          <motion.p 
+            className="text-xl text-lux-gray-600 dark:text-lux-gray-400 max-w-2xl mx-auto mb-8"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+          >
+            Interactive visualization of my programming language proficiency and project usage
+          </motion.p>
+        </div>
+        
+        <LanguageVisualization 
+          languages={languageData}
+          showStats={true}
+          interactive={true}
+          layout="circle"
+        />
+      </section>
+
+      {/* Projects Section with Scroll-Triggered 3D */}
+      <section id="projects" className="relative">
+        <ScrollTriggered3DSections 
+          projects={featuredProjects}
+          stats={portfolioStats}
+        />
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="relative py-20 bg-gradient-to-br from-lux-gray-50 via-viva-magenta-50/20 to-lux-gold-50/20 dark:from-lux-gray-900 dark:via-viva-magenta-900/10 dark:to-lux-gold-900/10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-4xl md:text-6xl font-bold text-lux-gray-900 dark:text-lux-offwhite mb-8">
+              Let's Build Something <span className="gradient-text">Amazing</span>
+            </h2>
+            <p className="text-xl text-lux-gray-700 dark:text-lux-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
+              Ready to bring your ideas to life? I'm available for freelance projects 
+              and full-time opportunities. Let's create something extraordinary together.
+            </p>
+          </motion.div>
+
+          {/* Contact Options */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {contactOptions.map((contact, index) => {
+              const IconComponent = contact.icon
+              return (
+                <motion.a
+                  key={contact.title}
+                  href={contact.href}
+                  target={contact.href.startsWith('http') ? '_blank' : undefined}
+                  rel={contact.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className="hero-3d-card p-8 text-center group"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.2 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                >
+                  <div className="flex justify-center mb-4">
+                    <div className={`p-4 rounded-xl bg-gradient-to-br ${contact.color} shadow-lg group-hover:shadow-xl transition-shadow`}>
+                      <IconComponent className="w-8 h-8 text-white" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-lux-gray-900 dark:text-lux-offwhite mb-2 group-hover:text-viva-magenta-600 dark:group-hover:text-viva-magenta-400 transition-colors">
+                    {contact.title}
+                  </h3>
+                  <p className="text-lux-gray-600 dark:text-lux-gray-400">
+                    {contact.description}
+                  </p>
+                </motion.a>
+              )
+            })}
+          </div>
+
+          {/* CTA Button */}
+          <div className="text-center">
+            <motion.a
+              href="mailto:jafernandez94@gmail.com"
+              className="hero-3d-button inline-flex items-center gap-3 px-12 py-6 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="relative z-10">Start a Project</span>
+              <ArrowRight className="w-6 h-6 relative z-10" />
+            </motion.a>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
-      <Footer />
+      <footer className="bg-lux-black dark:bg-lux-black text-center py-8">
+        <div className="container mx-auto px-4">
+          <p className="text-lux-gray-400">
+            © 2025 Juan Fernandez. Built with Next.js, Three.js, and ❤️
+          </p>
+        </div>
+      </footer>
+
+      {/* Dino Game Button - Fixed Position */}
+      <motion.a
+        href="/dinosaur"
+        className="fixed bottom-8 right-8 z-40 p-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
+        whileHover={{ scale: 1.1, rotate: 5 }}
+        whileTap={{ scale: 0.9 }}
+        title="Play Synthwave Dino! 🎮"
+      >
+        <Play className="w-6 h-6 group-hover:scale-110 transition-transform" />
+      </motion.a>
     </div>
   )
 }
