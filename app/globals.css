@@ -1,3 +1,4 @@
+/* Enhanced globals.css - Updated for full compatibility */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,13 +6,14 @@
 /* Font imports - Enhanced Typography */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
-/* Import component styles - Update paths based on your structure */
+/* Import component styles - Updated paths */
 @import '../styles/main.css';
 @import '../styles/components/3d-hero.css';
 @import '../styles/components/github-integration.css';
 @import '../styles/components/project-showcase.css';
+@import '../styles/components/enhanced-components.css'; /* New file for enhanced components */
 
-/* Local font fallbacks */
+/* Local font fallbacks - Keep your existing fonts */
 @font-face {
   font-family: 'Inter var';
   font-style: normal;
@@ -29,13 +31,13 @@
   font-named-instance: 'Italic';
 }
 
-/* CSS Variables */
+/* Enhanced CSS Variables - Extended for new components */
 :root {
   /* Typography */
   --font-inter: 'Inter var', 'Inter', system-ui, -apple-system, sans-serif;
   --font-jetbrains-mono: 'JetBrains Mono', Menlo, Monaco, 'Courier New', monospace;
   
-  /* Viva Magenta Color Palette */
+  /* Your existing Viva Magenta Color Palette */
   --viva-magenta: #BE3455;
   --lux-gold: #D4AF37;
   --lux-sage: #98A869;
@@ -45,7 +47,7 @@
   --lux-black: #121212;
   --lux-offwhite: #FAFAFA;
   
-  /* Modern Color System */
+  /* Enhanced Modern Color System - Extended */
   --primary-50: #eff6ff;
   --primary-100: #dbeafe;
   --primary-200: #bfdbfe;
@@ -57,45 +59,76 @@
   --primary-800: #1e40af;
   --primary-900: #1e3a8a;
   
-  /* Glass Effect Variables */
+  /* Enhanced Color Variables for RGB usage */
+  --viva-magenta-rgb: 190, 52, 85;
+  --lux-gold-rgb: 212, 175, 55;
+  --lux-teal-rgb: 0, 128, 128;
+  --primary-rgb: 59, 130, 246;
+  --accent-rgb: 139, 92, 246;
+  
+  /* Enhanced Glass Effect Variables */
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-card-bg: rgba(255, 255, 255, 0.8);
   --glass-3d-bg: rgba(255, 255, 255, 0.05);
   --glass-3d-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(16px);
+  --glass-saturation: saturate(180%);
   
-  /* 3D and WebGL Variables */
+  /* Enhanced 3D and WebGL Variables */
   --three-bg: #0f172a;
   --webgl-primary: #3b82f6;
   --webgl-secondary: #8b5cf6;
   --particle-color: rgba(59, 130, 246, 0.6);
   --glow-color: rgba(59, 130, 246, 0.8);
+  --depth-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   
-  /* Layout Variables */
+  /* Enhanced Layout Variables */
   --header-height: 5rem;
   --section-spacing: 5rem;
+  --container-padding: 2rem;
+  --border-radius-sm: 0.5rem;
+  --border-radius-md: 1rem;
+  --border-radius-lg: 1.5rem;
+  --border-radius-xl: 2rem;
   
-  /* Shadow System */
+  /* Enhanced Shadow System */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-3d: 0 35px 60px -12px rgba(0, 0, 0, 0.3);
+  
+  /* Animation Variables */
+  --animation-fast: 0.15s;
+  --animation-normal: 0.3s;
+  --animation-slow: 0.6s;
+  --animation-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --animation-ease-out: cubic-bezier(0.25, 0.4, 0.55, 1.4);
+  
+  /* Interactive Variables */
+  --hover-lift: translateY(-2px);
+  --hover-scale: scale(1.02);
+  --active-scale: scale(0.98);
+  --focus-ring: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
 }
 
-/* Dark mode variables */
+/* Enhanced Dark mode variables */
 .dark {
   --glass-bg: rgba(0, 0, 0, 0.1);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-card-bg: rgba(0, 0, 0, 0.8);
   --glass-3d-bg: rgba(0, 0, 0, 0.05);
   --glass-3d-border: rgba(255, 255, 255, 0.1);
+  --glow-color: rgba(190, 52, 85, 0.8);
+  --particle-color: rgba(190, 52, 85, 0.6);
 }
 
-/* Base Layer - Foundation Styles */
+/* Enhanced Base Layer - Foundation Styles */
 @layer base {
-  /* Global Reset and Layout Foundation */
+  /* Global Reset and Layout Foundation - Keep your existing */
   * {
     box-sizing: border-box;
     margin: 0;
@@ -128,9 +161,11 @@
     min-height: 100vh;
     background: #0f172a;
     color: white;
+    /* Enhanced transitions for theme switching */
+    transition: background-color 0.3s var(--animation-spring), color 0.3s var(--animation-spring);
   }
 
-  /* Enhanced Typography Hierarchy */
+  /* Enhanced Typography Hierarchy - Keep your existing */
   h1 {
     font-variation-settings: 'wght' 850;
     line-height: 1.1;
@@ -152,20 +187,24 @@
     line-height: 1.7;
   }
 
-  /* Code styling */
+  /* Enhanced Code styling */
   code {
     font-family: var(--font-jetbrains-mono);
     font-size: 0.875em;
+    background: rgba(var(--viva-magenta-rgb), 0.1);
+    padding: 0.125rem 0.375rem;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid rgba(var(--viva-magenta-rgb), 0.2);
   }
 
   /* Enhanced link styles */
   a {
     color: inherit;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: all var(--animation-normal) ease;
   }
 
-  /* Button reset */
+  /* Enhanced Button reset */
   button {
     border: none;
     background: none;
@@ -173,9 +212,10 @@
     font: inherit;
     cursor: pointer;
     outline: inherit;
+    transition: all var(--animation-normal) var(--animation-spring);
   }
 
-  /* Enhanced scrollbar */
+  /* Enhanced scrollbar - Keep your existing */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -212,11 +252,11 @@
     color: white;
   }
 
-  /* Focus styles */
+  /* Enhanced Focus styles */
   :focus-visible {
     outline: 2px solid var(--primary-500);
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: var(--border-radius-sm);
   }
 
   /* Prevent layout shifts */
@@ -226,39 +266,40 @@
   }
 }
 
-/* Components Layer - Reusable UI Components */
+/* Enhanced Components Layer - Reusable UI Components */
 @layer components {
-  /* Enhanced Glass Effects */
+  /* Enhanced Glass Effects - Keep your existing and add new ones */
   .glass {
-    backdrop-filter: blur(16px);
+    backdrop-filter: var(--glass-blur) var(--glass-saturation);
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
-    transition: all 0.3s ease;
+    transition: all var(--animation-normal) ease;
   }
 
   .glass-card {
-    backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px) var(--glass-saturation);
     background: var(--glass-card-bg);
     border: 1px solid var(--glass-border);
     box-shadow: var(--shadow-xl);
-    transition: all 0.3s ease;
+    transition: all var(--animation-normal) ease;
   }
 
   .glass-3d {
-    backdrop-filter: blur(16px) saturate(180%);
+    backdrop-filter: var(--glass-blur) var(--glass-saturation);
     background: var(--glass-3d-bg);
     border: 1px solid var(--glass-3d-border);
-    transition: all 0.3s ease;
+    transition: all var(--animation-normal) ease;
+    transform-style: preserve-3d;
   }
 
   .glass-hero {
-    backdrop-filter: blur(32px) saturate(180%);
+    backdrop-filter: blur(32px) var(--glass-saturation);
     background: linear-gradient(135deg, var(--glass-3d-bg) 0%, rgba(255, 255, 255, 0.02) 100%);
     border: 1px solid var(--glass-3d-border);
-    transition: all 0.3s ease;
+    transition: all var(--animation-normal) ease;
   }
 
-  /* Enhanced Button System */
+  /* Enhanced Button System - Keep your existing and add new ones */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2;
     background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
@@ -270,7 +311,11 @@
   .btn-primary:hover {
     background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
     box-shadow: var(--shadow-xl);
-    transform: translateY(-2px) scale(1.02);
+    transform: var(--hover-lift) var(--hover-scale);
+  }
+
+  .btn-primary:active {
+    transform: var(--active-scale);
   }
 
   .btn-secondary {
@@ -282,8 +327,8 @@
   }
 
   .btn-secondary:hover {
-    background: rgba(59, 130, 246, 0.1);
-    transform: translateY(-2px) scale(1.02);
+    background: rgba(var(--primary-rgb), 0.1);
+    transform: var(--hover-lift) var(--hover-scale);
   }
 
   .btn-ghost {
@@ -296,10 +341,10 @@
   .btn-ghost:hover {
     background: rgba(255, 255, 255, 0.1);
     color: white;
-    transform: translateY(-2px) scale(1.02);
+    transform: var(--hover-lift) var(--hover-scale);
   }
 
-  /* 3D Button Effects */
+  /* Enhanced 3D Button Effects */
   .btn-3d {
     @apply btn-primary relative overflow-hidden;
     background: linear-gradient(135deg, var(--webgl-primary), var(--webgl-secondary));
@@ -322,12 +367,12 @@
     left: 100%;
   }
 
-  /* Enhanced Card System */
+  /* Enhanced Card System - Keep your existing and improve */
   .card {
     @apply rounded-2xl border transition-all duration-300;
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(16px);
+    backdrop-filter: var(--glass-blur);
     padding: 1.5rem;
     box-shadow: var(--shadow-lg);
   }
@@ -340,14 +385,14 @@
   .card-hover:hover {
     box-shadow: var(--shadow-2xl);
     transform: translateY(-8px) scale(1.02);
-    border-color: rgba(59, 130, 246, 0.3);
+    border-color: rgba(var(--primary-rgb), 0.3);
   }
 
-  /* 3D Card Effects */
+  /* Enhanced 3D Card Effects */
   .card-3d {
     @apply card relative;
     transform-style: preserve-3d;
-    transition: transform 0.6s ease, box-shadow 0.3s ease;
+    transition: transform 0.6s ease, box-shadow var(--animation-normal) ease;
   }
 
   .card-3d:hover {
@@ -359,21 +404,22 @@
     animation: float 6s ease-in-out infinite;
   }
 
-  /* Project Card Specific - Integrates with your project-showcase.css */
+  /* Enhanced Project Card Specific */
   .project-card-3d {
     @apply glass-3d rounded-2xl border transition-all duration-500;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
     padding: 1.5rem;
     transform: translateZ(0);
-    height: 100%; /* Ensure equal height */
+    height: 100%;
     display: flex;
     flex-direction: column;
+    transform-style: preserve-3d;
   }
 
   .project-card-3d:hover {
-    transform: translateY(-10px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
-    border-color: rgba(139, 92, 246, 0.3);
+    transform: translateY(-10px) scale(1.02) rotateY(5deg);
+    box-shadow: var(--shadow-3d), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    border-color: rgba(var(--viva-magenta-rgb), 0.3);
   }
 
   /* Enhanced Form Elements */
@@ -382,11 +428,12 @@
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.2);
     color: white;
+    backdrop-filter: var(--glass-blur);
   }
 
   .input:focus {
     border-color: var(--primary-500);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    box-shadow: var(--focus-ring);
   }
 
   .input::placeholder {
@@ -398,7 +445,7 @@
     min-height: 120px;
   }
 
-  /* Navigation Components */
+  /* Enhanced Navigation Components */
   .nav-link {
     @apply flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200;
     color: rgba(255, 255, 255, 0.8);
@@ -407,15 +454,17 @@
   .nav-link:hover,
   .nav-link-active {
     color: var(--primary-400);
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(var(--primary-rgb), 0.1);
+    transform: var(--hover-scale);
   }
 
-  /* Status Indicators */
+  /* Enhanced Status Indicators */
   .status-live {
     @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
     background: rgba(34, 197, 94, 0.1);
     color: #16a34a;
     border: 1px solid rgba(34, 197, 94, 0.2);
+    backdrop-filter: blur(8px);
   }
 
   .status-building {
@@ -424,6 +473,7 @@
     color: #2563eb;
     border: 1px solid rgba(59, 130, 246, 0.2);
     animation: pulse 2s infinite;
+    backdrop-filter: blur(8px);
   }
 
   .status-error {
@@ -431,9 +481,10 @@
     background: rgba(239, 68, 68, 0.1);
     color: #dc2626;
     border: 1px solid rgba(239, 68, 68, 0.2);
+    backdrop-filter: blur(8px);
   }
 
-  /* Loading States */
+  /* Enhanced Loading States */
   .loading-pulse {
     @apply animate-pulse rounded;
     background: rgba(255, 255, 255, 0.1);
@@ -444,41 +495,41 @@
     border-color: var(--primary-600);
   }
 
-  /* Special Effect Components - Integrates with your 3d-hero.css */
+  /* Enhanced Special Effect Components */
   .canvas-container {
     @apply relative w-full h-full overflow-hidden;
-    background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+    background: radial-gradient(ellipse at center, rgba(var(--primary-rgb), 0.1) 0%, transparent 70%);
   }
 
   .hero-3d {
     background: linear-gradient(135deg, var(--three-bg) 0%, #1e293b 50%, #334155 100%);
     position: relative;
-    z-index: 5; /* Proper layering */
+    z-index: 5;
   }
 
   .hero-3d::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+    background: radial-gradient(circle at 30% 20%, rgba(var(--primary-rgb), 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(var(--accent-rgb), 0.1) 0%, transparent 50%);
     pointer-events: none;
   }
 
-  /* GitHub Integration - Integrates with your github-integration.css */
+  /* Enhanced GitHub Integration */
   .github-stats-card {
     @apply glass-3d p-4 rounded-xl transition-all duration-300;
     transform: translateZ(0);
-    z-index: 10; /* Proper layering */
+    z-index: 10;
   }
 
   .github-stats-card:hover {
-    border-color: rgba(190, 52, 85, 0.5);
-    box-shadow: 0 10px 30px rgba(190, 52, 85, 0.2);
+    border-color: rgba(var(--viva-magenta-rgb), 0.5);
+    box-shadow: 0 10px 30px rgba(var(--viva-magenta-rgb), 0.2);
     transform: translateY(-2px);
   }
 
-  /* Theme Toggle */
+  /* Enhanced Theme Toggle */
   .theme-toggle {
     @apply relative inline-flex items-center justify-center w-10 h-10 rounded-full border transition-all duration-300;
     background: var(--glass-bg);
@@ -490,11 +541,171 @@
     background: var(--glass-3d-bg);
     transform: scale(1.1);
   }
+
+  /* NEW: Enhanced components for ScrollTriggered3DSections */
+  .scroll-triggered-container {
+    position: relative;
+    transform-style: preserve-3d;
+    perspective: 1200px;
+  }
+
+  .scroll-triggered-card {
+    @apply glass-3d rounded-2xl border transition-all duration-500;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.1) 0%, 
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  .scroll-triggered-card:hover {
+    transform: rotateY(8deg) rotateX(4deg) translateZ(30px);
+    box-shadow: var(--shadow-3d);
+    border-color: rgba(var(--viva-magenta-rgb), 0.4);
+  }
+
+  /* NEW: Enhanced components for Interactive3DHero */
+  .interactive-hero-container {
+    perspective: 1500px;
+    transform-style: preserve-3d;
+  }
+
+  .interactive-hero-card {
+    @apply glass-hero rounded-2xl border;
+    transform-style: preserve-3d;
+    transition: transform 0.4s var(--animation-spring);
+  }
+
+  .interactive-hero-card:hover {
+    transform: rotateY(6deg) rotateX(3deg) translateZ(25px);
+  }
+
+  /* NEW: Enhanced components for FloatingCodeBlocks */
+  .floating-code-container {
+    perspective: 2000px;
+    transform-style: preserve-3d;
+  }
+
+  .floating-code-block {
+    @apply glass-card rounded-xl border;
+    transform-style: preserve-3d;
+    backdrop-filter: blur(20px) saturate(150%);
+    transition: all 0.4s var(--animation-spring);
+  }
+
+  .floating-code-block:hover {
+    transform: scale(1.05) translateZ(20px);
+    box-shadow: var(--shadow-2xl), 0 0 20px rgba(var(--viva-magenta-rgb), 0.3);
+  }
+
+  .floating-code-block.selected {
+    border-color: rgba(var(--viva-magenta-rgb), 0.6);
+    box-shadow: var(--shadow-3d), 0 0 30px rgba(var(--viva-magenta-rgb), 0.4);
+  }
+
+  /* NEW: Enhanced components for LanguageVisualization */
+  .language-viz-container {
+    perspective: 1800px;
+    transform-style: preserve-3d;
+  }
+
+  .language-card {
+    @apply glass-3d rounded-2xl border;
+    transform-style: preserve-3d;
+    transition: all 0.5s var(--animation-spring);
+    backdrop-filter: blur(16px) saturate(180%);
+  }
+
+  .language-card:hover {
+    transform: rotateY(10deg) rotateX(5deg) translateZ(25px) scale(1.02);
+    box-shadow: var(--shadow-3d);
+  }
+
+  .language-card.selected {
+    transform: rotateY(15deg) rotateX(8deg) translateZ(40px) scale(1.08);
+    border-color: rgba(var(--viva-magenta-rgb), 0.5);
+    box-shadow: var(--shadow-3d), 0 0 25px rgba(var(--viva-magenta-rgb), 0.4);
+  }
+
+  /* Tech stack badges */
+  .tech-badge {
+    @apply px-3 py-1 rounded-full text-xs font-medium border backdrop-blur-sm;
+    background: linear-gradient(135deg, 
+      rgba(var(--viva-magenta-rgb), 0.1) 0%, 
+      rgba(var(--lux-gold-rgb), 0.1) 100%
+    );
+    border-color: rgba(var(--viva-magenta-rgb), 0.3);
+    color: rgb(var(--viva-magenta-rgb));
+    transition: all var(--animation-normal) ease;
+  }
+
+  .tech-badge:hover {
+    transform: var(--hover-scale);
+    background: linear-gradient(135deg, 
+      rgba(var(--viva-magenta-rgb), 0.2) 0%, 
+      rgba(var(--lux-gold-rgb), 0.2) 100%
+    );
+    box-shadow: 0 4px 15px rgba(var(--viva-magenta-rgb), 0.2);
+  }
+
+  /* Glow effects */
+  .glow-effect {
+    position: relative;
+  }
+
+  .glow-effect::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    background: linear-gradient(45deg, 
+      transparent, 
+      rgba(var(--viva-magenta-rgb), 0.3), 
+      transparent
+    );
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity var(--animation-normal) ease;
+    z-index: -1;
+    filter: blur(8px);
+  }
+
+  .glow-effect:hover::before {
+    opacity: 1;
+  }
+
+  /* Parallax elements */
+  .parallax-element {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+
+  /* Performance optimizations */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .perspective-1500 {
+    perspective: 1500px;
+  }
+
+  .perspective-2000 {
+    perspective: 2000px;
+  }
 }
 
-/* Utilities Layer - Utility Classes and Animations */
+/* Enhanced Utilities Layer */
 @layer utilities {
-  /* Text Utilities */
+  /* Enhanced Text Utilities */
   .gradient-text {
     background: linear-gradient(135deg, var(--primary-600), var(--primary-400));
     -webkit-background-clip: text;
@@ -511,6 +722,15 @@
     background-size: 200% 100%;
   }
 
+  .gradient-text-luxury {
+    background: linear-gradient(135deg, var(--viva-magenta), var(--lux-gold), var(--lux-teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% 100%;
+    animation: gradientShift 6s ease-in-out infinite;
+  }
+
   .text-shadow {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
@@ -519,13 +739,21 @@
     text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 
-  /* Layout Utilities */
+  .text-glow {
+    text-shadow: 0 0 20px rgba(var(--viva-magenta-rgb), 0.8);
+  }
+
+  /* Enhanced Layout Utilities */
   .preserve-3d {
     transform-style: preserve-3d;
   }
 
   .perspective-1000 {
     perspective: 1000px;
+  }
+
+  .perspective-1500 {
+    perspective: 1500px;
   }
 
   .perspective-2000 {
@@ -541,7 +769,7 @@
     will-change: transform;
   }
 
-  /* Grid Utilities */
+  /* Enhanced Grid Utilities */
   .grid-auto-fit {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   }
@@ -550,13 +778,16 @@
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
 
-  /* Enhanced Line Clamp with Standard Property Support */
+  .grid-auto-fit-lg {
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  }
+
+  /* Enhanced Line Clamp */
   .line-clamp-1 {
     display: -webkit-box;
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    /* Standard property for compatibility */
     line-clamp: 1;
   }
 
@@ -565,7 +796,6 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    /* Standard property for compatibility */
     line-clamp: 2;
   }
 
@@ -574,7 +804,6 @@
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    /* Standard property for compatibility */
     line-clamp: 3;
   }
 
@@ -583,16 +812,19 @@
     -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    /* Standard property for compatibility */
     line-clamp: 4;
   }
 
-  /* Backdrop Blur Utilities */
+  /* Enhanced Backdrop Blur Utilities */
   .backdrop-blur-xs {
     backdrop-filter: blur(2px);
   }
 
-  /* Safe Area Utilities */
+  .backdrop-blur-3xl {
+    backdrop-filter: blur(64px);
+  }
+
+  /* Enhanced Safe Area Utilities */
   .safe-top {
     padding-top: env(safe-area-inset-top);
   }
@@ -609,7 +841,7 @@
     padding-right: env(safe-area-inset-right);
   }
 
-  /* Animation Classes */
+  /* Enhanced Animation Classes */
   .animate-fade-in-up {
     animation: fadeInUp 0.6s ease-out;
   }
@@ -668,9 +900,52 @@
   .animate-github-star {
     animation: githubStar 1s ease-out;
   }
+
+  .animate-code-scan {
+    animation: codeScan 2s ease-in-out infinite;
+  }
+
+  .animate-language-orbit {
+    animation: languageOrbit 8s linear infinite;
+  }
+
+  /* Interactive state utilities */
+  .hover-lift {
+    transition: transform var(--animation-normal) var(--animation-spring);
+  }
+
+  .hover-lift:hover {
+    transform: var(--hover-lift);
+  }
+
+  .hover-scale {
+    transition: transform var(--animation-normal) var(--animation-spring);
+  }
+
+  .hover-scale:hover {
+    transform: var(--hover-scale);
+  }
+
+  .hover-3d {
+    transition: transform var(--animation-slow) var(--animation-spring);
+    transform-style: preserve-3d;
+  }
+
+  .hover-3d:hover {
+    transform: rotateY(5deg) rotateX(3deg) translateZ(20px);
+  }
+
+  /* Focus utilities */
+  .focus-ring {
+    transition: box-shadow var(--animation-normal) ease;
+  }
+
+  .focus-ring:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
 }
 
-/* Keyframe Animations */
+/* Enhanced Keyframe Animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -805,12 +1080,27 @@
   100% { transform: scale(1) rotate(360deg); }
 }
 
-/* Layout Fix Styles - Critical for preventing stacking issues */
+@keyframes codeScan {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(100%);
+    opacity: 1;
+  }
+}
+
+@keyframes languageOrbit {
+  0% { transform: rotate(0deg) translateX(100px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(100px) rotate(-360deg); }
+}
+
+/* Enhanced Layout Fix Styles */
 .fixed {
   z-index: 50;
 }
 
-/* Prevent layout shifts and ensure proper stacking */
 html {
   overflow-x: hidden;
 }
@@ -820,7 +1110,6 @@ body {
   position: relative;
 }
 
-/* Ensure proper z-index stacking for Three.js integration */
 canvas {
   position: absolute !important;
   top: 0;
@@ -829,7 +1118,6 @@ canvas {
   z-index: 1;
 }
 
-/* Ensure sections have proper spacing and don't overlap */
 section {
   position: relative;
   z-index: 10;
@@ -837,13 +1125,11 @@ section {
   clear: both;
 }
 
-/* Fix for navigation spacing */
 nav + main,
 nav + div {
   padding-top: 0;
 }
 
-/* Ensure proper section spacing */
 #hero {
   margin-top: 0;
   padding-top: var(--header-height);
@@ -859,28 +1145,18 @@ nav + div {
   padding-bottom: var(--section-spacing);
 }
 
-/* Fix container overflow issues */
 .container {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
 }
 
-/* Prevent horizontal scroll */
-* {
-  box-sizing: border-box;
-}
-
-*:before,
-*:after {
-  box-sizing: border-box;
-}
-
-/* Fix for mobile layout issues */
+/* Enhanced Mobile Optimizations */
 @media (max-width: 768px) {
   :root {
     --header-height: 4rem;
     --section-spacing: 3rem;
+    --container-padding: 1rem;
   }
 
   body {
@@ -888,17 +1164,22 @@ nav + div {
   }
   
   section {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
   }
   
   .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
   }
   
   /* Mobile-specific 3D adjustments */
-  .card-3d:hover {
+  .card-3d:hover,
+  .project-card-3d:hover,
+  .scroll-triggered-card:hover,
+  .interactive-hero-card:hover,
+  .floating-code-block:hover,
+  .language-card:hover {
     transform: translateY(-5px) scale(1.01);
   }
   
@@ -907,86 +1188,21 @@ nav + div {
   .btn-secondary:hover {
     transform: translateY(-1px) scale(1.01);
   }
-  
-  .project-card-3d:hover {
-    transform: translateY(-5px) scale(1.01);
+
+  /* Reduce 3D effects on mobile */
+  .perspective-1000,
+  .perspective-1500,
+  .perspective-2000 {
+    perspective: 800px;
   }
 
-  /* Ensure your 3D hero components work on mobile */
-  .hero-3d-card:hover {
-    transform: rotateY(2deg) rotateX(1deg) translateZ(10px);
-  }
-}
-
-/* Fix for Framer Motion layout shifts */
-[data-framer-appear-id] {
-  transform-origin: center center;
-}
-
-/* Ensure proper z-index layering */
-.relative {
-  z-index: auto;
-}
-
-.absolute {
-  z-index: auto;
-}
-
-/* Fix for backdrop blur elements */
-.backdrop-blur-sm,
-.backdrop-blur-md,
-.backdrop-blur-lg {
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-}
-
-/* Smooth transitions for all elements */
-* {
-  transition-property: transform, opacity, background-color, border-color, color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
-}
-
-/* Fix for layout shift on load */
-.min-h-screen {
-  min-height: 100vh;
-  min-height: 100dvh; /* Modern browsers */
-}
-
-/* Prevent content jumping */
-img {
-  height: auto;
-  max-width: 100%;
-}
-
-/* Fix for Three.js performance */
-.webgl-container {
-  will-change: transform;
-  transform: translateZ(0);
-}
-
-/* Ensure proper scroll behavior */
-html {
-  scroll-padding-top: var(--header-height);
-}
-
-/* Fix for mobile viewport */
-@supports (-webkit-touch-callout: none) {
-  .min-h-screen {
-    min-height: -webkit-fill-available;
+  .glass-card,
+  .glass-3d {
+    backdrop-filter: blur(8px) !important;
   }
 }
 
-/* High DPI optimization */
-@media screen and (min-device-pixel-ratio: 1.5),
-  screen and (min-resolution: 1.5dppx) {
-  body {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-}
-
-/* Accessibility - Reduce motion for users who prefer it */
+/* Enhanced Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1000,6 +1216,10 @@ html {
   .card-3d,
   .btn-3d,
   .project-card-3d,
+  .scroll-triggered-card,
+  .interactive-hero-card,
+  .floating-code-block,
+  .language-card,
   .animate-float-3d,
   .animate-rotate-3d,
   .animate-float,
@@ -1020,12 +1240,25 @@ html {
   .btn-secondary:hover,
   .hero-3d-card:hover,
   .hero-profile-image:hover,
-  .hero-3d-button:hover {
+  .hero-3d-button:hover,
+  .scroll-triggered-card:hover,
+  .interactive-hero-card:hover,
+  .floating-code-block:hover,
+  .language-card:hover {
     transform: none !important;
   }
 
-  .gradient-text-3d {
+  .gradient-text-3d,
+  .gradient-text-luxury {
     animation: none !important;
+  }
+
+  .preserve-3d,
+  .perspective-1000,
+  .perspective-1500,
+  .perspective-2000 {
+    transform-style: auto !important;
+    perspective: none !important;
   }
 }
 
@@ -1040,18 +1273,118 @@ html {
   }
   
   .gradient-text,
-  .gradient-text-3d {
+  .gradient-text-3d,
+  .gradient-text-luxury {
     -webkit-text-fill-color: initial !important;
     background: none !important;
     color: var(--lux-black) !important;
   }
   
-  /* Hide interactive elements in print */
   .animate-float,
   .animate-float-3d,
   .animate-rotate-3d,
   .loading-spinner {
     animation: none !important;
+  }
+}
+
+/* Enhanced High DPI Optimization */
+@media screen and (min-device-pixel-ratio: 1.5),
+  screen and (min-resolution: 1.5dppx) {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .glass,
+  .glass-card,
+  .glass-3d {
+    backdrop-filter: blur(20px) !important;
+  }
+}
+
+/* GPU Acceleration for better performance */
+.glass-card,
+.card-3d,
+.project-card-3d,
+.scroll-triggered-card,
+.interactive-hero-card,
+.floating-code-block,
+.language-card {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Ensure proper z-index stacking */
+.hero-3d-container {
+  z-index: 5;
+}
+
+.projects-showcase-container {
+  z-index: 10;
+}
+
+.github-stats-container {
+  z-index: 10;
+}
+
+.scroll-triggered-container {
+  z-index: 10;
+}
+
+.interactive-hero-container {
+  z-index: 5;
+}
+
+.floating-code-container {
+  z-index: 10;
+}
+
+.language-viz-container {
+  z-index: 10;
+}
+
+/* Prevent horizontal scroll */
+html, body {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Integration fixes for enhanced components */
+.enhanced-component {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Smooth transitions for all enhanced elements */
+.enhanced-component * {
+  transition-property: transform, opacity, background-color, border-color, color, fill, stroke;
+  transition-timing-function: var(--animation-spring);
+  transition-duration: var(--animation-normal);
+}
+
+/* Fix for layout shift on load */
+.min-h-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Prevent content jumping */
+img {
+  height: auto;
+  max-width: 100%;
+}
+
+/* Fix for Three.js performance */
+.webgl-container {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Fix for mobile viewport */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
   }
 }
 
@@ -1065,13 +1398,21 @@ select:focus-visible {
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 0 0 0 4px var(--primary-500);
 }
 
+.dark button:focus-visible,
+.dark a:focus-visible,
+.dark input:focus-visible,
+.dark textarea:focus-visible,
+.dark select:focus-visible {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1), 0 0 0 4px var(--viva-magenta);
+}
+
 /* Ensure consistent spacing for all sections */
 .section-spacing {
   padding-top: var(--section-spacing);
   padding-bottom: var(--section-spacing);
 }
 
-/* Grid system for consistent layouts - Works with your project showcase */
+/* Enhanced grid system for consistent layouts */
 .portfolio-grid {
   display: grid;
   gap: 2rem;
@@ -1108,49 +1449,3 @@ select:focus-visible {
 .equal-height-cards .card-actions {
   margin-top: auto;
 }
-
-/* Integration fixes for your component styles */
-.hero-3d-container {
-  z-index: 5;
-}
-
-.projects-showcase-container {
-  z-index: 10;
-}
-
-.github-stats-container {
-  z-index: 10;
-}
-
-/* GPU Acceleration */
-.glass-card {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-/* Prevent horizontal scroll */
-html, body {
-  overflow-x: hidden;
-  scroll-behavior: smooth;
-}
-
-/* Mobile performance */
-@media (max-width: 768px) {
-  .glass-card {
-    backdrop-filter: blur(8px) !important;
-  }
-}
-
-/* Debug utilities (comment out in production) */
-/*
-.debug * {
-  outline: 1px solid red !important;
-}
-
-.debug-grid {
-  background-image: 
-    linear-gradient(rgba(255, 0, 0, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
-}
-*/

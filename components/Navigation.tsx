@@ -1,14 +1,28 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
+import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion } from 'framer-motion'
 import { 
   Home, User, Briefcase, Calendar, Mail, Github, Linkedin, 
   Twitter, FileText, Menu, X, ExternalLink, MessageCircle,
   Sun, Moon, BookOpen, Gamepad2
 } from 'lucide-react'
+
+interface NavItem {
+  id: string
+  label: string
+  icon: React.ElementType
+  href: string
+}
+
+interface SocialLink {
+  platform: string
+  href: string
+  icon: React.ElementType
+  color: string
+}
 
 const Navigation = () => {
   const router = useRouter()
@@ -19,23 +33,24 @@ const Navigation = () => {
   const [darkMode, setDarkMode] = useState(false)
   const [mounted, setMounted] = useState(false)
   const navRef = useRef<HTMLElement>(null)
+  const shouldReduceMotion = useReducedMotion()
   
   const { scrollYProgress } = useScroll()
-  const navBlur = useTransform(scrollYProgress, [0, 0.1], [0, 20])
+  const navBlur = useTransform(scrollYProgress, [0, 0.1], [0, shouldReduceMotion ? 8 : 20])
 
-  // Navigation items - Updated with correct paths
-  const navItems = [
+  // Memoized navigation items to prevent recreation
+  const navItems = useMemo<NavItem[]>(() => [
     { id: 'home', label: 'Home', icon: Home, href: '/' },
     { id: 'about', label: 'About', icon: User, href: '/#about' },
     { id: 'projects', label: 'Projects', icon: Briefcase, href: '/#projects' },
     { id: 'experience', label: 'Experience', icon: Calendar, href: '/#experience' },
-    { id: 'blog', label: 'Blog', icon: BookOpen, href: '/posts' },
-    { id: 'dino-game', label: 'Game', icon: Gamepad2, href: '/dinosaur' },
+    { id: 'blog', label: 'Blog', icon: BookOpen, href: '/blog' },
+    { id: 'dino-game', label: 'Game', icon: Gamepad2, href: '/dino-game' },
     { id: 'contact', label: 'Contact', icon: Mail, href: '/#contact' }
-  ]
+  ], [])
 
-  // Social links
-  const socialLinks = [
+  // Memoized social links to prevent recreation
+  const socialLinks = useMemo<SocialLink[]>(() => [
     { 
       platform: 'GitHub', 
       href: 'https://github.com/sippinwindex', 
@@ -60,157 +75,188 @@ const Navigation = () => {
       icon: FileText,
       color: 'hover:text-amber-600 dark:hover:text-amber-400'
     }
-  ]
+  ], [])
 
-  // Ensure component is mounted before rendering to prevent hydration mismatch
+  // Enhanced theme detection with error handling
   useEffect(() => {
-    setMounted(true)
+    const initializeTheme = () => {
+      try {
+        setMounted(true)
+        const savedTheme = localStorage.getItem('theme')
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        
+        const shouldUseDarkMode = savedTheme === 'dark' || (!savedTheme && systemPrefersDark)
+        
+        setDarkMode(shouldUseDarkMode)
+        document.documentElement.classList.toggle('dark', shouldUseDarkMode)
+      } catch (error) {
+        console.warn('Theme initialization failed:', error)
+        setMounted(true)
+      }
+    }
+
+    initializeTheme()
   }, [])
 
-  // Theme toggle functionality
-  useEffect(() => {
-    if (!mounted) return
-    
-    // Check for saved theme preference or default to system preference
-    const savedTheme = localStorage.getItem('theme')
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    
-    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-      setDarkMode(true)
-      document.documentElement.classList.add('dark')
-    } else {
-      setDarkMode(false)
-      document.documentElement.classList.remove('dark')
-    }
-  }, [mounted])
-
-  const toggleTheme = () => {
+  // Enhanced theme toggle with better error handling
+  const toggleTheme = useCallback(() => {
     const newDarkMode = !darkMode
     setDarkMode(newDarkMode)
     
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
+    try {
+      document.documentElement.classList.toggle('dark', newDarkMode)
+      localStorage.setItem('theme', newDarkMode ? 'dark' : 'light')
+
+      // Enhanced ripple effect with reduced motion support
+      if (!shouldReduceMotion) {
+        const ripple = document.createElement('div')
+        ripple.className = 'fixed inset-0 pointer-events-none z-[9999] opacity-0'
+        ripple.style.background = darkMode 
+          ? 'radial-gradient(circle at center, #FAFAFA 0%, transparent 70%)'
+          : 'radial-gradient(circle at center, #121212 0%, transparent 70%)'
+        
+        document.body.appendChild(ripple)
+        
+        const animation = ripple.animate([
+          { opacity: 0, transform: 'scale(0)' },
+          { opacity: 0.8, transform: 'scale(1)' },
+          { opacity: 0, transform: 'scale(3)' }
+        ], {
+          duration: 800,
+          easing: 'ease-out'
+        })
+        
+        animation.onfinish = () => {
+          if (ripple.parentNode) {
+            ripple.remove()
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Theme toggle failed:', error)
     }
+  }, [darkMode, shouldReduceMotion])
 
-    // Create ripple effect animation
-    const ripple = document.createElement('div')
-    ripple.className = 'fixed inset-0 pointer-events-none z-[9999] opacity-0'
-    ripple.style.background = darkMode 
-      ? 'radial-gradient(circle at center, #FAFAFA 0%, transparent 70%)'
-      : 'radial-gradient(circle at center, #121212 0%, transparent 70%)'
-    
-    document.body.appendChild(ripple)
-    
-    // Animate ripple
-    ripple.animate([
-      { opacity: 0, transform: 'scale(0)' },
-      { opacity: 0.8, transform: 'scale(1)' },
-      { opacity: 0, transform: 'scale(3)' }
-    ], {
-      duration: 800,
-      easing: 'ease-out'
-    }).onfinish = () => ripple.remove()
-  }
-
-  // Track scroll progress and determine current section based on pathname
+  // Optimized scroll tracking with throttling
   useEffect(() => {
+    let ticking = false
+
     const handleScroll = () => {
-      const scrolled = window.scrollY
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight
-      const progress = scrolled / maxScroll
-      setScrollProgress(progress)
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrolled = window.scrollY
+          const maxScroll = document.documentElement.scrollHeight - window.innerHeight
+          const progress = Math.min(scrolled / Math.max(maxScroll, 1), 1)
+          setScrollProgress(progress)
+          ticking = false
+        })
+        ticking = true
+      }
     }
 
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Determine active section based on pathname and hash
+  // Enhanced section detection with cleanup
   useEffect(() => {
-    // Handle null pathname
     if (!pathname) return
     
     if (pathname === '/') {
-      // Check if there's a hash in the URL
       const hash = window.location.hash.replace('#', '')
       if (hash) {
         setCurrentSection(hash)
-      } else {
-        // Check scroll position for sections on homepage
-        const sections = ['hero', 'about', 'projects', 'experience', 'contact']
-        const observerOptions = {
-          threshold: 0.3,
-          rootMargin: '-20% 0px -70% 0px'
-        }
+        return
+      }
 
-        const observer = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              setCurrentSection(entry.target.id)
-            }
-          })
-        }, observerOptions)
+      const sections = ['hero', 'about', 'projects', 'experience', 'contact']
+      const observerOptions = {
+        threshold: 0.3,
+        rootMargin: '-20% 0px -70% 0px'
+      }
 
-        sections.forEach(sectionId => {
-          const element = document.getElementById(sectionId)
-          if (element) {
-            observer.observe(element)
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setCurrentSection(entry.target.id)
           }
         })
+      }, observerOptions)
 
-        return () => observer.disconnect()
+      const elements: Element[] = []
+      sections.forEach(sectionId => {
+        const element = document.getElementById(sectionId)
+        if (element) {
+          observer.observe(element)
+          elements.push(element)
+        }
+      })
+
+      return () => {
+        elements.forEach(element => observer.unobserve(element))
+        observer.disconnect()
       }
-    } else if (pathname === '/posts') {
+    } else if (pathname === '/blog') {
       setCurrentSection('blog')
-    } else if (pathname === '/dinosaur') {
+    } else if (pathname === '/dino-game') {
       setCurrentSection('dino-game')
     } else if (pathname.includes('/photos')) {
       setCurrentSection('about')
     }
   }, [pathname])
 
-  // 3D Hover Effect Hook
-  const use3DHover = () => {
+  // Enhanced 3D hover hook with performance optimizations
+  const use3DHover = useCallback(() => {
     const ref = useRef<HTMLDivElement>(null)
     const [rotation, setRotation] = useState({ x: 0, y: 0 })
 
     useEffect(() => {
       const element = ref.current
-      if (!element) return
+      if (!element || shouldReduceMotion) return
+
+      let animationFrameId: number
 
       const handleMouseMove = (e: MouseEvent) => {
-        const rect = element.getBoundingClientRect()
-        const centerX = rect.left + rect.width / 2
-        const centerY = rect.top + rect.height / 2
-        
-        const rotateX = (e.clientY - centerY) / 10
-        const rotateY = (centerX - e.clientX) / 10
-        
-        setRotation({ x: rotateX, y: rotateY })
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId)
+        }
+
+        animationFrameId = requestAnimationFrame(() => {
+          const rect = element.getBoundingClientRect()
+          const centerX = rect.left + rect.width / 2
+          const centerY = rect.top + rect.height / 2
+          
+          const rotateX = (e.clientY - centerY) / 10
+          const rotateY = (centerX - e.clientX) / 10
+          
+          setRotation({ x: rotateX, y: rotateY })
+        })
       }
 
       const handleMouseLeave = () => {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId)
+        }
         setRotation({ x: 0, y: 0 })
       }
 
-      element.addEventListener('mousemove', handleMouseMove)
+      element.addEventListener('mousemove', handleMouseMove, { passive: true })
       element.addEventListener('mouseleave', handleMouseLeave)
 
       return () => {
         element.removeEventListener('mousemove', handleMouseMove)
         element.removeEventListener('mouseleave', handleMouseLeave)
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId)
+        }
       }
     }, [])
 
     return [ref, rotation] as const
-  }
+  }, [shouldReduceMotion])
 
   // Enhanced Theme Toggle Component
-  const ThemeToggle = () => {
+  const ThemeToggle = React.memo(() => {
     const [hoverRef, rotation] = use3DHover()
 
     if (!mounted) {
@@ -225,10 +271,10 @@ const Navigation = () => {
         className="relative"
         style={{
           transformStyle: 'preserve-3d',
-          transform: `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`
+          transform: shouldReduceMotion ? 'none' : `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`
         }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+        whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
       >
         <motion.button
           onClick={toggleTheme}
@@ -248,27 +294,28 @@ const Navigation = () => {
             transition={{
               type: "spring",
               stiffness: 500,
-              damping: 30
+              damping: 30,
+              duration: shouldReduceMotion ? 0.1 : undefined
             }}
           >
             <AnimatePresence mode="wait">
               {darkMode ? (
                 <motion.div
                   key="moon"
-                  initial={{ opacity: 0, rotate: -180 }}
+                  initial={{ opacity: 0, rotate: shouldReduceMotion ? 0 : -180 }}
                   animate={{ opacity: 1, rotate: 0 }}
-                  exit={{ opacity: 0, rotate: 180 }}
-                  transition={{ duration: 0.3 }}
+                  exit={{ opacity: 0, rotate: shouldReduceMotion ? 0 : 180 }}
+                  transition={{ duration: shouldReduceMotion ? 0.1 : 0.3 }}
                 >
                   <Moon className="w-3 h-3 text-blue-500" />
                 </motion.div>
               ) : (
                 <motion.div
                   key="sun"
-                  initial={{ opacity: 0, rotate: -180 }}
+                  initial={{ opacity: 0, rotate: shouldReduceMotion ? 0 : -180 }}
                   animate={{ opacity: 1, rotate: 0 }}
-                  exit={{ opacity: 0, rotate: 180 }}
-                  transition={{ duration: 0.3 }}
+                  exit={{ opacity: 0, rotate: shouldReduceMotion ? 0 : 180 }}
+                  transition={{ duration: shouldReduceMotion ? 0.1 : 0.3 }}
                 >
                   <Sun className="w-3 h-3 text-yellow-500" />
                 </motion.div>
@@ -276,35 +323,35 @@ const Navigation = () => {
             </AnimatePresence>
           </motion.div>
           
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            animate={{
-              boxShadow: darkMode 
-                ? '0 0 20px rgba(59, 130, 246, 0.3)'
-                : '0 0 20px rgba(251, 191, 36, 0.3)'
-            }}
-            transition={{ duration: 0.3 }}
-          />
+          {!shouldReduceMotion && (
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              animate={{
+                boxShadow: darkMode 
+                  ? '0 0 20px rgba(59, 130, 246, 0.3)'
+                  : '0 0 20px rgba(251, 191, 36, 0.3)'
+              }}
+              transition={{ duration: 0.3 }}
+            />
+          )}
         </motion.button>
       </motion.div>
     )
-  }
+  })
 
-  // Navigation Link Component
-  interface NavLinkProps {
-    item: typeof navItems[0]
+  // Enhanced Navigation Link Component
+  const NavLink = React.memo<{
+    item: NavItem
     index: number
     isMobile?: boolean
-  }
-
-  const NavLink: React.FC<NavLinkProps> = ({ item, index, isMobile = false }) => {
+  }>(({ item, index, isMobile = false }) => {
     const [hoverRef, rotation] = use3DHover()
     const isActive = currentSection === item.id || 
                    (pathname === item.href) ||
                    (item.href.includes('#') && pathname === '/' && `/#${currentSection}` === item.href)
     const IconComponent = item.icon
 
-    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const handleClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
       setIsMenuOpen(false)
       
       // Handle hash navigation on same page
@@ -313,13 +360,15 @@ const Navigation = () => {
         const targetId = item.href.replace('/#', '')
         const targetElement = document.getElementById(targetId)
         if (targetElement) {
-          targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          targetElement.scrollIntoView({ 
+            behavior: shouldReduceMotion ? 'auto' : 'smooth', 
+            block: 'start' 
+          })
           // Update URL without reload
           window.history.pushState(null, '', item.href)
         }
       }
-      // Let Next.js handle other navigation
-    }
+    }, [item.href, pathname, shouldReduceMotion])
 
     return (
       <motion.div
@@ -327,11 +376,14 @@ const Navigation = () => {
         className="relative group"
         style={{
           transformStyle: 'preserve-3d',
-          transform: `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`
+          transform: shouldReduceMotion ? 'none' : `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`
         }}
         initial={{ opacity: 0, y: isMobile ? 20 : -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.1, duration: 0.6 }}
+        transition={{ 
+          delay: shouldReduceMotion ? 0 : index * 0.1, 
+          duration: shouldReduceMotion ? 0.2 : 0.6 
+        }}
       >
         <Link href={item.href} onClick={handleClick} className="block">
           <motion.div
@@ -343,12 +395,15 @@ const Navigation = () => {
               }
               ${isMobile ? 'text-lg justify-center' : 'text-sm'}
             `}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ 
+              scale: shouldReduceMotion ? 1 : 1.05, 
+              y: shouldReduceMotion ? 0 : -2 
+            }}
+            whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
           >
             <motion.div
               className="flex-shrink-0"
-              animate={isActive ? { 
+              animate={isActive && !shouldReduceMotion ? { 
                 rotate: [0, 10, -10, 0],
                 scale: [1, 1.2, 1]
               } : {}}
@@ -372,56 +427,75 @@ const Navigation = () => {
             <motion.div
               className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-50/50 to-lux-gold-50/50 dark:from-viva-magenta-900/10 dark:to-lux-gold-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               initial={{ scale: 0.8 }}
-              whileHover={{ scale: 1 }}
+              whileHover={{ scale: shouldReduceMotion ? 0.8 : 1 }}
             />
           </motion.div>
         </Link>
       </motion.div>
     )
-  }
+  })
 
-  // Social Link Component
-  interface SocialLinkProps {
-    social: typeof socialLinks[0]
+  // Enhanced Social Link Component
+  const SocialLink = React.memo<{
+    social: SocialLink
     index: number
-  }
-
-  const SocialLink: React.FC<SocialLinkProps> = ({ social, index }) => {
+  }>(({ social, index }) => {
     const [hoverRef, rotation] = use3DHover()
     const IconComponent = social.icon
+
+    const handleClick = useCallback((e: React.MouseEvent) => {
+      // Track social link clicks for analytics
+      if (typeof window !== 'undefined' && 'gtag' in window) {
+        (window as any).gtag('event', 'social_link_click', {
+          platform: social.platform,
+          url: social.href
+        })
+      }
+    }, [social.platform, social.href])
 
     return (
       <motion.div
         ref={hoverRef}
         style={{
           transformStyle: 'preserve-3d',
-          transform: `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`
+          transform: shouldReduceMotion ? 'none' : `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`
         }}
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.5 + index * 0.1, type: "spring", stiffness: 300 }}
+        transition={{ 
+          delay: shouldReduceMotion ? 0 : 0.5 + index * 0.1, 
+          type: "spring", 
+          stiffness: 300,
+          duration: shouldReduceMotion ? 0.2 : undefined
+        }}
       >
         <motion.a
           href={social.href}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={handleClick}
           className={`
             block w-10 h-10 rounded-xl glass border border-gray-200/50 dark:border-gray-700/50
             flex items-center justify-center transition-all duration-300
             hover:bg-gray-200/50 dark:hover:bg-gray-700/50 hover:border-viva-magenta-300 dark:hover:border-viva-magenta-600 hover:scale-110 ${social.color}
           `}
-          whileHover={{ y: -3, rotateY: 10 }}
-          whileTap={{ scale: 0.9 }}
+          whileHover={{ 
+            y: shouldReduceMotion ? 0 : -3, 
+            rotateY: shouldReduceMotion ? 0 : 10,
+            scale: shouldReduceMotion ? 1 : 1.1
+          }}
+          whileTap={{ scale: shouldReduceMotion ? 1 : 0.9 }}
           title={social.platform}
+          aria-label={`Visit ${social.platform} profile`}
         >
           <IconComponent className="w-5 h-5" />
         </motion.a>
       </motion.div>
     )
-  }
+  })
 
-  // Mobile Menu Component
-  const MobileMenu = () => (
+  // Enhanced Mobile Menu Component
+  const MobileMenu = React.memo(() => (
     <AnimatePresence>
       {isMenuOpen && (
         <motion.div
@@ -443,7 +517,12 @@ const Navigation = () => {
             initial={{ opacity: 0, y: -50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -50, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 30,
+              duration: shouldReduceMotion ? 0.2 : undefined
+            }}
           >
             <div className="space-y-4 mb-8">
               {navItems.map((item, index) => (
@@ -466,13 +545,13 @@ const Navigation = () => {
               className="mt-8 text-center"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: shouldReduceMotion ? 0 : 0.3 }}
             >
               <motion.a
                 href="mailto:stormblazdesign@gmail.com"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl shadow-lg"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+                whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
               >
                 <MessageCircle className="w-5 h-5" />
                 <span>Let's Talk</span>
@@ -482,7 +561,24 @@ const Navigation = () => {
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  ))
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMenuOpen(false)
+  }, [pathname])
+
+  // Enhanced keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMenuOpen) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isMenuOpen])
 
   return (
     <>
@@ -496,31 +592,34 @@ const Navigation = () => {
         }}
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
+        transition={{ 
+          duration: shouldReduceMotion ? 0.2 : 0.6, 
+          delay: shouldReduceMotion ? 0 : 0.2 
+        }}
       >        
         <div className="container mx-auto">
           <div className="flex items-center justify-between">
             
-            {/* Logo / Brand */}
+            {/* Enhanced Logo / Brand */}
             <Link href="/" className="block">
               <motion.div
                 className="relative group"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+                whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
               >
                 <motion.div
                   className="flex items-center gap-3 cursor-pointer"
-                  whileHover={{ x: 5 }}
+                  whileHover={{ x: shouldReduceMotion ? 0 : 5 }}
                 >
                   <motion.div 
                     className="w-10 h-10 rounded-xl bg-gradient-to-br from-viva-magenta-600 to-lux-gold-600 flex items-center justify-center font-bold text-white shadow-lg"
-                    animate={{ 
+                    animate={!shouldReduceMotion ? { 
                       boxShadow: [
                         "0 0 20px rgba(190, 52, 85, 0.3)",
                         "0 0 30px rgba(212, 175, 55, 0.3)",
                         "0 0 20px rgba(190, 52, 85, 0.3)"
                       ]
-                    }}
+                    } : {}}
                     transition={{ duration: 3, repeat: Infinity }}
                   >
                     JF
@@ -554,19 +653,24 @@ const Navigation = () => {
               <motion.a
                 href="mailto:stormblazdesign@gmail.com"
                 className="relative group px-6 py-2 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ 
+                  scale: shouldReduceMotion ? 1 : 1.05, 
+                  y: shouldReduceMotion ? 0 : -2 
+                }}
+                whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
               >
                 <span className="relative z-10 flex items-center gap-2">
                   <MessageCircle className="w-4 h-4" />
                   Let's Talk
                 </span>
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-lux-gold-600 to-viva-magenta-600"
-                  initial={{ x: "-100%" }}
-                  whileHover={{ x: "0%" }}
-                  transition={{ duration: 0.3 }}
-                />
+                {!shouldReduceMotion && (
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-lux-gold-600 to-viva-magenta-600"
+                    initial={{ x: "-100%" }}
+                    whileHover={{ x: "0%" }}
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
               </motion.a>
             </div>
 
@@ -577,8 +681,10 @@ const Navigation = () => {
               <motion.button
                 className="relative w-10 h-10 rounded-xl glass border border-gray-200 dark:border-gray-700 flex items-center justify-center"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+                whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+                aria-label={`${isMenuOpen ? 'Close' : 'Open'} navigation menu`}
+                aria-expanded={isMenuOpen}
               >
                 <motion.div
                   className="w-5 h-5 flex flex-col justify-center items-center"
@@ -595,11 +701,12 @@ const Navigation = () => {
           </div>
         </div>
 
+        {/* Enhanced Scroll Progress Bar */}
         <motion.div
           className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600"
           style={{ 
             width: `${scrollProgress * 100}%`,
-            boxShadow: `0 0 10px rgba(190, 52, 85, 0.6)`
+            boxShadow: shouldReduceMotion ? 'none' : `0 0 10px rgba(190, 52, 85, 0.6)`
           }}
           initial={{ width: "0%" }}
         />
@@ -610,4 +717,6 @@ const Navigation = () => {
   )
 }
 
-export default Navigation
+Navigation.displayName = 'Navigation'
+
+export default React.memo(Navigation)

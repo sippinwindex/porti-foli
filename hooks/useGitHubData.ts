@@ -1,4 +1,4 @@
-// hooks/useGitHubData.ts - UPDATED VERSION
+// hooks/useGitHubData.ts - COMPLETE FIX
 import { useState, useEffect } from 'react'
 
 interface GitHubRepo {
@@ -43,16 +43,11 @@ interface UseGitHubDataOptions {
 }
 
 interface UseGitHubDataReturn {
-  // Data
   repositories: GitHubRepo[]
   user: GitHubUser | null
   stats: GitHubStats | null
-  
-  // State
   loading: boolean
   error: string | null
-  
-  // Actions
   fetchRepositories: () => Promise<void>
   fetchUser: () => Promise<void>
   fetchStats: () => Promise<void>
@@ -61,45 +56,38 @@ interface UseGitHubDataReturn {
 }
 
 export function useGitHubData(options: UseGitHubDataOptions = {}): UseGitHubDataReturn {
-  const { autoFetch = true, cacheTimeout = 30 * 60 * 1000 } = options // 30 minutes default cache
+  const { autoFetch = true, cacheTimeout = 30 * 60 * 1000 } = options
 
-  // State
   const [repositories, setRepositories] = useState<GitHubRepo[]>([])
   const [user, setUser] = useState<GitHubUser | null>(null)
   const [stats, setStats] = useState<GitHubStats | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  // Cache management
   const [lastFetch, setLastFetch] = useState<number>(0)
 
-  const shouldRefetch = () => {
-    return Date.now() - lastFetch > cacheTimeout
-  }
+  const shouldRefetch = () => Date.now() - lastFetch > cacheTimeout
 
-  // Fetch repositories - UPDATED API CALL
   const fetchRepositories = async () => {
     try {
       setError(null)
-      
       console.log('🔄 Fetching GitHub repositories...')
-      // Updated to match your current API structure
-      const response = await fetch('/api/github?type=repos')
+      
+      // Use the correct API endpoint
+      const response = await fetch('/api/github/repositories')
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+        throw new Error(errorData.error || `HTTP ${response.status}`)
       }
       
       const data = await response.json()
       
-      if (data.success && data.repositories) {
+      if (data.repositories) {
         setRepositories(data.repositories)
         console.log(`✅ Fetched ${data.repositories.length} repositories`)
       } else {
-        throw new Error(data.error || 'No repositories data received')
+        throw new Error('No repositories data received')
       }
-      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch repositories'
       console.error('❌ Error fetching repositories:', errorMessage)
@@ -107,57 +95,64 @@ export function useGitHubData(options: UseGitHubDataOptions = {}): UseGitHubData
     }
   }
 
-  // Fetch user data - UPDATED API CALL
   const fetchUser = async () => {
     try {
       setError(null)
-      
       console.log('🔄 Fetching GitHub user...')
+      
+      // Use correct endpoint with query param
       const response = await fetch('/api/github?type=user')
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+        throw new Error(errorData.error || `HTTP ${response.status}`)
       }
       
-      const data = await response.json()
+      const userData = await response.json()
       
-      if (data.success && data.user) {
-        setUser(data.user)
-        console.log(`✅ Fetched user: ${data.user.name || data.user.login}`)
-      } else {
-        throw new Error(data.error || 'No user data received')
+      if (userData) {
+        setUser(userData)
+        console.log(`✅ Fetched user: ${userData.name || userData.login}`)
       }
-      
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch user data'
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch user'
       console.error('❌ Error fetching user:', errorMessage)
       setError(errorMessage)
     }
   }
 
-  // Fetch stats - UPDATED API CALL
   const fetchStats = async () => {
     try {
       setError(null)
-      
       console.log('🔄 Fetching GitHub stats...')
-      const response = await fetch('/api/github?type=stats')
+      
+      const response = await fetch('/api/github/stats')
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+        throw new Error(errorData.error || `HTTP ${response.status}`)
       }
       
       const data = await response.json()
       
       if (data.success && data.stats) {
-        setStats(data.stats)
-        console.log(`✅ Fetched stats: ${data.stats.totalProjects || 0} repos, ${data.stats.totalStars || 0} stars`)
-      } else {
-        throw new Error(data.error || 'No stats data received')
+        // Transform stats to match expected format
+        const transformedStats: GitHubStats = {
+          totalProjects: typeof data.stats.repositories === 'number' 
+            ? data.stats.repositories 
+            : Array.isArray(data.stats.repositories) 
+              ? data.stats.repositories.length 
+              : 0,
+          totalStars: data.stats.totalStars || 0,
+          totalForks: data.stats.totalForks || 0,
+          topLanguages: Object.keys(data.stats.languageStats || {}).slice(0, 5),
+          publicRepos: data.stats.user?.public_repos || 0,
+          followers: data.stats.user?.followers || 0,
+          following: data.stats.user?.following || 0
+        }
+        setStats(transformedStats)
+        console.log(`✅ Fetched stats: ${transformedStats.totalProjects} repos`)
       }
-      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch stats'
       console.error('❌ Error fetching stats:', errorMessage)
@@ -165,7 +160,6 @@ export function useGitHubData(options: UseGitHubDataOptions = {}): UseGitHubData
     }
   }
 
-  // Fetch all data
   const refetchAll = async () => {
     if (loading) return
     
@@ -186,60 +180,44 @@ export function useGitHubData(options: UseGitHubDataOptions = {}): UseGitHubData
     }
   }
 
-  // Clear error
-  const clearError = () => {
-    setError(null)
-  }
+  const clearError = () => setError(null)
 
-  // Auto-fetch on mount and when cache expires
   useEffect(() => {
     if (autoFetch && (repositories.length === 0 || shouldRefetch())) {
       refetchAll()
     }
   }, [autoFetch])
 
-  // Expose methods for manual fetching
-  const fetchRepositoriesWithLoading = async () => {
-    setLoading(true)
-    try {
-      await fetchRepositories()
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchUserWithLoading = async () => {
-    setLoading(true)
-    try {
-      await fetchUser()
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchStatsWithLoading = async () => {
-    setLoading(true)
-    try {
-      await fetchStats()
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return {
-    // Data
     repositories,
     user,
     stats,
-    
-    // State
     loading,
     error,
-    
-    // Actions
-    fetchRepositories: fetchRepositoriesWithLoading,
-    fetchUser: fetchUserWithLoading,
-    fetchStats: fetchStatsWithLoading,
+    fetchRepositories: async () => {
+      setLoading(true)
+      try {
+        await fetchRepositories()
+      } finally {
+        setLoading(false)
+      }
+    },
+    fetchUser: async () => {
+      setLoading(true)
+      try {
+        await fetchUser()
+      } finally {
+        setLoading(false)
+      }
+    },
+    fetchStats: async () => {
+      setLoading(true)
+      try {
+        await fetchStats()
+      } finally {
+        setLoading(false)
+      }
+    },
     refetchAll,
     clearError
   }

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useEffect, useState, useCallback } from 'react'
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import { motion, useAnimation, useScroll, useTransform } from 'framer-motion'
 
 interface Particle {
@@ -57,17 +57,17 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
   const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0])
   const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.8, 1, 0.8])
 
-  // Color schemes
-  const colorSchemes = {
+  // Color schemes - memoized to prevent recreation
+  const colorSchemes = useMemo(() => ({
     'viva-magenta': ['#BE3455', '#E85A4F', '#C73650', '#A91D3A'],
     'lux-gold': ['#D4AF37', '#FFD700', '#F4D03F', '#E6C200'],
     'multi': ['#BE3455', '#D4AF37', '#98A869', '#008080'],
     'cyberpunk': ['#00FFFF', '#FF00FF', '#00FF00', '#FFFF00']
-  }
+  }), [])
 
-  const colors = colorSchemes[colorScheme]
+  const colors = useMemo(() => colorSchemes[colorScheme], [colorSchemes, colorScheme])
 
-  // Initialize particles
+  // Initialize particles - FIXED: Memoized createParticle function
   const createParticle = useCallback((index: number): Particle => {
     const x = Math.random() * dimensions.width
     const y = Math.random() * dimensions.height
@@ -88,7 +88,7 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
       maxLife: Math.random() * 1000 + 500,
       trail: []
     }
-  }, [dimensions, colors, speed])
+  }, [dimensions.width, dimensions.height, colors, speed]) // FIXED: Include all dependencies
 
   // Initialize particles when dimensions change
   useEffect(() => {
@@ -96,7 +96,7 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
       const newParticles = Array.from({ length: particleCount }, (_, i) => createParticle(i))
       setParticles(newParticles)
     }
-  }, [dimensions, particleCount, createParticle])
+  }, [dimensions.width, dimensions.height, particleCount, createParticle]) // FIXED: Include createParticle
 
   // Handle window resize
   useEffect(() => {
@@ -135,8 +135,8 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
     }
   }, [interactive])
 
-  // Animation functions
-  const applyAnimation = (particle: Particle, time: number) => {
+  // Animation functions - FIXED: Memoized to avoid recreation
+  const applyAnimation = useCallback((particle: Particle, time: number) => {
     switch (animation) {
       case 'spiral':
         const angle = time * 0.001 + particle.life * 0.01
@@ -188,9 +188,9 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
         particle.z += particle.vz
         break
     }
-  }
+  }, [animation, interactive, mousePos.x, mousePos.y, mouseInfluence, speed, dimensions.height, dimensions.width]) // FIXED: Include all dependencies
 
-  // Main animation loop
+  // Main animation loop - FIXED: Include all dependencies
   const animate = useCallback((time: number) => {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext('2d')
@@ -319,14 +319,12 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
 
     animationRef.current = requestAnimationFrame(animate)
   }, [
-    dimensions, 
+    dimensions.width, 
+    dimensions.height, 
     createParticle, 
-    animation, 
-    interactive, 
-    mousePos, 
-    mouseInfluence, 
+    applyAnimation,
     showConnections
-  ])
+  ]) // FIXED: Include all dependencies
 
   // Start animation
   useEffect(() => {
@@ -357,8 +355,8 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
     return () => observer.disconnect()
   }, [])
 
-  // Preset configurations
-  const presetConfigs = {
+  // Preset configurations - FIXED: Memoized to prevent recreation
+  const presetConfigs = useMemo(() => ({
     hero: () => controls.start({
       filter: "brightness(1.2) contrast(1.1)",
       transition: { duration: 2 }
@@ -371,7 +369,7 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
       filter: "brightness(0.9) contrast(1.2) saturate(1.1)",
       transition: { duration: 1 }
     })
-  }
+  }), [controls])
 
   return (
     <motion.div

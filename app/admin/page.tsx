@@ -87,7 +87,7 @@ export default function AdminPage() {
     const hostname = window.location.hostname
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1'
     const isVercelPreview = hostname.includes('vercel.app')
-    const isYourDomain = hostname === 'juanfernandez.dev' // Replace with your actual domain
+    const isYourDomain = hostname === 'juanfernandez.dev' || hostname === 'juan-fernandez.vercel.app'
     
     // Only allow access from specific sources
     if (!isLocalhost && !isVercelPreview && !isYourDomain) {

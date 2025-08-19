@@ -1,42 +1,130 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
-import Navigation from '@/components/Navigation'
-import Footer from '@/components/Footer'
-import ParticleField from '@/components/3D/ParticleField'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import Link from 'next/link'
 import { 
   ExternalLink, Github, Filter, Grid, List, Star, GitFork, 
-  Calendar, Code, Zap, Search, TrendingUp, Eye, Clock 
+  Calendar, Code, Zap, Search, TrendingUp, Eye, Clock, Loader
 } from 'lucide-react'
 import usePortfolioData from '@/hooks/usePortfolioData'
 import type { PortfolioProject } from '@/types/portfolio'
 
+// Lazy load heavy components
+const Navigation = dynamic(
+  () => import('@/components/Navigation'),
+  { 
+    ssr: false,
+    loading: () => <NavigationSkeleton />
+  }
+)
+
+const Footer = dynamic(
+  () => import('@/components/Footer'),
+  { 
+    ssr: false,
+    loading: () => <FooterSkeleton />
+  }
+)
+
+const ParticleField = dynamic(
+  () => import('@/components/3D/ParticleField'),
+  { 
+    ssr: false,
+    loading: () => null
+  }
+)
+
+// Loading Skeletons
+function NavigationSkeleton() {
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-40 px-4 py-4 bg-lux-offwhite/80 dark:bg-lux-black/80 backdrop-blur-md border-b border-lux-gray-200/50 dark:border-lux-gray-700/50">
+      <div className="container mx-auto flex justify-between items-center">
+        <div className="w-32 h-8 bg-lux-gray-200 dark:bg-lux-gray-800 rounded animate-pulse" />
+        <div className="flex gap-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="w-20 h-8 bg-lux-gray-200 dark:bg-lux-gray-800 rounded animate-pulse" />
+          ))}
+        </div>
+      </div>
+    </nav>
+  )
+}
+
+function FooterSkeleton() {
+  return (
+    <footer className="bg-lux-black text-center py-8">
+      <div className="container mx-auto px-4">
+        <div className="w-64 h-4 bg-lux-gray-700 rounded mx-auto animate-pulse" />
+      </div>
+    </footer>
+  )
+}
+
+function ProjectsSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {[...Array(6)].map((_, i) => (
+        <div key={i} className="h-96 bg-lux-gray-200 dark:bg-lux-gray-800 rounded-2xl animate-pulse" />
+      ))}
+    </div>
+  )
+}
+
+// Debounce utility function with proper typing
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => func(...args), wait)
+  }
+}
+
+// Optimized Project Showcase Component
 function ProjectShowcase() {
   const { projects, loading, error, refetch } = usePortfolioData()
-  const [filteredProjects, setFilteredProjects] = useState<PortfolioProject[]>(projects)
+  const [filteredProjects, setFilteredProjects] = useState<PortfolioProject[]>([])
   const [activeTag, setActiveTag] = useState('All')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'stars' | 'updated'>('updated')
+  const [isMobile, setIsMobile] = useState(false)
+  const [visibleProjects, setVisibleProjects] = useState(6) // Pagination
+  
   const containerRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(containerRef, { once: true })
 
-  // Update filtered projects when projects data changes
+  // Check if mobile
   useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Debounced search with proper typing
+  const debouncedSearch = useCallback(
+    debounce((term: string) => {
+      setSearchTerm(term)
+    }, 300),
+    []
+  )
+
+  // Update filtered projects when data changes
+  useEffect(() => {
+    if (!projects.length) return
+
     let filtered = [...projects]
 
-    // Filter by tag - FIXED: Safe property access
+    // Filter by tag - Safe property access
     if (activeTag !== 'All') {
       filtered = filtered.filter(project => {
-        // Safely access all possible tag sources
         const projectTags = project.tags || []
         const techStackTags = project.techStack || []
         const githubTopics = project.github?.topics || []
         const projectTopics = project.topics || []
         
-        // Combine all tag sources and normalize to lowercase
         const allTags = [
           ...projectTags,
           ...techStackTags,
@@ -75,31 +163,37 @@ function ProjectShowcase() {
     setFilteredProjects(filtered)
   }, [projects, activeTag, searchTerm, sortBy])
 
-  // Get all unique tags from projects - FIXED: Safe property access
+  // Get all unique tags - Safe property access
   const allTags = React.useMemo(() => {
     const tagSet = new Set(['All'])
     projects.forEach(project => {
-      // Safely add tags from all sources
       const projectTags = project.tags || []
       const techStackTags = project.techStack || []
       const githubTopics = project.github?.topics || []
       const projectTopics = project.topics || []
       
-      // Add all tags to the set
       projectTags.forEach(tag => tagSet.add(tag))
       techStackTags.forEach(tech => tagSet.add(tech))
       githubTopics.forEach(topic => tagSet.add(topic))
       projectTopics.forEach(topic => tagSet.add(topic))
     })
-    return Array.from(tagSet).slice(0, 15) // Limit to prevent overflow
+    return Array.from(tagSet).slice(0, 15)
   }, [projects])
 
-  const ProjectCard: React.FC<{ project: PortfolioProject; index: number }> = ({ project, index }) => {
+  // Load more projects
+  const loadMore = () => {
+    setVisibleProjects(prev => prev + 6)
+  }
+
+  // Optimized Project Card with virtualization
+  const ProjectCard: React.FC<{ project: PortfolioProject; index: number }> = React.memo(({ project, index }) => {
     const cardRef = useRef<HTMLDivElement>(null)
     const [rotation, setRotation] = useState({ x: 0, y: 0 })
     const [glowPosition, setGlowPosition] = useState({ x: 50, y: 50 })
 
-    const handleMouseMove = (e: React.MouseEvent) => {
+    const handleMouseMove = useCallback((e: React.MouseEvent) => {
+      if (isMobile) return // Disable 3D effects on mobile
+      
       const card = cardRef.current
       if (!card) return
 
@@ -107,20 +201,20 @@ function ProjectShowcase() {
       const centerX = rect.left + rect.width / 2
       const centerY = rect.top + rect.height / 2
       
-      const rotateX = (e.clientY - centerY) / 20
-      const rotateY = (centerX - e.clientX) / 20
+      const rotateX = (e.clientY - centerY) / 30
+      const rotateY = (centerX - e.clientX) / 30
       
       const glowX = ((e.clientX - rect.left) / rect.width) * 100
       const glowY = ((e.clientY - rect.top) / rect.height) * 100
       
       setRotation({ x: rotateX, y: rotateY })
       setGlowPosition({ x: glowX, y: glowY })
-    }
+    }, [isMobile])
 
-    const handleMouseLeave = () => {
+    const handleMouseLeave = useCallback(() => {
       setRotation({ x: 0, y: 0 })
       setGlowPosition({ x: 50, y: 50 })
-    }
+    }, [])
 
     return (
       <motion.div
@@ -130,7 +224,7 @@ function ProjectShowcase() {
         transition={{ duration: 0.6, delay: index * 0.1 }}
         style={{
           transformStyle: 'preserve-3d',
-          transform: `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`
+          transform: isMobile ? 'none' : `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`
         }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
@@ -144,46 +238,49 @@ function ProjectShowcase() {
           viewMode === 'list' ? 'sm:w-full flex' : ''
         }`}>
           
-          {/* Dynamic Glow Effect */}
-          <div 
-            className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-2xl"
-            style={{
-              background: `radial-gradient(circle at ${glowPosition.x}% ${glowPosition.y}%, rgba(190, 52, 85, 0.3) 0%, transparent 70%)`
-            }}
-          />
+          {/* Dynamic Glow Effect - Only on desktop */}
+          {!isMobile && (
+            <div 
+              className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-2xl"
+              style={{
+                background: `radial-gradient(circle at ${glowPosition.x}% ${glowPosition.y}%, rgba(190, 52, 85, 0.3) 0%, transparent 70%)`
+              }}
+            />
+          )}
 
           {/* Project Header/Image */}
           <div className={`relative ${
             viewMode === 'list' ? 'sm:w-1/3 h-48' : 'h-56'
           }`}>
-            {/* Gradient placeholder with tech stack pattern */}
             <div className="w-full h-full bg-gradient-to-br from-viva-magenta-500/20 via-lux-gold-500/10 to-lux-teal-500/20 flex items-center justify-center relative overflow-hidden">
               <Code className="w-16 h-16 text-viva-magenta-400/40" />
               
-              {/* Animated tech stack background */}
-              <div className="absolute inset-0 opacity-10">
-                {project.techStack?.slice(0, 3).map((tech: string, i: number) => (
-                  <motion.div
-                    key={tech}
-                    className="absolute text-xs font-mono text-viva-magenta-600 dark:text-viva-magenta-400"
-                    style={{
-                      left: `${20 + i * 25}%`,
-                      top: `${30 + i * 15}%`,
-                    }}
-                    animate={{
-                      y: [0, -10, 0],
-                      opacity: [0.3, 0.6, 0.3],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      delay: i * 0.5,
-                    }}
-                  >
-                    {tech}
-                  </motion.div>
-                ))}
-              </div>
+              {/* Animated tech stack background - Only on desktop */}
+              {!isMobile && (
+                <div className="absolute inset-0 opacity-10">
+                  {project.techStack?.slice(0, 3).map((tech: string, i: number) => (
+                    <motion.div
+                      key={tech}
+                      className="absolute text-xs font-mono text-viva-magenta-600 dark:text-viva-magenta-400"
+                      style={{
+                        left: `${20 + i * 25}%`,
+                        top: `${30 + i * 15}%`,
+                      }}
+                      animate={{
+                        y: [0, -10, 0],
+                        opacity: [0.3, 0.6, 0.3],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        delay: i * 0.5,
+                      }}
+                    >
+                      {tech}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
             
             {/* Status badges */}
@@ -314,22 +411,24 @@ function ProjectShowcase() {
             </div>
           </div>
 
-          {/* Scan line effect on hover */}
-          <motion.div
-            className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-viva-magenta-500 to-transparent opacity-0 group-hover:opacity-100"
-            animate={{
-              top: ['0%', '100%'],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-          />
+          {/* Scan line effect on hover - Only on desktop */}
+          {!isMobile && (
+            <motion.div
+              className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-viva-magenta-500 to-transparent opacity-0 group-hover:opacity-100"
+              animate={{
+                top: ['0%', '100%'],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+          )}
         </div>
       </motion.div>
     )
-  }
+  })
 
   if (loading) {
     return (
@@ -418,8 +517,7 @@ function ProjectShowcase() {
             <input
               type="text"
               placeholder="Search projects..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => debouncedSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-lux-gray-50 dark:bg-lux-gray-800 border border-lux-gray-200 dark:border-lux-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-viva-magenta-500 transition-all duration-300"
             />
           </div>
@@ -485,7 +583,7 @@ function ProjectShowcase() {
         </div>
       </motion.div>
 
-      {/* Projects Grid/List */}
+      {/* Projects Grid/List with Pagination */}
       <motion.div
         layout
         className={`grid gap-8 ${
@@ -495,11 +593,29 @@ function ProjectShowcase() {
         }`}
       >
         <AnimatePresence mode="popLayout">
-          {filteredProjects.map((project, index) => (
+          {filteredProjects.slice(0, visibleProjects).map((project, index) => (
             <ProjectCard key={project.id} project={project} index={index} />
           ))}
         </AnimatePresence>
       </motion.div>
+
+      {/* Load More Button */}
+      {filteredProjects.length > visibleProjects && (
+        <motion.div
+          className="text-center mt-12"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <motion.button
+            onClick={loadMore}
+            className="px-8 py-4 bg-viva-magenta-500 text-white rounded-xl hover:bg-viva-magenta-600 transition-colors font-semibold"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Load More Projects ({filteredProjects.length - visibleProjects} remaining)
+          </motion.button>
+        </motion.div>
+      )}
 
       {/* Empty state */}
       {filteredProjects.length === 0 && projects.length > 0 && (
@@ -536,20 +652,96 @@ function ProjectShowcase() {
 
 // Main page component
 export default function ProjectsPage() {
-  return (
-    <>
-      <Navigation />
-      
-      {/* Particle Field Background */}
-      <div className="fixed inset-0 z-0">
-        <ParticleField 
-          particleCount={50}
-          colorScheme="viva-magenta"
-          animation="float"
-          interactive={false}
-          speed={0.5}
-        />
+  const [isLoading, setIsLoading] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Initial loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-gradient-to-br from-lux-offwhite via-viva-magenta-50/20 to-lux-gold-50/20 dark:from-lux-black dark:via-viva-magenta-900/10 dark:to-lux-gold-900/10 flex items-center justify-center z-50">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-32 w-32 border-4 border-viva-magenta-500 border-t-transparent"></div>
+          <div className="absolute inset-0 animate-pulse rounded-full h-32 w-32 border-2 border-lux-gold-400 opacity-30"></div>
+          <div className="absolute inset-4 flex items-center justify-center">
+            <Code className="w-8 h-8 text-viva-magenta-400 animate-pulse" />
+          </div>
+        </div>
+        <motion.p 
+          className="absolute bottom-20 text-lux-gray-600 dark:text-lux-gray-300 font-medium"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          Loading Projects...
+        </motion.p>
       </div>
+    )
+  }
+
+  return (
+    <div className="relative min-h-screen bg-gradient-to-br from-lux-offwhite via-viva-magenta-50/20 to-lux-gold-50/20 dark:from-lux-black dark:via-viva-magenta-900/10 dark:to-lux-gold-900/10 overflow-x-hidden">
+      <style jsx global>{`
+        /* Performance optimizations */
+        * {
+          -webkit-backface-visibility: hidden;
+          -moz-backface-visibility: hidden;
+          backface-visibility: hidden;
+        }
+        
+        main {
+          isolation: isolate;
+        }
+        
+        section {
+          position: relative;
+          contain: layout style paint;
+          will-change: auto;
+        }
+        
+        @media (max-width: 768px) {
+          .hero-particles,
+          .hero-3d-background::before {
+            display: none;
+          }
+          
+          .glass-card {
+            backdrop-filter: blur(8px);
+          }
+        }
+      `}</style>
+
+      {/* Lazy loaded Navigation */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>
+        <Navigation />
+      </div>
+
+      {/* Particle Field Background - Only on desktop */}
+      {!isMobile && (
+        <div className="fixed inset-0 z-0">
+          <ParticleField 
+            particleCount={50}
+            colorScheme="viva-magenta"
+            animation="float"
+            interactive={false}
+            speed={0.5}
+          />
+        </div>
+      )}
 
       <main className="relative z-10 pt-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -586,7 +778,8 @@ export default function ProjectsPage() {
         </div>
       </main>
       
+      {/* Lazy loaded Footer */}
       <Footer />
-    </>
+    </div>
   )
 }

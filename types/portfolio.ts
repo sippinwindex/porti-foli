@@ -1,4 +1,4 @@
-// types/portfolio.ts - FIXED to match usePortfolioData hook
+// types/portfolio.ts - FIXED to include missing EnhancedPortfolioProject export
 import type { GitHubRepository, GitHubStats } from './github'
 import type { VercelProjectWithStatus, VercelStats } from './vercel'
 
@@ -105,7 +105,7 @@ export interface HeroProject {
   }
 }
 
-// Enhanced project with full GitHub and Vercel integration
+// FIXED: Add the missing EnhancedPortfolioProject interface that was imported but not exported
 export interface EnhancedPortfolioProject {
   id: string
   slug: string

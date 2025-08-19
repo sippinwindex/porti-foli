@@ -1,398 +1,266 @@
-// components/RealProjectShowcase.tsx
+// components/RealProjectShowcase.tsx - FIXED V2 with proper hook patterns
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import Link from 'next/link'
-import { ExternalLink, Github, Filter, Grid, List, Star, GitFork, Calendar, Code, Zap, Eye } from 'lucide-react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { motion } from 'framer-motion'
+import usePortfolioData from '@/hooks/usePortfolioData'
 
-interface GitHubRepo {
-  id: number
-  name: string
-  description: string | null
-  html_url: string
-  stargazers_count: number
-  forks_count: number
-  language: string | null
-  updated_at: string
-  topics: string[]
-  homepage: string | null
-  private: boolean
-  fork: boolean
-  archived: boolean
+interface RealProjectShowcaseProps {
+  className?: string
+  maxProjects?: number
 }
 
-interface EnhancedProject {
-  id: string
-  name: string
-  description: string
-  githubUrl: string
-  liveUrl?: string
-  featured: boolean
-  techStack: string[]
-  github: {
-    stars: number
-    forks: number
-    language: string | null
-    lastUpdated: string
-  }
-}
-
-export default function RealProjectShowcase() {
-  const [projects, setProjects] = useState<EnhancedProject[]>([])
-  const [filteredProjects, setFilteredProjects] = useState<EnhancedProject[]>([])
+export default function RealProjectShowcase({ 
+  className = '', 
+  maxProjects = 6 
+}: RealProjectShowcaseProps) {
+  const [displayProjects, setDisplayProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTag, setActiveTag] = useState('All')
-  const [viewMode, setViewMode] = useState('grid')
 
-  useEffect(() => {
-    fetchRealProjects()
-  }, [])
+  // Get portfolio data from hook
+  const { projects, stats, loading: portfolioLoading, error: portfolioError } = usePortfolioData()
 
-  useEffect(() => {
-    if (activeTag === 'All') {
-      setFilteredProjects(projects)
-    } else {
-      setFilteredProjects(projects.filter(project => 
-        project.techStack?.includes(activeTag) ||
-        project.github?.language === activeTag
-      ))
+  // FIXED: Memoize fallback projects to prevent recreation
+  const fallbackProjects = useMemo(() => [
+    {
+      id: 'portfolio-website',
+      name: 'Portfolio Website',
+      description: 'Modern 3D portfolio with live GitHub integration and interactive animations',
+      techStack: ['Next.js', 'Three.js', 'TypeScript', 'Framer Motion'],
+      featured: true,
+      github: { stars: 25, forks: 8, url: 'https://github.com/sippinwindex' },
+      vercel: { isLive: true, liveUrl: 'https://juanfernandez.dev' }
+    },
+    {
+      id: 'synthwave-runner',
+      name: 'Synthwave Runner',
+      description: 'Professional endless runner game with synthwave aesthetics',
+      techStack: ['React', 'TypeScript', 'HTML5 Canvas'],
+      featured: true,
+      github: { stars: 15, forks: 4, url: 'https://github.com/sippinwindex' },
+      vercel: { isLive: true, liveUrl: '/dino-game' }
     }
-  }, [projects, activeTag])
+  ], [])
 
-  const fetchRealProjects = async () => {
+  // FIXED: Stable fetchRealProjects with proper dependencies
+  const fetchRealProjects = useCallback(() => {
+    setLoading(true)
+    setError(null)
+
     try {
-      setLoading(true)
-      setError(null)
-      
-      console.log('🔄 Fetching real GitHub repositories...')
-      
-      const response = await fetch('/api/github?type=repos')
-      if (!response.ok) {
-        throw new Error(`GitHub API failed: ${response.status}`)
+      // Use data from the hook
+      if (projects && projects.length > 0) {
+        const featuredProjects = projects
+          .filter(project => project.featured)
+          .slice(0, maxProjects)
+        
+        setDisplayProjects(featuredProjects)
+      } else {
+        // Use memoized fallback projects
+        setDisplayProjects(fallbackProjects)
       }
-      
-      const reposData: GitHubRepo[] = await response.json()
-      console.log(`✅ Fetched ${reposData.length} repositories`)
-      
-      // Filter and enhance repositories for portfolio
-      const portfolioProjects = reposData
-        .filter(repo => 
-          !repo.fork && 
-          !repo.archived && 
-          !repo.private &&
-          repo.description &&
-          !repo.name.match(/^(\.github|config|dotfiles|profile|readme)$/i)
-        )
-        .slice(0, 12) // Limit to top 12 projects
-        .map((repo, index) => {
-          const techStack = [
-            repo.language,
-            ...repo.topics.slice(0, 4)
-          ].filter(Boolean) as string[]
-          
-          return {
-            id: repo.id.toString(),
-            name: formatProjectName(repo.name),
-            description: repo.description || 'A project built with modern technologies',
-            githubUrl: repo.html_url,
-            liveUrl: repo.homepage || undefined,
-            featured: repo.stargazers_count > 0 || index < 6,
-            techStack,
-            github: {
-              stars: repo.stargazers_count,
-              forks: repo.forks_count,
-              language: repo.language,
-              lastUpdated: repo.updated_at,
-            }
-          }
-        })
-        .sort((a, b) => {
-          // Featured first, then by stars
-          if (a.featured && !b.featured) return -1
-          if (!a.featured && b.featured) return 1
-          return b.github.stars - a.github.stars
-        })
-      
-      setProjects(portfolioProjects)
-      console.log(`✅ Processed ${portfolioProjects.length} portfolio projects`)
-      
     } catch (err) {
-      console.error('❌ Failed to fetch projects:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load projects')
-      
-      // Fallback to placeholder projects
-      setProjects([{
-        id: '1',
-        name: 'Portfolio Website',
-        description: 'Modern portfolio website built with Next.js, TypeScript, and Framer Motion',
-        githubUrl: 'https://github.com/sippinwindex/portfolio',
-        liveUrl: window.location.origin,
-        featured: true,
-        techStack: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
-        github: {
-          stars: 0,
-          forks: 0,
-          language: 'TypeScript',
-          lastUpdated: new Date().toISOString(),
-        }
-      }])
+      setError(err instanceof Error ? err.message : 'Failed to fetch projects')
+      setDisplayProjects(fallbackProjects)
     } finally {
       setLoading(false)
     }
-  }
+  }, [projects, maxProjects, fallbackProjects]) // FIXED: All dependencies included
 
-  const formatProjectName = (name: string): string => {
-    return name
-      .replace(/[-_]/g, ' ')
-      .replace(/\b\w/g, l => l.toUpperCase())
-      .replace(/\bJs\b/g, 'JS')
-      .replace(/\bTs\b/g, 'TS')
-      .replace(/\bApi\b/g, 'API')
-      .replace(/\bUi\b/g, 'UI')
-  }
+  // FIXED: Effect only depends on portfolioLoading and fetchRealProjects
+  useEffect(() => {
+    if (!portfolioLoading) {
+      fetchRealProjects()
+    }
+  }, [portfolioLoading, fetchRealProjects])
 
-  // Get all unique tags
-  const allTags = React.useMemo(() => {
-    const tagSet = new Set(['All'])
-    projects.forEach(project => {
-      project.techStack?.forEach(tech => tagSet.add(tech))
-      if (project.github?.language) tagSet.add(project.github.language)
-    })
-    return Array.from(tagSet).slice(0, 15)
-  }, [projects])
+  // FIXED: Handle portfolio errors with stable dependency
+  useEffect(() => {
+    if (portfolioError) {
+      setError(portfolioError)
+      setLoading(false)
+    }
+  }, [portfolioError])
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold mb-4">My Projects</h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Loading real projects from GitHub...
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-card border rounded-xl p-6 animate-pulse">
-              <div className="h-4 bg-muted rounded w-3/4 mb-3"></div>
-              <div className="h-3 bg-muted rounded w-full mb-2"></div>
-              <div className="h-3 bg-muted rounded w-2/3 mb-4"></div>
-              <div className="flex space-x-2 mb-4">
-                <div className="h-6 bg-muted rounded w-16"></div>
-                <div className="h-6 bg-muted rounded w-12"></div>
-              </div>
-              <div className="flex justify-between items-center">
-                <div className="h-4 bg-muted rounded w-20"></div>
-                <div className="h-8 bg-muted rounded w-24"></div>
-              </div>
-            </div>
-          ))}
+  // FIXED: Memoize loading component
+  const LoadingComponent = useMemo(() => (
+    <section className={`py-20 ${className}`}>
+      <div className="container mx-auto px-6">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-2 border-viva-magenta-500 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-lux-gray-300">Loading real projects...</p>
         </div>
       </div>
-    )
+    </section>
+  ), [className])
+
+  // FIXED: Memoize error component with stable fetchRealProjects
+  const ErrorComponent = useMemo(() => (
+    <section className={`py-20 ${className}`}>
+      <div className="container mx-auto px-6">
+        <div className="glass-card p-8 rounded-2xl text-center">
+          <h3 className="text-xl font-bold text-red-400 mb-4">Failed to Load Projects</h3>
+          <p className="text-lux-gray-300 mb-4">{error}</p>
+          <button 
+            onClick={fetchRealProjects}
+            className="btn-primary"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    </section>
+  ), [className, error, fetchRealProjects])
+
+  if (loading) {
+    return LoadingComponent
   }
 
   if (error) {
-    return (
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">My Projects</h1>
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 max-w-md mx-auto">
-            <p className="text-red-600 dark:text-red-400 mb-4">
-              Failed to load projects: {error}
-            </p>
-            <button
-              onClick={fetchRealProjects}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      </div>
-    )
+    return ErrorComponent
   }
 
   return (
-    <div>
-      {/* Success indicator */}
-      {projects.length > 0 && (
-        <div className="text-center mb-8">
-          <p className="text-sm text-green-600 dark:text-green-400">
-            ✅ Successfully loaded {projects.length} projects from GitHub
+    <section className={`py-20 bg-gradient-to-br from-lux-black to-lux-gray-900 ${className}`}>
+      <div className="container mx-auto px-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <span className="gradient-text-3d">Real Projects</span>
+          </h2>
+          <p className="text-xl text-lux-gray-300 max-w-3xl mx-auto">
+            Live projects with real GitHub data and deployment status
           </p>
-        </div>
-      )}
+          
+          {stats && (
+            <div className="grid grid-cols-3 gap-4 mt-8 max-w-md mx-auto">
+              <div className="glass-card p-4 rounded-lg">
+                <div className="text-2xl font-bold text-viva-magenta-400">{stats.totalProjects}</div>
+                <div className="text-sm text-lux-gray-400">Total Projects</div>
+              </div>
+              <div className="glass-card p-4 rounded-lg">
+                <div className="text-2xl font-bold text-lux-gold">{stats.totalStars}</div>
+                <div className="text-sm text-lux-gray-400">GitHub Stars</div>
+              </div>
+              <div className="glass-card p-4 rounded-lg">
+                <div className="text-2xl font-bold text-lux-teal">{stats.liveProjects}</div>
+                <div className="text-sm text-lux-gray-400">Live Apps</div>
+              </div>
+            </div>
+          )}
+        </motion.div>
 
-      {/* Filters and View Toggle */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-12">
-        <div className="flex flex-wrap gap-2 mb-4 md:mb-0">
-          <Filter className="w-5 h-5 mr-2 text-muted-foreground" />
-          {allTags.map(tag => (
-            <button
-              key={tag}
-              onClick={() => setActiveTag(tag)}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                activeTag === tag
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-        
-        <div className="flex gap-2">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
-          >
-            <Grid className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
-          >
-            <List className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Projects Grid/List */}
-      <motion.div
-        layout
-        className={`grid gap-8 ${
-          viewMode === 'grid'
-            ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-            : 'grid-cols-1'
-        }`}
-      >
-        <AnimatePresence>
-          {filteredProjects.map((project, index) => (
+        {/* Projects Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {displayProjects.map((project, index) => (
             <motion.div
               key={project.id}
-              layout
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              className={`bg-card border border-border rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group ${
-                viewMode === 'list' ? 'flex flex-col sm:flex-row' : ''
-              }`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              viewport={{ once: true }}
+              className="project-card-3d group"
             >
-              {/* Project Header */}
-              <div className={`relative ${viewMode === 'list' ? 'sm:w-1/3 h-48' : 'h-56'}`}>
-                {/* Placeholder image with gradient */}
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <Code className="w-16 h-16 text-primary/40" />
-                </div>
-                
-                {/* Project status badges */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2">
-                  {project.featured && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
-                      <Star className="w-3 h-3 mr-1" />
-                      Featured
-                    </span>
-                  )}
-                  {project.liveUrl && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
-                      <Eye className="w-3 h-3 mr-1" />
-                      Live
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 flex flex-col justify-between flex-1">
-                <div>
-                  <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
-                    {project.name}
-                  </h3>
-                  <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
+              <div className="project-card-inner">
+                {/* Project Header */}
+                <div className="p-6 border-b border-lux-gray-700">
+                  <div className="flex items-start justify-between mb-4">
+                    <h3 className="text-xl font-bold text-white group-hover:text-viva-magenta-400 transition-colors">
+                      {project.name}
+                    </h3>
+                    <div className="flex gap-2">
+                      {project.featured && (
+                        <span className="w-3 h-3 bg-viva-magenta-500 rounded-full animate-pulse" />
+                      )}
+                      {project.vercel?.isLive && (
+                        <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                      )}
+                    </div>
+                  </div>
+                  
+                  <p className="text-lux-gray-300 text-sm leading-relaxed">
                     {project.description}
                   </p>
-                  
-                  {/* Tech stack */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {project.techStack?.slice(0, 3).map(tech => (
+                </div>
+
+                {/* Tech Stack */}
+                <div className="p-6 border-b border-lux-gray-700">
+                  <h4 className="text-sm font-semibold text-lux-gray-400 mb-3">Tech Stack</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {project.techStack.map((tech: string, i: number) => (
                       <span
-                        key={tech}
-                        className="px-2 py-1 bg-primary/10 text-primary text-xs rounded"
+                        key={i}
+                        className="px-2 py-1 bg-viva-magenta-500/20 text-viva-magenta-300 rounded text-xs border border-viva-magenta-500/30"
                       >
                         {tech}
                       </span>
                     ))}
-                    {project.techStack && project.techStack.length > 3 && (
-                      <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">
-                        +{project.techStack.length - 3}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* GitHub stats */}
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4" />
-                      <span>{project.github.stars}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <GitFork className="w-4 h-4" />
-                      <span>{project.github.forks}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>{new Date(project.github.lastUpdated).toLocaleDateString()}</span>
-                    </div>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center justify-between mt-4">
+                {/* Stats & Actions */}
+                <div className="p-6">
+                  {project.github && (
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-lux-gold">⭐ {project.github.stars}</div>
+                        <div className="text-xs text-lux-gray-400">Stars</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-lux-teal">🔧 {project.github.forks}</div>
+                        <div className="text-xs text-lux-gray-400">Forks</div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
-                    <a
-                      href={project.githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 bg-muted rounded-full hover:bg-muted/80 transition-colors"
-                      title="View on GitHub"
-                    >
-                      <Github className="w-5 h-5" />
-                    </a>
-                    {project.liveUrl && (
+                    {project.github && (
                       <a
-                        href={project.liveUrl}
+                        href={project.github.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2 bg-muted rounded-full hover:bg-muted/80 transition-colors"
-                        title="View Live Demo"
+                        className="flex-1 text-center px-3 py-2 bg-lux-gray-700 hover:bg-lux-gray-600 text-lux-gray-300 rounded-lg text-sm transition-colors"
                       >
-                        <ExternalLink className="w-5 h-5" />
+                        Code
+                      </a>
+                    )}
+                    {project.vercel?.isLive && project.vercel.liveUrl && (
+                      <a
+                        href={project.vercel.liveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 text-center px-3 py-2 bg-viva-magenta-500 hover:bg-viva-magenta-600 text-white rounded-lg text-sm transition-colors"
+                      >
+                        Live
                       </a>
                     )}
                   </div>
-                  <span className="text-sm text-primary cursor-pointer hover:underline">
-                    View Details →
-                  </span>
                 </div>
               </div>
             </motion.div>
           ))}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* Empty state */}
-      {filteredProjects.length === 0 && projects.length > 0 && (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">
-            No projects found for "{activeTag}". Try a different filter.
-          </p>
         </div>
-      )}
-    </div>
+
+        {/* View All Projects Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          viewport={{ once: true }}
+          className="text-center mt-12"
+        >
+          <a href="/projects" className="btn-primary">
+            View All Projects
+          </a>
+        </motion.div>
+      </div>
+    </section>
   )
 }
