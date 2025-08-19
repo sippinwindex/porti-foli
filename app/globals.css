@@ -1,4 +1,4 @@
-/* Enhanced globals.css - Updated for full compatibility */
+/* Enhanced globals.css - Updated for full compatibility with navigation fixes */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -113,6 +113,17 @@
   --hover-scale: scale(1.02);
   --active-scale: scale(0.98);
   --focus-ring: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+  
+  /* CRITICAL: Fixed z-index hierarchy to prevent conflicts */
+  --z-backdrop: -1;
+  --z-base: 0;
+  --z-content: 10;
+  --z-header: 100;
+  --z-navigation: 1000;
+  --z-dropdown: 1001;
+  --z-theme-toggle: 100;
+  --z-modal: 9999;
+  --z-tooltip: 10000;
 }
 
 /* Enhanced Dark mode variables */
@@ -268,12 +279,13 @@
 
 /* Enhanced Components Layer - Reusable UI Components */
 @layer components {
-  /* Enhanced Glass Effects - Keep your existing and add new ones */
+  /* CRITICAL: Fixed Glass Effects with proper interaction handling */
   .glass {
     backdrop-filter: var(--glass-blur) var(--glass-saturation);
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     transition: all var(--animation-normal) ease;
+    position: relative;
   }
 
   .glass-card {
@@ -297,6 +309,298 @@
     background: linear-gradient(135deg, var(--glass-3d-bg) 0%, rgba(255, 255, 255, 0.02) 100%);
     border: 1px solid var(--glass-3d-border);
     transition: all var(--animation-normal) ease;
+  }
+
+  /* CRITICAL: Fixed Navigation System */
+  nav {
+    position: fixed;
+    z-index: var(--z-navigation);
+    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    pointer-events: auto;
+  }
+
+  /* Ensure navigation links are clickable */
+  nav a,
+  nav button {
+    position: relative;
+    z-index: 1;
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  /* Fix glass effect interference in navigation */
+  nav .glass {
+    backdrop-filter: blur(16px) saturate(180%);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+  }
+
+  nav.dark .glass {
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Fix navigation hover states */
+  nav .group:hover * {
+    pointer-events: auto;
+  }
+
+  /* Prevent backdrop-filter from blocking interactions */
+  nav [style*="backdrop-filter"] {
+    pointer-events: none;
+  }
+
+  nav [style*="backdrop-filter"] > * {
+    pointer-events: auto;
+  }
+
+  /* Fixed Navigation Links */
+  .nav-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    min-height: 2.5rem;
+    pointer-events: auto;
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+
+  .nav-link:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px) scale(1.02);
+  }
+
+  .nav-link.active {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+  }
+
+  .nav-link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 0 0 0 4px rgba(59, 130, 246, 0.5);
+  }
+
+  /* Fix icon disappearing on hover */
+  .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    pointer-events: none; /* Icons shouldn't intercept clicks */
+  }
+
+  /* Fixed Logo Container */
+  .logo-container {
+    position: relative;
+    z-index: 2;
+    pointer-events: auto;
+  }
+
+  .logo-container a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: inherit;
+    pointer-events: auto;
+  }
+
+  /* Fixed Social Links */
+  .social-links {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  .social-link {
+    position: relative;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: inherit;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+
+  .social-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px) scale(1.1);
+  }
+
+  .social-link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 0 0 0 4px rgba(59, 130, 246, 0.5);
+  }
+
+  /* Fixed Contact Button */
+  .contact-button {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.5rem;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+
+  .contact-button:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+  }
+
+  .contact-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 0 0 0 4px rgba(59, 130, 246, 0.5);
+  }
+
+  /* Fixed Mobile Navigation */
+  .mobile-nav-button {
+    position: relative;
+    z-index: 2;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    pointer-events: auto;
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+  
+  .mobile-nav-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+  }
+
+  .mobile-nav-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 0 0 0 4px rgba(59, 130, 246, 0.5);
+  }
+
+  /* Fixed Mobile Menu */
+  .mobile-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    pointer-events: auto;
+  }
+
+  .mobile-menu-content {
+    position: relative;
+    z-index: calc(var(--z-modal) + 1);
+    pointer-events: auto;
+  }
+
+  /* Fixed Theme Toggle */
+  .theme-toggle-container {
+    position: relative;
+    z-index: var(--z-theme-toggle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    margin: 0.5rem;
+    padding: 0.25rem;
+  }
+
+  .theme-toggle {
+    @apply relative inline-flex items-center justify-center w-10 h-10 rounded-full border transition-all duration-300;
+    background: var(--glass-bg);
+    border-color: var(--glass-border);
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  .theme-toggle:hover {
+    background: var(--glass-3d-bg);
+    transform: scale(1.1);
+  }
+
+  .theme-toggle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 0 0 0 4px rgba(59, 130, 246, 0.5);
+  }
+
+  /* Fixed scroll progress bar */
+  .scroll-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Fixed navigation container positioning */
+  .navigation-container {
+    position: relative;
+    z-index: var(--z-navigation);
+    width: 100%;
+    overflow: visible;
+  }
+
+  .navigation-content {
+    position: relative;
+    z-index: 1;
+    overflow: visible;
   }
 
   /* Enhanced Button System - Keep your existing and add new ones */
@@ -445,19 +749,6 @@
     min-height: 120px;
   }
 
-  /* Enhanced Navigation Components */
-  .nav-link {
-    @apply flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200;
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .nav-link:hover,
-  .nav-link-active {
-    color: var(--primary-400);
-    background: rgba(var(--primary-rgb), 0.1);
-    transform: var(--hover-scale);
-  }
-
   /* Enhanced Status Indicators */
   .status-live {
     @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
@@ -527,19 +818,6 @@
     border-color: rgba(var(--viva-magenta-rgb), 0.5);
     box-shadow: 0 10px 30px rgba(var(--viva-magenta-rgb), 0.2);
     transform: translateY(-2px);
-  }
-
-  /* Enhanced Theme Toggle */
-  .theme-toggle {
-    @apply relative inline-flex items-center justify-center w-10 h-10 rounded-full border transition-all duration-300;
-    background: var(--glass-bg);
-    border-color: var(--glass-border);
-    backdrop-filter: blur(10px);
-  }
-
-  .theme-toggle:hover {
-    background: var(--glass-3d-bg);
-    transform: scale(1.1);
   }
 
   /* NEW: Enhanced components for ScrollTriggered3DSections */
@@ -1152,6 +1430,16 @@ nav + div {
 }
 
 /* Enhanced Mobile Optimizations */
+@media (max-width: 1024px) {
+  /* Mobile navigation specific fixes */
+  .nav-link:hover,
+  .social-link:hover,
+  .contact-button:hover,
+  .mobile-nav-button:hover {
+    transform: translateY(-1px) scale(1.01);
+  }
+}
+
 @media (max-width: 768px) {
   :root {
     --header-height: 4rem;
@@ -1171,6 +1459,17 @@ nav + div {
   .container {
     padding-left: var(--container-padding);
     padding-right: var(--container-padding);
+  }
+  
+  /* Mobile navigation adjustments */
+  .navbar-theme-toggle {
+    margin-left: 0.75rem;
+    margin-right: 0;
+  }
+  
+  .theme-toggle-container {
+    min-width: 3rem;
+    min-height: 2rem;
   }
   
   /* Mobile-specific 3D adjustments */
@@ -1202,6 +1501,18 @@ nav + div {
   }
 }
 
+@media (max-width: 480px) {
+  .floating-theme-toggle {
+    top: 1rem;
+    right: 1rem;
+    padding: 0.375rem;
+  }
+  
+  .navbar-theme-toggle {
+    margin-left: 0.5rem;
+  }
+}
+
 /* Enhanced Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -1211,6 +1522,21 @@ nav + div {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  
+  /* Fixed navigation elements for reduced motion */
+  .nav-link:hover,
+  .social-link:hover,
+  .contact-button:hover,
+  .mobile-nav-button:hover,
+  .card-3d:hover,
+  .btn-3d:hover,
+  .project-card-3d:hover,
+  .scroll-triggered-card:hover,
+  .interactive-hero-card:hover,
+  .floating-code-block:hover,
+  .language-card:hover {
+    transform: none !important;
   }
   
   .card-3d,
@@ -1233,20 +1559,6 @@ nav + div {
     animation: none !important;
     transition: opacity 0.3s ease !important;
   }
-  
-  .card-3d:hover,
-  .project-card-3d:hover,
-  .btn-primary:hover,
-  .btn-secondary:hover,
-  .hero-3d-card:hover,
-  .hero-profile-image:hover,
-  .hero-3d-button:hover,
-  .scroll-triggered-card:hover,
-  .interactive-hero-card:hover,
-  .floating-code-block:hover,
-  .language-card:hover {
-    transform: none !important;
-  }
 
   .gradient-text-3d,
   .gradient-text-luxury {
@@ -1264,6 +1576,12 @@ nav + div {
 
 /* Print styles */
 @media print {
+  .floating-theme-toggle,
+  .theme-toggle-container,
+  nav {
+    display: none !important;
+  }
+  
   .glass,
   .glass-card,
   .glass-3d {
@@ -1310,7 +1628,11 @@ nav + div {
 .scroll-triggered-card,
 .interactive-hero-card,
 .floating-code-block,
-.language-card {
+.language-card,
+.nav-link,
+.social-link,
+.contact-button,
+.mobile-nav-button {
   transform: translateZ(0);
   will-change: transform;
 }
@@ -1350,41 +1672,18 @@ html, body {
   scroll-behavior: smooth;
 }
 
-/* Integration fixes for enhanced components */
-.enhanced-component {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-/* Smooth transitions for all enhanced elements */
-.enhanced-component * {
-  transition-property: transform, opacity, background-color, border-color, color, fill, stroke;
-  transition-timing-function: var(--animation-spring);
-  transition-duration: var(--animation-normal);
-}
-
-/* Fix for layout shift on load */
-.min-h-screen {
-  min-height: 100vh;
-  min-height: 100dvh;
-}
-
-/* Prevent content jumping */
-img {
-  height: auto;
-  max-width: 100%;
-}
-
-/* Fix for Three.js performance */
-.webgl-container {
-  will-change: transform;
-  transform: translateZ(0);
-}
-
-/* Fix for mobile viewport */
-@supports (-webkit-touch-callout: none) {
-  .min-h-screen {
-    min-height: -webkit-fill-available;
+/* Fix for Safari backdrop-filter */
+@supports (-webkit-backdrop-filter: blur(16px)) {
+  .glass {
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+  }
+  
+  nav .glass {
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+  }
+  
+  .floating-theme-toggle {
+    -webkit-backdrop-filter: blur(10px);
   }
 }
 
@@ -1450,58 +1749,7 @@ select:focus-visible {
   margin-top: auto;
 }
 
-/* Theme Toggle Layout Fixes */
-
-/* Ensure proper z-index hierarchy */
-:root {
-  --z-navigation: 1000;
-  --z-theme-toggle: 100;
-  --z-modal: 9999;
-  --z-tooltip: 10000;
-}
-
-/* Fix navigation positioning conflicts */
-nav {
-  position: relative;
-  z-index: var(--z-navigation);
-}
-
-/* Ensure theme toggle doesn't overlap with navigation */
-.theme-toggle-container {
-  position: relative;
-  z-index: var(--z-theme-toggle);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Prevent theme toggle from being clipped */
-.theme-toggle-safe-area {
-  margin: 0.5rem;
-  padding: 0.25rem;
-}
-
-/* Fix for navbar integration */
-.navbar-theme-toggle {
-  margin-left: auto;
-  margin-right: 0;
-  flex-shrink: 0;
-}
-
-/* Fix for mobile navigation */
-@media (max-width: 768px) {
-  .navbar-theme-toggle {
-    margin-left: 0.75rem;
-    margin-right: 0;
-  }
-  
-  .theme-toggle-container {
-    min-width: 3rem;
-    min-height: 2rem;
-  }
-}
-
-/* Floating theme toggle positioning */
+/* FLOATING THEME TOGGLE POSITIONING FIXES */
 .floating-theme-toggle {
   position: fixed;
   top: 1.5rem;
@@ -1518,6 +1766,13 @@ nav {
 .dark .floating-theme-toggle {
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Fix for navbar integration */
+.navbar-theme-toggle {
+  margin-left: auto;
+  margin-right: 0;
+  flex-shrink: 0;
 }
 
 /* Prevent layout shifts */
@@ -1540,45 +1795,11 @@ nav {
   will-change: transform;
 }
 
-/* Fix focus states */
-.theme-toggle-button:focus-visible {
-  outline: none;
-  box-shadow: 
-    0 0 0 2px rgba(255, 255, 255, 0.1),
-    0 0 0 4px rgba(59, 130, 246, 0.5);
-}
-
-.dark .theme-toggle-button:focus-visible {
-  box-shadow: 
-    0 0 0 2px rgba(0, 0, 0, 0.1),
-    0 0 0 4px rgba(59, 130, 246, 0.5);
-}
-
 /* Prevent button from affecting layout flow */
 .theme-toggle-inline {
   display: inline-flex;
   vertical-align: middle;
   align-items: center;
-}
-
-/* Enhanced mobile responsiveness */
-@media (max-width: 480px) {
-  .floating-theme-toggle {
-    top: 1rem;
-    right: 1rem;
-    padding: 0.375rem;
-  }
-  
-  .navbar-theme-toggle {
-    margin-left: 0.5rem;
-  }
-}
-
-/* Fix for Safari */
-@supports (-webkit-backdrop-filter: blur(10px)) {
-  .floating-theme-toggle {
-    -webkit-backdrop-filter: blur(10px);
-  }
 }
 
 /* Performance optimizations */
@@ -1594,20 +1815,527 @@ nav {
   box-sizing: border-box;
 }
 
-/* Accessibility improvements */
-@media (prefers-reduced-motion: reduce) {
-  .theme-toggle-button,
-  .theme-toggle-track,
-  .theme-toggle-circle {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
+/* Integration fixes for enhanced components */
+.enhanced-component {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Smooth transitions for all enhanced elements */
+.enhanced-component * {
+  transition-property: transform, opacity, background-color, border-color, color, fill, stroke;
+  transition-timing-function: var(--animation-spring);
+  transition-duration: var(--animation-normal);
+}
+
+/* Fix for layout shift on load */
+.min-h-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Prevent content jumping */
+img {
+  height: auto;
+  max-width: 100%;
+}
+
+/* Fix for Three.js performance */
+.webgl-container {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Fix for mobile viewport */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
   }
 }
 
-/* Print styles */
-@media print {
-  .floating-theme-toggle,
-  .theme-toggle-container {
-    display: none !important;
+/* CRITICAL: Additional Navigation Interaction Fixes */
+
+/* Ensure all clickable elements in navigation are properly layered */
+nav * {
+  position: relative;
+}
+
+nav a,
+nav button,
+nav [role="button"] {
+  z-index: 2;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Fix for nested elements inside navigation links */
+.nav-link * {
+  pointer-events: none;
+}
+
+.nav-link {
+  pointer-events: auto !important;
+}
+
+/* Fix for icon containers */
+.nav-link svg,
+.social-link svg,
+.contact-button svg,
+.mobile-nav-button svg {
+  pointer-events: none;
+  display: block;
+}
+
+/* Fix for text elements */
+.nav-link span,
+.social-link span,
+.contact-button span {
+  pointer-events: none;
+}
+
+/* Fix for glass backdrop interference */
+nav::before,
+nav::after {
+  pointer-events: none;
+}
+
+/* Fix for backdrop elements */
+.glass-backdrop,
+.backdrop-blur {
+  pointer-events: none;
+}
+
+.glass-backdrop > *,
+.backdrop-blur > * {
+  pointer-events: auto;
+}
+
+/* Additional Mobile Navigation Fixes */
+@media (max-width: 1024px) {
+  .mobile-menu {
+    z-index: var(--z-modal);
+    position: fixed;
+    pointer-events: auto;
+  }
+  
+  .mobile-menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    pointer-events: auto;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+  }
+  
+  .mobile-menu-panel {
+    position: relative;
+    z-index: calc(var(--z-modal) + 1);
+    pointer-events: auto;
+  }
+  
+  .mobile-nav-link {
+    display: block;
+    padding: 1rem 1.5rem;
+    color: inherit;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    pointer-events: auto;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .mobile-nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    padding-left: 2rem;
+  }
+}
+
+/* Fix for theme toggle in navigation */
+.nav-theme-toggle {
+  position: relative;
+  z-index: 3;
+  pointer-events: auto;
+}
+
+.nav-theme-toggle button {
+  pointer-events: auto !important;
+  z-index: 1;
+  position: relative;
+}
+
+/* Debug styles for troubleshooting (remove in production) */
+.debug-clickable {
+  outline: 2px solid red !important;
+  background: rgba(255, 0, 0, 0.1) !important;
+}
+
+.debug-clickable:hover {
+  outline: 2px solid blue !important;
+  background: rgba(0, 0, 255, 0.1) !important;
+}
+
+/* Ensure proper touch targets on mobile */
+@media (max-width: 768px) {
+  .nav-link,
+  .social-link,
+  .contact-button,
+  .mobile-nav-button {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-link {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Fix for Safari touch handling */
+@supports (-webkit-touch-callout: none) {
+  .nav-link,
+  .social-link,
+  .contact-button,
+  .mobile-nav-button {
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Prevent text selection on interactive elements */
+.nav-link,
+.social-link,
+.contact-button,
+.mobile-nav-button,
+.theme-toggle {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Fix for focus trap in modals */
+.modal-open {
+  overflow: hidden;
+}
+
+.modal-open nav {
+  pointer-events: none;
+}
+
+.modal-open .mobile-menu {
+  pointer-events: auto;
+}
+
+/* Enhanced scroll behavior */
+html.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+html.scroll-locked {
+  overflow: hidden;
+  height: 100%;
+}
+
+body.scroll-locked {
+  overflow: hidden;
+  height: 100%;
+  position: fixed;
+  width: 100%;
+}
+
+/* Fix for sticky navigation */
+.sticky-nav {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-navigation);
+}
+
+/* Enhanced glass effect for better performance */
+@supports (backdrop-filter: blur(16px)) {
+  .glass-nav {
+    backdrop-filter: blur(16px) saturate(180%);
+    background: rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .dark .glass-nav {
+    background: rgba(0, 0, 0, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+@supports not (backdrop-filter: blur(16px)) {
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .dark .glass-nav {
+    background: rgba(0, 0, 0, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Fix for navigation logo */
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+  font-weight: 700;
+  font-size: 1.25rem;
+  pointer-events: auto;
+  z-index: 2;
+  position: relative;
+}
+
+.nav-logo:hover {
+  opacity: 0.8;
+  transform: scale(1.02);
+}
+
+/* Fix for dropdown menus */
+.dropdown {
+  position: relative;
+  z-index: var(--z-dropdown);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: var(--z-dropdown);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  min-width: 200px;
+  box-shadow: var(--shadow-xl);
+  pointer-events: auto;
+}
+
+.dark .dropdown-menu {
+  background: rgba(0, 0, 0, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-item {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+}
+
+.dropdown-item:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--primary-600);
+}
+
+/* Fix for breadcrumb navigation */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.breadcrumb-item a {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  pointer-events: auto;
+}
+
+.breadcrumb-item a:hover {
+  opacity: 1;
+}
+
+.breadcrumb-separator {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.875rem;
+}
+
+/* Fix for search functionality */
+.search-container {
+  position: relative;
+  z-index: var(--z-dropdown);
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.search-button {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.search-button:hover {
+  color: white;
+}
+
+/* Fix for notification badges */
+.notification-badge {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 9999px;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* Fix for loading states */
+.loading-nav {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.loading-nav::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.1) 50%, 
+    transparent 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+/* Fix for error states */
+.error-nav {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Utility classes for navigation debugging */
+.debug-nav-pointer {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  background: rgba(0, 255, 0, 0.1) !important;
+}
+
+.debug-nav-blocked {
+  pointer-events: none !important;
+  background: rgba(255, 0, 0, 0.1) !important;
+}
+
+/* Final catch-all for navigation issues */
+nav [data-clickable="true"] {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative;
+  z-index: 2;
+}
+
+nav [data-clickable="false"] {
+  pointer-events: none !important;
+}
+
+/* Ensure all interactive elements are above glass effects */
+nav .interactive {
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+/* Performance optimization for navigation */
+.nav-optimized {
+  contain: layout style;
+  will-change: transform;
+}
+
+.nav-optimized * {
+  will-change: auto;
+}
+
+/* Fix for navigation animations */
+.nav-animated {
+  transition: transform 0.3s var(--animation-spring);
+}
+
+.nav-animated:hover {
+  transform: translateY(-1px);
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .nav-animated,
+  .nav-link,
+  .social-link,
+  .contact-button,
+  .mobile-nav-button {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  
+  .nav-animated:hover,
+  .nav-link:hover,
+  .social-link:hover,
+  .contact-button:hover,
+  .mobile-nav-button:hover {
+    transform: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .nav-link,
+  .social-link,
+  .contact-button {
+    border: 2px solid currentColor;
+  }
+  
+  .nav-link:hover,
+  .social-link:hover,
+  .contact-button:hover {
+    background: currentColor;
+    color: white;
   }
 }

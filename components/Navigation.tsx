@@ -8,7 +8,6 @@ import {
   Home, User, Briefcase, Calendar, Mail, Github, Linkedin, 
   Twitter, FileText, Menu, X, MessageCircle, BookOpen, Gamepad2
 } from 'lucide-react'
-import ThemeToggle from './ThemeToggle'
 
 interface NavItem {
   id: string
@@ -31,29 +30,45 @@ const Navigation = () => {
   const [scrollProgress, setScrollProgress] = useState(0)
   const [currentSection, setCurrentSection] = useState('home')
   const [mounted, setMounted] = useState(false)
+  const [darkMode, setDarkMode] = useState(false)
   const navRef = useRef<HTMLElement>(null)
   const shouldReduceMotion = useReducedMotion()
   
   const { scrollYProgress } = useScroll()
   const navBlur = useTransform(scrollYProgress, [0, 0.1], [0, shouldReduceMotion ? 8 : 20])
 
-  // Initialize mounted state
+  // Initialize theme and mounted state
   useEffect(() => {
     setMounted(true)
+    // Initialize theme from localStorage or system preference
+    const savedTheme = localStorage.getItem('theme')
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const shouldUseDarkMode = savedTheme === 'dark' || (!savedTheme && systemPrefersDark)
+    
+    setDarkMode(shouldUseDarkMode)
+    document.documentElement.classList.toggle('dark', shouldUseDarkMode)
   }, [])
 
-  // Memoized navigation items
+  // Theme toggle function
+  const toggleTheme = useCallback(() => {
+    const newDarkMode = !darkMode
+    setDarkMode(newDarkMode)
+    document.documentElement.classList.toggle('dark', newDarkMode)
+    localStorage.setItem('theme', newDarkMode ? 'dark' : 'light')
+  }, [darkMode])
+
+  // Fixed navigation items - corrected experience route
   const navItems = useMemo<NavItem[]>(() => [
     { id: 'home', label: 'Home', icon: Home, href: '/' },
     { id: 'about', label: 'About', icon: User, href: '/about' },
     { id: 'projects', label: 'Projects', icon: Briefcase, href: '/projects' },
-    { id: 'experience', label: 'Experience', icon: Calendar, href: '/#experience' },
+    { id: 'experience', label: 'Experience', icon: Calendar, href: '/#experience' }, // Fixed: hash link instead of route
     { id: 'blog', label: 'Blog', icon: BookOpen, href: '/blog' },
     { id: 'dino-game', label: 'Game', icon: Gamepad2, href: '/dino-game' },
     { id: 'contact', label: 'Contact', icon: Mail, href: '/contact' }
   ], [])
 
-  // Memoized social links
+  // Social links
   const socialLinks = useMemo<SocialLink[]>(() => [
     { 
       platform: 'GitHub', 
@@ -81,7 +96,120 @@ const Navigation = () => {
     }
   ], [])
 
-  // Navigation Link Component
+  // Scroll tracking
+  useEffect(() => {
+    let ticking = false
+
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrolled = window.scrollY
+          const maxScroll = document.documentElement.scrollHeight - window.innerHeight
+          const progress = Math.min(scrolled / Math.max(maxScroll, 1), 1)
+          setScrollProgress(progress)
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Section detection
+  useEffect(() => {
+    if (!pathname) return
+    
+    if (pathname === '/') {
+      const hash = window.location.hash.replace('#', '')
+      if (hash) {
+        setCurrentSection(hash)
+        return
+      }
+
+      const sections = ['hero', 'about', 'projects', 'experience', 'contact']
+      const observerOptions = {
+        threshold: 0.3,
+        rootMargin: '-20% 0px -70% 0px'
+      }
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setCurrentSection(entry.target.id)
+          }
+        })
+      }, observerOptions)
+
+      const elements: Element[] = []
+      sections.forEach(sectionId => {
+        const element = document.getElementById(sectionId)
+        if (element) {
+          observer.observe(element)
+          elements.push(element)
+        }
+      })
+
+      return () => {
+        elements.forEach(element => observer.unobserve(element))
+        observer.disconnect()
+      }
+    } else if (pathname === '/blog') {
+      setCurrentSection('blog')
+    } else if (pathname === '/dino-game') {
+      setCurrentSection('dino-game')
+    } else if (pathname === '/about') {
+      setCurrentSection('about')
+    } else if (pathname === '/projects') {
+      setCurrentSection('projects')
+    } else if (pathname === '/contact') {
+      setCurrentSection('contact')
+    }
+  }, [pathname])
+
+  // Theme Toggle Component
+  const ThemeToggle = React.memo(() => {
+    if (!mounted) {
+      return (
+        <div className="w-12 h-6 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+      )
+    }
+
+    return (
+      <motion.button
+        onClick={toggleTheme}
+        className="relative w-12 h-6 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 bg-gray-200 dark:bg-gray-700"
+        whileTap={{ scale: 0.95 }}
+        aria-label={`Switch to ${darkMode ? 'light' : 'dark'} mode`}
+      >
+        <motion.div
+          className="absolute top-0.5 w-5 h-5 bg-white dark:bg-gray-900 rounded-full shadow-lg flex items-center justify-center"
+          animate={{
+            x: darkMode ? 24 : 2,
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 500,
+            damping: 30
+          }}
+        >
+          {darkMode ? (
+            <svg className="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+            </svg>
+          ) : (
+            <svg className="w-3 h-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+            </svg>
+          )}
+        </motion.div>
+      </motion.button>
+    )
+  })
+  ThemeToggle.displayName = 'ThemeToggle'
+
+  // Navigation Link Component - Fixed hover and click issues
   const NavLink = React.memo<{
     item: NavItem
     index: number
@@ -93,10 +221,11 @@ const Navigation = () => {
     const IconComponent = item.icon
 
     const handleClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault() // Prevent default to handle ourselves
       setIsMenuOpen(false)
       
       if (item.href.startsWith('/#') && pathname === '/') {
-        e.preventDefault()
+        // Hash navigation on same page
         const targetId = item.href.replace('/#', '')
         const targetElement = document.getElementById(targetId)
         if (targetElement) {
@@ -106,8 +235,11 @@ const Navigation = () => {
           })
           window.history.pushState(null, '', item.href)
         }
+      } else {
+        // Regular navigation
+        router.push(item.href)
       }
-    }, [item.href])
+    }, [item.href, pathname, router, shouldReduceMotion])
 
     return (
       <motion.div
@@ -119,52 +251,58 @@ const Navigation = () => {
           duration: shouldReduceMotion ? 0.2 : 0.6 
         }}
       >
-        <Link href={item.href} onClick={handleClick} className="block">
+        <motion.a
+          href={item.href}
+          onClick={handleClick}
+          className={`
+            relative flex items-center gap-3 px-4 py-2 rounded-xl font-medium transition-all duration-300 cursor-pointer select-none
+            ${isActive 
+              ? 'text-white bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg' 
+              : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-50 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
+            }
+            ${isMobile ? 'text-lg justify-center' : 'text-sm'}
+          `}
+          whileHover={{ 
+            scale: shouldReduceMotion ? 1 : 1.05, 
+            y: shouldReduceMotion ? 0 : -2 
+          }}
+          whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+        >
           <motion.div
-            className={`
-              relative flex items-center gap-3 px-4 py-2 rounded-xl font-medium transition-all duration-300 cursor-pointer
-              ${isActive 
-                ? 'text-white bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg' 
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-50 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
-              }
-              ${isMobile ? 'text-lg justify-center' : 'text-sm'}
-            `}
-            whileHover={{ 
-              scale: shouldReduceMotion ? 1 : 1.05, 
-              y: shouldReduceMotion ? 0 : -2 
-            }}
-            whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+            className="flex-shrink-0 pointer-events-none"
+            animate={isActive && !shouldReduceMotion ? { 
+              rotate: [0, 10, -10, 0],
+              scale: [1, 1.2, 1]
+            } : {}}
+            transition={{ duration: 2, repeat: Infinity }}
           >
-            <motion.div
-              className="flex-shrink-0"
-              animate={isActive && !shouldReduceMotion ? { 
-                rotate: [0, 10, -10, 0],
-                scale: [1, 1.2, 1]
-              } : {}}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <IconComponent className="w-5 h-5" />
-            </motion.div>
-            
-            <span className={isMobile ? 'block' : 'hidden lg:block'}>
-              {item.label}
-            </span>
-
-            {isActive && (
-              <motion.div
-                className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30"
-                layoutId="activeNav"
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              />
-            )}
+            <IconComponent className="w-5 h-5" />
           </motion.div>
-        </Link>
+          
+          <span className={`pointer-events-none ${isMobile ? 'block' : 'hidden lg:block'}`}>
+            {item.label}
+          </span>
+
+          {isActive && (
+            <motion.div
+              className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 pointer-events-none"
+              layoutId="activeNav"
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            />
+          )}
+
+          <motion.div
+            className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            initial={{ scale: 0.8 }}
+            whileHover={{ scale: shouldReduceMotion ? 0.8 : 1 }}
+          />
+        </motion.a>
       </motion.div>
     )
   })
   NavLink.displayName = 'NavLink'
 
-  // Social Link Component
+  // Social Link Component - Fixed
   const SocialLink = React.memo<{
     social: SocialLink
     index: number
@@ -198,7 +336,7 @@ const Navigation = () => {
           title={social.platform}
           aria-label={`Visit ${social.platform} profile`}
         >
-          <IconComponent className="w-5 h-5" />
+          <IconComponent className="w-5 h-5 pointer-events-none" />
         </motion.a>
       </motion.div>
     )
@@ -251,11 +389,8 @@ const Navigation = () => {
               ))}
             </div>
 
-            {/* Theme Toggle in Mobile Menu */}
             <div className="flex justify-center mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <div className="theme-toggle-container">
-                <ThemeToggle variant="inline" size="md" showLabel={true} />
-              </div>
+              <ThemeToggle />
             </div>
 
             <motion.div
@@ -281,7 +416,24 @@ const Navigation = () => {
   ))
   MobileMenu.displayName = 'MobileMenu'
 
-  // Don't render until mounted to prevent hydration issues
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMenuOpen(false)
+  }, [pathname])
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMenuOpen) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isMenuOpen])
+
+  // Loading state
   if (!mounted) {
     return (
       <nav className="fixed top-0 left-0 right-0 z-[1000] px-4 sm:px-6 lg:px-8 py-4">
@@ -304,9 +456,9 @@ const Navigation = () => {
         ref={navRef}
         className="fixed top-0 left-0 right-0 z-[1000] px-4 sm:px-6 lg:px-8 py-4"
         style={{ 
-          backgroundColor: 'rgba(250, 250, 250, 0.95)',
+          backgroundColor: darkMode ? 'rgba(18, 18, 18, 0.95)' : 'rgba(250, 250, 250, 0.95)',
           backdropFilter: `blur(${navBlur}px)`,
-          borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
+          borderBottom: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
         }}
         initial={{ y: -100 }}
         animate={{ y: 0 }}
@@ -316,7 +468,7 @@ const Navigation = () => {
           <div className="flex items-center justify-between">
             
             {/* Logo */}
-            <Link href="/" className="block">
+            <Link href="/" className="block z-10">
               <motion.div
                 className="relative group"
                 whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
@@ -357,10 +509,7 @@ const Navigation = () => {
 
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center gap-4">
-              {/* Theme Toggle with proper positioning */}
-              <div className="theme-toggle-container navbar-theme-toggle">
-                <ThemeToggle variant="navbar" size="md" />
-              </div>
+              <ThemeToggle />
               
               <div className="flex items-center gap-2">
                 {socialLinks.map((social, index) => (
@@ -381,26 +530,15 @@ const Navigation = () => {
                   <MessageCircle className="w-4 h-4" />
                   Let's Talk
                 </span>
-                {!shouldReduceMotion && (
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600"
-                    initial={{ x: "-100%" }}
-                    whileHover={{ x: "0%" }}
-                    transition={{ duration: 0.3 }}
-                  />
-                )}
               </motion.a>
             </div>
 
             {/* Mobile Controls */}
             <div className="flex lg:hidden items-center gap-3">
-              {/* Mobile Theme Toggle */}
-              <div className="theme-toggle-container">
-                <ThemeToggle variant="navbar" size="sm" />
-              </div>
+              <ThemeToggle />
               
               <motion.button
-                className="relative w-10 h-10 rounded-xl glass border border-gray-200 dark:border-gray-700 flex items-center justify-center"
+                className="relative w-10 h-10 rounded-xl glass border border-gray-200 dark:border-gray-700 flex items-center justify-center z-10"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
                 whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}

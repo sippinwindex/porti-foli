@@ -1,5 +1,7 @@
+'use client'
+
 import React, { useRef, useEffect, useState, useCallback } from 'react'
-import { Home, ArrowLeft, Play, Pause, RotateCcw, Volume2, VolumeX, Zap, Shield, Star, Magnet } from 'lucide-react'
+import { Home, Play, RotateCcw, Volume2, VolumeX } from 'lucide-react'
 
 // Game constants
 const GRAVITY = 0.6
@@ -35,7 +37,7 @@ interface Collectible {
   value: number
 }
 
-export default function DinoGameFixed() {
+export default function DinoGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number | null>(null)
   const lastTimeRef = useRef<number>(0)
@@ -601,84 +603,71 @@ export default function DinoGameFixed() {
   useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext('2d')
-    if (ctx && gameState !== 'playing') {
+    if (ctx && (gameState === 'menu' || gameState === 'gameOver' || gameState === 'paused')) {
+      // Draw the current state of the game first
       draw(ctx)
+      
+      // Then draw the overlay
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
+      ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+      
+      ctx.fillStyle = 'white'
+      ctx.textAlign = 'center'
+      
+      if (gameState === 'menu') {
+        ctx.font = 'bold 50px monospace'
+        ctx.fillText('SYNTHWAVE RUNNER', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40)
+        ctx.font = '20px monospace'
+        ctx.fillText('Click or Press Space to Start', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20)
+      } else if (gameState === 'gameOver') {
+        ctx.font = 'bold 50px monospace'
+        ctx.fillText('GAME OVER', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40)
+        ctx.font = '24px monospace'
+        ctx.fillText(`Score: ${score}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20)
+        ctx.font = '18px monospace'
+        ctx.fillText('Click or Press Space to Restart', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 60)
+      }
     }
-  }, [gameState, draw])
+  }, [gameState, draw, score])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-4xl">
-        <div className="text-center mb-4">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-500 via-cyan-500 to-yellow-500 bg-clip-text text-transparent mb-2">
-            Synthwave Runner
-          </h1>
-          <p className="text-gray-400">Click or press Space to jump • Arrow Down to duck</p>
-        </div>
+    <div className="w-full max-w-4xl">
+      <div className="text-center mb-4">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-500 via-cyan-500 to-yellow-500 bg-clip-text text-transparent mb-2">
+          Synthwave Runner
+        </h1>
+        <p className="text-gray-400">Click or press Space to jump • Arrow Down to duck</p>
+      </div>
 
-        <div className="relative rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl">
-          <canvas
-            ref={canvasRef}
-            width={GAME_WIDTH}
-            height={GAME_HEIGHT}
-            className="w-full cursor-pointer"
-            style={{ imageRendering: 'pixelated', maxWidth: '800px' }}
-          />
-          
-          {/* Game state overlays */}
-          {gameState === 'menu' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
-              <h2 className="text-6xl font-bold bg-gradient-to-r from-pink-500 via-cyan-500 to-yellow-500 bg-clip-text text-transparent mb-4">
-                SYNTHWAVE RUNNER
-              </h2>
-              <p className="text-cyan-300 text-lg mb-8">An endless runner with retro vibes</p>
-              <button
-                onClick={startGame}
-                className="flex items-center gap-3 px-8 py-4 bg-white/10 border border-white/20 text-white rounded-lg font-bold text-lg backdrop-blur-md hover:bg-white/20 transition-all"
-              >
-                <Play size={24} />
-                START GAME
-              </button>
-            </div>
-          )}
+      <div className="relative rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl">
+        <canvas
+          ref={canvasRef}
+          width={GAME_WIDTH}
+          height={GAME_HEIGHT}
+          className="w-full cursor-pointer"
+          style={{ imageRendering: 'pixelated', maxWidth: '800px' }}
+        />
+      </div>
 
-          {gameState === 'gameOver' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
-              <h2 className="text-6xl font-bold bg-gradient-to-r from-red-500 via-yellow-500 to-orange-500 bg-clip-text text-transparent mb-4">
-                GAME OVER
-              </h2>
-              <div className="text-white text-2xl mb-8">Score: {score.toLocaleString()}</div>
-              <button
-                onClick={restartGame}
-                className="flex items-center gap-3 px-8 py-4 bg-white/10 border border-white/20 text-white rounded-lg font-bold text-lg backdrop-blur-md hover:bg-white/20 transition-all"
-              >
-                <RotateCcw size={24} />
-                PLAY AGAIN
-              </button>
-            </div>
-          )}
-        </div>
+      <div className="flex gap-4 justify-center mt-4">
+        <button
+          onClick={() => setSoundEnabled(!soundEnabled)}
+          className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all"
+        >
+          {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+        </button>
+        
+        <a
+          href="/"
+          className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-all"
+        >
+          <Home size={20} />
+          Back to Portfolio
+        </a>
+      </div>
 
-        <div className="flex gap-4 justify-center mt-4">
-          <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all"
-          >
-            {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-          </button>
-          
-          <button
-            onClick={() => window.location.href = '/'}
-            className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-all"
-          >
-            <Home size={20} />
-            Back to Portfolio
-          </button>
-        </div>
-
-        <div className="text-center mt-4 text-gray-400 text-sm">
-          <p><strong>Power-ups:</strong> Shield (green) protects you • Magnet (purple) attracts stars • Star gives bonus points</p>
-        </div>
+      <div className="text-center mt-4 text-gray-400 text-sm">
+        <p><strong>Power-ups:</strong> Shield (green) protects you • Magnet (purple) attracts stars • Star gives bonus points</p>
       </div>
     </div>
   )
