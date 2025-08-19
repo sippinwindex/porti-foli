@@ -1,4 +1,4 @@
-// types/portfolio.ts - FIXED to include missing EnhancedPortfolioProject export
+// types/portfolio.ts - FIXED with unified type definitions
 import type { GitHubRepository, GitHubStats } from './github'
 import type { VercelProjectWithStatus, VercelStats } from './vercel'
 
@@ -6,60 +6,84 @@ import type { VercelProjectWithStatus, VercelStats } from './vercel'
 export type { GitHubRepository, GitHubStats } from './github'
 export type { VercelProjectWithStatus, VercelStats } from './vercel'
 
+// UNIFIED: Main portfolio project interface - covers all use cases
 export interface PortfolioProject {
+  // Core identification
   id: string
   name: string
-  title?: string  // ← FIXED: Made optional to match hook
+  title?: string // Optional - falls back to name if not provided
+  
+  // Description and content
   description: string
   longDescription?: string
+  
+  // Technical details
   techStack: string[]
-  tags?: string[]  // ← FIXED: Made optional and added
+  tags?: string[]
+  topics?: string[] // GitHub topics
+  
+  // Classification
   featured: boolean
   category?: 'fullstack' | 'frontend' | 'backend' | 'mobile' | 'data' | 'other'
   status?: 'completed' | 'in-progress' | 'planning' | 'archived'
+  complexity?: 'beginner' | 'intermediate' | 'advanced'
+  
+  // Project metadata
   image?: string
   startDate?: string
   endDate?: string
+  teamSize?: number
+  role?: string
+  client?: string
+  
+  // Learning and challenges
   challenges?: string[]
   learnings?: string[]
+  highlights?: string[]
   metrics?: Record<string, any>
+  
+  // GitHub integration
   github?: {
     stars: number
     forks: number
     url: string
-    topics?: string[]  // ← FIXED: Added topics
-    lastUpdated?: string  // ← FIXED: Changed from updatedAt to lastUpdated
+    topics?: string[]
+    lastUpdated?: string
     language?: string
   }
+  
+  // Vercel integration
   vercel?: {
     isLive: boolean
     liveUrl?: string
     deploymentStatus?: string
   }
+  
+  // Legacy compatibility
   githubUrl?: string
   liveUrl?: string
-  // ADDED: Additional properties for compatibility
-  topics?: string[]  // ← ADDED: For GitHub topics at project level
-  complexity?: 'beginner' | 'intermediate' | 'advanced'
-  teamSize?: number
-  role?: string
-  client?: string
-  highlights?: string[]
 }
 
+// UNIFIED: Portfolio statistics interface
 export interface PortfolioStats {
+  // Core metrics
   totalProjects: number
   totalStars: number
   liveProjects: number
-  recentActivity?: {
-    activeProjects: number
-  }
-  // Additional stats properties for compatibility
+  
+  // Extended metrics (optional for backward compatibility)
   totalForks?: number
   topLanguages?: string[]
   deploymentSuccessRate?: number
+  
+  // Activity metrics
+  recentActivity?: {
+    activeProjects: number
+    lastUpdated?: string
+  }
 }
 
+// Hook return type - unified interface
 export interface UsePortfolioDataReturn {
   projects: PortfolioProject[]
   stats: PortfolioStats | null
@@ -68,57 +92,22 @@ export interface UsePortfolioDataReturn {
   refetch: () => Promise<void>
 }
 
-// Interface that matches ScrollTriggered3DSections expectations
-export interface ScrollProject {
-  id: string
-  name: string
-  title?: string  // ← FIXED: Made optional
-  description: string
-  techStack: string[]
-  featured: boolean
-  github: {
-    stars: number
-    forks: number
-    url: string
-  }
-  vercel: {
-    isLive: boolean
-    liveUrl?: string
-  }
-}
-
-// Interface for Hero section projects
-export interface HeroProject {
-  id: string
-  title?: string  // ← FIXED: Made optional
-  description: string
-  techStack: string[]
-  featured: boolean
-  github: {
-    stars: number
-    forks: number
-    url: string
-  }
-  vercel: {
-    isLive: boolean
-    liveUrl?: string
-  }
-}
-
-// FIXED: Add the missing EnhancedPortfolioProject interface that was imported but not exported
+// ENHANCED: Extended project interface for advanced use cases
 export interface EnhancedPortfolioProject {
+  // Base properties (not extending to avoid conflicts)
   id: string
   slug: string
   name: string
-  title?: string  // ← FIXED: Made optional
+  title?: string
   description: string
   longDescription?: string
   category: 'fullstack' | 'frontend' | 'backend' | 'mobile' | 'data' | 'other'
   status: 'completed' | 'in-progress' | 'planning' | 'archived'
   featured: boolean
   order: number
+  techStack: string[]
   
-  // GitHub integration
+  // Enhanced GitHub integration (different structure than base)
   github?: {
     repository: GitHubRepository
     url?: string
@@ -136,7 +125,7 @@ export interface EnhancedPortfolioProject {
     }
   }
   
-  // Vercel integration
+  // Enhanced Vercel integration
   vercel?: {
     project: VercelProjectWithStatus
     deployments: number
@@ -150,7 +139,7 @@ export interface EnhancedPortfolioProject {
     isLive: boolean
   }
   
-  // Custom metadata
+  // Rich metadata
   metadata: {
     customDescription?: string
     images: string[]
@@ -169,10 +158,63 @@ export interface EnhancedPortfolioProject {
   }
   
   // Computed properties
-  techStack: string[]
   lastActivity: string
   deploymentScore: number
   popularity: number
+}
+
+// Specialized interfaces for different component needs
+export interface ScrollProject {
+  id: string
+  name: string
+  title?: string
+  description: string
+  techStack: string[]
+  featured: boolean
+  github: {
+    stars: number
+    forks: number
+    url: string
+  }
+  vercel: {
+    isLive: boolean
+    liveUrl?: string
+  }
+}
+
+export interface HeroProject {
+  id: string
+  title?: string
+  description: string
+  techStack: string[]
+  featured: boolean
+  github: {
+    stars: number
+    forks: number
+    url: string
+  }
+  vercel: {
+    isLive: boolean
+    liveUrl?: string
+  }
+}
+
+// API response interfaces
+export interface PortfolioAPIResponse<T = any> {
+  success: boolean
+  data?: T
+  projects?: T[] // For projects endpoint
+  error?: string
+  message?: string
+  timestamp: string
+  source?: 'github' | 'vercel' | 'cache' | 'fallback' | 'mock'
+  meta?: {
+    hasGitHubIntegration?: boolean
+    totalAvailable?: number
+    cacheTime?: number
+    filters?: Record<string, any>
+    fallbackReason?: string
+  }
 }
 
 // Portfolio analytics and insights
@@ -212,7 +254,7 @@ export interface PortfolioAnalytics {
   }
 }
 
-// Portfolio configuration
+// Configuration and sync interfaces
 export interface PortfolioConfig {
   github: {
     username: string
@@ -240,16 +282,6 @@ export interface PortfolioConfig {
   }
 }
 
-// API integration types
-export interface PortfolioAPIResponse<T = any> {
-  success: boolean
-  data?: T
-  error?: string
-  timestamp: string
-  cached?: boolean
-  source?: 'github' | 'vercel' | 'cache' | 'fallback'
-}
-
 export interface PortfolioSyncStatus {
   github: {
     lastSync: string
@@ -268,4 +300,169 @@ export interface PortfolioSyncStatus {
     status: 'healthy' | 'degraded' | 'error'
     nextSync: string
   }
+}
+
+// Type guards and utilities
+export function isPortfolioProject(obj: any): obj is PortfolioProject {
+  return obj && 
+         typeof obj.id === 'string' && 
+         typeof obj.name === 'string' && 
+         typeof obj.description === 'string' &&
+         Array.isArray(obj.techStack) &&
+         typeof obj.featured === 'boolean'
+}
+
+export function isEnhancedPortfolioProject(obj: any): obj is EnhancedPortfolioProject {
+  return obj && 
+         typeof obj.id === 'string' && 
+         typeof obj.slug === 'string' && 
+         typeof obj.metadata === 'object' &&
+         typeof obj.deploymentScore === 'number'
+}
+
+// Conversion utilities
+export function toScrollProject(project: PortfolioProject): ScrollProject {
+  return {
+    id: project.id,
+    name: project.name,
+    title: project.title,
+    description: project.description,
+    techStack: project.techStack,
+    featured: project.featured,
+    github: project.github || { stars: 0, forks: 0, url: '' },
+    vercel: project.vercel || { isLive: false }
+  }
+}
+
+export function toHeroProject(project: PortfolioProject): HeroProject {
+  return {
+    id: project.id,
+    title: project.title,
+    description: project.description,
+    techStack: project.techStack,
+    featured: project.featured,
+    github: project.github || { stars: 0, forks: 0, url: '' },
+    vercel: project.vercel || { isLive: false }
+  }
+}
+
+// Enhanced project creation utility
+export function createEnhancedProject(
+  base: PortfolioProject, 
+  githubRepo?: GitHubRepository,
+  vercelProject?: VercelProjectWithStatus
+): EnhancedPortfolioProject {
+  return {
+    // Copy base properties
+    id: base.id,
+    name: base.name,
+    title: base.title,
+    description: base.description,
+    longDescription: base.longDescription,
+    category: base.category || 'other',
+    status: base.status || 'completed',
+    featured: base.featured,
+    techStack: base.techStack,
+    
+    // Enhanced properties
+    slug: base.id.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+    order: base.featured ? 1 : 10,
+    
+    github: githubRepo ? {
+      repository: githubRepo,
+      url: base.github?.url || githubRepo.html_url,
+      stats: {
+        stars: githubRepo.stargazers_count,
+        forks: githubRepo.forks_count,
+        watchers: githubRepo.watchers_count,
+        issues: githubRepo.open_issues_count,
+        prs: 0 // Would need additional API call
+      },
+      activity: {
+        lastCommit: githubRepo.updated_at,
+        commitsThisMonth: 0, // Would need additional API call
+        contributors: 1 // Would need additional API call
+      }
+    } : base.github ? {
+      repository: {} as GitHubRepository, // Fallback
+      url: base.github.url,
+      stats: {
+        stars: base.github.stars,
+        forks: base.github.forks,
+        watchers: base.github.stars,
+        issues: 0,
+        prs: 0
+      },
+      activity: {
+        lastCommit: base.github.lastUpdated || new Date().toISOString(),
+        commitsThisMonth: 0,
+        contributors: 1
+      }
+    } : undefined,
+    
+    vercel: vercelProject ? {
+      project: vercelProject,
+      deployments: 1,
+      deploymentStatus: vercelProject.status?.state || 'unknown',
+      lastDeployment: vercelProject.status ? {
+        state: vercelProject.status.state,
+        url: vercelProject.status.url,
+        createdAt: new Date(vercelProject.status.created).toISOString()
+      } : undefined,
+      customDomains: [],
+      isLive: vercelProject.status?.state === 'READY'
+    } : base.vercel ? {
+      project: {} as VercelProjectWithStatus, // Fallback
+      deployments: 1,
+      deploymentStatus: base.vercel.deploymentStatus,
+      lastDeployment: undefined,
+      customDomains: [],
+      isLive: base.vercel.isLive
+    } : undefined,
+    
+    metadata: {
+      customDescription: base.longDescription,
+      images: base.image ? [base.image] : [],
+      tags: base.tags || [],
+      highlights: base.highlights || [],
+      challenges: base.challenges,
+      learnings: base.learnings,
+      client: base.client,
+      teamSize: base.teamSize,
+      role: base.role,
+      liveUrl: base.liveUrl,
+      demoUrl: base.liveUrl,
+      caseStudyUrl: undefined,
+      startDate: base.startDate,
+      endDate: base.endDate
+    },
+    
+    lastActivity: githubRepo?.updated_at || base.github?.lastUpdated || new Date().toISOString(),
+    deploymentScore: calculateDeploymentScore(base),
+    popularity: calculatePopularity(base)
+  }
+}
+
+// Helper functions
+function calculateDeploymentScore(project: PortfolioProject): number {
+  let score = 60
+  
+  if (project.description) score += 10
+  if (project.github?.stars && project.github.stars > 0) {
+    score += Math.min(project.github.stars * 2, 20)
+  }
+  if (project.techStack && project.techStack.length > 0) score += 5
+  if (project.vercel?.isLive) score += 15
+  if (project.featured) score += 10
+  
+  return Math.min(score, 100)
+}
+
+function calculatePopularity(project: PortfolioProject): number {
+  const stars = project.github?.stars || 0
+  const forks = project.github?.forks || 0
+  const featured = project.featured ? 10 : 0
+  const hasLiveUrl = (project.liveUrl || project.vercel?.isLive) ? 5 : 0
+  
+  return stars * 2 + forks + featured + hasLiveUrl
 }
