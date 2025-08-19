@@ -6,8 +6,8 @@ import Link from 'next/link'
 import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion } from 'framer-motion'
 import { 
   Home, User, Briefcase, Calendar, Mail, Github, Linkedin, 
-  Twitter, FileText, Menu, X, ExternalLink, MessageCircle,
-  Sun, Moon, BookOpen, Gamepad2
+  Twitter, FileText, Menu, X, MessageCircle,
+  Sun, Moon, BookOpen, Gamepad2, Code
 } from 'lucide-react'
 
 interface NavItem {
@@ -15,6 +15,7 @@ interface NavItem {
   label: string
   icon: React.ElementType
   href: string
+  external?: boolean
 }
 
 interface SocialLink {
@@ -89,12 +90,11 @@ const Navigation = () => {
   const { scrollYProgress } = useScroll()
   const navBlur = useTransform(scrollYProgress, [0, 0.1], [0, shouldReduceMotion ? 8 : 20])
 
-  // Memoized navigation items to prevent recreation
+  // ✅ Fixed: Complete navigation items with proper routing
   const navItems = useMemo<NavItem[]>(() => [
     { id: 'home', label: 'Home', icon: Home, href: '/' },
     { id: 'about', label: 'About', icon: User, href: '/about' },
     { id: 'projects', label: 'Projects', icon: Briefcase, href: '/projects' },
-    { id: 'experience', label: 'Experience', icon: Calendar, href: '/#experience' },
     { id: 'blog', label: 'Blog', icon: BookOpen, href: '/blog' },
     { id: 'dino-game', label: 'Game', icon: Gamepad2, href: '/dino-game' },
     { id: 'contact', label: 'Contact', icon: Mail, href: '/contact' }
@@ -209,58 +209,35 @@ const Navigation = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Enhanced section detection with cleanup
+  // ✅ Fixed: Enhanced section detection with proper path matching and null check
   useEffect(() => {
-    if (!pathname) return
-    
+    // Handle null pathname case
+    if (!pathname) {
+      setCurrentSection('home')
+      return
+    }
+
+    // Set current section based on pathname
     if (pathname === '/') {
-      const hash = window.location.hash.replace('#', '')
-      if (hash) {
-        setCurrentSection(hash)
-        return
-      }
-
-      const sections = ['hero', 'about', 'projects', 'experience', 'contact']
-      const observerOptions = {
-        threshold: 0.3,
-        rootMargin: '-20% 0px -70% 0px'
-      }
-
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            setCurrentSection(entry.target.id)
-          }
-        })
-      }, observerOptions)
-
-      const elements: Element[] = []
-      sections.forEach(sectionId => {
-        const element = document.getElementById(sectionId)
-        if (element) {
-          observer.observe(element)
-          elements.push(element)
-        }
-      })
-
-      return () => {
-        elements.forEach(element => observer.unobserve(element))
-        observer.disconnect()
-      }
-    } else if (pathname === '/blog') {
+      setCurrentSection('home')
+    } else if (pathname === '/about') {
+      setCurrentSection('about')
+    } else if (pathname === '/projects' || pathname.startsWith('/projects/')) {
+      setCurrentSection('projects')
+    } else if (pathname === '/blog' || pathname.startsWith('/blog/')) {
       setCurrentSection('blog')
     } else if (pathname === '/dino-game') {
       setCurrentSection('dino-game')
-    } else if (pathname === '/about') {
-      setCurrentSection('about')
-    } else if (pathname === '/projects') {
-      setCurrentSection('projects')
     } else if (pathname === '/contact') {
       setCurrentSection('contact')
-    } else if (pathname.includes('/photos')) {
-      setCurrentSection('about')
+    } else {
+      // For any other path, try to match with nav items
+      const matchingItem = navItems.find(item => pathname.startsWith(item.href))
+      if (matchingItem) {
+        setCurrentSection(matchingItem.id)
+      }
     }
-  }, [pathname])
+  }, [pathname, navItems])
 
   // ✅ Fixed: Enhanced Theme Toggle Component with proper displayName
   const ThemeToggle = React.memo(() => {
@@ -347,36 +324,29 @@ const Navigation = () => {
   })
   ThemeToggle.displayName = 'ThemeToggle'
 
-  // ✅ Fixed: Enhanced Navigation Link Component with proper displayName
+  // ✅ Fixed: Enhanced Navigation Link Component with proper click handling
   const NavLink = React.memo<{
     item: NavItem
     index: number
     isMobile?: boolean
   }>(({ item, index, isMobile = false }) => {
     const [hoverRef, rotation] = use3DHover()
-    const isActive = currentSection === item.id || 
-                   (pathname === item.href) ||
-                   (item.href.includes('#') && pathname === '/' && `/#${currentSection}` === item.href)
+    const isActive = currentSection === item.id
     const IconComponent = item.icon
 
     const handleClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+      // Close mobile menu when clicking any link
       setIsMenuOpen(false)
       
-      // Handle hash navigation on same page
-      if (item.href.startsWith('/#') && pathname === '/') {
-        e.preventDefault()
-        const targetId = item.href.replace('/#', '')
-        const targetElement = document.getElementById(targetId)
-        if (targetElement) {
-          targetElement.scrollIntoView({ 
-            behavior: shouldReduceMotion ? 'auto' : 'smooth', 
-            block: 'start' 
-          })
-          // Update URL without reload
-          window.history.pushState(null, '', item.href)
-        }
+      // If it's an external link, let it proceed normally
+      if (item.external) {
+        return
       }
-    }, [item.href]) // ✅ Fixed: Removed pathname and shouldReduceMotion from dependencies
+      
+      // For internal navigation, use Next.js routing
+      e.preventDefault()
+      router.push(item.href)
+    }, [item.href, item.external])
 
     return (
       <motion.div
@@ -633,7 +603,7 @@ const Navigation = () => {
                     } : {}}
                     transition={{ duration: 3, repeat: Infinity }}
                   >
-                    JF
+                    <Code className="w-5 h-5" />
                   </motion.div>
                   <span className="hidden sm:block font-bold text-gray-900 dark:text-gray-50 text-lg">
                     Juan Fernandez
@@ -701,11 +671,29 @@ const Navigation = () => {
                   className="w-5 h-5 flex flex-col justify-center items-center"
                   animate={isMenuOpen ? "open" : "closed"}
                 >
-                  {isMenuOpen ? (
-                    <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                  ) : (
-                    <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                  )}
+                  <AnimatePresence mode="wait">
+                    {isMenuOpen ? (
+                      <motion.div
+                        key="close"
+                        initial={{ rotate: -90, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: 90, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="menu"
+                        initial={{ rotate: 90, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        exit={{ rotate: -90, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               </motion.button>
             </div>
