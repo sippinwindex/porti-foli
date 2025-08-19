@@ -148,7 +148,7 @@ const Navigation: React.FC = () => {
     }
   ], [])
 
-  // Social links with enhanced structure
+  // ✅ FIXED: Enhanced social links with better spacing
   const socialLinks: SocialLink[] = useMemo(() => [
     { 
       platform: 'GitHub',
@@ -176,24 +176,6 @@ const Navigation: React.FC = () => {
       external: true,
       description: 'Follow me on Twitter',
       color: 'hover:text-sky-500 dark:hover:text-sky-400'
-    },
-    { 
-      platform: 'Resume',
-      name: 'Resume', 
-      href: 'https://flowcv.com/resume/moac4k9d8767', 
-      icon: FileText, 
-      external: true,
-      description: 'Download my resume',
-      color: 'hover:text-amber-600 dark:hover:text-amber-400'
-    },
-    { 
-      platform: 'Email',
-      name: 'Email', 
-      href: 'mailto:jafernandez94@gmail.com', 
-      icon: Mail, 
-      external: true,
-      description: 'Send me a message',
-      color: 'hover:text-green-600 dark:hover:text-green-400'
     }
   ], [])
 
@@ -418,7 +400,7 @@ const Navigation: React.FC = () => {
   })
   NavLink.displayName = 'NavLink'
 
-  // Social Link Component
+  // ✅ FIXED: Enhanced Social Link Component with better spacing
   const SocialLink = React.memo<{
     social: SocialLink
     index: number
@@ -440,10 +422,10 @@ const Navigation: React.FC = () => {
           target={social.external ? '_blank' : undefined}
           rel={social.external ? 'noopener noreferrer' : undefined}
           className={`
-            block w-10 h-10 rounded-xl border border-gray-200/50 dark:border-gray-700/50
+            block w-11 h-11 rounded-xl border border-gray-200/50 dark:border-gray-700/50
             flex items-center justify-center transition-all duration-300
             hover:bg-gray-200/50 dark:hover:bg-gray-700/50 hover:border-viva-magenta-300 dark:hover:border-viva-magenta-600 ${social.color}
-            bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm
+            bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm hover:shadow-md
           `}
           whileHover={{ 
             y: shouldReduceMotion ? 0 : -3,
@@ -504,7 +486,7 @@ const Navigation: React.FC = () => {
   // Loading state
   if (!mounted) {
     return (
-      <nav className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 lg:px-8 py-4">
+      <nav className="fixed top-0 left-0 right-0 z-[1000] px-4 sm:px-6 lg:px-8 py-4">
         <div className="container mx-auto">
           <div className="flex items-center justify-between">
             <div className="w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
@@ -520,10 +502,11 @@ const Navigation: React.FC = () => {
 
   return (
     <>
+      {/* ✅ FIXED: Enhanced z-index to ensure navbar stays above loading bar */}
       <motion.nav 
         ref={navRef}
         className={`
-          fixed top-0 left-0 right-0 z-50 transition-all duration-300
+          fixed top-0 left-0 right-0 z-[1000] transition-all duration-300
           ${scrolled 
             ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg' 
             : 'bg-transparent'
@@ -581,10 +564,10 @@ const Navigation: React.FC = () => {
               </div>
             </div>
 
-            {/* Desktop Social Links & Theme Toggle */}
+            {/* ✅ FIXED: Desktop Social Links & Theme Toggle with better spacing and email icon */}
             <div className="hidden lg:flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                {socialLinks.slice(0, 3).map((social, index) => (
+              <div className="flex items-center gap-3">
+                {socialLinks.map((social, index) => (
                   <SocialLink key={social.platform} social={social} index={index} />
                 ))}
               </div>
@@ -593,19 +576,23 @@ const Navigation: React.FC = () => {
               
               <ThemeToggleComponent />
 
+              {/* ✅ FIXED: Replace "Let's Talk" with email icon */}
               <motion.a
                 href="mailto:jafernandez94@gmail.com"
-                className="relative group px-6 py-2 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg"
+                className="relative group p-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
                 whileHover={{ 
                   scale: shouldReduceMotion ? 1 : 1.05, 
                   y: shouldReduceMotion ? 0 : -2 
                 }}
                 whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+                title="Send me an email"
+                aria-label="Contact via email"
               >
-                <span className="relative z-10 flex items-center gap-2">
-                  <MessageCircle className="w-4 h-4" />
-                  Let's Talk
-                </span>
+                <Mail className="w-5 h-5 relative z-10 group-hover:scale-110 transition-transform duration-300" />
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  whileHover={{ scale: 1.1 }}
+                />
               </motion.a>
             </div>
 
@@ -632,9 +619,9 @@ const Navigation: React.FC = () => {
           </div>
         </div>
 
-        {/* Scroll Progress Indicator */}
+        {/* ✅ FIXED: Scroll Progress Indicator with proper z-index */}
         <motion.div
-          className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 origin-left"
+          className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 origin-left z-[1001]"
           style={{ 
             scaleX,
             boxShadow: shouldReduceMotion ? 'none' : `0 0 10px rgba(190, 24, 93, 0.6)`
@@ -648,7 +635,7 @@ const Navigation: React.FC = () => {
           <>
             {/* Backdrop */}
             <motion.div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999] lg:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -662,7 +649,7 @@ const Navigation: React.FC = () => {
             {/* Mobile Menu */}
             <motion.div
               ref={mobileMenuRef}
-              className="fixed top-20 right-4 left-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl z-50 lg:hidden overflow-hidden max-h-[80vh] overflow-y-auto"
+              className="fixed top-20 right-4 left-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl z-[1000] lg:hidden overflow-hidden max-h-[80vh] overflow-y-auto"
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
@@ -681,7 +668,7 @@ const Navigation: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Mobile Social Links */}
+                {/* ✅ FIXED: Mobile Social Links with better spacing */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                   <div className="flex items-center justify-center gap-4 mb-6">
                     {socialLinks.map((social, index) => (
@@ -695,14 +682,15 @@ const Navigation: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: shouldReduceMotion ? 0 : 0.3 }}
                   >
+                    {/* ✅ FIXED: Replace mobile "Let's Talk" with email icon and better text */}
                     <motion.a
                       href="mailto:jafernandez94@gmail.com"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl shadow-lg"
+                      className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl shadow-lg"
                       whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
                       whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
                     >
-                      <MessageCircle className="w-5 h-5" />
-                      <span>Let's Talk</span>
+                      <Mail className="w-5 h-5" />
+                      <span>Send Email</span>
                     </motion.a>
                   </motion.div>
                 </div>

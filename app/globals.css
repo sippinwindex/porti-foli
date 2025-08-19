@@ -1346,3 +1346,500 @@ html, body {
   border: 2px solid lime !important;
   background: rgba(0, 255, 0, 0.1) !important;
 }
+
+/* ✅ CRITICAL Z-INDEX FIXES - Add this to your globals.css */
+
+/* Force navbar to always be on top */
+nav,
+.navbar,
+header[role="navigation"] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1000 !important;
+  height: 5rem !important;
+  min-height: 5rem !important;
+  max-height: 5rem !important;
+}
+
+/* Ensure scroll progress bar sits under navbar but above content */
+.scroll-progress,
+nav .scroll-progress {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  height: 2px !important;
+  z-index: 1001 !important;
+  pointer-events: none !important;
+}
+
+/* Fix body padding to account for fixed navbar */
+body {
+  padding-top: 5rem !important;
+}
+
+/* Ensure all page content starts below navbar */
+main,
+.main-content,
+section:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Fix any loading bars or progress indicators */
+.loading-bar,
+.progress-bar,
+.scroll-indicator {
+  z-index: 999 !important; /* Below navbar */
+}
+
+/* Fix theme toggle positioning */
+.theme-toggle-container,
+.theme-toggle {
+  z-index: 1002 !important;
+}
+
+/* Mobile responsive fixes */
+@media (max-width: 1024px) {
+  nav,
+  .navbar,
+  header[role="navigation"] {
+    height: 4rem !important;
+    min-height: 4rem !important;
+    max-height: 4rem !important;
+  }
+  
+  body {
+    padding-top: 4rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  nav,
+  .navbar,
+  header[role="navigation"] {
+    height: 3.5rem !important;
+    min-height: 3.5rem !important;
+    max-height: 3.5rem !important;
+  }
+  
+  body {
+    padding-top: 3.5rem !important;
+  }
+}
+
+/* ✅ SOCIAL LINKS SPACING FIXES */
+
+/* Desktop social links container */
+.social-links,
+.social-icons,
+nav .social-links {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important; /* 12px spacing */
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Individual social link styling */
+.social-link,
+.social-icon,
+nav .social-link {
+  width: 2.75rem !important; /* 44px */
+  height: 2.75rem !important; /* 44px */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 0.75rem !important; /* 12px */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+.dark .social-link,
+.dark .social-icon,
+.dark nav .social-link {
+  background: rgba(0, 0, 0, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Social link hover effects */
+.social-link:hover,
+.social-icon:hover,
+nav .social-link:hover {
+  transform: translateY(-2px) scale(1.05) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border-color: rgba(190, 52, 85, 0.3) !important;
+}
+
+/* Social link icons */
+.social-link svg,
+.social-icon svg,
+nav .social-link svg {
+  width: 1.25rem !important; /* 20px */
+  height: 1.25rem !important; /* 20px */
+  color: currentColor !important;
+  transition: transform 0.2s ease !important;
+}
+
+.social-link:hover svg,
+.social-icon:hover svg,
+nav .social-link:hover svg {
+  transform: scale(1.1) !important;
+}
+
+/* ✅ EMAIL ICON BUTTON FIXES */
+
+/* Contact/Email button styling */
+.contact-button,
+.email-button,
+nav .contact-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  padding: 0 !important;
+  background: linear-gradient(135deg, #BE3455, #D4AF37) !important;
+  color: white !important;
+  border-radius: 0.75rem !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(190, 52, 85, 0.3) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.contact-button:hover,
+.email-button:hover,
+nav .contact-button:hover {
+  transform: translateY(-2px) scale(1.05) !important;
+  box-shadow: 0 8px 20px rgba(190, 52, 85, 0.4) !important;
+}
+
+.contact-button svg,
+.email-button svg,
+nav .contact-button svg {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  color: white !important;
+  z-index: 10 !important;
+  position: relative !important;
+  transition: transform 0.3s ease !important;
+}
+
+.contact-button:hover svg,
+.email-button:hover svg,
+nav .contact-button:hover svg {
+  transform: scale(1.1) !important;
+}
+
+/* ✅ NAVIGATION CONTAINER SPACING */
+
+/* Desktop navigation right section */
+.nav-actions,
+.navbar-actions,
+nav > div > div:last-child {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important; /* 16px spacing between groups */
+}
+
+/* Divider between social links and theme toggle */
+.nav-divider,
+.navbar-divider {
+  width: 1px !important;
+  height: 1.5rem !important; /* 24px */
+  background: rgba(0, 0, 0, 0.1) !important;
+  margin: 0 0.5rem !important;
+}
+
+.dark .nav-divider,
+.dark .navbar-divider {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ✅ MOBILE NAVIGATION FIXES */
+
+/* Mobile social links container */
+@media (max-width: 1024px) {
+  .social-links,
+  .social-icons,
+  nav .social-links {
+    gap: 1rem !important; /* More spacing on mobile */
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .social-link,
+  .social-icon,
+  nav .social-link {
+    width: 3rem !important; /* Larger touch targets */
+    height: 3rem !important;
+  }
+  
+  .contact-button,
+  .email-button,
+  nav .contact-button {
+    width: 100% !important;
+    height: 3rem !important;
+    border-radius: 0.75rem !important;
+    max-width: 200px !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* ✅ ACCESSIBILITY FIXES */
+
+/* Focus states */
+.social-link:focus-visible,
+.contact-button:focus-visible,
+nav .social-link:focus-visible,
+nav .contact-button:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 
+              0 0 0 4px rgba(190, 52, 85, 0.5) !important;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .social-link,
+  .contact-button,
+  nav .social-link,
+  nav .contact-button {
+    transition: none !important;
+  }
+  
+  .social-link:hover,
+  .contact-button:hover,
+  nav .social-link:hover,
+  nav .contact-button:hover {
+    transform: none !important;
+  }
+}
+
+/* ✅ THIN NAVBAR FIXES - Add to your globals.css */
+
+/* Make navbar thinner and more compact */
+nav,
+.navbar,
+header[role="navigation"] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1000 !important;
+  height: 3.5rem !important; /* Reduced from 5rem to 3.5rem */
+  min-height: 3.5rem !important;
+  max-height: 3.5rem !important;
+  padding: 0.5rem 0 !important; /* Reduced vertical padding */
+}
+
+/* Fix body padding for thinner navbar */
+body {
+  padding-top: 3.5rem !important; /* Match navbar height */
+}
+
+/* Thin navbar container */
+.navbar-container,
+.nav-container,
+nav > div {
+  height: 100% !important;
+  padding: 0 1rem !important; /* Reduced horizontal padding */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* Compact logo styling */
+.navbar-brand,
+.nav-brand,
+.nav-logo,
+nav a:first-child {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important; /* Reduced gap */
+  font-size: 1rem !important; /* Smaller font */
+  font-weight: 700 !important;
+}
+
+.navbar-brand > div:first-child,
+.nav-logo > div:first-child {
+  width: 1.75rem !important; /* Smaller logo size */
+  height: 1.75rem !important;
+  font-size: 0.75rem !important;
+}
+
+/* Compact navigation items */
+.nav-link,
+.navbar-nav a,
+nav .nav-link {
+  padding: 0.375rem 0.75rem !important; /* Reduced padding */
+  font-size: 0.875rem !important; /* Smaller text */
+  border-radius: 0.5rem !important; /* Smaller border radius */
+  min-height: 2rem !important; /* Reduced min height */
+}
+
+/* Compact social links */
+.social-link,
+.social-icon,
+nav .social-link {
+  width: 2.25rem !important; /* Reduced from 2.75rem */
+  height: 2.25rem !important;
+  border-radius: 0.5rem !important; /* Smaller border radius */
+}
+
+.social-link svg,
+.social-icon svg,
+nav .social-link svg {
+  width: 1rem !important; /* Smaller icons */
+  height: 1rem !important;
+}
+
+/* Compact email button */
+.contact-button,
+.email-button,
+nav .contact-button {
+  width: 2.25rem !important; /* Match social links */
+  height: 2.25rem !important;
+  border-radius: 0.5rem !important;
+  padding: 0 !important;
+}
+
+.contact-button svg,
+.email-button svg,
+nav .contact-button svg {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+/* Compact theme toggle */
+.theme-toggle,
+nav .theme-toggle {
+  width: 2.75rem !important; /* Slightly larger for usability */
+  height: 1.5rem !important; /* Thinner toggle */
+  border-radius: 0.75rem !important;
+}
+
+.theme-toggle > div {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  top: 0.125rem !important;
+}
+
+/* Compact navigation sections spacing */
+.nav-actions,
+.navbar-actions,
+nav > div > div:last-child {
+  gap: 0.75rem !important; /* Reduced spacing */
+}
+
+.social-links,
+.social-icons,
+nav .social-links {
+  gap: 0.5rem !important; /* Tighter social icon spacing */
+}
+
+/* Desktop navigation menu container */
+nav .hidden.lg\\:flex > div:first-child {
+  padding: 0.25rem !important; /* Reduced padding around nav items */
+  border-radius: 0.75rem !important;
+}
+
+/* Mobile responsive - keep similar proportions */
+@media (max-width: 1024px) {
+  nav,
+  .navbar,
+  header[role="navigation"] {
+    height: 3rem !important;
+    min-height: 3rem !important;
+    max-height: 3rem !important;
+  }
+  
+  body {
+    padding-top: 3rem !important;
+  }
+  
+  .navbar-brand > div:first-child,
+  .nav-logo > div:first-child {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    font-size: 0.625rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  nav,
+  .navbar,
+  header[role="navigation"] {
+    height: 2.75rem !important;
+    min-height: 2.75rem !important;
+    max-height: 2.75rem !important;
+  }
+  
+  body {
+    padding-top: 2.75rem !important;
+  }
+  
+  .navbar-container,
+  .nav-container,
+  nav > div {
+    padding: 0 0.75rem !important;
+  }
+  
+  .navbar-brand,
+  .nav-brand,
+  nav a:first-child {
+    font-size: 0.875rem !important;
+  }
+  
+  .theme-toggle,
+  nav .theme-toggle {
+    width: 2.5rem !important;
+    height: 1.25rem !important;
+  }
+  
+  .theme-toggle > div {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+}
+
+/* Hide text on smaller screens to make navbar even more compact */
+@media (max-width: 640px) {
+  .navbar-brand span,
+  .nav-brand span,
+  nav a:first-child span {
+    display: none !important;
+  }
+}
+
+/* Ensure scroll progress bar works with thin navbar */
+.scroll-progress,
+nav .scroll-progress {
+  height: 1px !important; /* Thinner progress bar */
+  z-index: 1001 !important;
+}
+
+/* Compact mobile menu positioning */
+.mobile-menu,
+nav + div[role="dialog"] {
+  top: 3.75rem !important; /* Just below thin navbar */
+}
+
+@media (max-width: 1024px) {
+  .mobile-menu,
+  nav + div[role="dialog"] {
+    top: 3.25rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-menu,
+  nav + div[role="dialog"] {
+    top: 3rem !important;
+  }
+}

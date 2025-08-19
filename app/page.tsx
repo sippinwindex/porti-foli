@@ -1,4 +1,4 @@
-// Fixed app/page.tsx - Complete TypeScript error resolution
+// Updated app/page.tsx - Integrated LocationWelcomeMessage with optimal UX placement
 'use client'
 
 import { Suspense, useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -36,7 +36,10 @@ import {
 import usePortfolioData from '@/hooks/usePortfolioData'
 import { useGitHubData } from '@/hooks/useGitHubData'
 
-// ✅ FIXED: Enhanced Type definitions that match your actual PortfolioProject interface
+// ✅ ADDED: Import LocationWelcomeMessage component
+import LocationWelcomeMessage from '@/components/LocationWelcomeMessage'
+
+// Enhanced Type definitions that match your actual PortfolioProject interface
 interface PortfolioProject {
   id: string
   name: string
@@ -55,10 +58,9 @@ interface PortfolioProject {
   }
   githubUrl?: string
   liveUrl?: string
-  // Note: deploymentScore, lastUpdated, imageUrl are NOT in your PortfolioProject type
 }
 
-// ✅ FIXED: Project interface for 3D components (with all required fields)
+// Project interface for 3D components (with all required fields)
 interface Project {
   id: string
   title: string // Required for 3D components
@@ -103,7 +105,7 @@ interface ContactOption {
   working?: boolean
 }
 
-// ✅ FIXED: PortfolioStats interface that matches both your types and usage
+// PortfolioStats interface that matches both your types and usage
 interface PortfolioStats {
   totalProjects: number
   totalStars: number
@@ -118,13 +120,12 @@ interface PortfolioStats {
   }
 }
 
-// ✅ FIXED: GitHubStats interface for compatibility
+// GitHubStats interface for compatibility
 interface GitHubStats {
   totalProjects: number
   totalStars: number
   totalForks?: number
   topLanguages?: string[]
-  // Note: liveProjects and recentActivity are NOT in GitHubStats
 }
 
 interface SectionVisibility {
@@ -377,7 +378,7 @@ function PageLoading() {
   )
 }
 
-// ✅ FIXED: Updated language data with realistic values for 2+ years experience
+// Updated language data with realistic values for 2+ years experience
 const LANGUAGE_DATA: LanguageData[] = [
   {
     name: 'TypeScript',
@@ -447,7 +448,7 @@ const LANGUAGE_DATA: LanguageData[] = [
   }
 ]
 
-// ✅ FIXED: Updated contact options with verified working links
+// Updated contact options with verified working links
 const CONTACT_OPTIONS: ContactOption[] = [
   {
     icon: Mail,
@@ -489,7 +490,7 @@ const CONTACT_OPTIONS: ContactOption[] = [
 
 // Enhanced Main Component
 export default function HomePage() {
-  // ✅ FIXED: Use real data hooks with proper error handling
+  // Use real data hooks with proper error handling
   const { projects, stats, loading: portfolioLoading, error: portfolioError } = usePortfolioData()
   const { repositories, user, stats: githubStats, loading: githubLoading, error: githubError } = useGitHubData()
   
@@ -508,14 +509,18 @@ export default function HomePage() {
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [isScrolling, setIsScrolling] = useState(false)
   
+  // ✅ ADDED: Location welcome message state with smart timing
+  const [showLocationMessage, setShowLocationMessage] = useState(false)
+  const [hasShownLocationMessage, setHasShownLocationMessage] = useState(false)
+  
   // Refs for better performance
   const observerRef = useRef<IntersectionObserver | null>(null)
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const shouldReduceMotion = useReducedMotion()
 
-  // ✅ FIXED: Enhanced portfolio stats with proper type handling and realistic values
+  // Enhanced portfolio stats with proper type handling and realistic values
   const portfolioStats = useMemo((): PortfolioStats => {
-    // ✅ FIXED: Safely transform PortfolioProject[] to Project[] format
+    // Safely transform PortfolioProject[] to Project[] format
     const transformedProjects: Project[] = projects.map(p => ({
       id: p.id,
       title: p.title || p.name, // Use title if available, fallback to name
@@ -524,29 +529,29 @@ export default function HomePage() {
       techStack: p.techStack || [],
       github: p.github,
       vercel: p.vercel,
-      deploymentScore: 85, // ✅ FIXED: Generate a reasonable score since not in PortfolioProject
+      deploymentScore: 85, // Generate a reasonable score since not in PortfolioProject
       featured: p.featured,
-      category: 'fullstack', // ✅ FIXED: Default category since not in PortfolioProject
-      lastUpdated: new Date().toISOString(), // ✅ FIXED: Generate current date since not in PortfolioProject
-      imageUrl: `/images/projects/${p.id}.jpg` // ✅ FIXED: Generate image path since not in PortfolioProject
+      category: 'fullstack', // Default category since not in PortfolioProject
+      lastUpdated: new Date().toISOString(), // Generate current date since not in PortfolioProject
+      imageUrl: `/images/projects/${p.id}.jpg` // Generate image path since not in PortfolioProject
     }))
 
     // Use real GitHub data if available, fallback to processed data
     const realProjects = transformedProjects.length > 0 ? transformedProjects : []
     
-    // ✅ FIXED: Handle both GitHubStats and PortfolioStats types
+    // Handle both GitHubStats and PortfolioStats types
     const realStats = stats || githubStats
     
-    // ✅ FIXED: Create a compatible PortfolioStats object
+    // Create a compatible PortfolioStats object
     const result: PortfolioStats = {
       totalProjects: realProjects.length || realStats?.totalProjects || 8,
       totalStars: realStats?.totalStars || realProjects.reduce((acc, p) => acc + (p.github?.stars || 0), 0) || 25,
-      liveProjects: realProjects.filter(p => p.vercel?.isLive).length || 6, // ✅ FIXED: Calculate from projects since GitHubStats doesn't have this
+      liveProjects: realProjects.filter(p => p.vercel?.isLive).length || 6, // Calculate from projects since GitHubStats doesn't have this
       totalForks: realStats?.totalForks || realProjects.reduce((acc, p) => acc + (p.github?.forks || 0), 0) || 12,
       topLanguages: realStats?.topLanguages || LANGUAGE_DATA.slice(0, 3).map(lang => lang.name),
       totalCommits: LANGUAGE_DATA.reduce((acc, lang) => acc + (lang.commits || 0), 0),
       yearsExperience: 2,
-      recentActivity: { // ✅ FIXED: Always provide recentActivity since it's required
+      recentActivity: { // Always provide recentActivity since it's required
         activeProjects: realProjects.filter(p => p.featured).length || 4,
         lastCommit: new Date().toISOString()
       }
@@ -555,21 +560,21 @@ export default function HomePage() {
     return result
   }, [projects, stats, githubStats])
 
-  // ✅ FIXED: Transform projects for 3D components with proper type safety
+  // Transform projects for 3D components with proper type safety
   const transformedProjects = useMemo((): Project[] => {
     return projects.map(p => ({
       id: p.id,
-      title: p.title || p.name, // ✅ FIXED: Ensure title is always available
+      title: p.title || p.name, // Ensure title is always available
       name: p.name,
       description: p.description,
       techStack: p.techStack || [],
       github: p.github,
       vercel: p.vercel,
-      deploymentScore: Math.floor(Math.random() * 30) + 70, // ✅ FIXED: Generate score (70-100)
+      deploymentScore: Math.floor(Math.random() * 30) + 70, // Generate score (70-100)
       featured: p.featured,
-      category: 'fullstack', // ✅ FIXED: Default category
-      lastUpdated: new Date().toISOString(), // ✅ FIXED: Current date
-      imageUrl: `/images/projects/${p.id}.jpg` // ✅ FIXED: Generate image path
+      category: 'fullstack', // Default category
+      lastUpdated: new Date().toISOString(), // Current date
+      imageUrl: `/images/projects/${p.id}.jpg` // Generate image path
     }))
   }, [projects])
 
@@ -614,6 +619,22 @@ export default function HomePage() {
     
     return () => clearTimeout(timer)
   }, [shouldReduceMotion, portfolioLoading, githubLoading])
+
+  // ✅ ADDED: Smart location message timing - shows after user has seen hero section
+  useEffect(() => {
+    if (currentSection === 'hero' && !hasShownLocationMessage && !isLoading) {
+      // Show after 4 seconds on hero section, giving user time to appreciate the 3D content
+      const timer = setTimeout(() => {
+        setShowLocationMessage(true)
+        setHasShownLocationMessage(true)
+      }, 4000)
+      
+      return () => clearTimeout(timer)
+    } else if (currentSection !== 'hero') {
+      // Hide when user scrolls away from hero
+      setShowLocationMessage(false)
+    }
+  }, [currentSection, hasShownLocationMessage, isLoading])
 
   // Enhanced scroll tracking
   useEffect(() => {
@@ -710,7 +731,7 @@ export default function HomePage() {
     }
   }, [shouldReduceMotion])
 
-  // ✅ FIXED: Error handling for data loading issues
+  // Error handling for data loading issues
   const hasErrors = portfolioError || githubError
   const isDataLoading = portfolioLoading || githubLoading
 
@@ -720,7 +741,7 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-screen bg-lux-offwhite dark:bg-lux-black text-lux-gray-900 dark:text-lux-offwhite overflow-x-hidden">
-      {/* ✅ ADDED: Error notification for data loading issues */}
+      {/* Error notification for data loading issues */}
       {hasErrors && (
         <div className="fixed top-20 right-4 z-50 max-w-sm">
           <motion.div
@@ -768,7 +789,7 @@ export default function HomePage() {
           <div className="relative" style={{ zIndex: 1 }}>
             <Suspense fallback={<HeroSkeleton />}>
               <Interactive3DHero 
-                projects={transformedProjects} // ✅ FIXED: Pass properly transformed projects
+                projects={transformedProjects}
               />
             </Suspense>
           </div>
@@ -844,7 +865,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ✅ FIXED: Enhanced About Section with correct data */}
+        {/* Enhanced About Section with correct data */}
         <section id="about" className="scroll-section relative py-20 bg-gradient-to-br from-lux-offwhite via-viva-magenta-50/20 to-lux-gold-50/20 dark:from-lux-black dark:via-viva-magenta-900/10 dark:to-lux-gold-900/10">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
@@ -876,7 +897,7 @@ export default function HomePage() {
               </div>
             </motion.div>
 
-            {/* ✅ FIXED: Enhanced Stats Cards with realistic data for 2+ years */}
+            {/* Enhanced Stats Cards with realistic data for 2+ years */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
               {[
                 { 
@@ -994,19 +1015,19 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* ✅ FIXED: Enhanced Projects Section with properly transformed data */}
+        {/* Enhanced Projects Section with properly transformed data */}
         <section id="projects" className="scroll-section relative">
           {sectionsInView.projects && (
             <Suspense fallback={<ProjectsSkeleton />}>
               <ScrollTriggered3DSections 
-                projects={transformedProjects.slice(0, 6)} // ✅ FIXED: Pass properly transformed projects
+                projects={transformedProjects.slice(0, 6)}
                 stats={portfolioStats}
               />
             </Suspense>
           )}
         </section>
 
-        {/* ✅ FIXED: Enhanced Contact Section with verified links */}
+        {/* Enhanced Contact Section with verified links */}
         <section id="contact" className="scroll-section relative py-20 bg-gradient-to-br from-lux-gray-50 via-viva-magenta-50/20 to-lux-gold-50/20 dark:from-lux-gray-900 dark:via-viva-magenta-900/10 dark:to-lux-gold-900/10">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
@@ -1059,7 +1080,7 @@ export default function HomePage() {
                       y: shouldReduceMotion ? 0 : -5
                     }}
                   >
-                    {/* ✅ ADDED: Working status indicator */}
+                    {/* Working status indicator */}
                     {contact.working && (
                       <div className="absolute top-2 right-2 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                     )}
@@ -1257,6 +1278,15 @@ export default function HomePage() {
           <div className="absolute inset-0 rounded-full bg-viva-magenta-400 opacity-75 scale-0 group-hover:scale-150 group-hover:opacity-0 transition-all duration-500" />
         </motion.a>
       </div>
+
+      {/* ✅ ADDED: Location Welcome Message - Optimally placed for UX */}
+      <AnimatePresence>
+        {showLocationMessage && (
+          <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-30 pointer-events-none">
+            <LocationWelcomeMessage />
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
