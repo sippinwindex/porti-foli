@@ -24,15 +24,17 @@ interface SocialLink {
 }
 
 const Navigation = () => {
+  // ✅ FIXED: All hooks at component level
   const router = useRouter()
   const pathname = usePathname()
+  const shouldReduceMotion = useReducedMotion()
+  
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
   const [currentSection, setCurrentSection] = useState('home')
   const [mounted, setMounted] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
   const navRef = useRef<HTMLElement>(null)
-  const shouldReduceMotion = useReducedMotion()
   
   const { scrollYProgress } = useScroll()
   const navBlur = useTransform(scrollYProgress, [0, 0.1], [0, shouldReduceMotion ? 8 : 20])
@@ -40,7 +42,6 @@ const Navigation = () => {
   // Initialize theme and mounted state
   useEffect(() => {
     setMounted(true)
-    // Initialize theme from localStorage or system preference
     const savedTheme = localStorage.getItem('theme')
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     const shouldUseDarkMode = savedTheme === 'dark' || (!savedTheme && systemPrefersDark)
@@ -57,14 +58,14 @@ const Navigation = () => {
     localStorage.setItem('theme', newDarkMode ? 'dark' : 'light')
   }, [darkMode])
 
-  // Fixed navigation items - corrected experience route
+  // Updated navigation items
   const navItems = useMemo<NavItem[]>(() => [
     { id: 'home', label: 'Home', icon: Home, href: '/' },
     { id: 'about', label: 'About', icon: User, href: '/about' },
     { id: 'projects', label: 'Projects', icon: Briefcase, href: '/projects' },
-    { id: 'experience', label: 'Experience', icon: Calendar, href: '/#experience' }, // Fixed: hash link instead of route
+    { id: 'experience', label: 'Experience', icon: Calendar, href: '/#experience' },
     { id: 'blog', label: 'Blog', icon: BookOpen, href: '/blog' },
-    { id: 'dino-game', label: 'Game', icon: Gamepad2, href: '/dino-game' },
+    { id: 'synthwave-runner', label: 'Game', icon: Gamepad2, href: '/games/synthwave-runner' },
     { id: 'contact', label: 'Contact', icon: Mail, href: '/contact' }
   ], [])
 
@@ -157,8 +158,8 @@ const Navigation = () => {
       }
     } else if (pathname === '/blog') {
       setCurrentSection('blog')
-    } else if (pathname === '/dino-game') {
-      setCurrentSection('dino-game')
+    } else if (pathname === '/games/synthwave-runner') {
+      setCurrentSection('synthwave-runner')
     } else if (pathname === '/about') {
       setCurrentSection('about')
     } else if (pathname === '/projects') {
@@ -209,7 +210,7 @@ const Navigation = () => {
   })
   ThemeToggle.displayName = 'ThemeToggle'
 
-  // Navigation Link Component - Fixed hover and click issues
+  // ✅ FIXED: Navigation Link Component with proper hook usage
   const NavLink = React.memo<{
     item: NavItem
     index: number
@@ -220,12 +221,13 @@ const Navigation = () => {
                    (item.href.includes('#') && pathname === '/' && `/#${currentSection}` === item.href)
     const IconComponent = item.icon
 
+    // ✅ FIXED: Use router/pathname from component closure
     const handleClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-      e.preventDefault() // Prevent default to handle ourselves
+      e.preventDefault()
       setIsMenuOpen(false)
       
+      // ✅ Use values from component closure instead of calling hooks
       if (item.href.startsWith('/#') && pathname === '/') {
-        // Hash navigation on same page
         const targetId = item.href.replace('/#', '')
         const targetElement = document.getElementById(targetId)
         if (targetElement) {
@@ -236,10 +238,9 @@ const Navigation = () => {
           window.history.pushState(null, '', item.href)
         }
       } else {
-        // Regular navigation
         router.push(item.href)
       }
-    }, [item.href, pathname, router, shouldReduceMotion])
+    }, [item.href, pathname, router, shouldReduceMotion]) // ✅ Include all used dependencies
 
     return (
       <motion.div
@@ -302,7 +303,7 @@ const Navigation = () => {
   })
   NavLink.displayName = 'NavLink'
 
-  // Social Link Component - Fixed
+  // Social Link Component
   const SocialLink = React.memo<{
     social: SocialLink
     index: number
@@ -343,7 +344,7 @@ const Navigation = () => {
   })
   SocialLink.displayName = 'SocialLink'
 
-  // Mobile Menu Component - Fixed TypeScript issues
+  // Mobile Menu Component
   const MobileMenu = React.memo(() => (
     <AnimatePresence>
       {isMenuOpen && (
@@ -407,7 +408,7 @@ const Navigation = () => {
               transition={{ delay: shouldReduceMotion ? 0 : 0.3 }}
             >
               <motion.a
-                href="mailto:stormblazdesign@gmail.com"
+                href="mailto:jafernandez94@gmail.com"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg"
                 whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
                 whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
@@ -534,7 +535,7 @@ const Navigation = () => {
               </div>
 
               <motion.a
-                href="mailto:stormblazdesign@gmail.com"
+                href="mailto:jafernandez94@gmail.com"
                 className="relative group px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg"
                 whileHover={{ 
                   scale: shouldReduceMotion ? 1 : 1.05, 

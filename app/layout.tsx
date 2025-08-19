@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { Analytics } from '@vercel/analytics/react'
-import Script from 'next/script'
 import './globals.css'
 
 const spaceGrotesk = Space_Grotesk({
@@ -83,22 +82,17 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* Fixed layout structure */}
           <div className="relative min-h-screen bg-background">
-            {/* Main content wrapper */}
             <main className="relative z-10">
               {children}
             </main>
           </div>
         </ThemeProvider>
         
-        {/* Navbar Fix Script - Loads after page content */}
-        <Script
+        {/* ✅ FIXED: Removed onLoad event handler that was causing serialization error */}
+        <script 
           src="/js/navbar-fix.js"
-          strategy="afterInteractive"
-          onLoad={() => {
-            console.log('🔧 Navbar fix script loaded');
-          }}
+          async
         />
         
         <Analytics />

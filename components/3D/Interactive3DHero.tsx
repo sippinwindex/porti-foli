@@ -56,10 +56,10 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
   const opacity = useTransform(springScrollY, [0, 0.5, 1], [1, 0.9, 0.7])
   const scale = useTransform(springScrollY, [0, 1], [1, prefersReducedMotion ? 0.95 : 0.8])
 
-  // ✅ Fixed: Remove prefersReducedMotion from dependencies (it's a stable prop)
+  // ✅ CORRECT FIX: Use prefersReducedMotion directly in dependencies
   const handleMouseMove = useCallback((e: MouseEvent) => {
     const rect = heroRef.current?.getBoundingClientRect()
-    if (rect && !prefersReducedMotion) { // Use directly in the function
+    if (rect && !prefersReducedMotion) { // ✅ Use variable from closure
       const x = (e.clientX - rect.left - rect.width / 2) / rect.width
       const y = (e.clientY - rect.top - rect.height / 2) / rect.height
       
@@ -68,7 +68,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
         setMousePosition({ x: Math.max(-1, Math.min(1, x)), y: Math.max(-1, Math.min(1, y)) })
       })
     }
-  }, []) // ✅ Empty dependency array
+  }, [prefersReducedMotion]) // ✅ Include prefersReducedMotion in dependencies
 
   useEffect(() => {
     const container = heroRef.current
@@ -166,9 +166,10 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
     const [rotation, setRotation] = useState({ x: 0, y: 0 })
     const [isHovered, setIsHovered] = useState(false)
 
+    // ✅ CORRECT FIX: Use prefersReducedMotion from parent scope
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
       const card = cardRef.current
-      if (!card || prefersReducedMotion) return // Use directly
+      if (!card || prefersReducedMotion) return // ✅ Use variable from parent scope
 
       const rect = card.getBoundingClientRect()
       const centerX = rect.left + rect.width / 2
@@ -178,7 +179,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
       const rotateY = (centerX - e.clientX) / 15
       
       setRotation({ x: rotateX, y: rotateY })
-    }, []) // ✅ Empty dependency array
+    }, [prefersReducedMotion]) // ✅ Include prefersReducedMotion in dependencies
 
     const handleMouseEnter = useCallback(() => setIsHovered(true), [])
     const handleMouseLeave = useCallback(() => {

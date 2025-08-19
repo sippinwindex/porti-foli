@@ -533,7 +533,7 @@ const ScrollTriggered3DSections: React.FC<ScrollTriggered3DSectionsProps> = ({
       }, interval)
 
       return () => clearInterval(timer)
-    }, [isInView, targetStats.totalProjects, targetStats.totalStars, targetStats.liveProjects]) // ✅ Only include specific values that change
+    }, [isInView, shouldReduceMotion]) // ✅ Only include values that change
 
     // Memoized tech data to prevent recreation
     const techData = useMemo(() => [
