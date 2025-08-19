@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useRef, useEffect, useState, useCallback } from 'react'
-import { Home, Play, RotateCcw, Volume2, VolumeX } from 'lucide-react'
+import { Home, Play, RotateCcw, Volume2, VolumeX, ArrowLeft, Trophy, Target, Zap } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 // Game constants
 const GRAVITY = 0.6
@@ -37,7 +38,7 @@ interface Collectible {
   value: number
 }
 
-export default function DinoGame() {
+export default function SynthwaveRunnerPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number | null>(null)
   const lastTimeRef = useRef<number>(0)
@@ -631,43 +632,186 @@ export default function DinoGame() {
   }, [gameState, draw, score])
 
   return (
-    <div className="w-full max-w-4xl">
-      <div className="text-center mb-4">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-500 via-cyan-500 to-yellow-500 bg-clip-text text-transparent mb-2">
-          Synthwave Runner
-        </h1>
-        <p className="text-gray-400">Click or press Space to jump • Arrow Down to duck</p>
-      </div>
-
-      <div className="relative rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl">
-        <canvas
-          ref={canvasRef}
-          width={GAME_WIDTH}
-          height={GAME_HEIGHT}
-          className="w-full cursor-pointer"
-          style={{ imageRendering: 'pixelated', maxWidth: '800px' }}
-        />
-      </div>
-
-      <div className="flex gap-4 justify-center mt-4">
-        <button
-          onClick={() => setSoundEnabled(!soundEnabled)}
-          className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all"
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900 p-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <motion.div 
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
         >
-          {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-        </button>
-        
-        <a
-          href="/"
-          className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-all"
-        >
-          <Home size={20} />
-          Back to Portfolio
-        </a>
-      </div>
+          <motion.h1 
+            className="text-6xl md:text-8xl font-bold mb-4 bg-gradient-to-r from-pink-500 via-cyan-500 to-yellow-500 bg-clip-text text-transparent"
+            animate={{
+              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          >
+            🎮 SYNTHWAVE RUNNER
+          </motion.h1>
+          <motion.p 
+            className="text-xl text-gray-300 mb-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+          >
+            The ultimate retro endless runner experience
+          </motion.p>
+          <motion.div 
+            className="flex justify-center gap-6 text-cyan-400 text-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.8 }}
+          >
+            <span className="flex items-center gap-1">
+              <Target size={16} />
+              High Score: {highScore.toLocaleString()}
+            </span>
+            <span className="flex items-center gap-1">
+              <Zap size={16} />
+              Canvas Powered
+            </span>
+          </motion.div>
+        </motion.div>
 
-      <div className="text-center mt-4 text-gray-400 text-sm">
-        <p><strong>Power-ups:</strong> Shield (green) protects you • Magnet (purple) attracts stars • Star gives bonus points</p>
+        {/* Game Container */}
+        <motion.div 
+          className="relative mx-auto mb-8"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          style={{ maxWidth: '800px' }}
+        >
+          <div className="relative rounded-2xl overflow-hidden border-2 border-cyan-500/50 shadow-2xl bg-black">
+            <canvas
+              ref={canvasRef}
+              width={GAME_WIDTH}
+              height={GAME_HEIGHT}
+              className="w-full cursor-pointer block"
+              style={{ 
+                imageRendering: 'pixelated',
+                filter: 'contrast(1.1) saturate(1.2)',
+                boxShadow: '0 0 50px rgba(0, 255, 255, 0.3)'
+              }}
+            />
+            
+            {/* Retro scanlines overlay */}
+            <div 
+              className="absolute inset-0 pointer-events-none opacity-10"
+              style={{
+                background: `repeating-linear-gradient(
+                  0deg,
+                  transparent 0px,
+                  rgba(0, 255, 255, 0.1) 1px,
+                  transparent 2px
+                )`
+              }}
+            />
+          </div>
+        </motion.div>
+
+        {/* Controls */}
+        <motion.div 
+          className="flex flex-wrap gap-4 justify-center mb-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+        >
+          <motion.button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            {soundEnabled ? 'Sound On' : 'Sound Off'}
+          </motion.button>
+          
+          <motion.button
+            onClick={() => {
+              initGame()
+              setGameState('menu')
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg hover:from-cyan-700 hover:to-blue-700 transition-all shadow-lg"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <RotateCcw size={20} />
+            Reset Game
+          </motion.button>
+
+          <motion.a
+            href="/"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all shadow-lg"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Home size={20} />
+            Back to Portfolio
+          </motion.a>
+        </motion.div>
+
+        {/* Instructions */}
+        <motion.div 
+          className="max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.7 }}
+        >
+          <div className="bg-black/30 backdrop-blur-sm rounded-xl p-6 border border-cyan-500/30">
+            <h3 className="text-2xl font-bold text-cyan-400 mb-4 text-center">🎮 How to Play</h3>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-lg font-semibold text-pink-400 mb-3">Controls</h4>
+                <ul className="space-y-2 text-gray-300">
+                  <li className="flex items-center gap-2">
+                    <span className="bg-cyan-600 px-2 py-1 rounded text-xs font-mono">SPACE</span>
+                    or click to jump
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="bg-cyan-600 px-2 py-1 rounded text-xs font-mono">↓</span>
+                    Hold to duck under flying obstacles
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="bg-cyan-600 px-2 py-1 rounded text-xs font-mono">ENTER</span>
+                    Start game or restart after game over
+                  </li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="text-lg font-semibold text-pink-400 mb-3">Power-ups</h4>
+                <ul className="space-y-2 text-gray-300">
+                  <li className="flex items-center gap-2">
+                    <span className="bg-green-600 px-2 py-1 rounded text-xs font-mono">S</span>
+                    Shield - Temporary invincibility (5s)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="bg-purple-600 px-2 py-1 rounded text-xs font-mono">M</span>
+                    Magnet - Attracts collectibles (8s)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="bg-yellow-600 px-2 py-1 rounded text-xs font-mono">★</span>
+                    Star - Instant 500 bonus points
+                  </li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="mt-6 p-4 bg-gradient-to-r from-cyan-900/30 to-pink-900/30 rounded-lg border border-cyan-500/20">
+              <p className="text-center text-cyan-300">
+                <strong>Objective:</strong> Jump and duck to avoid obstacles while collecting power-ups and stars. 
+                The game speeds up as you progress. How far can you run in the synthwave void?
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   )

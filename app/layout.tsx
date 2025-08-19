@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { Analytics } from '@vercel/analytics/react'
+import Script from 'next/script'
 import './globals.css'
 
 const spaceGrotesk = Space_Grotesk({
@@ -90,6 +91,16 @@ export default function RootLayout({
             </main>
           </div>
         </ThemeProvider>
+        
+        {/* Navbar Fix Script - Loads after page content */}
+        <Script
+          src="/js/navbar-fix.js"
+          strategy="afterInteractive"
+          onLoad={() => {
+            console.log('🔧 Navbar fix script loaded');
+          }}
+        />
+        
         <Analytics />
       </body>
     </html>

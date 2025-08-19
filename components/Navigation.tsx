@@ -343,7 +343,7 @@ const Navigation = () => {
   })
   SocialLink.displayName = 'SocialLink'
 
-  // Mobile Menu Component
+  // Mobile Menu Component - Fixed TypeScript issues
   const MobileMenu = React.memo(() => (
     <AnimatePresence>
       {isMenuOpen && (
@@ -362,7 +362,14 @@ const Navigation = () => {
           />
 
           <motion.div
-            className="absolute top-20 left-4 right-4 glass border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-8 max-h-[80vh] overflow-y-auto"
+            className="absolute top-20 left-4 right-4 rounded-2xl p-8 max-h-[80vh] overflow-y-auto"
+            style={{
+              background: darkMode 
+                ? 'rgba(31, 41, 55, 0.95)' 
+                : 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(16px)',
+              border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
+            }}
             initial={{ opacity: 0, y: -50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -50, scale: 0.95 }}
@@ -500,7 +507,16 @@ const Navigation = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-6">
-              <div className="flex items-center gap-2 glass rounded-xl p-2 border border-gray-200/50 dark:border-gray-700/50">
+              <div 
+                className="flex items-center gap-2 rounded-xl p-2"
+                style={{
+                  background: darkMode 
+                    ? 'rgba(31, 41, 55, 0.8)' 
+                    : 'rgba(255, 255, 255, 0.8)',
+                  backdropFilter: 'blur(16px)',
+                  border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
+                }}
+              >
                 {navItems.map((item, index) => (
                   <NavLink key={item.id} item={item} index={index} />
                 ))}
@@ -538,7 +554,14 @@ const Navigation = () => {
               <ThemeToggle />
               
               <motion.button
-                className="relative w-10 h-10 rounded-xl glass border border-gray-200 dark:border-gray-700 flex items-center justify-center z-10"
+                className="relative w-10 h-10 rounded-xl flex items-center justify-center z-10"
+                style={{
+                  background: darkMode 
+                    ? 'rgba(31, 41, 55, 0.8)' 
+                    : 'rgba(255, 255, 255, 0.8)',
+                  backdropFilter: 'blur(10px)',
+                  border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
+                }}
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
                 whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
