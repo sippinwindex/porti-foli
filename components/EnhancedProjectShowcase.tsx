@@ -1,7 +1,7 @@
 // components/EnhancedProjectShowcase.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Star, 
@@ -49,17 +49,8 @@ export default function EnhancedProjectShowcase({
 
   const categories = ['all', 'fullstack', 'frontend', 'backend', 'data', 'mobile', 'other']
 
-  useEffect(() => {
-    if (initialProjects.length === 0) {
-      fetchProjects()
-    }
-  }, [])
-
-  useEffect(() => {
-    filterAndSortProjects()
-  }, [projects, selectedCategory, searchTerm, sortBy])
-
-  const fetchProjects = async () => {
+  // ✅ FIX: Memoize fetchProjects to avoid unnecessary re-renders
+  const fetchProjects = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch('/api/projects')
@@ -72,9 +63,10 @@ export default function EnhancedProjectShowcase({
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const filterAndSortProjects = () => {
+  // ✅ FIX: Memoize filterAndSortProjects function
+  const filterAndSortProjects = useCallback(() => {
     let filtered = [...projects]
 
     // Filter by category
@@ -115,7 +107,19 @@ export default function EnhancedProjectShowcase({
     })
 
     setFilteredProjects(filtered)
-  }
+  }, [projects, selectedCategory, searchTerm, sortBy, featuredFirst])
+
+  // ✅ FIX: Include initialProjects.length dependency
+  useEffect(() => {
+    if (initialProjects.length === 0) {
+      fetchProjects()
+    }
+  }, [initialProjects.length, fetchProjects])
+
+  // ✅ FIX: Include filterAndSortProjects dependency
+  useEffect(() => {
+    filterAndSortProjects()
+  }, [filterAndSortProjects])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)

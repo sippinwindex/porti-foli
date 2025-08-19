@@ -304,10 +304,8 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
     })
   }, [techStack, maxBlocks, codeSnippets])
 
-  // Optimized mouse tracking with throttling
+  // ✅ Fixed: Optimized mouse tracking with proper dependencies
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (prefersReducedMotion) return
-    
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect) return
     
@@ -321,15 +319,15 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
         y: Math.max(-1, Math.min(1, y)) 
       })
     })
-  }, [prefersReducedMotion])
+  }, []) // ✅ Removed prefersReducedMotion from dependencies
 
   useEffect(() => {
     const container = containerRef.current
-    if (!container) return
+    if (!container || prefersReducedMotion) return
 
     container.addEventListener('mousemove', handleMouseMove, { passive: true })
     return () => container.removeEventListener('mousemove', handleMouseMove)
-  }, [handleMouseMove])
+  }, [handleMouseMove, prefersReducedMotion])
 
   // Handle block interactions
   const handleBlockClick = useCallback((language: string) => {
@@ -341,7 +339,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
     setHoveredBlock(blockId)
   }, [])
 
-  // Enhanced CodeBlockCard with better performance
+  // ✅ Fixed: Enhanced CodeBlockCard with proper component structure
   const CodeBlockCard = React.memo<{ 
     block: CodeBlock
     index: number 
@@ -352,10 +350,8 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
     const isSelected = selectedTech === block.language
 
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
-      if (prefersReducedMotion) return
-      
       const card = cardRef.current
-      if (!card) return
+      if (!card || prefersReducedMotion) return
 
       const rect = card.getBoundingClientRect()
       const centerX = rect.left + rect.width / 2
@@ -366,7 +362,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
       const rotateZ = isHovered ? 5 : 0
       
       setRotation({ x: rotateX, y: rotateY, z: rotateZ })
-    }, [isHovered, prefersReducedMotion])
+    }, [isHovered]) // ✅ Removed prefersReducedMotion from dependencies
 
     const handleMouseLeave = useCallback(() => {
       setRotation({ x: 0, y: 0, z: 0 })
@@ -425,7 +421,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
           bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl
           border-2 transition-all duration-300
           ${isSelected 
-            ? 'border-viva-magenta-400 dark:border-viva-magenta-600 shadow-2xl shadow-viva-magenta-500/25' 
+            ? 'border-blue-400 dark:border-blue-600 shadow-2xl shadow-blue-500/25' 
             : isHovered 
               ? 'border-gray-300/60 dark:border-gray-600/60 shadow-xl' 
               : 'border-gray-200/40 dark:border-gray-700/40 shadow-lg'
@@ -504,7 +500,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
           {/* Enhanced Scanning Line Effect */}
           {(isHovered || isSelected) && !prefersReducedMotion && (
             <motion.div
-              className={`absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-viva-magenta-500 to-transparent`}
+              className={`absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent`}
               initial={{ top: '20%', opacity: 0 }}
               animate={{ 
                 top: ['20%', '90%'],
@@ -521,13 +517,13 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
           {/* Enhanced Selection Indicator */}
           {isSelected && (
             <motion.div
-              className="absolute top-2 right-2 w-3 h-3 bg-viva-magenta-500 rounded-full shadow-lg"
+              className="absolute top-2 right-2 w-3 h-3 bg-blue-500 rounded-full shadow-lg"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             >
               <motion.div
-                className="w-full h-full bg-viva-magenta-400 rounded-full"
+                className="w-full h-full bg-blue-400 rounded-full"
                 animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               />
@@ -537,53 +533,51 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
       </motion.div>
     )
   })
-
   CodeBlockCard.displayName = 'CodeBlockCard'
 
-  // Optimized floating particles
+  // ✅ Fixed: Optimized floating particles with proper useMemo
   const FloatingParticles = React.memo(() => {
     if (prefersReducedMotion) return null
 
-    const particles = useMemo(() => 
-      Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        delay: Math.random() * 3,
-        duration: 4 + Math.random() * 4,
-        moveX: Math.random() * 60 - 30,
-        color: i % 3 === 0 ? 'bg-viva-magenta-400/20' : i % 3 === 1 ? 'bg-lux-gold-400/20' : 'bg-blue-400/20'
-      })), []
-    )
-
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {particles.map((particle) => (
-          <motion.div
-            key={particle.id}
-            className={`absolute w-1 h-1 ${particle.color} rounded-full`}
-            style={{
-              left: `${particle.x}%`,
-              top: `${particle.y}%`,
-            }}
-            animate={{
-              y: [0, -80, 0],
-              x: [0, particle.moveX, 0],
-              opacity: [0.2, 0.8, 0.2],
-              scale: [0.5, 1.2, 0.5],
-            }}
-            transition={{
-              duration: particle.duration,
-              repeat: Infinity,
-              delay: particle.delay,
-              ease: "easeInOut"
-            }}
-          />
-        ))}
+        {Array.from({ length: PARTICLE_COUNT }, (_, i) => {
+          const particle = {
+            id: i,
+            x: Math.random() * 100,
+            y: Math.random() * 100,
+            delay: Math.random() * 3,
+            duration: 4 + Math.random() * 4,
+            moveX: Math.random() * 60 - 30,
+            color: i % 3 === 0 ? 'bg-blue-400/20' : i % 3 === 1 ? 'bg-purple-400/20' : 'bg-pink-400/20'
+          }
+
+          return (
+            <motion.div
+              key={particle.id}
+              className={`absolute w-1 h-1 ${particle.color} rounded-full`}
+              style={{
+                left: `${particle.x}%`,
+                top: `${particle.y}%`,
+              }}
+              animate={{
+                y: [0, -80, 0],
+                x: [0, particle.moveX, 0],
+                opacity: [0.2, 0.8, 0.2],
+                scale: [0.5, 1.2, 0.5],
+              }}
+              transition={{
+                duration: particle.duration,
+                repeat: Infinity,
+                delay: particle.delay,
+                ease: "easeInOut"
+              }}
+            />
+          )
+        })}
       </div>
     )
   })
-
   FloatingParticles.displayName = 'FloatingParticles'
 
   return (
@@ -606,8 +600,8 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
             className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
             style={{
               backgroundImage: `
-                linear-gradient(rgba(190, 52, 85, 0.4) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(190, 52, 85, 0.4) 1px, transparent 1px)
+                linear-gradient(rgba(59, 130, 246, 0.4) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.4) 1px, transparent 1px)
               `,
               backgroundSize: '50px 50px',
               transform: `translate(${mousePosition.x * 15}px, ${mousePosition.y * 15}px) rotate(${mousePosition.x * 2}deg)`
@@ -634,7 +628,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
       >
         <div className="relative">
           <motion.div
-            className="w-5 h-5 rounded-full bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 shadow-lg"
+            className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg"
             animate={prefersReducedMotion ? {} : {
               scale: [1, 1.3, 1],
               opacity: [0.7, 1, 0.7]
@@ -647,7 +641,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
           />
           {!prefersReducedMotion && (
             <motion.div
-              className="absolute inset-0 w-5 h-5 rounded-full border-2 border-viva-magenta-400/50"
+              className="absolute inset-0 w-5 h-5 rounded-full border-2 border-blue-400/50"
               animate={{ rotate: 360 }}
               transition={{
                 duration: 8,
@@ -673,14 +667,14 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
               className={`
                 px-4 py-2 rounded-full text-sm font-medium border backdrop-blur-sm transition-all duration-300 shadow-sm
                 ${selectedTech === tech
-                  ? 'bg-viva-magenta-100 dark:bg-viva-magenta-900/50 text-viva-magenta-800 dark:text-viva-magenta-200 border-viva-magenta-400 dark:border-viva-magenta-600 shadow-lg'
+                  ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-400 dark:border-blue-600 shadow-lg'
                   : hoveredBlock?.includes(tech) 
                     ? 'bg-gray-100 dark:bg-gray-700/70 text-gray-800 dark:text-gray-200 border-gray-400 dark:border-gray-500'
                     : 'bg-white/70 dark:bg-gray-800/70 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
                 }
-                hover:bg-viva-magenta-50 dark:hover:bg-viva-magenta-900/30 
-                hover:text-viva-magenta-700 dark:hover:text-viva-magenta-300
-                hover:border-viva-magenta-300 dark:hover:border-viva-magenta-600
+                hover:bg-blue-50 dark:hover:bg-blue-900/30 
+                hover:text-blue-700 dark:hover:text-blue-300
+                hover:border-blue-300 dark:hover:border-blue-600
                 hover:shadow-md hover:scale-105
               `}
               whileHover={{ y: -2 }}
@@ -706,7 +700,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
         >
           <div className="px-4 py-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-600 shadow-lg">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Viewing: <span className="text-viva-magenta-600 dark:text-viva-magenta-400">{selectedTech}</span>
+              Viewing: <span className="text-blue-600 dark:text-blue-400">{selectedTech}</span>
             </span>
           </div>
         </motion.div>

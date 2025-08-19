@@ -6,7 +6,7 @@ module.exports = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './lib/**/*.{js,ts,jsx,tsx,mdx}',
-    './styles/**/*.{css}', // Include your CSS files for proper purging
+    './styles/**/*.css', // ✅ FIX: Corrected glob pattern - removed curly braces
   ],
   darkMode: 'class',
   theme: {

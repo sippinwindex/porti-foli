@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { Github, Star, GitFork, ExternalLink, AlertCircle, CheckCircle, X } from 'lucide-react'
 
 interface GitHubRepo {
@@ -205,10 +206,15 @@ export default function GitHubAPITest() {
       {user && (
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <img 
+            {/* ✅ FIX: Replaced <img> with Next.js <Image /> for better LCP performance */}
+            <Image 
               src={user.avatar_url} 
               alt={user.name || user.login}
+              width={40}
+              height={40}
               className="w-10 h-10 rounded-full"
+              priority={true}
+              unoptimized={true} // GitHub avatars are already optimized and served from CDN
             />
             <div>
               <div className="font-medium">{user.name || user.login}</div>

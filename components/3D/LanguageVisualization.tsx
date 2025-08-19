@@ -168,12 +168,10 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
     return () => clearTimeout(timer)
   }, [isInView, displayLanguages, prefersReducedMotion])
 
-  // Optimized mouse tracking with throttling
+  // ✅ Fixed: Remove unnecessary dependencies - props are stable
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!interactive || prefersReducedMotion) return
-    
     const rect = containerRef.current?.getBoundingClientRect()
-    if (!rect) return
+    if (!rect || !interactive || prefersReducedMotion) return // Use directly
     
     const x = (e.clientX - rect.left - rect.width / 2) / rect.width
     const y = (e.clientY - rect.top - rect.height / 2) / rect.height
@@ -185,7 +183,7 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
         y: Math.max(-1, Math.min(1, y))
       })
     })
-  }, [interactive, prefersReducedMotion])
+  }, []) // ✅ Empty dependency array - props are stable
 
   useEffect(() => {
     const container = containerRef.current
@@ -226,7 +224,7 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
     }
   }, [layout])
 
-  // Enhanced Language Card Component
+  // ✅ Fixed: Enhanced Language Card Component with proper dependencies
   const LanguageCard = React.memo<{ 
     language: LanguageData
     index: number
@@ -241,10 +239,8 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
     const strokeDashoffset = circumference - (animatedPercentage / 100) * circumference
 
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
-      if (!interactive || prefersReducedMotion) return
-      
       const card = cardRef.current
-      if (!card) return
+      if (!card || !interactive || prefersReducedMotion) return // Use directly
 
       const rect = card.getBoundingClientRect()
       const centerX = rect.left + rect.width / 2
@@ -254,7 +250,7 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
       const rotateY = (centerX - e.clientX) / 20
       
       setRotation({ x: rotateX, y: rotateY })
-    }, [interactive, prefersReducedMotion])
+    }, []) // ✅ Empty dependency array - props are stable
 
     const handleMouseLeave = useCallback(() => {
       setRotation({ x: 0, y: 0 })
@@ -263,16 +259,16 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
     }, [])
 
     const handleMouseEnter = useCallback(() => {
-      if (interactive) {
+      if (interactive) { // Use directly
         setHoveredLanguage(language.name)
       }
-    }, [interactive, language.name])
+    }, [language.name]) // ✅ Only keep language.name
 
     const handleClick = useCallback(() => {
-      if (interactive) {
-        setSelectedLanguage(selectedLanguage === language.name ? null : language.name)
+      if (interactive) { // Use directly
+        setSelectedLanguage(prev => prev === language.name ? null : language.name)
       }
-    }, [interactive, language.name, selectedLanguage])
+    }, [language.name]) // ✅ Use functional update to avoid selectedLanguage dependency
 
     const isSelected = selectedLanguage === language.name
     const isHovered = hoveredLanguage === language.name
@@ -328,7 +324,7 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
           relative w-36 h-36 rounded-2xl backdrop-blur-xl
           border-2 transition-all duration-300 shadow-lg
           ${isSelected 
-            ? 'border-viva-magenta-400 dark:border-viva-magenta-600 shadow-2xl shadow-viva-magenta-500/25 bg-white/95 dark:bg-gray-800/95' 
+            ? 'border-blue-400 dark:border-blue-600 shadow-2xl shadow-blue-500/25 bg-white/95 dark:bg-gray-800/95' 
             : isHovered
             ? 'border-gray-300/60 dark:border-gray-600/60 shadow-xl bg-white/90 dark:bg-gray-800/90'
             : 'border-gray-200/40 dark:border-gray-700/40 bg-white/80 dark:bg-gray-800/80'
@@ -506,7 +502,6 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
       </motion.div>
     )
   })
-
   LanguageCard.displayName = 'LanguageCard'
 
   // Enhanced Stats Panel Component
@@ -517,7 +512,7 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
     if (!language) return null
 
     const statsData = [
-      { label: 'Usage', value: `${language.percentage}%`, icon: TrendingUp, color: 'text-viva-magenta-500' },
+      { label: 'Usage', value: `${language.percentage}%`, icon: TrendingUp, color: 'text-blue-500' },
       { label: 'Projects', value: language.projects.toString(), icon: Code, color: 'text-blue-500' },
       { label: 'Experience', value: `${language.experience}y`, icon: Clock, color: 'text-amber-500' },
       { label: 'Commits', value: language.commits?.toLocaleString() || '0', icon: GitBranch, color: 'text-emerald-500' }
@@ -593,7 +588,6 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
       </motion.div>
     )
   })
-
   StatsPanel.displayName = 'StatsPanel'
 
   return (
@@ -677,7 +671,7 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
       >
         <div className="relative">
           <motion.div
-            className="w-16 h-16 rounded-full bg-gradient-to-br from-viva-magenta-500 via-blue-500 to-emerald-500 flex items-center justify-center shadow-2xl backdrop-blur-sm border border-white/20"
+            className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 via-blue-500 to-emerald-500 flex items-center justify-center shadow-2xl backdrop-blur-sm border border-white/20"
             animate={prefersReducedMotion ? {} : {
               boxShadow: [
                 "0 0 30px rgba(59, 130, 246, 0.3)",

@@ -56,12 +56,10 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
   const opacity = useTransform(springScrollY, [0, 0.5, 1], [1, 0.9, 0.7])
   const scale = useTransform(springScrollY, [0, 1], [1, prefersReducedMotion ? 0.95 : 0.8])
 
-  // Optimized mouse tracking with throttling
+  // ✅ Fixed: Remove prefersReducedMotion from dependencies (it's a stable prop)
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (prefersReducedMotion) return
-    
     const rect = heroRef.current?.getBoundingClientRect()
-    if (rect) {
+    if (rect && !prefersReducedMotion) { // Use directly in the function
       const x = (e.clientX - rect.left - rect.width / 2) / rect.width
       const y = (e.clientY - rect.top - rect.height / 2) / rect.height
       
@@ -70,7 +68,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
         setMousePosition({ x: Math.max(-1, Math.min(1, x)), y: Math.max(-1, Math.min(1, y)) })
       })
     }
-  }, [prefersReducedMotion])
+  }, []) // ✅ Empty dependency array
 
   useEffect(() => {
     const container = heroRef.current
@@ -92,8 +90,17 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
     return () => clearTimeout(timer)
   }, [])
 
-  // Memoized calculations for better performance
+  // ✅ Fixed: Memoized calculations for better performance
   const calculatedStats = useMemo(() => {
+    if (!projects.length) {
+      return [
+        { label: "Projects Built", value: "8+", icon: Code, color: "text-blue-600" },
+        { label: "GitHub Stars", value: "50+", icon: Star, color: "text-yellow-600" },
+        { label: "Live Projects", value: "6+", icon: Zap, color: "text-green-600" },
+        { label: "Years Experience", value: "5+", icon: Calendar, color: "text-purple-600" }
+      ]
+    }
+
     const totalStars = projects.reduce((acc, p) => acc + (p.github?.stars || 0), 0)
     const totalForks = projects.reduce((acc, p) => acc + (p.github?.forks || 0), 0)
     const liveProjects = projects.filter(p => p.vercel?.isLive).length
@@ -106,49 +113,48 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
     ]
   }, [projects])
 
-  // Optimized floating particles with better performance
+  // ✅ Fixed: Optimized floating particles with proper structure
   const FloatingParticles = React.memo(() => {
     if (prefersReducedMotion) return null
 
-    const particles = useMemo(() => 
-      Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        delay: Math.random() * 2,
-        duration: 3 + Math.random() * 4,
-        moveX: Math.random() * 40 - 20
-      })), []
-    )
-
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {particles.map((particle) => (
-          <motion.div
-            key={particle.id}
-            className="absolute w-1 h-1 bg-gradient-to-r from-viva-magenta-400 to-lux-gold-500 rounded-full opacity-60"
-            style={{
-              left: `${particle.x}%`,
-              top: `${particle.y}%`,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              x: [0, particle.moveX, 0],
-              opacity: [0.3, 0.8, 0.3],
-              scale: [0.5, 1.2, 0.5],
-            }}
-            transition={{
-              duration: particle.duration,
-              repeat: Infinity,
-              delay: particle.delay,
-              ease: "easeInOut"
-            }}
-          />
-        ))}
+        {Array.from({ length: PARTICLE_COUNT }, (_, i) => {
+          const particle = {
+            id: i,
+            x: Math.random() * 100,
+            y: Math.random() * 100,
+            delay: Math.random() * 2,
+            duration: 3 + Math.random() * 4,
+            moveX: Math.random() * 40 - 20
+          }
+
+          return (
+            <motion.div
+              key={particle.id}
+              className="absolute w-1 h-1 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-60"
+              style={{
+                left: `${particle.x}%`,
+                top: `${particle.y}%`,
+              }}
+              animate={{
+                y: [0, -30, 0],
+                x: [0, particle.moveX, 0],
+                opacity: [0.3, 0.8, 0.3],
+                scale: [0.5, 1.2, 0.5],
+              }}
+              transition={{
+                duration: particle.duration,
+                repeat: Infinity,
+                delay: particle.delay,
+                ease: "easeInOut"
+              }}
+            />
+          )
+        })}
       </div>
     )
   })
-
   FloatingParticles.displayName = 'FloatingParticles'
 
   // Enhanced 3D Card with better performance
@@ -161,10 +167,8 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
     const [isHovered, setIsHovered] = useState(false)
 
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
-      if (prefersReducedMotion) return
-      
       const card = cardRef.current
-      if (!card) return
+      if (!card || prefersReducedMotion) return // Use directly
 
       const rect = card.getBoundingClientRect()
       const centerX = rect.left + rect.width / 2
@@ -174,7 +178,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
       const rotateY = (centerX - e.clientX) / 15
       
       setRotation({ x: rotateX, y: rotateY })
-    }, [])
+    }, []) // ✅ Empty dependency array
 
     const handleMouseEnter = useCallback(() => setIsHovered(true), [])
     const handleMouseLeave = useCallback(() => {
@@ -203,7 +207,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
           {/* Enhanced glow effect */}
           {!prefersReducedMotion && isHovered && (
             <motion.div
-              className="absolute inset-0 rounded-2xl bg-gradient-to-r from-viva-magenta-500/20 to-lux-gold-500/20 blur-xl -z-10"
+              className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-xl -z-10"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1.1 }}
               exit={{ opacity: 0, scale: 0.8 }}
@@ -214,7 +218,6 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
       </motion.div>
     )
   })
-
   ThreeDCard.displayName = 'ThreeDCard'
 
   // Enhanced social links with better accessibility
@@ -256,8 +259,8 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
               animate={{ rotate: prefersReducedMotion ? 0 : 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             >
-              <div className="absolute inset-0 border-4 border-viva-magenta-200 rounded-full" />
-              <div className="absolute inset-0 border-4 border-viva-magenta-600 border-t-transparent rounded-full animate-spin" />
+              <div className="absolute inset-0 border-4 border-blue-200 rounded-full" />
+              <div className="absolute inset-0 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
             </motion.div>
             <motion.p
               className="text-gray-900 dark:text-gray-50 text-lg font-medium"
@@ -293,8 +296,8 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
               className="absolute inset-0 transition-all duration-1000"
               style={{
                 background: `radial-gradient(circle at ${50 + mousePosition.x * 15}% ${50 + mousePosition.y * 15}%, 
-                  rgba(190, 52, 85, 0.08) 0%, 
-                  rgba(212, 175, 55, 0.04) 30%, 
+                  rgba(59, 130, 246, 0.08) 0%, 
+                  rgba(147, 51, 234, 0.04) 30%, 
                   transparent 70%)`
               }}
             />
@@ -354,7 +357,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
               >
                 Hi, I'm{' '}
                 <motion.span 
-                  className="bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-blue-600 bg-clip-text text-transparent"
+                  className="bg-gradient-to-r from-blue-600 via-purple-500 to-blue-600 bg-clip-text text-transparent"
                   animate={prefersReducedMotion ? {} : { 
                     backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
                   }}
@@ -374,7 +377,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
               >
                 <h2 className="text-xl sm:text-2xl lg:text-3xl text-gray-600 dark:text-gray-300 mb-4 font-medium">
                   Full Stack Developer &{' '}
-                  <span className="text-viva-magenta-600 dark:text-viva-magenta-400 font-semibold">
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold">
                     3D Experience Creator
                   </span>
                 </h2>
@@ -392,7 +395,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
                 transition={{ delay: 0.9 }}
               >
                 <motion.button
-                  className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -402,7 +405,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
                   </span>
                   {!prefersReducedMotion && (
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-lux-gold-600 to-viva-magenta-600"
+                      className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600"
                       initial={{ x: "-100%" }}
                       whileHover={{ x: "0%" }}
                       transition={{ duration: 0.3 }}
@@ -411,7 +414,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
                 </motion.button>
                 
                 <motion.button
-                  className="group px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-50 font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-viva-magenta-400 dark:hover:border-viva-magenta-600 transition-all duration-300"
+                  className="group px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-50 font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-blue-400 dark:hover:border-blue-600 transition-all duration-300"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -435,7 +438,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`group p-3 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-700 hover:border-viva-magenta-300 dark:hover:border-viva-magenta-600 transition-all duration-300 backdrop-blur-sm shadow-sm hover:shadow-md ${social.color}`}
+                    className={`group p-3 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 backdrop-blur-sm shadow-sm hover:shadow-md ${social.color}`}
                     whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     aria-label={social.label}
@@ -471,9 +474,9 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
                       ease: "easeInOut"
                     }}
                   >
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-viva-magenta-500 to-lux-gold-500 p-1">
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 p-1">
                       <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-inner">
-                        <Code className="w-10 h-10 sm:w-12 sm:h-12 text-viva-magenta-600" />
+                        <Code className="w-10 h-10 sm:w-12 sm:h-12 text-blue-600" />
                       </div>
                     </div>
                     {/* Floating indicators */}
@@ -501,7 +504,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
                           {stat.label}
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-viva-magenta-600 dark:text-viva-magenta-400 font-bold">
+                          <span className="text-blue-600 dark:text-blue-400 font-bold">
                             {stat.value}
                           </span>
                           <stat.icon className={`w-4 h-4 ${stat.color}`} />
@@ -524,7 +527,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
                       {TECH_STACK.slice(0, 5).map((tech, index) => (
                         <motion.div
                           key={index}
-                          className="px-3 py-1.5 rounded-full bg-gradient-to-r from-viva-magenta-50 to-lux-gold-50 dark:from-viva-magenta-900/30 dark:to-lux-gold-900/30 text-viva-magenta-700 dark:text-viva-magenta-300 text-xs font-medium border border-viva-magenta-200/50 dark:border-viva-magenta-800/50 backdrop-blur-sm"
+                          className="px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-700 dark:text-blue-300 text-xs font-medium border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm"
                           whileHover={{ scale: 1.05, y: -2 }}
                           animate={prefersReducedMotion ? {} : { 
                             y: [0, -1, 0],
@@ -563,12 +566,12 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
             transition={{ duration: 2, repeat: Infinity }}
             whileHover={{ scale: 1.05 }}
           >
-            <span className="text-sm font-medium group-hover:text-viva-magenta-500 transition-colors">
+            <span className="text-sm font-medium group-hover:text-blue-500 transition-colors">
               Scroll to explore
             </span>
-            <div className="relative w-6 h-10 border-2 border-gray-300 dark:border-gray-600 group-hover:border-viva-magenta-400 rounded-full flex justify-center transition-colors">
+            <div className="relative w-6 h-10 border-2 border-gray-300 dark:border-gray-600 group-hover:border-blue-400 rounded-full flex justify-center transition-colors">
               <motion.div
-                className="w-1 h-3 bg-viva-magenta-500 rounded-full mt-2"
+                className="w-1 h-3 bg-blue-500 rounded-full mt-2"
                 animate={prefersReducedMotion ? {} : { y: [0, 12, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />

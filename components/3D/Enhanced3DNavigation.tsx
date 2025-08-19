@@ -22,6 +22,42 @@ interface SocialLink {
   color: string
 }
 
+// ✅ Fixed: Move 3D hover hook to top level, outside of any callbacks
+const use3DHover = () => {
+  const ref = useRef<HTMLDivElement>(null)
+  const [rotation, setRotation] = useState({ x: 0, y: 0 })
+
+  useEffect(() => {
+    const element = ref.current
+    if (!element) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = element.getBoundingClientRect()
+      const centerX = rect.left + rect.width / 2
+      const centerY = rect.top + rect.height / 2
+      
+      const rotateX = (e.clientY - centerY) / 15
+      const rotateY = (centerX - e.clientX) / 15
+      
+      setRotation({ x: rotateX, y: rotateY })
+    }
+
+    const handleMouseLeave = () => {
+      setRotation({ x: 0, y: 0 })
+    }
+
+    element.addEventListener('mousemove', handleMouseMove, { passive: true })
+    element.addEventListener('mouseleave', handleMouseLeave)
+
+    return () => {
+      element.removeEventListener('mousemove', handleMouseMove)
+      element.removeEventListener('mouseleave', handleMouseLeave)
+    }
+  }, [])
+
+  return [ref, rotation] as const
+}
+
 const Enhanced3DNavigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
@@ -65,19 +101,19 @@ const Enhanced3DNavigation = () => {
       platform: 'LinkedIn', 
       href: 'https://www.linkedin.com/in/juan-fernandez-fullstack/', 
       icon: Linkedin,
-      color: 'hover:text-viva-magenta-400'
+      color: 'hover:text-pink-400'
     },
     { 
       platform: 'Twitter', 
       href: 'https://x.com/FullyStackedUp', 
       icon: Twitter,
-      color: 'hover:text-lux-teal-400'
+      color: 'hover:text-blue-400'
     },
     { 
       platform: 'Resume', 
       href: 'https://flowcv.com/resume/moac4k9d8767', 
       icon: FileText,
-      color: 'hover:text-lux-gold-400'
+      color: 'hover:text-yellow-400'
     }
   ], [])
 
@@ -128,48 +164,13 @@ const Enhanced3DNavigation = () => {
     }
   }, [])
 
-  // Enhanced 3D Hover Effect Hook with memoization
-  const use3DHover = useCallback(() => {
-    const ref = useRef<HTMLDivElement>(null)
-    const [rotation, setRotation] = useState({ x: 0, y: 0 })
-
-    useEffect(() => {
-      const element = ref.current
-      if (!element) return
-
-      const handleMouseMove = (e: MouseEvent) => {
-        const rect = element.getBoundingClientRect()
-        const centerX = rect.left + rect.width / 2
-        const centerY = rect.top + rect.height / 2
-        
-        const rotateX = (e.clientY - centerY) / 15
-        const rotateY = (centerX - e.clientX) / 15
-        
-        setRotation({ x: rotateX, y: rotateY })
-      }
-
-      const handleMouseLeave = () => {
-        setRotation({ x: 0, y: 0 })
-      }
-
-      element.addEventListener('mousemove', handleMouseMove, { passive: true })
-      element.addEventListener('mouseleave', handleMouseLeave)
-
-      return () => {
-        element.removeEventListener('mousemove', handleMouseMove)
-        element.removeEventListener('mouseleave', handleMouseLeave)
-      }
-    }, [])
-
-    return [ref, rotation] as const
-  }, [])
-
-  // Enhanced Navigation Link Component with memoization
+  // ✅ Fixed: Enhanced Navigation Link Component with hooks at top level
   const NavLink = React.memo<{ 
     item: NavItem
     index: number
     isMobile?: boolean 
   }>(({ item, index, isMobile = false }) => {
+    // ✅ Hooks at top level of component
     const [hoverRef, rotation] = use3DHover()
     const isActive = currentSection === item.id
     const IconComponent = item.icon
@@ -190,8 +191,8 @@ const Enhanced3DNavigation = () => {
           className={`
             relative flex items-center gap-3 px-4 py-2 rounded-xl font-medium transition-all duration-300 
             ${isActive 
-              ? 'text-viva-magenta-400 bg-viva-magenta-900/30 border border-viva-magenta-700 glass-3d' 
-              : 'text-lux-gray-300 hover:text-lux-gray-50 hover:bg-lux-gray-800/50'
+              ? 'text-pink-400 bg-pink-900/30 border border-pink-700 glass' 
+              : 'text-gray-300 hover:text-gray-50 hover:bg-gray-800/50'
             }
             ${isMobile ? 'text-lg justify-center' : 'text-sm'}
           `}
@@ -220,7 +221,7 @@ const Enhanced3DNavigation = () => {
           {/* Enhanced Active Indicator with 3D depth */}
           {isActive && (
             <motion.div
-              className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-900/20 to-lux-gold-900/20 border border-viva-magenta-700/50"
+              className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-900/20 to-yellow-900/20 border border-pink-700/50"
               layoutId="activeNav"
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               style={{ transform: 'translateZ(-5px)' }}
@@ -229,7 +230,7 @@ const Enhanced3DNavigation = () => {
 
           {/* Enhanced Hover Glow Effect */}
           <motion.div
-            className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-500/10 to-lux-gold-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500/10 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             initial={{ scale: 0.8 }}
             whileHover={{ scale: 1 }}
           />
@@ -243,14 +244,14 @@ const Enhanced3DNavigation = () => {
       </motion.div>
     )
   })
-
   NavLink.displayName = 'NavLink'
 
-  // Enhanced Social Link Component with memoization
+  // ✅ Fixed: Enhanced Social Link Component with hooks at top level
   const SocialLink = React.memo<{ 
     social: SocialLink
     index: number 
   }>(({ social, index }) => {
+    // ✅ Hooks at top level of component
     const [hoverRef, rotation] = use3DHover()
     const IconComponent = social.icon
 
@@ -270,9 +271,9 @@ const Enhanced3DNavigation = () => {
           target="_blank"
           rel="noopener noreferrer"
           className={`
-            block w-10 h-10 rounded-xl glass-3d border border-lux-gray-700
+            block w-10 h-10 rounded-xl glass border border-gray-700
             flex items-center justify-center transition-all duration-300
-            hover:border-viva-magenta-600 hover:scale-110 ${social.color}
+            hover:border-pink-600 hover:scale-110 ${social.color}
             transform-gpu will-change-transform
           `}
           whileHover={{ y: -3, rotateY: 10, scale: 1.1 }}
@@ -290,7 +291,6 @@ const Enhanced3DNavigation = () => {
       </motion.div>
     )
   })
-
   SocialLink.displayName = 'SocialLink'
 
   // Enhanced Mobile Menu Component
@@ -317,7 +317,7 @@ const Enhanced3DNavigation = () => {
 
           {/* Enhanced Menu Content with 3D effects */}
           <motion.div
-            className="absolute top-20 left-4 right-4 glass-card border border-lux-gray-700/50 rounded-2xl p-8 transform-gpu"
+            className="absolute top-20 left-4 right-4 glass border border-gray-700/50 rounded-2xl p-8 transform-gpu"
             initial={{ opacity: 0, y: -50, scale: 0.95, rotateX: -15 }}
             animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
             exit={{ opacity: 0, y: -50, scale: 0.95, rotateX: -15 }}
@@ -340,7 +340,7 @@ const Enhanced3DNavigation = () => {
             </div>
 
             {/* Social Links */}
-            <div className="flex justify-center gap-4 pt-6 border-t border-lux-gray-700">
+            <div className="flex justify-center gap-4 pt-6 border-t border-gray-700">
               {socialLinks.map((social, index) => (
                 <SocialLink key={social.platform} social={social} index={index} />
               ))}
@@ -355,7 +355,7 @@ const Enhanced3DNavigation = () => {
             >
               <motion.a
                 href="mailto:stormblazdesign@gmail.com"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl shadow-lg transform-gpu"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-yellow-600 text-white font-semibold rounded-xl shadow-lg transform-gpu"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 style={{ transformStyle: 'preserve-3d' }}
@@ -365,7 +365,7 @@ const Enhanced3DNavigation = () => {
                 
                 {/* 3D button depth */}
                 <div 
-                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-700 to-lux-gold-700"
+                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-700 to-yellow-700"
                   style={{ transform: 'translateZ(-3px)' }}
                 />
               </motion.a>
@@ -376,7 +376,7 @@ const Enhanced3DNavigation = () => {
               {Array.from({ length: 5 }).map((_, i) => (
                 <motion.div
                   key={i}
-                  className="absolute w-1 h-1 bg-viva-magenta-400/30 rounded-full"
+                  className="absolute w-1 h-1 bg-pink-400/30 rounded-full"
                   style={{
                     left: `${20 + Math.random() * 60}%`,
                     top: `${20 + Math.random() * 60}%`,
@@ -399,7 +399,6 @@ const Enhanced3DNavigation = () => {
       )}
     </AnimatePresence>
   ))
-
   MobileMenu.displayName = 'MobileMenu'
 
   return (
@@ -422,13 +421,13 @@ const Enhanced3DNavigation = () => {
         <motion.div
           className="absolute inset-0 opacity-20 pointer-events-none"
           style={{
-            background: `radial-gradient(circle at ${50 + mousePosition.x * 30}% ${50 + mousePosition.y * 30}%, rgba(190, 52, 85, 0.3) 0%, transparent 70%)`
+            background: `radial-gradient(circle at ${50 + mousePosition.x * 30}% ${50 + mousePosition.y * 30}%, rgba(236, 72, 153, 0.3) 0%, transparent 70%)`
           }}
           animate={{
             background: [
-              `radial-gradient(circle at ${50 + mousePosition.x * 30}% ${50 + mousePosition.y * 30}%, rgba(190, 52, 85, 0.3) 0%, transparent 70%)`,
-              `radial-gradient(circle at ${50 + mousePosition.x * 30}% ${50 + mousePosition.y * 30}%, rgba(212, 175, 55, 0.2) 0%, transparent 70%)`,
-              `radial-gradient(circle at ${50 + mousePosition.x * 30}% ${50 + mousePosition.y * 30}%, rgba(190, 52, 85, 0.3) 0%, transparent 70%)`
+              `radial-gradient(circle at ${50 + mousePosition.x * 30}% ${50 + mousePosition.y * 30}%, rgba(236, 72, 153, 0.3) 0%, transparent 70%)`,
+              `radial-gradient(circle at ${50 + mousePosition.x * 30}% ${50 + mousePosition.y * 30}%, rgba(251, 191, 36, 0.2) 0%, transparent 70%)`,
+              `radial-gradient(circle at ${50 + mousePosition.x * 30}% ${50 + mousePosition.y * 30}%, rgba(236, 72, 153, 0.3) 0%, transparent 70%)`
             ]
           }}
           transition={{ duration: 4, repeat: Infinity }}
@@ -450,12 +449,12 @@ const Enhanced3DNavigation = () => {
               >
                 <Link href="/" className="flex items-center gap-3">
                   <motion.div 
-                    className="w-10 h-10 rounded-xl bg-gradient-to-br from-viva-magenta-600 to-lux-gold-600 flex items-center justify-center font-bold text-white shadow-lg transform-gpu"
+                    className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-600 to-yellow-600 flex items-center justify-center font-bold text-white shadow-lg transform-gpu"
                     animate={{ 
                       boxShadow: [
-                        "0 0 20px rgba(190, 52, 85, 0.3)",
-                        "0 0 30px rgba(212, 175, 55, 0.3)",
-                        "0 0 20px rgba(190, 52, 85, 0.3)"
+                        "0 0 20px rgba(236, 72, 153, 0.3)",
+                        "0 0 30px rgba(251, 191, 36, 0.3)",
+                        "0 0 20px rgba(236, 72, 153, 0.3)"
                       ]
                     }}
                     transition={{ duration: 3, repeat: Infinity }}
@@ -464,11 +463,11 @@ const Enhanced3DNavigation = () => {
                     <Code className="w-5 h-5" />
                     {/* 3D logo depth */}
                     <div 
-                      className="absolute inset-0 rounded-xl bg-gradient-to-br from-viva-magenta-700 to-lux-gold-700"
+                      className="absolute inset-0 rounded-xl bg-gradient-to-br from-pink-700 to-yellow-700"
                       style={{ transform: 'translateZ(-3px)' }}
                     />
                   </motion.div>
-                  <span className="hidden sm:block font-bold text-lux-gray-50 text-lg">
+                  <span className="hidden sm:block font-bold text-gray-50 text-lg">
                     Juan Fernandez
                   </span>
                 </Link>
@@ -477,7 +476,7 @@ const Enhanced3DNavigation = () => {
 
             {/* Enhanced Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-6">
-              <div className="flex items-center gap-2 glass-card rounded-xl p-2 border border-lux-gray-700/50">
+              <div className="flex items-center gap-2 glass rounded-xl p-2 border border-gray-700/50">
                 {navItems.map((item, index) => (
                   <NavLink key={item.id} item={item} index={index} />
                 ))}
@@ -496,7 +495,7 @@ const Enhanced3DNavigation = () => {
               {/* Enhanced CTA Button with 3D effect */}
               <motion.a
                 href="mailto:stormblazdesign@gmail.com"
-                className="relative group px-6 py-2 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg transform-gpu"
+                className="relative group px-6 py-2 bg-gradient-to-r from-pink-600 to-yellow-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg transform-gpu"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 style={{ transformStyle: 'preserve-3d' }}
@@ -506,14 +505,14 @@ const Enhanced3DNavigation = () => {
                   Let's Talk
                 </span>
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-lux-gold-600 to-viva-magenta-600"
+                  className="absolute inset-0 bg-gradient-to-r from-yellow-600 to-pink-600"
                   initial={{ x: "-100%" }}
                   whileHover={{ x: "0%" }}
                   transition={{ duration: 0.3 }}
                 />
                 {/* 3D button depth */}
                 <div 
-                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-700 to-lux-gold-700"
+                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-700 to-yellow-700"
                   style={{ transform: 'translateZ(-3px)' }}
                 />
               </motion.a>
@@ -521,7 +520,7 @@ const Enhanced3DNavigation = () => {
 
             {/* Enhanced Mobile Menu Button */}
             <motion.button
-              className="lg:hidden relative w-10 h-10 rounded-xl glass-card border border-lux-gray-700 flex items-center justify-center transform-gpu"
+              className="lg:hidden relative w-10 h-10 rounded-xl glass border border-gray-700 flex items-center justify-center transform-gpu"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -540,7 +539,7 @@ const Enhanced3DNavigation = () => {
                       exit={{ rotate: 90, opacity: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <X className="w-5 h-5 text-lux-gray-300" />
+                      <X className="w-5 h-5 text-gray-300" />
                     </motion.div>
                   ) : (
                     <motion.div
@@ -550,7 +549,7 @@ const Enhanced3DNavigation = () => {
                       exit={{ rotate: -90, opacity: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <Menu className="w-5 h-5 text-lux-gray-300" />
+                      <Menu className="w-5 h-5 text-gray-300" />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -558,7 +557,7 @@ const Enhanced3DNavigation = () => {
               
               {/* 3D button depth */}
               <div 
-                className="absolute inset-0 rounded-xl bg-lux-gray-800/50"
+                className="absolute inset-0 rounded-xl bg-gray-800/50"
                 style={{ transform: 'translateZ(-2px)' }}
               />
             </motion.button>
@@ -567,10 +566,10 @@ const Enhanced3DNavigation = () => {
 
         {/* Enhanced Scroll Progress Bar with 3D effect */}
         <motion.div
-          className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 transform-gpu"
+          className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-pink-600 to-yellow-600 transform-gpu"
           style={{ 
             width: `${scrollProgress * 100}%`,
-            boxShadow: `0 0 10px rgba(190, 52, 85, 0.6), 0 0 20px rgba(212, 175, 55, 0.4)`,
+            boxShadow: `0 0 10px rgba(236, 72, 153, 0.6), 0 0 20px rgba(251, 191, 36, 0.4)`,
             transformStyle: 'preserve-3d'
           }}
           initial={{ width: "0%" }}
@@ -578,7 +577,7 @@ const Enhanced3DNavigation = () => {
 
         {/* 3D navigation depth layer */}
         <div 
-          className="absolute inset-0 bg-gradient-to-b from-lux-gray-900/50 to-transparent opacity-30"
+          className="absolute inset-0 bg-gradient-to-b from-gray-900/50 to-transparent opacity-30"
           style={{ transform: 'translateZ(-5px)' }}
         />
       </motion.nav>
@@ -588,5 +587,7 @@ const Enhanced3DNavigation = () => {
     </>
   )
 }
+
+Enhanced3DNavigation.displayName = 'Enhanced3DNavigation'
 
 export default Enhanced3DNavigation

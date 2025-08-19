@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { motion, useInView } from 'framer-motion'
 import { 
   Brain, 
@@ -108,6 +109,7 @@ const itemVariants = {
 // Optimized Article Card Component
 function ArticleCard({ article, index }: { article: DailyArticle; index: number }) {
   const [isVisible, setIsVisible] = useState(false)
+  const [imageError, setImageError] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(cardRef, { once: true, margin: "100px" })
   
@@ -168,17 +170,17 @@ function ArticleCard({ article, index }: { article: DailyArticle; index: number 
           </div>
         </div>
 
-        {/* Article Image - Optimized loading */}
-        {article.imageUrl && (
+        {/* Article Image - ✅ FIX: Replaced <img> with Next.js <Image /> */}
+        {article.imageUrl && !imageError && (
           <div className="relative mx-6 mb-6 h-48 overflow-hidden rounded-xl">
-            <img 
+            <Image 
               src={article.imageUrl} 
               alt={article.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
+              onError={() => setImageError(true)}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           </div>
@@ -265,35 +267,8 @@ export default function BlogPage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Fetch daily articles with error handling
-  const fetchDailyArticles = async (showLoading = true) => {
-    if (showLoading) setLoading(true)
-    setError(null)
-    
-    try {
-      const response = await fetch('/api/daily-articles')
-      const data = await response.json()
-      
-      if (data.success) {
-        setArticles(data.articles || [])
-        setLastUpdated(new Date(data.timestamp))
-      } else {
-        setError(data.error || 'Failed to fetch articles')
-        // Set fallback articles
-        setArticles(getFallbackArticles())
-      }
-    } catch (err) {
-      setError('Network error - please try again')
-      console.error('Failed to fetch articles:', err)
-      // Set fallback articles
-      setArticles(getFallbackArticles())
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Fallback articles for when API fails
-  const getFallbackArticles = (): DailyArticle[] => [
+  // ✅ FIX: Fallback articles with empty dependency array (no reactive values)
+  const getFallbackArticles = useCallback((): DailyArticle[] => [
     {
       id: 'fallback-1',
       title: 'Exploring the Future of AI Development',
@@ -324,11 +299,39 @@ export default function BlogPage() {
       category: 'FullStack',
       readTime: '10 min read'
     }
-  ]
+  ], []) // ✅ Empty array - fallback articles don't depend on reactive values
 
+  // ✅ FIX: Include getFallbackArticles in fetchDailyArticles dependencies
+  const fetchDailyArticles = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true)
+    setError(null)
+    
+    try {
+      const response = await fetch('/api/daily-articles')
+      const data = await response.json()
+      
+      if (data.success) {
+        setArticles(data.articles || [])
+        setLastUpdated(new Date(data.timestamp))
+      } else {
+        setError(data.error || 'Failed to fetch articles')
+        // Set fallback articles
+        setArticles(getFallbackArticles())
+      }
+    } catch (err) {
+      setError('Network error - please try again')
+      console.error('Failed to fetch articles:', err)
+      // Set fallback articles
+      setArticles(getFallbackArticles())
+    } finally {
+      setLoading(false)
+    }
+  }, [getFallbackArticles]) // ✅ Include getFallbackArticles dependency
+
+  // ✅ Include fetchDailyArticles dependency
   useEffect(() => {
     fetchDailyArticles()
-  }, [])
+  }, [fetchDailyArticles])
 
   const handleRefresh = () => {
     fetchDailyArticles(false) // Don't show full loading state for manual refresh

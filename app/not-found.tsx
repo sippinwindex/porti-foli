@@ -1,7 +1,5 @@
 'use client'
 
-'use client'
-
 import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { motion, useMotionValue, useSpring, useTransform, useScroll } from 'framer-motion'
 import Link from 'next/link'
@@ -80,7 +78,7 @@ export default function EnhancedSynthwave404() {
   const [groundOffset, setGroundOffset] = useState(0)
   const [timeOfDay, setTimeOfDay] = useState<'night' | 'sunrise' | 'day' | 'sunset'>('night')
 
-  // Game constants
+  // Game constants - ✅ FIX: Defined as stable constants
   const GRAVITY = 0.7
   const JUMP_FORCE = -18
   const GROUND_Y = 120
@@ -200,13 +198,15 @@ export default function EnhancedSynthwave404() {
   const pauseGame = useCallback(() => setGameState('paused'), [])
   const resumeGame = useCallback(() => { lastTimeRef.current = performance.now(); setGameState('playing') }, [])
   const restartGame = useCallback(() => { initGame(); setGameState('playing') }, [initGame])
+  
+  // ✅ FIX: Include JUMP_FORCE in the dependencies array
   const jump = useCallback(() => { 
     if (!isJumping && playerY <= 0) { 
       setIsJumping(true); 
       setJumpVelocity(JUMP_FORCE); 
       playJumpSound() 
     } 
-  }, [isJumping, playerY, playJumpSound])
+  }, [isJumping, playerY, JUMP_FORCE, playJumpSound])
 
   // Game input handling
   const handleGameAction = useCallback(() => {
@@ -280,7 +280,7 @@ export default function EnhancedSynthwave404() {
     setSpeed(prev => Math.min(prev + 0.001 * normalizedDelta, 12))
     
     animationRef.current = requestAnimationFrame(gameLoop)
-  }, [gameState, speed, playerY, obstacles, score, highScore, checkCollision, playHitSound, jumpVelocity])
+  }, [gameState, speed, playerY, obstacles, score, highScore, checkCollision, playHitSound, jumpVelocity, GRAVITY, GAME_WIDTH, GROUND_Y, PLAYER_WIDTH, PLAYER_HEIGHT])
 
   useEffect(() => {
     lastTimeRef.current = 0

@@ -2,6 +2,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Github, Star, GitFork, ExternalLink, Calendar } from 'lucide-react'
 
@@ -157,10 +158,15 @@ export const GitHubIntegration: React.FC = () => {
           >
             <div className="bg-card rounded-2xl p-8 shadow-lg border max-w-md w-full">
               <div className="text-center">
-                <img
+                {/* ✅ FIX: Replaced <img> with Next.js <Image /> for better LCP performance */}
+                <Image
                   src={user.avatar_url}
                   alt={user.name}
+                  width={80}
+                  height={80}
                   className="w-20 h-20 rounded-full mx-auto mb-4 border-4 border-primary/20"
+                  priority={true}
+                  unoptimized={true} // GitHub avatars are already optimized and served from CDN
                 />
                 <h3 className="text-xl font-bold mb-2">
                   {user.name || user.login}

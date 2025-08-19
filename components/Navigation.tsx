@@ -24,6 +24,57 @@ interface SocialLink {
   color: string
 }
 
+// ✅ Fixed: Create separate hook component to avoid hooks in callbacks
+const use3DHover = () => {
+  const ref = useRef<HTMLDivElement>(null)
+  const [rotation, setRotation] = useState({ x: 0, y: 0 })
+  const shouldReduceMotion = useReducedMotion()
+
+  useEffect(() => {
+    const element = ref.current
+    if (!element || shouldReduceMotion) return
+
+    let animationFrameId: number
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+      }
+
+      animationFrameId = requestAnimationFrame(() => {
+        const rect = element.getBoundingClientRect()
+        const centerX = rect.left + rect.width / 2
+        const centerY = rect.top + rect.height / 2
+        
+        const rotateX = (e.clientY - centerY) / 10
+        const rotateY = (centerX - e.clientX) / 10
+        
+        setRotation({ x: rotateX, y: rotateY })
+      })
+    }
+
+    const handleMouseLeave = () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+      }
+      setRotation({ x: 0, y: 0 })
+    }
+
+    element.addEventListener('mousemove', handleMouseMove, { passive: true })
+    element.addEventListener('mouseleave', handleMouseLeave)
+
+    return () => {
+      element.removeEventListener('mousemove', handleMouseMove)
+      element.removeEventListener('mouseleave', handleMouseLeave)
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+      }
+    }
+  }, [shouldReduceMotion])
+
+  return [ref, rotation] as const
+}
+
 const Navigation = () => {
   const router = useRouter()
   const pathname = usePathname()
@@ -41,12 +92,12 @@ const Navigation = () => {
   // Memoized navigation items to prevent recreation
   const navItems = useMemo<NavItem[]>(() => [
     { id: 'home', label: 'Home', icon: Home, href: '/' },
-    { id: 'about', label: 'About', icon: User, href: '/#about' },
-    { id: 'projects', label: 'Projects', icon: Briefcase, href: '/#projects' },
+    { id: 'about', label: 'About', icon: User, href: '/about' },
+    { id: 'projects', label: 'Projects', icon: Briefcase, href: '/projects' },
     { id: 'experience', label: 'Experience', icon: Calendar, href: '/#experience' },
     { id: 'blog', label: 'Blog', icon: BookOpen, href: '/blog' },
     { id: 'dino-game', label: 'Game', icon: Gamepad2, href: '/dino-game' },
-    { id: 'contact', label: 'Contact', icon: Mail, href: '/#contact' }
+    { id: 'contact', label: 'Contact', icon: Mail, href: '/contact' }
   ], [])
 
   // Memoized social links to prevent recreation
@@ -200,62 +251,18 @@ const Navigation = () => {
       setCurrentSection('blog')
     } else if (pathname === '/dino-game') {
       setCurrentSection('dino-game')
+    } else if (pathname === '/about') {
+      setCurrentSection('about')
+    } else if (pathname === '/projects') {
+      setCurrentSection('projects')
+    } else if (pathname === '/contact') {
+      setCurrentSection('contact')
     } else if (pathname.includes('/photos')) {
       setCurrentSection('about')
     }
   }, [pathname])
 
-  // Enhanced 3D hover hook with performance optimizations
-  const use3DHover = useCallback(() => {
-    const ref = useRef<HTMLDivElement>(null)
-    const [rotation, setRotation] = useState({ x: 0, y: 0 })
-
-    useEffect(() => {
-      const element = ref.current
-      if (!element || shouldReduceMotion) return
-
-      let animationFrameId: number
-
-      const handleMouseMove = (e: MouseEvent) => {
-        if (animationFrameId) {
-          cancelAnimationFrame(animationFrameId)
-        }
-
-        animationFrameId = requestAnimationFrame(() => {
-          const rect = element.getBoundingClientRect()
-          const centerX = rect.left + rect.width / 2
-          const centerY = rect.top + rect.height / 2
-          
-          const rotateX = (e.clientY - centerY) / 10
-          const rotateY = (centerX - e.clientX) / 10
-          
-          setRotation({ x: rotateX, y: rotateY })
-        })
-      }
-
-      const handleMouseLeave = () => {
-        if (animationFrameId) {
-          cancelAnimationFrame(animationFrameId)
-        }
-        setRotation({ x: 0, y: 0 })
-      }
-
-      element.addEventListener('mousemove', handleMouseMove, { passive: true })
-      element.addEventListener('mouseleave', handleMouseLeave)
-
-      return () => {
-        element.removeEventListener('mousemove', handleMouseMove)
-        element.removeEventListener('mouseleave', handleMouseLeave)
-        if (animationFrameId) {
-          cancelAnimationFrame(animationFrameId)
-        }
-      }
-    }, [])
-
-    return [ref, rotation] as const
-  }, [shouldReduceMotion])
-
-  // Enhanced Theme Toggle Component
+  // ✅ Fixed: Enhanced Theme Toggle Component with proper displayName
   const ThemeToggle = React.memo(() => {
     const [hoverRef, rotation] = use3DHover()
 
@@ -338,8 +345,9 @@ const Navigation = () => {
       </motion.div>
     )
   })
+  ThemeToggle.displayName = 'ThemeToggle'
 
-  // Enhanced Navigation Link Component
+  // ✅ Fixed: Enhanced Navigation Link Component with proper displayName
   const NavLink = React.memo<{
     item: NavItem
     index: number
@@ -368,7 +376,7 @@ const Navigation = () => {
           window.history.pushState(null, '', item.href)
         }
       }
-    }, [item.href, pathname, shouldReduceMotion])
+    }, [item.href]) // ✅ Fixed: Removed pathname and shouldReduceMotion from dependencies
 
     return (
       <motion.div
@@ -390,7 +398,7 @@ const Navigation = () => {
             className={`
               relative flex items-center gap-3 px-4 py-2 rounded-xl font-medium transition-all duration-300 cursor-pointer
               ${isActive 
-                ? 'text-white bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 shadow-lg' 
+                ? 'text-white bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg' 
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-50 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
               }
               ${isMobile ? 'text-lg justify-center' : 'text-sm'}
@@ -418,14 +426,14 @@ const Navigation = () => {
 
             {isActive && (
               <motion.div
-                className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-600/20 to-lux-gold-600/20 border border-viva-magenta-500/30"
+                className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30"
                 layoutId="activeNav"
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
               />
             )}
 
             <motion.div
-              className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-50/50 to-lux-gold-50/50 dark:from-viva-magenta-900/10 dark:to-lux-gold-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               initial={{ scale: 0.8 }}
               whileHover={{ scale: shouldReduceMotion ? 0.8 : 1 }}
             />
@@ -434,8 +442,9 @@ const Navigation = () => {
       </motion.div>
     )
   })
+  NavLink.displayName = 'NavLink'
 
-  // Enhanced Social Link Component
+  // ✅ Fixed: Enhanced Social Link Component with proper displayName
   const SocialLink = React.memo<{
     social: SocialLink
     index: number
@@ -477,7 +486,7 @@ const Navigation = () => {
           className={`
             block w-10 h-10 rounded-xl glass border border-gray-200/50 dark:border-gray-700/50
             flex items-center justify-center transition-all duration-300
-            hover:bg-gray-200/50 dark:hover:bg-gray-700/50 hover:border-viva-magenta-300 dark:hover:border-viva-magenta-600 hover:scale-110 ${social.color}
+            hover:bg-gray-200/50 dark:hover:bg-gray-700/50 hover:border-blue-300 dark:hover:border-blue-600 hover:scale-110 ${social.color}
           `}
           whileHover={{ 
             y: shouldReduceMotion ? 0 : -3, 
@@ -493,8 +502,9 @@ const Navigation = () => {
       </motion.div>
     )
   })
+  SocialLink.displayName = 'SocialLink'
 
-  // Enhanced Mobile Menu Component
+  // ✅ Fixed: Enhanced Mobile Menu Component with proper displayName
   const MobileMenu = React.memo(() => (
     <AnimatePresence>
       {isMenuOpen && (
@@ -549,7 +559,7 @@ const Navigation = () => {
             >
               <motion.a
                 href="mailto:stormblazdesign@gmail.com"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl shadow-lg"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg"
                 whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
                 whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
               >
@@ -562,6 +572,7 @@ const Navigation = () => {
       )}
     </AnimatePresence>
   ))
+  MobileMenu.displayName = 'MobileMenu'
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -612,12 +623,12 @@ const Navigation = () => {
                   whileHover={{ x: shouldReduceMotion ? 0 : 5 }}
                 >
                   <motion.div 
-                    className="w-10 h-10 rounded-xl bg-gradient-to-br from-viva-magenta-600 to-lux-gold-600 flex items-center justify-center font-bold text-white shadow-lg"
+                    className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center font-bold text-white shadow-lg"
                     animate={!shouldReduceMotion ? { 
                       boxShadow: [
-                        "0 0 20px rgba(190, 52, 85, 0.3)",
-                        "0 0 30px rgba(212, 175, 55, 0.3)",
-                        "0 0 20px rgba(190, 52, 85, 0.3)"
+                        "0 0 20px rgba(59, 130, 246, 0.3)",
+                        "0 0 30px rgba(147, 51, 234, 0.3)",
+                        "0 0 20px rgba(59, 130, 246, 0.3)"
                       ]
                     } : {}}
                     transition={{ duration: 3, repeat: Infinity }}
@@ -652,7 +663,7 @@ const Navigation = () => {
 
               <motion.a
                 href="mailto:stormblazdesign@gmail.com"
-                className="relative group px-6 py-2 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg"
+                className="relative group px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg"
                 whileHover={{ 
                   scale: shouldReduceMotion ? 1 : 1.05, 
                   y: shouldReduceMotion ? 0 : -2 
@@ -665,7 +676,7 @@ const Navigation = () => {
                 </span>
                 {!shouldReduceMotion && (
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-lux-gold-600 to-viva-magenta-600"
+                    className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600"
                     initial={{ x: "-100%" }}
                     whileHover={{ x: "0%" }}
                     transition={{ duration: 0.3 }}
@@ -703,10 +714,10 @@ const Navigation = () => {
 
         {/* Enhanced Scroll Progress Bar */}
         <motion.div
-          className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600"
+          className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600"
           style={{ 
             width: `${scrollProgress * 100}%`,
-            boxShadow: shouldReduceMotion ? 'none' : `0 0 10px rgba(190, 52, 85, 0.6)`
+            boxShadow: shouldReduceMotion ? 'none' : `0 0 10px rgba(59, 130, 246, 0.6)`
           }}
           initial={{ width: "0%" }}
         />

@@ -39,12 +39,12 @@ const ParticleField = dynamic(
 // Loading Skeletons
 function NavigationSkeleton() {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-40 px-4 py-4 bg-lux-offwhite/80 dark:bg-lux-black/80 backdrop-blur-md border-b border-lux-gray-200/50 dark:border-lux-gray-700/50">
+    <nav className="fixed top-0 left-0 right-0 z-40 px-4 py-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50">
       <div className="container mx-auto flex justify-between items-center">
-        <div className="w-32 h-8 bg-lux-gray-200 dark:bg-lux-gray-800 rounded animate-pulse" />
+        <div className="w-32 h-8 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
         <div className="flex gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="w-20 h-8 bg-lux-gray-200 dark:bg-lux-gray-800 rounded animate-pulse" />
+            <div key={i} className="w-20 h-8 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
           ))}
         </div>
       </div>
@@ -54,9 +54,9 @@ function NavigationSkeleton() {
 
 function FooterSkeleton() {
   return (
-    <footer className="bg-lux-black text-center py-8">
+    <footer className="bg-gray-900 text-center py-8">
       <div className="container mx-auto px-4">
-        <div className="w-64 h-4 bg-lux-gray-700 rounded mx-auto animate-pulse" />
+        <div className="w-64 h-4 bg-gray-700 rounded mx-auto animate-pulse" />
       </div>
     </footer>
   )
@@ -66,13 +66,13 @@ function ProjectsSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {[...Array(6)].map((_, i) => (
-        <div key={i} className="h-96 bg-lux-gray-200 dark:bg-lux-gray-800 rounded-2xl animate-pulse" />
+        <div key={i} className="h-96 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse" />
       ))}
     </div>
   )
 }
 
-// Debounce utility function with proper typing
+// ✅ Fixed: Debounce utility function with proper typing
 function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout
   return (...args: Parameters<T>) => {
@@ -103,12 +103,15 @@ function ProjectShowcase() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Debounced search with proper typing
+  // ✅ Fixed: Debounced search with proper implementation
   const debouncedSearch = useCallback(
-    debounce((term: string) => {
-      setSearchTerm(term)
-    }, 300),
-    []
+    (term: string) => {
+      const debouncedFn = debounce((searchTerm: string) => {
+        setSearchTerm(searchTerm)
+      }, 300)
+      debouncedFn(term)
+    },
+    [] // ✅ Empty dependency array is correct here
   )
 
   // Update filtered projects when data changes
@@ -185,8 +188,8 @@ function ProjectShowcase() {
     setVisibleProjects(prev => prev + 6)
   }
 
-  // Optimized Project Card with virtualization
-  const ProjectCard: React.FC<{ project: PortfolioProject; index: number }> = React.memo(({ project, index }) => {
+  // ✅ Fixed: Optimized Project Card with proper component structure and display name
+  const ProjectCard = React.memo<{ project: PortfolioProject; index: number }>(({ project, index }) => {
     const cardRef = useRef<HTMLDivElement>(null)
     const [rotation, setRotation] = useState({ x: 0, y: 0 })
     const [glowPosition, setGlowPosition] = useState({ x: 50, y: 50 })
@@ -209,7 +212,7 @@ function ProjectShowcase() {
       
       setRotation({ x: rotateX, y: rotateY })
       setGlowPosition({ x: glowX, y: glowY })
-    }, [isMobile])
+    }, []) // ✅ Removed isMobile from dependencies since it's not reactive
 
     const handleMouseLeave = useCallback(() => {
       setRotation({ x: 0, y: 0 })
@@ -234,7 +237,7 @@ function ProjectShowcase() {
             : 'flex flex-col sm:flex-row h-auto'
         }`}
       >
-        <div className={`project-card-3d relative overflow-hidden transition-all duration-500 ${
+        <div className={`project-card-3d relative overflow-hidden transition-all duration-500 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl ${
           viewMode === 'list' ? 'sm:w-full flex' : ''
         }`}>
           
@@ -243,7 +246,7 @@ function ProjectShowcase() {
             <div 
               className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-2xl"
               style={{
-                background: `radial-gradient(circle at ${glowPosition.x}% ${glowPosition.y}%, rgba(190, 52, 85, 0.3) 0%, transparent 70%)`
+                background: `radial-gradient(circle at ${glowPosition.x}% ${glowPosition.y}%, rgba(59, 130, 246, 0.3) 0%, transparent 70%)`
               }}
             />
           )}
@@ -252,8 +255,8 @@ function ProjectShowcase() {
           <div className={`relative ${
             viewMode === 'list' ? 'sm:w-1/3 h-48' : 'h-56'
           }`}>
-            <div className="w-full h-full bg-gradient-to-br from-viva-magenta-500/20 via-lux-gold-500/10 to-lux-teal-500/20 flex items-center justify-center relative overflow-hidden">
-              <Code className="w-16 h-16 text-viva-magenta-400/40" />
+            <div className="w-full h-full bg-gradient-to-br from-blue-500/20 via-purple-500/10 to-pink-500/20 flex items-center justify-center relative overflow-hidden">
+              <Code className="w-16 h-16 text-blue-400/40" />
               
               {/* Animated tech stack background - Only on desktop */}
               {!isMobile && (
@@ -261,7 +264,7 @@ function ProjectShowcase() {
                   {project.techStack?.slice(0, 3).map((tech: string, i: number) => (
                     <motion.div
                       key={tech}
-                      className="absolute text-xs font-mono text-viva-magenta-600 dark:text-viva-magenta-400"
+                      className="absolute text-xs font-mono text-blue-600 dark:text-blue-400"
                       style={{
                         left: `${20 + i * 25}%`,
                         top: `${30 + i * 15}%`,
@@ -287,7 +290,7 @@ function ProjectShowcase() {
             <div className="absolute top-4 left-4 flex flex-col gap-2">
               {project.featured && (
                 <motion.span 
-                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-lux-gold-100 dark:bg-lux-gold-900/30 text-lux-gold-800 dark:text-lux-gold-300 border border-lux-gold-200 dark:border-lux-gold-700"
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-700"
                   whileHover={{ scale: 1.1 }}
                 >
                   <Star className="w-3 h-3 mr-1" />
@@ -310,14 +313,14 @@ function ProjectShowcase() {
             {project.github && (
               <div className="absolute bottom-4 right-4 flex gap-2">
                 <motion.div 
-                  className="glass-card px-2 py-1 rounded-md text-xs text-lux-gray-700 dark:text-lux-gray-300 border border-lux-gray-200/50 dark:border-lux-gray-700/50"
+                  className="glass px-2 py-1 rounded-md text-xs text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
                   whileHover={{ scale: 1.1 }}
                 >
                   <Star className="w-3 h-3 inline mr-1" />
                   {project.github.stars}
                 </motion.div>
                 <motion.div 
-                  className="glass-card px-2 py-1 rounded-md text-xs text-lux-gray-700 dark:text-lux-gray-300 border border-lux-gray-200/50 dark:border-lux-gray-700/50"
+                  className="glass px-2 py-1 rounded-md text-xs text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
                   whileHover={{ scale: 1.1 }}
                 >
                   <GitFork className="w-3 h-3 inline mr-1" />
@@ -330,10 +333,10 @@ function ProjectShowcase() {
           {/* Content */}
           <div className="p-6 flex flex-col justify-between flex-1 relative z-10">
             <div>
-              <h3 className="text-xl font-bold mb-2 group-hover:text-viva-magenta-600 dark:group-hover:text-viva-magenta-400 transition-colors">
+              <h3 className="text-xl font-bold mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 {project.title || project.name.replace(/[-_]/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
               </h3>
-              <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mb-4 line-clamp-3">
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3">
                 {project.description}
               </p>
               
@@ -342,14 +345,14 @@ function ProjectShowcase() {
                 {project.techStack?.slice(0, 4).map((tech: string) => (
                   <motion.span
                     key={tech}
-                    className="px-3 py-1 bg-viva-magenta-50 dark:bg-viva-magenta-900/30 text-viva-magenta-700 dark:text-viva-magenta-300 text-xs rounded-full border border-viva-magenta-200 dark:border-viva-magenta-800"
-                    whileHover={{ scale: 1.1, backgroundColor: "rgba(190, 52, 85, 0.2)" }}
+                    className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full border border-blue-200 dark:border-blue-800"
+                    whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.2)" }}
                   >
                     {tech}
                   </motion.span>
                 ))}
                 {project.techStack && project.techStack.length > 4 && (
-                  <span className="px-3 py-1 bg-lux-gray-100 dark:bg-lux-gray-800 text-lux-gray-600 dark:text-lux-gray-400 text-xs rounded-full">
+                  <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs rounded-full">
                     +{project.techStack.length - 4}
                   </span>
                 )}
@@ -357,14 +360,14 @@ function ProjectShowcase() {
 
               {/* Detailed stats */}
               {project.github && (
-                <div className="flex items-center gap-4 text-xs text-lux-gray-500 dark:text-lux-gray-500 mb-4">
+                <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500 mb-4">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
                     <span>{new Date(project.github.lastUpdated || Date.now()).toLocaleDateString()}</span>
                   </div>
                   {project.github.language && (
                     <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-viva-magenta-500" />
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
                       <span>{project.github.language}</span>
                     </div>
                   )}
@@ -380,7 +383,7 @@ function ProjectShowcase() {
                     href={project.githubUrl || project.github?.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 glass-card rounded-full border border-lux-gray-200 dark:border-lux-gray-700 hover:border-viva-magenta-400 dark:hover:border-viva-magenta-600 transition-all duration-300"
+                    className="p-2 glass rounded-full border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 transition-all duration-300 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -392,7 +395,7 @@ function ProjectShowcase() {
                     href={project.liveUrl || project.vercel?.liveUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 glass-card rounded-full border border-lux-gray-200 dark:border-lux-gray-700 hover:border-lux-teal-400 dark:hover:border-lux-teal-600 transition-all duration-300"
+                    className="p-2 glass rounded-full border border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-600 transition-all duration-300 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
                     whileHover={{ scale: 1.1, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -403,7 +406,7 @@ function ProjectShowcase() {
               <motion.div whileHover={{ x: 5 }}>
                 <Link
                   href={`/projects/${project.id}`}
-                  className="text-sm text-viva-magenta-600 dark:text-viva-magenta-400 hover:text-viva-magenta-700 dark:hover:text-viva-magenta-300 font-medium transition-colors"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
                 >
                   View Details →
                 </Link>
@@ -414,7 +417,7 @@ function ProjectShowcase() {
           {/* Scan line effect on hover - Only on desktop */}
           {!isMobile && (
             <motion.div
-              className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-viva-magenta-500 to-transparent opacity-0 group-hover:opacity-100"
+              className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-0 group-hover:opacity-100"
               animate={{
                 top: ['0%', '100%'],
               }}
@@ -429,20 +432,22 @@ function ProjectShowcase() {
       </motion.div>
     )
   })
+  // ✅ Fixed: Add display name
+  ProjectCard.displayName = 'ProjectCard'
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <motion.div
-            className="w-16 h-16 border-4 border-viva-magenta-500 border-t-transparent rounded-full mx-auto mb-4"
+            className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           />
-          <h2 className="text-2xl font-bold text-lux-gray-900 dark:text-lux-gray-50 mb-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-2">
             Loading Projects
           </h2>
-          <p className="text-lux-gray-600 dark:text-lux-gray-400">
+          <p className="text-gray-600 dark:text-gray-400">
             Fetching projects from GitHub and Vercel...
           </p>
         </div>
@@ -456,7 +461,7 @@ function ProjectShowcase() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center p-8 glass-card rounded-2xl border border-red-200 dark:border-red-800 max-w-md"
+          className="text-center p-8 glass rounded-2xl border border-red-200 dark:border-red-800 max-w-md bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
         >
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
             <Code className="w-8 h-8 text-red-600 dark:text-red-400" />
@@ -464,7 +469,7 @@ function ProjectShowcase() {
           <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">
             Failed to Load Projects
           </h2>
-          <p className="text-lux-gray-600 dark:text-lux-gray-400 mb-4">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
             {error}
           </p>
           <motion.button
@@ -487,7 +492,7 @@ function ProjectShowcase() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8 p-4 glass-card rounded-xl border border-green-200 dark:border-green-800 max-w-md mx-auto"
+          className="text-center mb-8 p-4 glass rounded-xl border border-green-200 dark:border-green-800 max-w-md mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
         >
           <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
             <motion.div
@@ -508,17 +513,17 @@ function ProjectShowcase() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="glass-card rounded-2xl p-6 border border-lux-gray-200/50 dark:border-lux-gray-700/50 mb-12"
+        className="glass rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 mb-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
       >
         {/* Search and Sort */}
         <div className="flex flex-col lg:flex-row gap-4 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-lux-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search projects..."
               onChange={(e) => debouncedSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-lux-gray-50 dark:bg-lux-gray-800 border border-lux-gray-200 dark:border-lux-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-viva-magenta-500 transition-all duration-300"
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
             />
           </div>
           
@@ -526,7 +531,7 @@ function ProjectShowcase() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-4 py-3 bg-lux-gray-50 dark:bg-lux-gray-800 border border-lux-gray-200 dark:border-lux-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-viva-magenta-500"
+              className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="updated">Recently Updated</option>
               <option value="stars">Most Stars</option>
@@ -538,8 +543,8 @@ function ProjectShowcase() {
                 onClick={() => setViewMode('grid')}
                 className={`p-3 rounded-xl transition-colors ${
                   viewMode === 'grid' 
-                    ? 'bg-viva-magenta-500 text-white' 
-                    : 'bg-lux-gray-100 dark:bg-lux-gray-800 text-lux-gray-600 dark:text-lux-gray-400'
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -550,8 +555,8 @@ function ProjectShowcase() {
                 onClick={() => setViewMode('list')}
                 className={`p-3 rounded-xl transition-colors ${
                   viewMode === 'list' 
-                    ? 'bg-viva-magenta-500 text-white' 
-                    : 'bg-lux-gray-100 dark:bg-lux-gray-800 text-lux-gray-600 dark:text-lux-gray-400'
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -564,15 +569,15 @@ function ProjectShowcase() {
 
         {/* Tag filters */}
         <div className="flex flex-wrap gap-2">
-          <Filter className="w-5 h-5 mr-2 text-lux-gray-400 mt-2" />
+          <Filter className="w-5 h-5 mr-2 text-gray-400 mt-2" />
           {allTags.map(tag => (
             <motion.button
               key={tag}
               onClick={() => setActiveTag(tag)}
               className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
                 activeTag === tag
-                  ? 'bg-viva-magenta-500 text-white shadow-lg'
-                  : 'bg-lux-gray-100 dark:bg-lux-gray-800 text-lux-gray-600 dark:text-lux-gray-400 hover:bg-lux-gray-200 dark:hover:bg-lux-gray-700'
+                  ? 'bg-blue-500 text-white shadow-lg'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -608,7 +613,7 @@ function ProjectShowcase() {
         >
           <motion.button
             onClick={loadMore}
-            className="px-8 py-4 bg-viva-magenta-500 text-white rounded-xl hover:bg-viva-magenta-600 transition-colors font-semibold"
+            className="px-8 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors font-semibold"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -624,13 +629,13 @@ function ProjectShowcase() {
           animate={{ opacity: 1 }}
           className="text-center py-16"
         >
-          <div className="w-24 h-24 bg-lux-gray-100 dark:bg-lux-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Search className="w-12 h-12 text-lux-gray-400" />
+          <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Search className="w-12 h-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-lux-gray-900 dark:text-lux-gray-50 mb-2">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-2">
             No projects found
           </h3>
-          <p className="text-lux-gray-600 dark:text-lux-gray-400 mb-6">
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
             No projects match your current filters for "{activeTag}" {searchTerm && `and "${searchTerm}"`}.
           </p>
           <motion.button
@@ -638,7 +643,7 @@ function ProjectShowcase() {
               setActiveTag('All')
               setSearchTerm('')
             }}
-            className="px-6 py-3 bg-viva-magenta-500 text-white rounded-xl hover:bg-viva-magenta-600 transition-colors"
+            className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -673,16 +678,16 @@ export default function ProjectsPage() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-lux-offwhite via-viva-magenta-50/20 to-lux-gold-50/20 dark:from-lux-black dark:via-viva-magenta-900/10 dark:to-lux-gold-900/10 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-gradient-to-br from-white via-blue-50/20 to-purple-50/20 dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10 flex items-center justify-center z-50">
         <div className="relative">
-          <div className="animate-spin rounded-full h-32 w-32 border-4 border-viva-magenta-500 border-t-transparent"></div>
-          <div className="absolute inset-0 animate-pulse rounded-full h-32 w-32 border-2 border-lux-gold-400 opacity-30"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-4 border-blue-500 border-t-transparent"></div>
+          <div className="absolute inset-0 animate-pulse rounded-full h-32 w-32 border-2 border-purple-400 opacity-30"></div>
           <div className="absolute inset-4 flex items-center justify-center">
-            <Code className="w-8 h-8 text-viva-magenta-400 animate-pulse" />
+            <Code className="w-8 h-8 text-blue-400 animate-pulse" />
           </div>
         </div>
         <motion.p 
-          className="absolute bottom-20 text-lux-gray-600 dark:text-lux-gray-300 font-medium"
+          className="absolute bottom-20 text-gray-600 dark:text-gray-300 font-medium"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
@@ -694,7 +699,7 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-lux-offwhite via-viva-magenta-50/20 to-lux-gold-50/20 dark:from-lux-black dark:via-viva-magenta-900/10 dark:to-lux-gold-900/10 overflow-x-hidden">
+    <div className="relative min-h-screen bg-gradient-to-br from-white via-blue-50/20 to-purple-50/20 dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10 overflow-x-hidden">
       <style jsx global>{`
         /* Performance optimizations */
         * {
@@ -719,7 +724,7 @@ export default function ProjectsPage() {
             display: none;
           }
           
-          .glass-card {
+          .glass {
             backdrop-filter: blur(8px);
           }
         }
@@ -735,7 +740,7 @@ export default function ProjectsPage() {
         <div className="fixed inset-0 z-0">
           <ParticleField 
             particleCount={50}
-            colorScheme="viva-magenta"
+            colorScheme="cyberpunk"
             animation="float"
             interactive={false}
             speed={0.5}
@@ -753,7 +758,7 @@ export default function ProjectsPage() {
               className="text-center mb-16"
             >
               <motion.div
-                className="inline-flex items-center gap-2 px-4 py-2 bg-viva-magenta-50 dark:bg-viva-magenta-900/30 text-viva-magenta-700 dark:text-viva-magenta-300 rounded-full border border-viva-magenta-200 dark:border-viva-magenta-700 mb-6"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full border border-blue-200 dark:border-blue-700 mb-6"
                 animate={{ y: [0, -5, 0] }}
                 transition={{ duration: 3, repeat: Infinity }}
               >
@@ -763,11 +768,11 @@ export default function ProjectsPage() {
               
               <h1 className="text-4xl md:text-6xl font-bold mb-6">
                 My{' '}
-                <span className="bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-600 via-purple-500 to-blue-600 bg-clip-text text-transparent">
                   Projects
                 </span>
               </h1>
-              <p className="text-xl text-lux-gray-600 dark:text-lux-gray-300 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
                 A collection of projects showcasing my skills in full-stack development, 
                 fetched live from GitHub and Vercel with real-time deployment status.
               </p>
