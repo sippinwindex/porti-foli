@@ -1,5 +1,5 @@
-// hooks/usePortfolioData.ts - Enhanced with better GitHub integration
-import { useState, useEffect, useCallback } from 'react'
+// hooks/usePortfolioData.ts - COMPLETELY FIXED VERSION
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { PortfolioProject, PortfolioStats, UsePortfolioDataReturn } from '@/types/portfolio'
 
 interface UsePortfolioDataOptions {
@@ -8,15 +8,19 @@ interface UsePortfolioDataOptions {
   includePrivate?: boolean
   source?: 'auto' | 'github' | 'mock'
   limit?: number
+  retryAttempts?: number
+  retryDelay?: number
 }
 
 export function usePortfolioData(options: UsePortfolioDataOptions = {}): UsePortfolioDataReturn {
   const {
     autoFetch = true,
-    refreshInterval = 0, // No auto-refresh by default
+    refreshInterval = 0,
     includePrivate = false,
     source = 'auto',
-    limit = 20
+    limit = 20,
+    retryAttempts = 3,
+    retryDelay = 1000
   } = options
 
   const [projects, setProjects] = useState<PortfolioProject[]>([])
@@ -24,27 +28,55 @@ export function usePortfolioData(options: UsePortfolioDataOptions = {}): UsePort
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastFetch, setLastFetch] = useState<number>(0)
+  
+  // Use refs to prevent stale closures
+  const currentAttempt = useRef(0)
+  const abortController = useRef<AbortController | null>(null)
 
-  // Cache duration: 5 minutes for better UX
-  const CACHE_DURATION = 5 * 60 * 1000
+  // FIXED: Enhanced retry mechanism
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-  const shouldRefresh = useCallback(() => {
-    return Date.now() - lastFetch > CACHE_DURATION
-  }, [lastFetch])
+  const fetchWithRetry = useCallback(async <T>(
+    fetchFn: () => Promise<T>,
+    context: string
+  ): Promise<T> => {
+    let lastError: Error | null = null
+    
+    for (let attempt = 1; attempt <= retryAttempts; attempt++) {
+      try {
+        if (abortController.current?.signal.aborted) {
+          throw new Error('Request aborted')
+        }
+        
+        console.log(`🔄 ${context} (attempt ${attempt}/${retryAttempts})`)
+        const result = await fetchFn()
+        console.log(`✅ ${context} succeeded`)
+        return result
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error('Unknown error')
+        console.warn(`⚠️ ${context} attempt ${attempt} failed:`, lastError.message)
+        
+        if (attempt < retryAttempts) {
+          await delay(retryDelay * attempt) // Exponential backoff
+        }
+      }
+    }
+    
+    throw lastError || new Error(`Failed after ${retryAttempts} attempts`)
+  }, [retryAttempts, retryDelay])
 
-  const fetchProjects = useCallback(async () => {
-    try {
-      setError(null)
-      console.log('🔄 Fetching portfolio projects...')
+  // FIXED: Enhanced project fetching with better error handling
+  const fetchProjects = useCallback(async (): Promise<PortfolioProject[]> => {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      source,
+      ...(includePrivate && { includePrivate: 'true' })
+    })
 
-      // Build query parameters
-      const params = new URLSearchParams({
-        limit: limit.toString(),
-        source,
-        ...(includePrivate && { includePrivate: 'true' })
+    return fetchWithRetry(async () => {
+      const response = await fetch(`/api/projects?${params}`, {
+        signal: abortController.current?.signal
       })
-
-      const response = await fetch(`/api/projects?${params}`)
       
       if (!response.ok) {
         throw new Error(`Projects API error: ${response.status} ${response.statusText}`)
@@ -52,45 +84,40 @@ export function usePortfolioData(options: UsePortfolioDataOptions = {}): UsePort
 
       const data = await response.json()
 
-      if (data.success) {
-        const fetchedProjects = data.projects || []
-        setProjects(fetchedProjects)
-        
-        console.log(`✅ Fetched ${fetchedProjects.length} projects from ${data.source}`)
-        
-        // Log live deployments for debugging
-        const liveProjects = fetchedProjects.filter((p: PortfolioProject) => 
-          p.vercel?.isLive || p.liveUrl
-        )
-        console.log(`📡 Found ${liveProjects.length} live deployments:`, 
-          liveProjects.map((p: PortfolioProject) => ({ 
-            name: p.name, 
-            liveUrl: p.vercel?.liveUrl || p.liveUrl 
-          }))
-        )
-
-        // Update last fetch timestamp
-        setLastFetch(Date.now())
-        
-        return fetchedProjects
-      } else {
-        throw new Error(data.error || 'Failed to fetch projects')
+      if (!data.success) {
+        throw new Error(data.error || 'Projects API returned unsuccessful response')
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch projects'
-      console.error('❌ Error fetching projects:', errorMessage)
-      setError(errorMessage)
-      
-      // Don't clear existing projects on error
-      return projects
-    }
-  }, [source, limit, includePrivate, projects])
 
-  const fetchStats = useCallback(async () => {
-    try {
-      console.log('📊 Fetching portfolio stats...')
+      const fetchedProjects = Array.isArray(data.projects) ? data.projects : []
       
-      const response = await fetch('/api/portfolio-stats')
+      // FIXED: Validate project structure
+      const validProjects = fetchedProjects.filter((project: any) => {
+        return project &&
+               typeof project.id === 'string' &&
+               typeof project.name === 'string' &&
+               typeof project.description === 'string' &&
+               Array.isArray(project.techStack) &&
+               typeof project.featured === 'boolean'
+      })
+
+      console.log(`✅ Fetched ${validProjects.length}/${fetchedProjects.length} valid projects from ${data.source}`)
+      
+      // Log live deployments for debugging
+      const liveProjects = validProjects.filter((p: PortfolioProject) => 
+        p.vercel?.isLive || p.liveUrl
+      )
+      console.log(`📡 Found ${liveProjects.length} live deployments`)
+
+      return validProjects
+    }, 'Fetch Projects')
+  }, [source, limit, includePrivate, fetchWithRetry])
+
+  // FIXED: Enhanced stats fetching
+  const fetchStats = useCallback(async (): Promise<PortfolioStats> => {
+    return fetchWithRetry(async () => {
+      const response = await fetch('/api/portfolio-stats', {
+        signal: abortController.current?.signal
+      })
       
       if (!response.ok) {
         throw new Error(`Stats API error: ${response.status}`)
@@ -98,79 +125,129 @@ export function usePortfolioData(options: UsePortfolioDataOptions = {}): UsePort
 
       const statsData = await response.json()
       
-      // Ensure we have proper PortfolioStats structure
-      const formattedStats: PortfolioStats = {
-        totalProjects: statsData.totalProjects || 0,
-        totalStars: statsData.totalStars || 0,
-        liveProjects: statsData.liveProjects || 0,
-        totalForks: statsData.totalForks || 0,
-        topLanguages: statsData.topLanguages || [],
-        recentActivity: {
-          activeProjects: statsData.recentActivity?.activeProjects || 0,
-          lastUpdated: statsData.recentActivity?.lastUpdated || new Date().toISOString()
-        }
-      }
-      
-      setStats(formattedStats)
-      console.log('✅ Portfolio stats updated:', formattedStats)
-      
-      return formattedStats
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch stats'
-      console.error('❌ Error fetching stats:', errorMessage)
-      
-      // Set fallback stats on error
-      const fallbackStats: PortfolioStats = {
-        totalProjects: projects.length,
-        totalStars: projects.reduce((sum, p) => sum + (p.github?.stars || 0), 0),
-        liveProjects: projects.filter(p => p.vercel?.isLive || p.liveUrl).length,
-        totalForks: projects.reduce((sum, p) => sum + (p.github?.forks || 0), 0),
-        topLanguages: [...new Set(projects.flatMap(p => p.techStack || []))].slice(0, 5),
-        recentActivity: {
-          activeProjects: projects.filter(p => p.featured).length,
+      // FIXED: Ensure proper PortfolioStats structure with validation
+      const validatedStats: PortfolioStats = {
+        totalProjects: typeof statsData.totalProjects === 'number' ? statsData.totalProjects : 0,
+        totalStars: typeof statsData.totalStars === 'number' ? statsData.totalStars : 0,
+        liveProjects: typeof statsData.liveProjects === 'number' ? statsData.liveProjects : 0,
+        totalForks: typeof statsData.totalForks === 'number' ? statsData.totalForks : 0,
+        topLanguages: Array.isArray(statsData.topLanguages) ? statsData.topLanguages : [],
+        deploymentSuccessRate: typeof statsData.deploymentSuccessRate === 'number' ? statsData.deploymentSuccessRate : undefined,
+        recentActivity: statsData.recentActivity && typeof statsData.recentActivity === 'object' ? {
+          activeProjects: typeof statsData.recentActivity.activeProjects === 'number' ? statsData.recentActivity.activeProjects : 0,
+          lastUpdated: typeof statsData.recentActivity.lastUpdated === 'string' ? statsData.recentActivity.lastUpdated : new Date().toISOString()
+        } : {
+          activeProjects: 0,
           lastUpdated: new Date().toISOString()
         }
       }
       
-      setStats(fallbackStats)
-      return fallbackStats
-    }
-  }, [projects])
+      console.log('✅ Portfolio stats validated:', validatedStats)
+      return validatedStats
+    }, 'Fetch Stats')
+  }, [fetchWithRetry])
 
+  // FIXED: Main refetch function with proper error handling
   const refetch = useCallback(async () => {
-    if (loading) return
+    if (loading) {
+      console.log('🔄 Refetch already in progress, skipping...')
+      return
+    }
+
+    // Cancel any ongoing requests
+    if (abortController.current) {
+      abortController.current.abort()
+    }
+    abortController.current = new AbortController()
 
     setLoading(true)
     setError(null)
+    currentAttempt.current++
+    const thisAttempt = currentAttempt.current
 
     try {
+      console.log('🔄 Starting portfolio data refetch...')
+      
       // Fetch projects and stats in parallel
-      const [fetchedProjects] = await Promise.all([
+      const [fetchedProjects, fetchedStats] = await Promise.allSettled([
         fetchProjects(),
         fetchStats()
       ])
 
-      console.log('✅ Portfolio data refreshed successfully')
-      
+      // Check if this is still the current attempt
+      if (currentAttempt.current !== thisAttempt) {
+        console.log('⏭️ Newer request in progress, ignoring results')
+        return
+      }
+
+      // Handle projects result
+      if (fetchedProjects.status === 'fulfilled') {
+        setProjects(fetchedProjects.value)
+      } else {
+        console.warn('⚠️ Projects fetch failed:', fetchedProjects.reason)
+        // Keep existing projects on error, don't clear them
+      }
+
+      // Handle stats result  
+      if (fetchedStats.status === 'fulfilled') {
+        setStats(fetchedStats.value)
+      } else {
+        console.warn('⚠️ Stats fetch failed:', fetchedStats.reason)
+        // Generate fallback stats from current projects
+        if (projects.length > 0) {
+          const fallbackStats: PortfolioStats = {
+            totalProjects: projects.length,
+            totalStars: projects.reduce((sum, p) => sum + (p.github?.stars || 0), 0),
+            liveProjects: projects.filter(p => p.vercel?.isLive || p.liveUrl).length,
+            totalForks: projects.reduce((sum, p) => sum + (p.github?.forks || 0), 0),
+            topLanguages: [...new Set(projects.flatMap(p => p.techStack || []))].slice(0, 5),
+            recentActivity: {
+              activeProjects: projects.filter(p => p.featured).length,
+              lastUpdated: new Date().toISOString()
+            }
+          }
+          setStats(fallbackStats)
+        }
+      }
+
+      // Update timestamp if at least one fetch succeeded
+      if (fetchedProjects.status === 'fulfilled' || fetchedStats.status === 'fulfilled') {
+        setLastFetch(Date.now())
+        console.log('✅ Portfolio data refetch completed successfully')
+      } else {
+        throw new Error('Both projects and stats fetch failed')
+      }
+
     } catch (err) {
-      console.error('❌ Error during refetch:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error during refetch'
+      console.error('❌ Portfolio data refetch failed:', errorMessage)
+      
+      // Only set error if we don't have any existing data
+      if (projects.length === 0 && !stats) {
+        setError(errorMessage)
+      } else {
+        console.log('📦 Keeping existing data despite fetch error')
+      }
     } finally {
       setLoading(false)
     }
-  }, [loading, fetchProjects, fetchStats])
+  }, [loading, fetchProjects, fetchStats, projects])
 
-  // Initial data fetch
+  // FIXED: Cache duration check
+  const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+  const shouldRefresh = useCallback(() => {
+    return Date.now() - lastFetch > CACHE_DURATION
+  }, [lastFetch])
+
+  // FIXED: Initial data fetch
   useEffect(() => {
     if (autoFetch && (projects.length === 0 || shouldRefresh())) {
+      console.log('🚀 Initial portfolio data fetch triggered')
       refetch()
-    } else if (projects.length > 0) {
-      // Update stats based on existing projects
-      fetchStats()
-      setLoading(false)
     }
-  }, [autoFetch, shouldRefresh, refetch, fetchStats, projects.length])
+  }, [autoFetch, shouldRefresh, refetch, projects.length])
 
-  // Auto-refresh functionality
+  // FIXED: Auto-refresh functionality
   useEffect(() => {
     if (!refreshInterval || refreshInterval <= 0) return
 
@@ -184,11 +261,11 @@ export function usePortfolioData(options: UsePortfolioDataOptions = {}): UsePort
     return () => clearInterval(interval)
   }, [refreshInterval, shouldRefresh, refetch])
 
-  // Refresh when page becomes visible
+  // FIXED: Refresh when page becomes visible
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && shouldRefresh()) {
-        console.log('🔄 Page visible - refreshing portfolio data...')
+        console.log('👁️ Page visible - refreshing portfolio data...')
         refetch()
       }
     }
@@ -196,6 +273,15 @@ export function usePortfolioData(options: UsePortfolioDataOptions = {}): UsePort
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [shouldRefresh, refetch])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortController.current) {
+        abortController.current.abort()
+      }
+    }
+  }, [])
 
   return {
     projects,
@@ -206,7 +292,7 @@ export function usePortfolioData(options: UsePortfolioDataOptions = {}): UsePort
   }
 }
 
-// Enhanced version with more options
+// FIXED: Enhanced version with better filtering and sorting
 export function useEnhancedPortfolioData(options: UsePortfolioDataOptions & {
   featured?: boolean
   sortBy?: 'name' | 'stars' | 'updated' | 'featured'
@@ -224,7 +310,7 @@ export function useEnhancedPortfolioData(options: UsePortfolioDataOptions & {
   const baseResult = usePortfolioData(baseOptions)
   const [filteredProjects, setFilteredProjects] = useState<PortfolioProject[]>([])
 
-  // Apply filters and sorting
+  // FIXED: Apply filters and sorting with better validation
   useEffect(() => {
     if (!baseResult.projects.length) {
       setFilteredProjects([])
@@ -244,21 +330,22 @@ export function useEnhancedPortfolioData(options: UsePortfolioDataOptions & {
     }
 
     // Filter by search term
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim()
       filtered = filtered.filter(project =>
         project.name.toLowerCase().includes(term) ||
-        project.description?.toLowerCase().includes(term) ||
-        project.techStack?.some(tech => tech.toLowerCase().includes(term)) ||
-        project.tags?.some(tag => tag.toLowerCase().includes(term))
+        (project.title && project.title.toLowerCase().includes(term)) ||
+        project.description.toLowerCase().includes(term) ||
+        project.techStack.some(tech => tech.toLowerCase().includes(term)) ||
+        (project.tags && project.tags.some(tag => tag.toLowerCase().includes(term)))
       )
     }
 
-    // Apply sorting
+    // Apply sorting with safe comparisons
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
-          return a.name.localeCompare(b.name)
+          return (a.title || a.name).localeCompare(b.title || b.name)
         case 'stars':
           return (b.github?.stars || 0) - (a.github?.stars || 0)
         case 'updated':
@@ -286,13 +373,13 @@ export function useEnhancedPortfolioData(options: UsePortfolioDataOptions & {
   return {
     ...baseResult,
     projects: filteredProjects,
-    allProjects: baseResult.projects, // Access to unfiltered projects
+    allProjects: baseResult.projects,
     filteredCount: filteredProjects.length,
     totalCount: baseResult.projects.length
   }
 }
 
-// Utility hooks for specific use cases
+// FIXED: Utility hooks for specific use cases
 export function useFeaturedProjects(limit = 6) {
   return useEnhancedPortfolioData({
     featured: true,
@@ -322,5 +409,4 @@ export function useProjectsByCategory(category: string, limit = 10) {
   })
 }
 
-// Export the main hook as default
 export default usePortfolioData

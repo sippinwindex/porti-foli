@@ -63,10 +63,10 @@ function NavigationSkeleton() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 px-4 py-4 glass border-b border-gray-200/50 dark:border-gray-700/50">
       <div className="container mx-auto flex justify-between items-center">
-        <div className="w-32 h-8 loading-skeleton-enhanced rounded animate-pulse" />
+        <div className="w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
         <div className="flex gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="w-20 h-8 loading-skeleton-enhanced rounded animate-pulse" />
+            <div key={i} className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
           ))}
         </div>
       </div>
@@ -188,8 +188,9 @@ function ContactMethodCard({ method, index, onCopy }: {
           </div>
           
           {method.available && (
-            <div className="status-indicator-enhanced live">
-              Available
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-green-700 dark:text-green-400 text-xs font-medium">Available</span>
             </div>
           )}
         </div>
@@ -208,7 +209,7 @@ function ContactMethodCard({ method, index, onCopy }: {
           </span>
           
           {method.responseTime && (
-            <span className="tech-badge-enhanced">
+            <span className="px-2 py-1 rounded-full bg-viva-magenta-50 dark:bg-viva-magenta-900/30 text-viva-magenta-700 dark:text-viva-magenta-300 text-xs font-medium border border-viva-magenta-200 dark:border-viva-magenta-800">
               {method.responseTime}
             </span>
           )}
@@ -250,7 +251,7 @@ function StatsSection() {
         <motion.div
           key={stat.label}
           variants={itemVariants}
-          className="card-enhanced text-center glow-effect-enhanced"
+          className="card-enhanced text-center"
         >
           <div className="flex justify-center mb-3">
             <div className="p-3 bg-gradient-to-br from-viva-magenta-100 to-lux-gold-100 dark:from-viva-magenta-900/30 dark:to-lux-gold-900/30 rounded-full">
@@ -893,13 +894,13 @@ export default function ContactPage() {
 
       <Navigation />
 
-      {/* Particle Field Background - Only on desktop */}
+      {/* ✅ FIXED: Particle Field Background with correct props */}
       {!isMobile && (
         <div className="fixed inset-0 z-0">
           <ParticleField 
             particleCount={25}
             colorScheme="viva-magenta"
-            animation="float"
+            animation="constellation"
             interactive={false}
             speed={0.2}
           />

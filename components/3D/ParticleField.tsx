@@ -1,447 +1,341 @@
+// components/3D/ParticleField.tsx - FIXED VERSION
 'use client'
 
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
-import { motion, useAnimation, useScroll, useTransform } from 'framer-motion'
+import { useEffect, useRef, useCallback, useMemo } from 'react'
 
 interface Particle {
-  id: string
   x: number
   y: number
-  z: number
   vx: number
   vy: number
-  vz: number
-  size: number
+  radius: number
   opacity: number
-  color: string
+  hue: number
   life: number
   maxLife: number
-  trail: { x: number; y: number; opacity: number }[]
 }
 
 interface ParticleFieldProps {
   particleCount?: number
+  colorScheme?: 'cyberpunk' | 'synthwave' | 'cosmic' | 'aurora'
+  animation?: 'float' | 'drift' | 'spiral' | 'chaos'
   interactive?: boolean
-  colorScheme?: 'viva-magenta' | 'lux-gold' | 'multi' | 'cyberpunk'
-  animation?: 'float' | 'spiral' | 'wave' | 'constellation' | 'matrix'
-  responsive?: boolean
-  showConnections?: boolean
-  mouseInfluence?: number
   speed?: number
+  className?: string
 }
 
-const ParticleField: React.FC<ParticleFieldProps> = ({
-  particleCount = 100,
+export default function ParticleField({
+  particleCount = 50,
+  colorScheme = 'cyberpunk',
+  animation = 'float',
   interactive = true,
-  colorScheme = 'multi',
-  animation = 'constellation',
-  responsive = true,
-  showConnections = true,
-  mouseInfluence = 100,
-  speed = 1
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null)
+  speed = 1,
+  className = ''
+}: ParticleFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number>()
-  const [particles, setParticles] = useState<Particle[]>([])
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
-  const [isVisible, setIsVisible] = useState(true)
-  const controls = useAnimation()
+  const particlesRef = useRef<Particle[]>([])
+  const mouseRef = useRef({ x: 0, y: 0 })
+  const dimensionsRef = useRef({ width: 0, height: 0 })
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"]
-  })
-
-  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0])
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.8, 1, 0.8])
-
-  // Color schemes - memoized to prevent recreation
+  // Color schemes
   const colorSchemes = useMemo(() => ({
-    'viva-magenta': ['#BE3455', '#E85A4F', '#C73650', '#A91D3A'],
-    'lux-gold': ['#D4AF37', '#FFD700', '#F4D03F', '#E6C200'],
-    'multi': ['#BE3455', '#D4AF37', '#98A869', '#008080'],
-    'cyberpunk': ['#00FFFF', '#FF00FF', '#00FF00', '#FFFF00']
+    cyberpunk: {
+      primary: [0, 255, 255], // Cyan
+      secondary: [255, 0, 255], // Magenta
+      accent: [255, 255, 0], // Yellow
+      hueRange: [180, 300]
+    },
+    synthwave: {
+      primary: [255, 20, 147], // Deep pink
+      secondary: [138, 43, 226], // Blue violet
+      accent: [0, 255, 255], // Cyan
+      hueRange: [280, 320]
+    },
+    cosmic: {
+      primary: [75, 0, 130], // Indigo
+      secondary: [138, 43, 226], // Blue violet
+      accent: [255, 215, 0], // Gold
+      hueRange: [240, 280]
+    },
+    aurora: {
+      primary: [0, 255, 127], // Spring green
+      secondary: [30, 144, 255], // Dodger blue
+      accent: [255, 20, 147], // Deep pink
+      hueRange: [120, 200]
+    }
   }), [])
 
-  const colors = useMemo(() => colorSchemes[colorScheme], [colorSchemes, colorScheme])
+  // FIXED: Safe gradient creation with validation
+  const createSafeRadialGradient = useCallback((
+    ctx: CanvasRenderingContext2D,
+    x0: number,
+    y0: number,
+    r0: number,
+    x1: number,
+    y1: number,
+    r1: number
+  ) => {
+    // Ensure all values are finite and non-negative
+    const safeR0 = Math.max(0, isFinite(r0) ? r0 : 0)
+    const safeR1 = Math.max(0, isFinite(r1) ? r1 : 1) // Minimum radius of 1
+    const safeX0 = isFinite(x0) ? x0 : 0
+    const safeY0 = isFinite(y0) ? y0 : 0
+    const safeX1 = isFinite(x1) ? x1 : 0
+    const safeY1 = isFinite(y1) ? y1 : 0
 
-  // Initialize particles - FIXED: Memoized createParticle function
-  const createParticle = useCallback((index: number): Particle => {
-    const x = Math.random() * dimensions.width
-    const y = Math.random() * dimensions.height
-    const z = Math.random() * 100
+    // Additional safety: ensure r1 is not zero when r0 is zero
+    const finalR1 = safeR0 === 0 && safeR1 === 0 ? 1 : safeR1
+
+    try {
+      return ctx.createRadialGradient(safeX0, safeY0, safeR0, safeX1, safeY1, finalR1)
+    } catch (error) {
+      console.warn('Gradient creation failed, using fallback:', error)
+      // Fallback: create a simple gradient
+      return ctx.createRadialGradient(safeX0, safeY0, 0, safeX1, safeY1, 10)
+    }
+  }, [])
+
+  // Initialize particles
+  const initializeParticles = useCallback(() => {
+    const { width, height } = dimensionsRef.current
+    if (width === 0 || height === 0) return
+
+    particlesRef.current = Array.from({ length: particleCount }, () => {
+      const hueRange = colorSchemes[colorScheme].hueRange
+      return {
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * speed * 0.5,
+        vy: (Math.random() - 0.5) * speed * 0.5,
+        radius: Math.random() * 3 + 1, // Ensure minimum radius
+        opacity: Math.random() * 0.8 + 0.2,
+        hue: hueRange[0] + Math.random() * (hueRange[1] - hueRange[0]),
+        life: 0,
+        maxLife: Math.random() * 200 + 100
+      }
+    })
+  }, [particleCount, colorScheme, speed, colorSchemes])
+
+  // Update particle positions
+  const updateParticles = useCallback(() => {
+    const { width, height } = dimensionsRef.current
     
-    return {
-      id: `particle-${index}`,
-      x,
-      y,
-      z,
-      vx: (Math.random() - 0.5) * speed,
-      vy: (Math.random() - 0.5) * speed,
-      vz: (Math.random() - 0.5) * speed * 0.5,
-      size: Math.random() * 3 + 1,
-      opacity: Math.random() * 0.8 + 0.2,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      life: 0,
-      maxLife: Math.random() * 1000 + 500,
-      trail: []
-    }
-  }, [dimensions.width, dimensions.height, colors, speed])
-
-  // Initialize particles when dimensions change
-  useEffect(() => {
-    if (dimensions.width && dimensions.height) {
-      const newParticles = Array.from({ length: particleCount }, (_, i) => createParticle(i))
-      setParticles(newParticles)
-    }
-  }, [dimensions.width, dimensions.height, particleCount, createParticle])
-
-  // Handle window resize
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const { width, height } = containerRef.current.getBoundingClientRect()
-        setDimensions({ width, height })
+    particlesRef.current.forEach(particle => {
+      // Update position based on animation type
+      switch (animation) {
+        case 'drift':
+          particle.x += particle.vx * speed
+          particle.y += particle.vy * speed
+          break
+        case 'spiral':
+          const centerX = width / 2
+          const centerY = height / 2
+          const angle = particle.life * 0.02
+          const distance = 50 + particle.life * 0.5
+          particle.x = centerX + Math.cos(angle) * distance
+          particle.y = centerY + Math.sin(angle) * distance
+          break
+        case 'chaos':
+          particle.vx += (Math.random() - 0.5) * 0.1
+          particle.vy += (Math.random() - 0.5) * 0.1
+          particle.x += particle.vx * speed
+          particle.y += particle.vy * speed
+          break
+        case 'float':
+        default:
+          particle.y += particle.vy * speed * 0.3
+          particle.x += Math.sin(particle.life * 0.01) * 0.5
+          break
       }
-    }
 
-    updateDimensions()
-    if (responsive) {
-      window.addEventListener('resize', updateDimensions)
-      return () => window.removeEventListener('resize', updateDimensions)
-    }
-  }, [responsive])
+      // Interactive mode: attract to mouse
+      if (interactive) {
+        const dx = mouseRef.current.x - particle.x
+        const dy = mouseRef.current.y - particle.y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+        
+        if (distance < 100) {
+          const force = (100 - distance) / 100 * 0.01
+          particle.vx += dx * force
+          particle.vy += dy * force
+        }
+      }
 
-  // Mouse tracking
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!interactive) return
+      // Wrap around screen edges
+      if (particle.x < 0) particle.x = width
+      if (particle.x > width) particle.x = 0
+      if (particle.y < 0) particle.y = height
+      if (particle.y > height) particle.y = 0
+
+      // Update life cycle
+      particle.life++
+      if (particle.life > particle.maxLife) {
+        particle.life = 0
+        particle.x = Math.random() * width
+        particle.y = Math.random() * height
+        particle.opacity = Math.random() * 0.8 + 0.2
+      }
+
+      // Fade in/out based on life cycle
+      const lifeCycle = particle.life / particle.maxLife
+      if (lifeCycle < 0.1) {
+        particle.opacity *= lifeCycle / 0.1
+      } else if (lifeCycle > 0.9) {
+        particle.opacity *= (1 - lifeCycle) / 0.1
+      }
+    })
+  }, [animation, speed, interactive])
+
+  // FIXED: Safe rendering with gradient validation
+  const render = useCallback(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const { width, height } = dimensionsRef.current
+
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height)
+
+    // Render particles
+    particlesRef.current.forEach(particle => {
+      // Validate particle properties before rendering
+      if (!isFinite(particle.x) || !isFinite(particle.y) || 
+          !isFinite(particle.radius) || particle.radius <= 0) {
+        return // Skip invalid particles
+      }
+
+      // FIXED: Safe radius calculation
+      const safeRadius = Math.max(1, Math.min(50, particle.radius)) // Clamp between 1-50
       
-      const rect = containerRef.current?.getBoundingClientRect()
-      if (rect) {
-        setMousePos({
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top
-        })
-      }
-    }
+      try {
+        // Create safe gradient
+        const gradient = createSafeRadialGradient(
+          ctx,
+          particle.x,
+          particle.y,
+          0,
+          particle.x,
+          particle.y,
+          safeRadius
+        )
 
-    const container = containerRef.current
-    if (container) {
-      container.addEventListener('mousemove', handleMouseMove)
-      return () => container.removeEventListener('mousemove', handleMouseMove)
+        // Add color stops
+        const alpha = Math.max(0, Math.min(1, particle.opacity)) // Clamp alpha
+        gradient.addColorStop(0, `hsla(${particle.hue}, 70%, 60%, ${alpha})`)
+        gradient.addColorStop(0.7, `hsla(${particle.hue}, 80%, 50%, ${alpha * 0.5})`)
+        gradient.addColorStop(1, `hsla(${particle.hue}, 90%, 40%, 0)`)
+
+        // Draw particle
+        ctx.save()
+        ctx.globalCompositeOperation = 'screen'
+        ctx.fillStyle = gradient
+        ctx.beginPath()
+        ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.restore()
+      } catch (error) {
+        console.warn('Particle rendering error:', error)
+        // Fallback: draw simple circle
+        ctx.save()
+        ctx.fillStyle = `hsla(${particle.hue}, 70%, 60%, ${particle.opacity})`
+        ctx.beginPath()
+        ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.restore()
+      }
+    })
+  }, [createSafeRadialGradient])
+
+  // Animation loop
+  const animate = useCallback(() => {
+    updateParticles()
+    render()
+    animationRef.current = requestAnimationFrame(animate)
+  }, [updateParticles, render])
+
+  // Handle mouse movement
+  const handleMouseMove = useCallback((event: MouseEvent) => {
+    if (!interactive) return
+    
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const rect = canvas.getBoundingClientRect()
+    mouseRef.current = {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top
     }
   }, [interactive])
 
-  // Animation functions - FIXED: Memoized to avoid recreation
-  const applyAnimation = useCallback((particle: Particle, time: number) => {
-    switch (animation) {
-      case 'spiral':
-        const angle = time * 0.001 + particle.life * 0.01
-        particle.x += Math.cos(angle) * 0.5
-        particle.y += Math.sin(angle) * 0.5
-        break
-        
-      case 'wave':
-        particle.y += Math.sin(time * 0.001 + particle.x * 0.01) * 0.2
-        particle.x += particle.vx
-        break
-        
-      case 'matrix':
-        particle.y += speed * 2
-        if (particle.y > dimensions.height) {
-          particle.y = -particle.size
-          particle.x = Math.random() * dimensions.width
-        }
-        break
-        
-      case 'constellation':
-        // Apply mouse influence
-        if (interactive) {
-          const dx = mousePos.x - particle.x
-          const dy = mousePos.y - particle.y
-          const distance = Math.sqrt(dx * dx + dy * dy)
-          
-          if (distance < mouseInfluence) {
-            const force = (mouseInfluence - distance) / mouseInfluence
-            particle.vx += dx * force * 0.001
-            particle.vy += dy * force * 0.001
-          }
-        }
-        
-        // Apply velocity with damping
-        particle.x += particle.vx
-        particle.y += particle.vy
-        particle.z += particle.vz
-        
-        particle.vx *= 0.99
-        particle.vy *= 0.99
-        particle.vz *= 0.99
-        break
-        
-      case 'float':
-      default:
-        particle.x += particle.vx
-        particle.y += particle.vy
-        particle.z += particle.vz
-        break
-    }
-  }, [animation, interactive, mousePos.x, mousePos.y, mouseInfluence, speed, dimensions.height, dimensions.width])
-
-  // FIXED: Separate the drawing logic from the animation logic
-  const drawParticles = useCallback((ctx: CanvasRenderingContext2D, particles: Particle[]) => {
-    // Draw connections
-    if (showConnections) {
-      ctx.strokeStyle = 'rgba(190, 52, 85, 0.1)'
-      ctx.lineWidth = 0.5
-      
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const p1 = particles[i]
-          const p2 = particles[j]
-          const dx = p1.x - p2.x
-          const dy = p1.y - p2.y
-          const distance = Math.sqrt(dx * dx + dy * dy)
-          
-          if (distance < 100) {
-            const opacity = (100 - distance) / 100 * 0.2
-            ctx.globalAlpha = opacity
-            ctx.beginPath()
-            ctx.moveTo(p1.x, p1.y)
-            ctx.lineTo(p2.x, p2.y)
-            ctx.stroke()
-          }
-        }
-      }
-    }
-
-    // Draw particles
-    particles.forEach((particle, index) => {
-      // Draw trail
-      if (particle.trail.length > 1) {
-        ctx.strokeStyle = particle.color
-        ctx.lineWidth = 1
-        ctx.globalAlpha = 0.3
-        
-        ctx.beginPath()
-        ctx.moveTo(particle.trail[0].x, particle.trail[0].y)
-        
-        for (let i = 1; i < particle.trail.length; i++) {
-          ctx.lineTo(particle.trail[i].x, particle.trail[i].y)
-        }
-        ctx.stroke()
-      }
-
-      // Draw particle
-      const size = particle.size * (1 + particle.z * 0.01)
-      ctx.globalAlpha = particle.opacity
-      
-      // Create gradient
-      const gradient = ctx.createRadialGradient(
-        particle.x, particle.y, 0,
-        particle.x, particle.y, size
-      )
-      gradient.addColorStop(0, particle.color)
-      gradient.addColorStop(1, 'transparent')
-      
-      ctx.fillStyle = gradient
-      ctx.beginPath()
-      ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2)
-      ctx.fill()
-
-      // Draw glow effect for special particles
-      if (index % 10 === 0) {
-        ctx.globalAlpha = 0.1
-        ctx.fillStyle = particle.color
-        ctx.beginPath()
-        ctx.arc(particle.x, particle.y, size * 3, 0, Math.PI * 2)
-        ctx.fill()
-      }
-    })
-
-    ctx.globalAlpha = 1
-  }, [showConnections])
-
-  // FIXED: Main animation loop with proper dependencies
-  const animate = useCallback((time: number) => {
+  // Handle resize
+  const handleResize = useCallback(() => {
     const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d')
+    if (!canvas) return
+
+    const container = canvas.parentElement
+    if (!container) return
+
+    const rect = container.getBoundingClientRect()
+    const width = rect.width || window.innerWidth
+    const height = rect.height || window.innerHeight
+
+    // Update canvas size
+    canvas.width = width
+    canvas.height = height
+    canvas.style.width = `${width}px`
+    canvas.style.height = `${height}px`
+
+    dimensionsRef.current = { width, height }
     
-    if (!canvas || !ctx || !dimensions.width || !dimensions.height) {
-      animationRef.current = requestAnimationFrame(animate)
-      return
-    }
+    // Reinitialize particles with new dimensions
+    initializeParticles()
+  }, [initializeParticles])
 
-    canvas.width = dimensions.width * window.devicePixelRatio
-    canvas.height = dimensions.height * window.devicePixelRatio
-    canvas.style.width = `${dimensions.width}px`
-    canvas.style.height = `${dimensions.height}px`
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-
-    // Clear canvas
-    ctx.clearRect(0, 0, dimensions.width, dimensions.height)
-
-    // Update particles
-    setParticles(prevParticles => {
-      const newParticles = prevParticles.map((particle, index) => {
-        const newParticle = { ...particle }
-        
-        // Update particle life
-        newParticle.life += 1
-        
-        // Apply animation
-        applyAnimation(newParticle, time)
-        
-        // Wrap around edges
-        if (newParticle.x < 0) newParticle.x = dimensions.width
-        if (newParticle.x > dimensions.width) newParticle.x = 0
-        if (newParticle.y < 0) newParticle.y = dimensions.height
-        if (newParticle.y > dimensions.height) newParticle.y = 0
-        
-        // Update trail
-        newParticle.trail.push({ 
-          x: newParticle.x, 
-          y: newParticle.y, 
-          opacity: newParticle.opacity 
-        })
-        if (newParticle.trail.length > 10) {
-          newParticle.trail.shift()
-        }
-        
-        // Respawn particle if life exceeded
-        if (newParticle.life > newParticle.maxLife) {
-          return createParticle(index)
-        }
-        
-        return newParticle
-      })
-
-      // Draw the updated particles
-      drawParticles(ctx, newParticles)
-      
-      return newParticles
-    })
-
-    animationRef.current = requestAnimationFrame(animate)
-  }, [dimensions.width, dimensions.height, applyAnimation, createParticle, drawParticles])
-
-  // Start animation
+  // Setup and cleanup
   useEffect(() => {
-    if (isVisible && particles.length > 0) {
-      animationRef.current = requestAnimationFrame(animate)
-    }
+    handleResize()
     
+    const canvas = canvasRef.current
+    if (canvas && interactive) {
+      canvas.addEventListener('mousemove', handleMouseMove)
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    // Start animation
+    animate()
+
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
       }
+      
+      if (canvas) {
+        canvas.removeEventListener('mousemove', handleMouseMove)
+      }
+      
+      window.removeEventListener('resize', handleResize)
     }
-  }, [animate, isVisible, particles.length])
+  }, [handleResize, handleMouseMove, animate, interactive])
 
-  // Intersection observer for performance
+  // Reinitialize when props change
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting)
-      },
-      { threshold: 0.1 }
-    )
-
-    if (containerRef.current) {
-      observer.observe(containerRef.current)
-    }
-
-    return () => observer.disconnect()
-  }, [])
-
-  // FIXED: Preset configurations - memoized to prevent recreation
-  const presetConfigs = useMemo(() => ({
-    hero: () => controls.start({
-      filter: "brightness(1.2) contrast(1.1)",
-      transition: { duration: 2 }
-    }),
-    about: () => controls.start({
-      filter: "hue-rotate(45deg) saturate(1.3)",
-      transition: { duration: 1.5 }
-    }),
-    projects: () => controls.start({
-      filter: "brightness(0.9) contrast(1.2) saturate(1.1)",
-      transition: { duration: 1 }
-    })
-  }), [controls])
-
-  // FIXED: Memoize the preset handler to prevent recreation
-  const handlePresetClick = useCallback((preset: keyof typeof presetConfigs) => {
-    presetConfigs[preset]()
-  }, [presetConfigs])
+    initializeParticles()
+  }, [initializeParticles])
 
   return (
-    <motion.div
-      ref={containerRef}
-      className="absolute inset-0 overflow-hidden pointer-events-none"
-      style={{ opacity, scale }}
-      animate={controls}
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true }}
-    >
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 w-full h-full"
-        style={{
-          mixBlendMode: 'screen',
-          filter: 'blur(0.5px)'
-        }}
-      />
-
-      {/* Interactive Elements */}
-      {interactive && (
-        <motion.div
-          className="absolute pointer-events-auto inset-0"
-          onHoverStart={() => controls.start({ scale: 1.02 })}
-          onHoverEnd={() => controls.start({ scale: 1 })}
-        />
-      )}
-
-      {/* Performance Monitor */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="absolute top-4 right-4 text-xs text-lux-gray-600 dark:text-lux-gray-400 bg-white/80 dark:bg-lux-gray-800/80 rounded px-2 py-1 pointer-events-auto">
-          Particles: {particles.length} | Animation: {animation}
-        </div>
-      )}
-
-      {/* Ambient Effects */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(190, 52, 85, 0.05) 0%, transparent 50%)`
-        }}
-        animate={{
-          background: interactive ? [
-            `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(190, 52, 85, 0.05) 0%, transparent 50%)`,
-            `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(212, 175, 55, 0.03) 0%, transparent 50%)`,
-            `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(190, 52, 85, 0.05) 0%, transparent 50%)`
-          ] : undefined
-        }}
-        transition={{ duration: 3, repeat: Infinity }}
-      />
-
-      {/* Preset Triggers */}
-      <div className="absolute bottom-4 left-4 space-x-2 pointer-events-auto opacity-0 hover:opacity-100 transition-opacity">
-        {Object.keys(presetConfigs).map(preset => (
-          <button
-            key={preset}
-            onClick={() => handlePresetClick(preset as keyof typeof presetConfigs)}
-            className="px-2 py-1 text-xs bg-lux-gray-800/50 text-white rounded backdrop-blur-sm hover:bg-lux-gray-700/50 transition-colors"
-          >
-            {preset}
-          </button>
-        ))}
-      </div>
-    </motion.div>
+    <canvas
+      ref={canvasRef}
+      className={`pointer-events-none absolute inset-0 ${className}`}
+      style={{
+        width: '100%',
+        height: '100%',
+        opacity: 0.6
+      }}
+    />
   )
 }
-
-export default ParticleField

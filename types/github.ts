@@ -1,4 +1,4 @@
-// types/github.ts
+// types/github.ts - FIXED: Removed invalid export attempt
 export interface GitHubRepository {
   id: number
   name: string
@@ -325,3 +325,6 @@ export interface GitHubCacheOptions {
   etag?: string
   lastModified?: string
 }
+
+// REMOVED: Invalid export attempt of types as values
+// These were causing the TypeScript errors you saw

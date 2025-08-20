@@ -1,57 +1,19 @@
-// lib/github-api.ts - Complete GitHub API implementation with all missing exports
-
+// lib/github-api.ts - FIXED TYPE IMPORTS
 import { Octokit } from '@octokit/rest'
 
-// Types
-export interface GitHubRepository {
-  id: number
-  name: string
-  full_name: string
-  html_url: string
-  description: string | null
-  stargazers_count: number
-  forks_count: number
-  language: string | null
-  topics: string[]
-  pushed_at: string
-  updated_at: string
-  created_at: string // ADDED: Missing created_at property
-  homepage: string | null
-  archived: boolean
-  private: boolean
-  size: number // ADDED: Missing size property
-  default_branch: string // ADDED: Missing default_branch property
-  open_issues_count: number // ADDED: Missing open_issues_count property
-  disabled: boolean // ADDED: Missing disabled property
-  fork: boolean // ADDED: Missing fork property
-}
+// FIXED: Import utility functions as regular imports, not type imports
+import { 
+  isGitHubRepository, 
+  isGitHubUser, 
+  calculateRepositoryScore 
+} from '@/utils/github-helpers'
 
-export interface GitHubUser {
-  login: string
-  name: string | null
-  bio: string | null
-  avatar_url: string
-  html_url: string
-  followers: number
-  following: number
-  public_repos: number
-  location?: string | null // ADDED: Optional location
-  company?: string | null // ADDED: Optional company
-  blog?: string | null // ADDED: Optional blog
-}
-
-export interface GitHubStats {
-  user: GitHubUser
-  repositories: GitHubRepository[] | number // FIXED: Can be array or number
-  totalStars: number
-  totalForks: number
-  languageStats: Record<string, number>
-  recentActivity: {
-    lastCommit: string
-    commitsThisMonth: number
-    activeProjects?: number // ADDED: Optional activeProjects
-  }
-}
+// Keep type imports separate
+import type { 
+  GitHubRepository, 
+  GitHubUser, 
+  GitHubStats 
+} from '@/types/github'
 
 // Initialize Octokit only if running on server-side or client-side with proper check
 const createOctokit = () => {
@@ -90,7 +52,7 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 // Helper function to check if we can make API calls
 function canMakeAPICall(): boolean {
-  return octokit !== null && typeof window !== 'undefined' || typeof process !== 'undefined'
+  return octokit !== null && (typeof window !== 'undefined' || typeof process !== 'undefined')
 }
 
 // Main API functions
@@ -104,8 +66,9 @@ export async function fetchGitHubUser(username: string = 'sippinwindex'): Promis
       username,
     })
 
-    return {
+    const user: GitHubUser = {
       login: data.login,
+      id: data.id,
       name: data.name,
       bio: data.bio,
       avatar_url: data.avatar_url,
@@ -116,7 +79,13 @@ export async function fetchGitHubUser(username: string = 'sippinwindex'): Promis
       location: data.location,
       company: data.company,
       blog: data.blog,
+      email: data.email,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      type: data.type as 'User' | 'Organization'
     }
+
+    return user
   } catch (error) {
     console.error('Error fetching GitHub user:', error)
     throw new Error('Failed to fetch GitHub user data')
@@ -136,7 +105,7 @@ export async function fetchGitHubRepositories(username: string = 'sippinwindex')
       per_page: 100,
     })
 
-    return data.map(repo => ({
+    const repositories: GitHubRepository[] = data.map(repo => ({
       id: repo.id,
       name: repo.name,
       full_name: repo.full_name,
@@ -148,16 +117,40 @@ export async function fetchGitHubRepositories(username: string = 'sippinwindex')
       topics: repo.topics || [],
       pushed_at: repo.pushed_at || '',
       updated_at: repo.updated_at || new Date().toISOString(),
-      created_at: repo.created_at || new Date().toISOString(), // FIXED: Added created_at
+      created_at: repo.created_at || new Date().toISOString(),
       homepage: repo.homepage || null,
       archived: repo.archived || false,
       private: repo.private || false,
-      size: repo.size || 0, // ADDED: size property
-      default_branch: repo.default_branch || 'main', // ADDED: default_branch
-      open_issues_count: repo.open_issues_count || 0, // ADDED: open_issues_count
-      disabled: repo.disabled || false, // ADDED: disabled property
-      fork: repo.fork || false, // ADDED: fork property
+      size: repo.size || 0,
+      default_branch: repo.default_branch || 'main',
+      open_issues_count: repo.open_issues_count || 0,
+      disabled: repo.disabled || false,
+      fork: repo.fork || false,
+      watchers_count: repo.watchers_count || 0,
+      has_issues: repo.has_issues || false,
+      has_projects: repo.has_projects || false,
+      has_wiki: repo.has_wiki || false,
+      has_pages: repo.has_pages || false,
+      has_downloads: repo.has_downloads || false,
+      // FIXED: Proper license type handling with required string fields
+      license: repo.license && repo.license.key && repo.license.name ? {
+        key: repo.license.key,
+        name: repo.license.name,
+        spdx_id: repo.license.spdx_id || '',
+        url: repo.license.url || '',
+        node_id: repo.license.node_id || ''
+      } : undefined,
+      owner: {
+        login: repo.owner?.login || username,
+        id: repo.owner?.id || 0,
+        avatar_url: repo.owner?.avatar_url || '',
+        html_url: repo.owner?.html_url || '',
+        type: (repo.owner?.type as 'User' | 'Organization') || 'User'
+      }
     }))
+
+    // FIXED: Now using imported function correctly
+    return repositories.filter(repo => isGitHubRepository(repo))
   } catch (error) {
     console.error('Error fetching GitHub repositories:', error)
     throw new Error('Failed to fetch GitHub repositories')
@@ -179,13 +172,19 @@ export async function getCachedRepositories(username: string = 'sippinwindex'): 
   try {
     const repositories = await fetchGitHubRepositories(username)
     
+    // FIXED: Now using imported function correctly
+    const scoredRepositories = repositories.map(repo => ({
+      ...repo,
+      _score: calculateRepositoryScore(repo, repositories)
+    })).sort((a, b) => (b._score || 0) - (a._score || 0))
+    
     // Update cache
     repositoriesCache = {
-      data: repositories,
+      data: scoredRepositories,
       timestamp: now
     }
     
-    return repositories
+    return scoredRepositories
   } catch (error) {
     // If fetch fails and we have stale cache, return it
     if (repositoriesCache.data) {
@@ -223,9 +222,9 @@ export async function fetchGitHubStats(username: string = 'sippinwindex'): Promi
       new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime()
     )[0]
 
-    return {
+    const stats: GitHubStats = {
       user,
-      repositories: repositories.length, // FIXED: Return count instead of array
+      repositories: repositories.length,
       totalStars,
       totalForks,
       languageStats,
@@ -244,7 +243,10 @@ export async function fetchGitHubStats(username: string = 'sippinwindex'): Promi
           return pushedDate > threeMonthsAgo && !repo.archived
         }).length,
       },
+      topRepositories: repositories.slice(0, 10)
     }
+
+    return stats
   } catch (error) {
     console.error('Error fetching GitHub stats:', error)
     throw new Error('Failed to fetch GitHub statistics')
@@ -286,7 +288,7 @@ export function createGitHubAPI() {
     fetchRepositories: getCachedRepositories,
     fetchStats: fetchGitHubStats,
     clearCache: clearRepositoriesCache,
-    getRepositories: getCachedRepositories, // ADDED: alias for compatibility
+    getRepositories: getCachedRepositories,
   }
 }
 
