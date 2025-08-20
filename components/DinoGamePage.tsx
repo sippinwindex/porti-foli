@@ -12,8 +12,8 @@ const PLAYER_HEIGHT = 47
 const DUCK_HEIGHT = 26
 const GAME_WIDTH = 800
 const GAME_HEIGHT = 400
-const BASE_SPEED = 8
-const MAX_SPEED = 16
+const BASE_SPEED = 6 // Reduced starting speed
+const MAX_SPEED = 12 // Reduced max speed for better progression
 
 interface Obstacle {
   id: number
@@ -83,7 +83,7 @@ export default function SynthwaveRunnerGame() {
   const collectibles = useRef<Collectible[]>([])
   const speed = useRef(BASE_SPEED)
   const distance = useRef(0)
-  const obstacleTimer = useRef(0)
+  const obstacleTimer = useRef(0) // Reset obstacle timer
   const lastObstacleX = useRef(GAME_WIDTH)
   
   // Power-up states
@@ -133,7 +133,7 @@ export default function SynthwaveRunnerGame() {
     collectibles.current = []
     speed.current = BASE_SPEED
     distance.current = 0
-    obstacleTimer.current = 0
+    obstacleTimer.current = 0 // Reset obstacle timer
     lastObstacleX.current = GAME_WIDTH
     shieldActive.current = false
     shieldTimeLeft.current = 0
@@ -224,10 +224,10 @@ export default function SynthwaveRunnerGame() {
     }
   }, [gameState, jump, startDucking, stopDucking, startGame, restartGame])
 
-  // Collision detection with proper hitboxes
+  // Improved collision detection with more forgiving hitboxes
   const checkCollision = useCallback((playerRect: any, obstacleRect: any) => {
-    // Add small buffer to make collisions feel fair
-    const buffer = 2
+    // More generous buffer for fairer gameplay
+    const buffer = 4
     return (
       playerRect.x + buffer < obstacleRect.x + obstacleRect.width &&
       playerRect.x + playerRect.width - buffer > obstacleRect.x &&
@@ -502,62 +502,86 @@ export default function SynthwaveRunnerGame() {
       }
     }
 
-    // Update game speed and distance
+    // Update game speed with Google Dino-style progression
     distance.current += speed.current * 0.1
-    speed.current = Math.min(BASE_SPEED + Math.floor(distance.current / 100) * 0.5, MAX_SPEED)
+    
+    // More gradual speed increase like Google Dino
+    // Speed increases every 100 distance units, but at a slower rate
+    const speedIncreaseInterval = 100
+    const speedIncreaseAmount = 0.2 // Much smaller increments
+    const targetSpeed = BASE_SPEED + Math.floor(distance.current / speedIncreaseInterval) * speedIncreaseAmount
+    
+    // Cap the maximum speed at a reasonable level
+    speed.current = Math.min(targetSpeed, BASE_SPEED + 4) // Max speed is BASE_SPEED + 4
     
     // Update visual offsets
     backgroundOffset.current += speed.current * 0.5
     groundOffset.current += speed.current
 
-    // Spawn obstacles with proper Google Dino-like timing and spacing
-    const minDistance = Math.max(150, 100 + speed.current * 8) // Minimum safe distance based on speed
-    const maxDistance = minDistance + 100 // Maximum distance for variety
+    // Google Dino-style obstacle spawning with proper difficulty curve
+    const baseSpawnRate = 1200 // Base time between obstacles (ms) - much more generous
+    const speedMultiplier = Math.max(0.3, 1 - (distance.current / 2000)) // Reduce time between obstacles as distance increases
+    const currentSpawnRate = baseSpawnRate * speedMultiplier
     
-    // Only spawn if enough distance has passed since last obstacle
-    if (obstacles.current.length === 0 || 
-        (obstacles.current[obstacles.current.length - 1].x < lastObstacleX.current - minDistance)) {
+    // Track time since last obstacle
+    obstacleTimer.current += deltaTime
+    
+    // Only spawn if enough time has passed and we don't have too many obstacles
+    if (obstacleTimer.current >= currentSpawnRate && obstacles.current.length < 3) {
       
-      // Random chance to spawn (not every opportunity)
-      if (Math.random() < 0.6) { // 60% chance when distance allows
+      // Progressive spawn chance - starts lower, increases gradually
+      const baseChance = 0.7 + (distance.current / 5000) * 0.3 // 70% to 100% over 5000m
+      
+      if (Math.random() < Math.min(baseChance, 1.0)) {
         
-        // Choose obstacle type based on progression
-        const canSpawnBirds = distance.current > 800
-        const obstacleTypes: ('cactus' | 'rock' | 'bird')[] = canSpawnBirds ? ['cactus', 'rock', 'bird'] : ['cactus', 'rock']
-        
-        // Weighted selection - favor ground obstacles early
+        // Obstacle type progression
+        const canSpawnBirds = distance.current > 1000
         let selectedType: 'cactus' | 'rock' | 'bird'
-        const rand = Math.random()
-        if (!canSpawnBirds || rand < 0.7) { // 70% ground obstacles
-          selectedType = rand < 0.4 ? 'cactus' : 'rock'
+        
+        if (!canSpawnBirds) {
+          // Early game: only ground obstacles, favor smaller ones
+          selectedType = Math.random() < 0.6 ? 'cactus' : 'rock'
         } else {
-          selectedType = 'bird'
+          // Late game: mix of all types, but still favor ground obstacles
+          const rand = Math.random()
+          if (rand < 0.5) {
+            selectedType = 'cactus'
+          } else if (rand < 0.8) {
+            selectedType = 'rock'
+          } else {
+            selectedType = 'bird'
+          }
         }
         
+        // Standardized obstacle dimensions for fair gameplay
         let width = 25
-        let height = 40
+        let height = 35
         let y = GAME_HEIGHT - GROUND_Y - height
         
         if (selectedType === 'bird') {
           width = 35
-          height = 24
-          // Birds fly at specific heights that can be ducked under
-          const birdHeights = [70, 85, 100] // Different duck-able heights
+          height = 20
+          // Birds at fixed, duck-able heights
+          const birdHeights = [65, 80] // All heights allow ducking
           const selectedHeight = birdHeights[Math.floor(Math.random() * birdHeights.length)]
           y = GAME_HEIGHT - GROUND_Y - selectedHeight
         } else if (selectedType === 'cactus') {
-          height = 30 + Math.random() * 20 // Varying heights but all jumpable
-          width = 20 + Math.random() * 10
+          // Standardized cactus heights - all jumpable
+          const cactusHeights = [30, 35, 40] // All heights are jumpable with standard jump
+          height = cactusHeights[Math.floor(Math.random() * cactusHeights.length)]
+          width = 20 + Math.random() * 8 // Slight width variation
           y = GAME_HEIGHT - GROUND_Y - height
         } else if (selectedType === 'rock') {
-          height = 25 + Math.random() * 15 // Smaller rocks
-          width = 25 + Math.random() * 10
+          // Standardized rock heights - all jumpable
+          const rockHeights = [25, 30, 35] // All heights are jumpable
+          height = rockHeights[Math.floor(Math.random() * rockHeights.length)]
+          width = 25 + Math.random() * 8 // Slight width variation
           y = GAME_HEIGHT - GROUND_Y - height
         }
         
         const newObstacle = {
           id: Date.now(),
-          x: GAME_WIDTH + 20, // Spawn slightly off screen
+          x: GAME_WIDTH + 50, // Spawn further off screen for fairness
           type: selectedType,
           width,
           height,
@@ -565,7 +589,14 @@ export default function SynthwaveRunnerGame() {
         }
         
         obstacles.current.push(newObstacle)
-        lastObstacleX.current = newObstacle.x
+        obstacleTimer.current = 0 // Reset timer
+        
+        // Add some randomness to prevent predictable patterns
+        const randomDelay = Math.random() * 200 // 0-200ms additional delay
+        obstacleTimer.current = -randomDelay
+      } else {
+        // If we don't spawn, reset timer with a shorter delay for next chance
+        obstacleTimer.current = currentSpawnRate * 0.3
       }
     }
 
@@ -575,8 +606,8 @@ export default function SynthwaveRunnerGame() {
       return obstacle.x > -100
     })
 
-    // Spawn power-ups occasionally
-    if (Math.random() < 0.001) { // Much rarer than before
+    // Spawn power-ups less frequently for balanced gameplay
+    if (Math.random() < 0.0005) { // Much rarer than before
       const types: PowerUp['type'][] = ['shield', 'magnet', 'star']
       powerUps.current.push({
         id: Date.now(),
@@ -593,8 +624,8 @@ export default function SynthwaveRunnerGame() {
       return powerUp.x > -50
     })
 
-    // Spawn collectibles
-    if (Math.random() < 0.005) {
+    // Spawn collectibles more moderately
+    if (Math.random() < 0.002) { // Balanced frequency
       collectibles.current.push({
         id: Date.now(),
         x: GAME_WIDTH + 30,
