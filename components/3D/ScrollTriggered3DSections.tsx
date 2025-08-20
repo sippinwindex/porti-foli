@@ -38,6 +38,7 @@ interface PortfolioStats {
 interface ScrollTriggered3DSectionsProps {
   projects?: Project[]
   stats?: PortfolioStats | null
+  onProjectClick?: (project: Project) => void
 }
 
 // Memoized default data to prevent recreation
@@ -72,8 +73,14 @@ const DEFAULT_STATS: PortfolioStats = {
   }
 }
 
-// ✅ FIX: ProjectCard component moved outside with proper hook usage
-const ProjectCard: React.FC<{ project: Project; index: number; isInView: boolean; shouldReduceMotion: boolean }> = React.memo(({ project, index, isInView, shouldReduceMotion }) => {
+// ProjectCard component with enhanced click handling
+const ProjectCard: React.FC<{ 
+  project: Project
+  index: number
+  isInView: boolean
+  shouldReduceMotion: boolean
+  onProjectClick?: (project: Project) => void
+}> = React.memo(({ project, index, isInView, shouldReduceMotion, onProjectClick }) => {
   const cardRef = useRef<HTMLDivElement>(null)
   const [rotation, setRotation] = useState({ x: 0, y: 0 })
   const [glowPosition, setGlowPosition] = useState({ x: 50, y: 50 })
@@ -121,18 +128,33 @@ const ProjectCard: React.FC<{ project: Project; index: number; isInView: boolean
     setGlowPosition({ x: 50, y: 50 })
   }, [])
 
+  // Enhanced project click handler that prioritizes live deployments
   const handleProjectClick = useCallback(() => {
-    if (project.vercel?.liveUrl) {
-      window.open(project.vercel.liveUrl, '_blank', 'noopener,noreferrer')
+    console.log('ProjectCard: Project clicked:', project.name)
+    
+    if (onProjectClick) {
+      console.log('ProjectCard: Calling onProjectClick callback')
+      onProjectClick(project)
+    } else {
+      // Fallback direct navigation logic
+      console.log('ProjectCard: No callback provided, using direct navigation')
+      if (project.vercel?.isLive && project.vercel.liveUrl) {
+        console.log('ProjectCard: Opening live URL:', project.vercel.liveUrl)
+        window.open(project.vercel.liveUrl, '_blank', 'noopener,noreferrer')
+      } else if (project.github?.url) {
+        console.log('ProjectCard: Opening GitHub URL:', project.github.url)
+        window.open(project.github.url, '_blank', 'noopener,noreferrer')
+      }
     }
-  }, [project.vercel?.liveUrl])
+  }, [project, onProjectClick])
 
   const handleGitHubClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
+    console.log('ProjectCard: GitHub button clicked for:', project.name)
     if (project.github?.url) {
       window.open(project.github.url, '_blank', 'noopener,noreferrer')
     }
-  }, [project.github?.url])
+  }, [project.github?.url, project.name])
 
   return (
     <motion.div
@@ -248,12 +270,12 @@ const ProjectCard: React.FC<{ project: Project; index: number; isInView: boolean
             className="group/btn flex-1 relative px-4 py-3 bg-gradient-to-r from-pink-600 to-yellow-600 text-white font-medium rounded-lg overflow-hidden shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             whileHover={{ scale: shouldReduceMotion ? 1 : 1.02 }}
             whileTap={{ scale: shouldReduceMotion ? 1 : 0.98 }}
-            disabled={!project.vercel?.isLive}
+            disabled={!project.vercel?.isLive && !project.github?.url}
             onClick={handleProjectClick}
           >
             <span className="relative z-10 flex items-center justify-center gap-2">
               <ExternalLink className="w-4 h-4" />
-              {project.vercel?.isLive ? 'View Live' : 'Coming Soon'}
+              {project.vercel?.isLive ? 'View Live' : project.github?.url ? 'View Code' : 'Coming Soon'}
             </span>
             {!shouldReduceMotion && (
               <motion.div
@@ -266,10 +288,11 @@ const ProjectCard: React.FC<{ project: Project; index: number; isInView: boolean
           </motion.button>
           
           <motion.button
-            className="px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:border-pink-400 dark:hover:border-pink-600 hover:text-pink-600 dark:hover:text-pink-400 transition-all duration-300"
+            className="px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:border-pink-400 dark:hover:border-pink-600 hover:text-pink-600 dark:hover:text-pink-400 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
             whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
             onClick={handleGitHubClick}
+            disabled={!project.github?.url}
             aria-label="View source code"
           >
             <Github className="w-4 h-4" />
@@ -291,10 +314,9 @@ const ProjectCard: React.FC<{ project: Project; index: number; isInView: boolean
   )
 })
 
-// ✅ FIX: Add display name
 ProjectCard.displayName = 'ProjectCard'
 
-// ✅ FIX: StatCard component moved outside with proper hook usage
+// StatCard component
 const StatCard: React.FC<{ 
   label: string
   value: number
@@ -408,12 +430,12 @@ const StatCard: React.FC<{
   </motion.div>
 ))
 
-// ✅ FIX: Add display name
 StatCard.displayName = 'StatCard'
 
 const ScrollTriggered3DSections: React.FC<ScrollTriggered3DSectionsProps> = ({ 
   projects = [], 
-  stats = null
+  stats = null,
+  onProjectClick
 }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const shouldReduceMotion = useReducedMotion() ?? false
@@ -431,11 +453,11 @@ const ScrollTriggered3DSections: React.FC<ScrollTriggered3DSectionsProps> = ({
   const springScrollY = useSpring(scrollYProgress, springConfig)
   const backgroundY = useTransform(springScrollY, [0, 1], ["0%", shouldReduceMotion ? "20%" : "100%"])
 
-  // ✅ FIX: Direct object assignment instead of useMemo to avoid dependency issues
+  // Use provided projects or fallback to defaults
   const displayProjects = projects.length > 0 ? projects.slice(0, 6) : DEFAULT_PROJECTS
   const processedStats = stats || DEFAULT_STATS
 
-  // ✅ FIX: ProjectsSection component moved inside with proper hook usage
+  // ProjectsSection component
   const ProjectsSection = React.memo(() => {
     const sectionRef = useRef<HTMLDivElement>(null)
     const isInView = useInView(sectionRef, { once: true, margin: "-100px" })
@@ -468,6 +490,7 @@ const ScrollTriggered3DSections: React.FC<ScrollTriggered3DSectionsProps> = ({
                 index={index} 
                 isInView={isInView}
                 shouldReduceMotion={shouldReduceMotion}
+                onProjectClick={onProjectClick}
               />
             ))}
           </div>
@@ -476,7 +499,6 @@ const ScrollTriggered3DSections: React.FC<ScrollTriggered3DSectionsProps> = ({
     )
   })
 
-  // ✅ FIX: Add display name
   ProjectsSection.displayName = 'ProjectsSection'
 
   // Enhanced GitHub Stats Section with Better Performance
@@ -490,7 +512,7 @@ const ScrollTriggered3DSections: React.FC<ScrollTriggered3DSectionsProps> = ({
       totalCommits: 0
     })
 
-    // ✅ FIX: Remove useMemo entirely - use direct object assignment
+    // Target stats object
     const targetStats = {
       totalProjects: processedStats.totalProjects || 25,
       totalStars: processedStats.totalStars || 150,
@@ -498,7 +520,7 @@ const ScrollTriggered3DSections: React.FC<ScrollTriggered3DSectionsProps> = ({
       totalCommits: 500 // Could be calculated from other data
     }
 
-    // ✅ FIX: Enhanced number animation with proper dependencies
+    // Enhanced number animation with proper dependencies
     useEffect(() => {
       if (!isInView) {
         return
@@ -533,7 +555,7 @@ const ScrollTriggered3DSections: React.FC<ScrollTriggered3DSectionsProps> = ({
       }, interval)
 
       return () => clearInterval(timer)
-    }, [isInView, shouldReduceMotion]) // ✅ Only include values that change
+    }, [isInView, shouldReduceMotion])
 
     // Memoized tech data to prevent recreation
     const techData = useMemo(() => [
@@ -676,7 +698,6 @@ const ScrollTriggered3DSections: React.FC<ScrollTriggered3DSectionsProps> = ({
     )
   })
 
-  // ✅ FIX: Add display name
   GitHubStatsSection.displayName = 'GitHubStatsSection'
 
   return (
@@ -702,7 +723,6 @@ const ScrollTriggered3DSections: React.FC<ScrollTriggered3DSectionsProps> = ({
   )
 }
 
-// ✅ FIX: Add display name
 ScrollTriggered3DSections.displayName = 'ScrollTriggered3DSections'
 
 export default React.memo(ScrollTriggered3DSections)

@@ -1,4 +1,4 @@
-// Updated app/page.tsx - Integrated LocationWelcomeMessage with optimal UX placement
+// Updated app/page.tsx - Fixed project linking behavior while preserving existing design
 'use client'
 
 import { Suspense, useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -60,7 +60,7 @@ interface PortfolioProject {
   liveUrl?: string
 }
 
-// Project interface for 3D components (with all required fields)
+// FIXED: Enhanced Project interface for 3D components with proper linking data
 interface Project {
   id: string
   title: string // Required for 3D components
@@ -81,6 +81,10 @@ interface Project {
   category?: string
   lastUpdated?: string // Optional for display
   imageUrl?: string // Optional for display
+  // FIXED: Add linking behavior properties
+  primaryAction?: 'live' | 'github' | 'details'
+  clickUrl?: string
+  hasLiveDeployment?: boolean
 }
 
 interface LanguageData {
@@ -174,6 +178,7 @@ const LanguageVisualization = dynamic(
   }
 )
 
+// FIXED: Enhanced 3D Projects component with click handler support
 const ScrollTriggered3DSections = dynamic(
   () => import('@/components/3D/ScrollTriggered3DSections').catch(() => {
     console.warn('Failed to load ScrollTriggered3DSections, using fallback')
@@ -196,7 +201,78 @@ const ParticleField = dynamic(
   }
 )
 
-// Enhanced Loading Skeletons
+// FIXED: Helper function to determine the best click action for a project
+function getProjectClickAction(project: PortfolioProject): {
+  action: 'live' | 'github' | 'details'
+  url?: string
+  hasLive: boolean
+} {
+  // Priority 1: Vercel live deployment
+  if (project.vercel?.isLive && project.vercel.liveUrl) {
+    return {
+      action: 'live',
+      url: project.vercel.liveUrl,
+      hasLive: true
+    }
+  }
+
+  // Priority 2: Any live URL that looks like a deployment
+  if (project.liveUrl && isValidDeploymentUrl(project.liveUrl)) {
+    return {
+      action: 'live',
+      url: project.liveUrl,
+      hasLive: true
+    }
+  }
+
+  // Priority 3: GitHub repository
+  if (project.github?.url || project.githubUrl) {
+    return {
+      action: 'github',
+      url: project.github?.url || project.githubUrl,
+      hasLive: false
+    }
+  }
+
+  // Fallback: Project details page
+  return {
+    action: 'details',
+    url: `/projects/${project.id}`,
+    hasLive: false
+  }
+}
+
+// FIXED: Helper function to validate deployment URLs
+function isValidDeploymentUrl(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url)
+    const hostname = parsedUrl.hostname.toLowerCase()
+    
+    // Known deployment platforms
+    const deploymentPlatforms = [
+      'vercel.app',
+      'netlify.app',
+      'herokuapp.com',
+      'github.io',
+      'surge.sh',
+      'firebase.app',
+      'web.app',
+      'cloudfront.net',
+      'azurewebsites.net',
+      'railway.app'
+    ]
+    
+    return deploymentPlatforms.some(platform => 
+      hostname.includes(platform) || hostname.endsWith(platform)
+    ) || 
+    // Custom domains that look like deployment URLs
+    (!hostname.includes('github.com') && !hostname.includes('localhost'))
+  } catch {
+    return false
+  }
+}
+
+// Enhanced Loading Skeletons (unchanged)
 function HeroSkeleton() {
   return (
     <div className="min-h-screen flex items-center justify-center pt-20">
@@ -321,7 +397,7 @@ function ProjectsSkeleton() {
   )
 }
 
-// Enhanced Page Loading
+// Enhanced Page Loading (unchanged)
 function PageLoading() {
   const [loadingText, setLoadingText] = useState('Initializing...')
   const [progress, setProgress] = useState(0)
@@ -378,7 +454,7 @@ function PageLoading() {
   )
 }
 
-// Updated language data with realistic values for 2+ years experience
+// Updated language data with realistic values for 2+ years experience (unchanged)
 const LANGUAGE_DATA: LanguageData[] = [
   {
     name: 'TypeScript',
@@ -448,7 +524,7 @@ const LANGUAGE_DATA: LanguageData[] = [
   }
 ]
 
-// Updated contact options with verified working links
+// Updated contact options with verified working links (unchanged)
 const CONTACT_OPTIONS: ContactOption[] = [
   {
     icon: Mail,
@@ -518,23 +594,53 @@ export default function HomePage() {
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const shouldReduceMotion = useReducedMotion()
 
+  // FIXED: Enhanced project click handler for 3D components
+  const handleProjectClick = useCallback((clickedProject: Project) => {
+    console.log('🎯 3D Project clicked:', clickedProject.name)
+    
+    // Use the enhanced click action logic
+    const { action, url } = clickedProject.primaryAction && clickedProject.clickUrl 
+      ? { action: clickedProject.primaryAction, url: clickedProject.clickUrl }
+      : getProjectClickAction(clickedProject as PortfolioProject)
+
+    console.log(`🔗 Action: ${action}, URL: ${url}`)
+
+    if (url) {
+      if (action === 'details') {
+        // Navigate to project details page
+        window.location.href = url
+      } else {
+        // Open live demo or GitHub in new tab
+        window.open(url, '_blank', 'noopener,noreferrer')
+      }
+    }
+  }, [])
+
   // Enhanced portfolio stats with proper type handling and realistic values
   const portfolioStats = useMemo((): PortfolioStats => {
-    // Safely transform PortfolioProject[] to Project[] format
-    const transformedProjects: Project[] = projects.map(p => ({
-      id: p.id,
-      title: p.title || p.name, // Use title if available, fallback to name
-      name: p.name,
-      description: p.description,
-      techStack: p.techStack || [],
-      github: p.github,
-      vercel: p.vercel,
-      deploymentScore: 85, // Generate a reasonable score since not in PortfolioProject
-      featured: p.featured,
-      category: 'fullstack', // Default category since not in PortfolioProject
-      lastUpdated: new Date().toISOString(), // Generate current date since not in PortfolioProject
-      imageUrl: `/images/projects/${p.id}.jpg` // Generate image path since not in PortfolioProject
-    }))
+    // FIXED: Enhanced project transformation with click behavior
+    const transformedProjects: Project[] = projects.map(p => {
+      const clickAction = getProjectClickAction(p)
+      
+      return {
+        id: p.id,
+        title: p.title || p.name, // Use title if available, fallback to name
+        name: p.name,
+        description: p.description,
+        techStack: p.techStack || [],
+        github: p.github,
+        vercel: p.vercel,
+        deploymentScore: 85, // Generate a reasonable score since not in PortfolioProject
+        featured: p.featured,
+        category: 'fullstack', // Default category since not in PortfolioProject
+        lastUpdated: new Date().toISOString(), // Generate current date since not in PortfolioProject
+        imageUrl: `/images/projects/${p.id}.jpg`, // Generate image path since not in PortfolioProject
+        // FIXED: Add linking behavior data
+        primaryAction: clickAction.action,
+        clickUrl: clickAction.url,
+        hasLiveDeployment: clickAction.hasLive
+      }
+    })
 
     // Use real GitHub data if available, fallback to processed data
     const realProjects = transformedProjects.length > 0 ? transformedProjects : []
@@ -546,7 +652,7 @@ export default function HomePage() {
     const result: PortfolioStats = {
       totalProjects: realProjects.length || realStats?.totalProjects || 8,
       totalStars: realStats?.totalStars || realProjects.reduce((acc, p) => acc + (p.github?.stars || 0), 0) || 25,
-      liveProjects: realProjects.filter(p => p.vercel?.isLive).length || 6, // Calculate from projects since GitHubStats doesn't have this
+      liveProjects: realProjects.filter(p => p.hasLiveDeployment).length || 6, // FIXED: Use hasLiveDeployment
       totalForks: realStats?.totalForks || realProjects.reduce((acc, p) => acc + (p.github?.forks || 0), 0) || 12,
       topLanguages: realStats?.topLanguages || LANGUAGE_DATA.slice(0, 3).map(lang => lang.name),
       totalCommits: LANGUAGE_DATA.reduce((acc, lang) => acc + (lang.commits || 0), 0),
@@ -560,29 +666,50 @@ export default function HomePage() {
     return result
   }, [projects, stats, githubStats])
 
-  // Transform projects for 3D components with proper type safety
+  // FIXED: Transform projects for 3D components with proper linking behavior
   const transformedProjects = useMemo((): Project[] => {
-    return projects.map(p => ({
-      id: p.id,
-      title: p.title || p.name, // Ensure title is always available
-      name: p.name,
-      description: p.description,
-      techStack: p.techStack || [],
-      github: p.github,
-      vercel: p.vercel,
-      deploymentScore: Math.floor(Math.random() * 30) + 70, // Generate score (70-100)
-      featured: p.featured,
-      category: 'fullstack', // Default category
-      lastUpdated: new Date().toISOString(), // Current date
-      imageUrl: `/images/projects/${p.id}.jpg` // Generate image path
-    }))
+    const transformed = projects.map(p => {
+      const clickAction = getProjectClickAction(p)
+      
+      return {
+        id: p.id,
+        title: p.title || p.name, // Ensure title is always available
+        name: p.name,
+        description: p.description,
+        techStack: p.techStack || [],
+        github: p.github,
+        vercel: p.vercel,
+        deploymentScore: Math.floor(Math.random() * 30) + 70, // Generate score (70-100)
+        featured: p.featured,
+        category: 'fullstack', // Default category
+        lastUpdated: new Date().toISOString(), // Current date
+        imageUrl: `/images/projects/${p.id}.jpg`, // Generate image path
+        // FIXED: Add linking behavior data for 3D components
+        primaryAction: clickAction.action,
+        clickUrl: clickAction.url,
+        hasLiveDeployment: clickAction.hasLive
+      }
+    })
+
+    // Log project linking behavior for debugging
+    console.log('🏠 Home Page Project Click Behavior:')
+    transformed.forEach(project => {
+      console.log(`  📦 ${project.name}:`, {
+        primaryAction: project.primaryAction,
+        clickUrl: project.clickUrl,
+        hasLive: project.hasLiveDeployment,
+        featured: project.featured
+      })
+    })
+
+    return transformed
   }, [projects])
 
   const techStack = useMemo(() => 
     ['React', 'TypeScript', 'Next.js', 'Node.js', 'Python', 'Three.js'], []
   )
 
-  // Enhanced mobile detection
+  // Enhanced mobile detection (unchanged)
   useEffect(() => {
     let ticking = false
     
@@ -602,7 +729,7 @@ export default function HomePage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Enhanced loading with GitHub data waiting
+  // Enhanced loading with GitHub data waiting (unchanged)
   useEffect(() => {
     const minLoadTime = shouldReduceMotion ? 800 : 2000
     const maxLoadTime = shouldReduceMotion ? 1200 : 3000
@@ -620,7 +747,7 @@ export default function HomePage() {
     return () => clearTimeout(timer)
   }, [shouldReduceMotion, portfolioLoading, githubLoading])
 
-  // ✅ ADDED: Smart location message timing - shows after user has seen hero section
+  // ✅ ADDED: Smart location message timing - shows after user has seen hero section (unchanged)
   useEffect(() => {
     if (currentSection === 'hero' && !hasShownLocationMessage && !isLoading) {
       // Show after 4 seconds on hero section, giving user time to appreciate the 3D content
@@ -636,7 +763,7 @@ export default function HomePage() {
     }
   }, [currentSection, hasShownLocationMessage, isLoading])
 
-  // Enhanced scroll tracking
+  // Enhanced scroll tracking (unchanged)
   useEffect(() => {
     let ticking = false
     
@@ -670,7 +797,7 @@ export default function HomePage() {
     }
   }, [])
 
-  // Enhanced intersection observer
+  // Enhanced intersection observer (unchanged)
   useEffect(() => {
     const sections = ['hero', 'code-showcase', 'about', 'languages', 'projects', 'contact']
     
@@ -713,7 +840,7 @@ export default function HomePage() {
     }
   }, [isMobile])
 
-  // Utility functions
+  // Utility functions (unchanged)
   const scrollToTop = useCallback(() => {
     window.scrollTo({
       top: 0,
@@ -790,6 +917,7 @@ export default function HomePage() {
             <Suspense fallback={<HeroSkeleton />}>
               <Interactive3DHero 
                 projects={transformedProjects}
+                onProjectClick={handleProjectClick}
               />
             </Suspense>
           </div>
@@ -1015,13 +1143,14 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* Enhanced Projects Section with properly transformed data */}
+        {/* FIXED: Enhanced Projects Section with click handler */}
         <section id="projects" className="scroll-section relative">
           {sectionsInView.projects && (
             <Suspense fallback={<ProjectsSkeleton />}>
               <ScrollTriggered3DSections 
                 projects={transformedProjects.slice(0, 6)}
                 stats={portfolioStats}
+                onProjectClick={handleProjectClick}
               />
             </Suspense>
           )}

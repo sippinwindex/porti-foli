@@ -23,13 +23,17 @@ interface Project {
 
 interface Interactive3DHeroProps {
   projects: Project[]
+  onProjectClick?: (project: Project) => void
 }
 
 // Memoized constants to prevent recreation
 const TECH_STACK = ['React', 'Next.js', 'TypeScript', 'Node.js', 'Three.js', 'Python', 'GraphQL']
 const PARTICLE_COUNT = 25 // Reduced for better performance
 
-const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) => {
+const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ 
+  projects = [], 
+  onProjectClick 
+}) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const heroRef = useRef<HTMLDivElement>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -56,10 +60,9 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
   const opacity = useTransform(springScrollY, [0, 0.5, 1], [1, 0.9, 0.7])
   const scale = useTransform(springScrollY, [0, 1], [1, prefersReducedMotion ? 0.95 : 0.8])
 
-  // ✅ CORRECT FIX: Use prefersReducedMotion directly in dependencies
   const handleMouseMove = useCallback((e: MouseEvent) => {
     const rect = heroRef.current?.getBoundingClientRect()
-    if (rect && !prefersReducedMotion) { // ✅ Use variable from closure
+    if (rect && !prefersReducedMotion) {
       const x = (e.clientX - rect.left - rect.width / 2) / rect.width
       const y = (e.clientY - rect.top - rect.height / 2) / rect.height
       
@@ -68,7 +71,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
         setMousePosition({ x: Math.max(-1, Math.min(1, x)), y: Math.max(-1, Math.min(1, y)) })
       })
     }
-  }, [prefersReducedMotion]) // ✅ Include prefersReducedMotion in dependencies
+  }, [prefersReducedMotion])
 
   useEffect(() => {
     const container = heroRef.current
@@ -90,7 +93,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
     return () => clearTimeout(timer)
   }, [])
 
-  // ✅ Fixed: Memoized calculations for better performance
+  // Memoized calculations for better performance
   const calculatedStats = useMemo(() => {
     if (!projects.length) {
       return [
@@ -113,7 +116,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
     ]
   }, [projects])
 
-  // ✅ Fixed: Optimized floating particles with proper structure
+  // Optimized floating particles with proper structure
   const FloatingParticles = React.memo(() => {
     if (prefersReducedMotion) return null
 
@@ -157,7 +160,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
   })
   FloatingParticles.displayName = 'FloatingParticles'
 
-  // Enhanced 3D Card with better performance
+  // Enhanced 3D Card with project click handling
   const ThreeDCard: React.FC<{ children: React.ReactNode; className?: string }> = React.memo(({ 
     children, 
     className = "" 
@@ -166,10 +169,9 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
     const [rotation, setRotation] = useState({ x: 0, y: 0 })
     const [isHovered, setIsHovered] = useState(false)
 
-    // ✅ CORRECT FIX: Use prefersReducedMotion from parent scope
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
       const card = cardRef.current
-      if (!card || prefersReducedMotion) return // ✅ Use variable from parent scope
+      if (!card || prefersReducedMotion) return
 
       const rect = card.getBoundingClientRect()
       const centerX = rect.left + rect.width / 2
@@ -179,7 +181,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
       const rotateY = (centerX - e.clientX) / 15
       
       setRotation({ x: rotateX, y: rotateY })
-    }, [prefersReducedMotion]) // ✅ Include prefersReducedMotion in dependencies
+    }, [prefersReducedMotion])
 
     const handleMouseEnter = useCallback(() => setIsHovered(true), [])
     const handleMouseLeave = useCallback(() => {
@@ -242,6 +244,16 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
       color: "hover:text-red-600" 
     }
   ], [])
+
+  // Enhanced project interaction handler
+  const handleProjectInteraction = useCallback(() => {
+    // Show the first featured project or the first project in the list
+    const featuredProject = projects.find(p => p.featured) || projects[0]
+    if (featuredProject && onProjectClick) {
+      console.log('Interactive3DHero: Triggering project click for:', featuredProject.title)
+      onProjectClick(featuredProject)
+    }
+  }, [projects, onProjectClick])
 
   return (
     <div ref={containerRef} className="relative min-h-screen overflow-hidden">
@@ -399,6 +411,7 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({ projects = [] }) 
                   className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
+                  onClick={handleProjectInteraction}
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     View My Work

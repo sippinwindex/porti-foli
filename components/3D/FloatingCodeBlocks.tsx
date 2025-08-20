@@ -14,10 +14,28 @@ interface CodeBlock {
   size: 'small' | 'medium' | 'large'
 }
 
+interface Project {
+  id: string
+  name: string
+  description: string
+  techStack: string[]
+  github?: {
+    stars: number
+    forks: number
+    url: string
+  }
+  vercel?: {
+    isLive: boolean
+    liveUrl?: string
+  }
+}
+
 interface FloatingCodeBlocksProps {
   techStack?: string[]
   isVisible?: boolean
   onBlockClick?: (language: string) => void
+  onProjectClick?: (project: Project) => void
+  projects?: Project[]
   maxBlocks?: number
   animationSpeed?: 'slow' | 'normal' | 'fast'
 }
@@ -36,6 +54,8 @@ const FloatingCodeBlocks: React.FC<FloatingCodeBlocksProps> = ({
   techStack = DEFAULT_TECH_STACK,
   isVisible = true,
   onBlockClick,
+  onProjectClick,
+  projects = [],
   maxBlocks = 8,
   animationSpeed = 'normal'
 }) => {
@@ -304,7 +324,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
     })
   }, [techStack, maxBlocks, codeSnippets])
 
-  // ✅ Fixed: Optimized mouse tracking with proper dependencies
+  // Optimized mouse tracking with proper dependencies
   const handleMouseMove = useCallback((e: MouseEvent) => {
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect) return
@@ -319,7 +339,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
         y: Math.max(-1, Math.min(1, y)) 
       })
     })
-  }, []) // ✅ Removed prefersReducedMotion from dependencies
+  }, [])
 
   useEffect(() => {
     const container = containerRef.current
@@ -329,17 +349,40 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
     return () => container.removeEventListener('mousemove', handleMouseMove)
   }, [handleMouseMove, prefersReducedMotion])
 
-  // Handle block interactions
+  // Enhanced block interactions with project integration
   const handleBlockClick = useCallback((language: string) => {
+    console.log('FloatingCodeBlocks: Block clicked:', language)
     setSelectedTech(selectedTech === language ? null : language)
-    onBlockClick?.(language)
-  }, [selectedTech, onBlockClick])
+    
+    if (onBlockClick) {
+      onBlockClick(language)
+    }
+
+    // Find a project that uses this technology and trigger project click
+    if (onProjectClick && projects.length > 0) {
+      const projectWithTech = projects.find(project => 
+        project.techStack.some(tech => 
+          tech.toLowerCase().includes(language.toLowerCase()) ||
+          language.toLowerCase().includes(tech.toLowerCase())
+        )
+      )
+
+      if (projectWithTech) {
+        console.log('FloatingCodeBlocks: Found project with tech:', projectWithTech.name)
+        setTimeout(() => {
+          onProjectClick(projectWithTech)
+        }, 300) // Small delay for better UX
+      } else {
+        console.log('FloatingCodeBlocks: No project found for tech:', language)
+      }
+    }
+  }, [selectedTech, onBlockClick, onProjectClick, projects])
 
   const handleBlockHover = useCallback((blockId: string | null) => {
     setHoveredBlock(blockId)
   }, [])
 
-  // ✅ Fixed: Enhanced CodeBlockCard with proper component structure
+  // Enhanced CodeBlockCard with proper component structure
   const CodeBlockCard = React.memo<{ 
     block: CodeBlock
     index: number 
@@ -362,7 +405,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
       const rotateZ = isHovered ? 5 : 0
       
       setRotation({ x: rotateX, y: rotateY, z: rotateZ })
-    }, [isHovered]) // ✅ Removed prefersReducedMotion from dependencies
+    }, [isHovered, prefersReducedMotion])
 
     const handleMouseLeave = useCallback(() => {
       setRotation({ x: 0, y: 0, z: 0 })
@@ -535,7 +578,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
   })
   CodeBlockCard.displayName = 'CodeBlockCard'
 
-  // ✅ Fixed: Optimized floating particles with proper useMemo
+  // Optimized floating particles with proper useMemo
   const FloatingParticles = React.memo(() => {
     if (prefersReducedMotion) return null
 
@@ -701,6 +744,24 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
           <div className="px-4 py-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-600 shadow-lg">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Viewing: <span className="text-blue-600 dark:text-blue-400">{selectedTech}</span>
+            </span>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Project Integration Indicator */}
+      {selectedTech && projects.length > 0 && (
+        <motion.div
+          className="absolute top-20 right-8 z-30"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="px-3 py-1 rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-600 shadow-sm">
+            <span className="text-xs text-green-700 dark:text-green-400">
+              {projects.filter(p => p.techStack.some(tech => 
+                tech.toLowerCase().includes(selectedTech.toLowerCase())
+              )).length} related project(s)
             </span>
           </div>
         </motion.div>

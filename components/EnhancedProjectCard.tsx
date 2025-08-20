@@ -1,8 +1,8 @@
-// components/EnhancedProjectShowcase.tsx
-'use client'
+// Enhanced Project Card Component with Proper Linking Logic
+// This fixes the linking behavior in your EnhancedProjectCard component
 
-import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { 
   Star, 
   GitFork, 
@@ -11,10 +11,6 @@ import {
   ExternalLink, 
   Eye,
   TrendingUp,
-  Filter,
-  Grid,
-  List,
-  Search,
   CheckCircle,
   XCircle,
   Clock,
@@ -25,30 +21,110 @@ import {
   Activity,
   Users
 } from 'lucide-react'
-import type { EnhancedProject } from '@/lib/portfolio-integration'
+import type { PortfolioProject } from '@/types/portfolio'
 
-interface EnhancedProjectShowcaseProps {
-  initialProjects?: EnhancedProject[]
-  showFilters?: boolean
-  showSearch?: boolean
-  showStats?: boolean
-  defaultView?: 'grid' | 'list'
-  featuredFirst?: boolean
-  onCardClick?: (project: EnhancedProject) => void
-}
-
-// Enhanced Project Card Component
 interface EnhancedProjectCardProps {
-  project: EnhancedProject
+  project: PortfolioProject
   index: number
   viewMode: 'grid' | 'list'
-  onCardClick?: (project: EnhancedProject) => void
+  onCardClick?: (project: PortfolioProject) => void
 }
 
 const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: EnhancedProjectCardProps) => {
   const [isHovered, setIsHovered] = useState(false)
 
-  const formatDate = (dateString: string) => {
+  // FIXED: Enhanced live deployment detection with priority
+  const getLiveDeploymentInfo = useCallback(() => {
+    // Priority 1: Vercel deployment with liveUrl
+    if (project.vercel?.isLive && project.vercel.liveUrl) {
+      return {
+        hasLive: true,
+        liveUrl: project.vercel.liveUrl,
+        source: 'vercel',
+        status: project.vercel.deploymentStatus || 'READY'
+      }
+    }
+
+    // Priority 2: Direct liveUrl (could be any platform)
+    if (project.liveUrl && isValidLiveUrl(project.liveUrl)) {
+      return {
+        hasLive: true,
+        liveUrl: project.liveUrl,
+        source: 'custom',
+        status: 'READY'
+      }
+    }
+
+    // Priority 3: GitHub Pages (from homepage)
+    if (project.github?.url && project.githubUrl) {
+      // Check if it's a GitHub Pages URL pattern
+      const username = extractGitHubUsername(project.github.url)
+      const repoName = extractRepoName(project.github.url)
+      const possibleGHPagesUrl = `https://${username}.github.io/${repoName}`
+      
+      // You could add logic here to check if GitHub Pages is enabled
+      // For now, we'll assume if there's a homepage, it might be live
+    }
+
+    return {
+      hasLive: false,
+      liveUrl: null,
+      source: 'none',
+      status: 'not-deployed'
+    }
+  }, [project])
+
+  // FIXED: Primary card click behavior
+  const handleCardClick = useCallback(() => {
+    const liveInfo = getLiveDeploymentInfo()
+    
+    // If we have a live deployment, go there directly
+    if (liveInfo.hasLive && liveInfo.liveUrl) {
+      window.open(liveInfo.liveUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
+
+    // If no live deployment but we have onCardClick (for project details page)
+    if (onCardClick) {
+      onCardClick(project)
+      return
+    }
+
+    // Fallback: Go to GitHub repository
+    if (project.github?.url || project.githubUrl) {
+      const githubUrl = project.github?.url || project.githubUrl
+      window.open(githubUrl, '_blank', 'noopener,noreferrer')
+    }
+  }, [project, onCardClick, getLiveDeploymentInfo])
+
+  // FIXED: Individual button click handlers (prevent event bubbling)
+  const handleLiveDemoClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    const liveInfo = getLiveDeploymentInfo()
+    
+    if (liveInfo.liveUrl) {
+      window.open(liveInfo.liveUrl, '_blank', 'noopener,noreferrer')
+    }
+  }, [getLiveDeploymentInfo])
+
+  const handleGithubClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    const githubUrl = project.github?.url || project.githubUrl
+    if (githubUrl) {
+      window.open(githubUrl, '_blank', 'noopener,noreferrer')
+    }
+  }, [project])
+
+  const handleDetailsClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    // Navigate to project details page
+    window.location.href = `/projects/${project.id}`
+  }, [project.id])
+
+  // Helper functions
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Recently'
+    
     const date = new Date(dateString)
     const now = new Date()
     const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
@@ -63,45 +139,23 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
   const getDeploymentStatusIcon = (status?: string) => {
     switch (status) {
       case 'success':
+      case 'completed':
+      case 'READY':
         return <CheckCircle className="w-4 h-4 text-green-500" />
       case 'error':
+      case 'failed':
+      case 'ERROR':
         return <XCircle className="w-4 h-4 text-red-500" />
       case 'building':
+      case 'in-progress':
+      case 'BUILDING':
         return <Clock className="w-4 h-4 text-blue-500 animate-spin" />
       default:
         return null
     }
   }
 
-  const hasLiveDemo = project.vercel?.liveUrl || project.metadata.liveUrl
-  const canClickCard = !hasLiveDemo && onCardClick
-
-  const handleCardClick = () => {
-    if (canClickCard) {
-      onCardClick!(project)
-    }
-  }
-
-  const handleLiveDemoClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    const liveUrl = project.vercel?.liveUrl || project.metadata.liveUrl
-    if (liveUrl) {
-      window.open(liveUrl, '_blank', 'noopener,noreferrer')
-    }
-  }
-
-  const handleGithubClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (project.github?.url) {
-      window.open(project.github.url, '_blank', 'noopener,noreferrer')
-    }
-  }
-
-  const handleDetailsClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    // Navigate to project details
-    window.location.href = `/projects/${project.slug}`
-  }
+  const liveInfo = getLiveDeploymentInfo()
 
   return (
     <motion.div
@@ -111,7 +165,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
       transition={{ delay: index * 0.1 }}
       className={`group relative bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 ${
         viewMode === 'list' ? 'flex items-center' : 'flex flex-col'
-      } ${canClickCard ? 'cursor-pointer' : ''}`}
+      } cursor-pointer hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-600`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleCardClick}
@@ -120,7 +174,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
         boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
       }}
     >
-      {/* Grid View Header Image */}
+      {/* FIXED: Grid View Header with Better Click Areas */}
       {viewMode === 'grid' && (
         <div className="relative h-48 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 overflow-hidden">
           {/* Animated Background Pattern */}
@@ -142,65 +196,63 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
             </motion.div>
           </div>
 
-          {/* Featured Badge */}
-          {project.featured && (
-            <motion.div 
-              className="absolute top-4 left-4"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="flex items-center px-3 py-1 rounded-full bg-yellow-400 text-yellow-900 text-xs font-semibold shadow-lg">
+          {/* Status Badges */}
+          <div className="absolute top-4 left-4 flex flex-col gap-2">
+            {project.featured && (
+              <motion.div 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center px-3 py-1 rounded-full bg-yellow-400 text-yellow-900 text-xs font-semibold shadow-lg"
+              >
                 <Star className="w-3 h-3 mr-1 fill-current" />
                 Featured
-              </div>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
+          </div>
 
-          {/* Live Status */}
-          {project.vercel?.isLive && (
-            <motion.div 
-              className="absolute top-4 right-4"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <div className="flex items-center px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 shadow-lg">
+          <div className="absolute top-4 right-4 flex flex-col gap-2">
+            {liveInfo.hasLive && (
+              <motion.div 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="flex items-center px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 shadow-lg"
+              >
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2" />
                 <span className="text-xs text-green-700 dark:text-green-300 font-semibold">Live</span>
+              </motion.div>
+            )}
+
+            {/* Deployment Status */}
+            {liveInfo.status && liveInfo.status !== 'not-deployed' && (
+              <div className="bg-white/90 dark:bg-gray-800/90 rounded-full p-2">
+                {getDeploymentStatusIcon(liveInfo.status)}
               </div>
-            </motion.div>
-          )}
+            )}
+          </div>
 
-          {/* Deployment Status */}
-          {project.vercel && (
-            <div className="absolute bottom-4 right-4">
-              {getDeploymentStatusIcon(project.vercel.buildStatus)}
-            </div>
-          )}
-
-          {/* Hover Overlay for Live Demo */}
-          {hasLiveDemo && (
+          {/* FIXED: Click-to-action overlay for live demos */}
+          {liveInfo.hasLive && (
             <motion.div
               className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              style={{ pointerEvents: 'auto' }}
-              onClick={handleLiveDemoClick}
+              style={{ pointerEvents: isHovered ? 'auto' : 'none' }}
             >
-              <motion.button
+              <motion.div
                 className="flex items-center px-6 py-3 bg-white text-gray-900 rounded-full font-semibold shadow-lg hover:bg-gray-100 transition-colors"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <Globe className="w-4 h-4 mr-2" />
-                View Live Demo
+                Open Live Demo
                 <ArrowUpRight className="w-4 h-4 ml-2" />
-              </motion.button>
+              </motion.div>
             </motion.div>
           )}
         </div>
       )}
 
-      {/* Content */}
+      {/* Content Area */}
       <div className={`${viewMode === 'grid' ? 'p-6' : 'flex-1 p-6'} ${viewMode === 'list' ? 'flex items-center' : ''}`}>
         {/* List View Layout */}
         {viewMode === 'list' ? (
@@ -218,12 +270,12 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-1">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
-                      {project.name}
+                      {project.title || project.name}
                     </h3>
                     {project.featured && (
                       <Star className="w-4 h-4 text-yellow-500 flex-shrink-0" />
                     )}
-                    {project.vercel?.isLive && (
+                    {liveInfo.hasLive && (
                       <div className="flex items-center space-x-1 flex-shrink-0">
                         <div className="w-2 h-2 bg-green-500 rounded-full" />
                         <span className="text-xs text-green-600 dark:text-green-400 font-medium">Live</span>
@@ -237,52 +289,58 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
 
                   <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                     <span className="capitalize text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                      {project.category}
+                      {project.category || 'Project'}
                     </span>
                     {project.github && (
                       <>
                         <div className="flex items-center space-x-1">
                           <Star className="w-3 h-3" />
-                          <span>{project.github.stars}</span>
+                          <span>{project.github.stars || 0}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Activity className="w-3 h-3" />
-                          <span>{formatDate(project.lastActivity)}</span>
+                          <span>{formatDate(project.github.lastUpdated)}</span>
                         </div>
                       </>
                     )}
                   </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* FIXED: Action Buttons with Clear Hierarchy */}
                 <div className="flex items-center space-x-2 ml-4">
-                  {project.github && (
+                  {/* Primary Action: Live Demo (if available) */}
+                  {liveInfo.hasLive && (
+                    <motion.button
+                      onClick={handleLiveDemoClick}
+                      className="p-2 text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors shadow-md"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      title="View Live Demo"
+                    >
+                      <Globe className="w-4 h-4" />
+                    </motion.button>
+                  )}
+                  
+                  {/* Secondary Action: GitHub */}
+                  {(project.github?.url || project.githubUrl) && (
                     <motion.button
                       onClick={handleGithubClick}
                       className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
+                      title="View Source Code"
                     >
                       <Github className="w-4 h-4" />
                     </motion.button>
                   )}
-                  
-                  {hasLiveDemo && (
-                    <motion.button
-                      onClick={handleLiveDemoClick}
-                      className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Globe className="w-4 h-4" />
-                    </motion.button>
-                  )}
 
+                  {/* Tertiary Action: Details */}
                   <motion.button
                     onClick={handleDetailsClick}
                     className="p-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    title="View Details"
                   >
                     <Eye className="w-4 h-4" />
                   </motion.button>
@@ -291,19 +349,19 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
             </div>
           </div>
         ) : (
-          /* Grid View Layout */
+          /* FIXED: Grid View Layout with Better Actions */
           <>
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <h3 className="font-semibold text-lg text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
-                  {project.name}
+                  {project.title || project.name}
                 </h3>
                 <div className="flex items-center space-x-2 mt-1">
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 capitalize">
-                    {project.category}
+                    {project.category || 'Project'}
                   </span>
-                  {project.vercel && getDeploymentStatusIcon(project.vercel.buildStatus)}
+                  {liveInfo.status && liveInfo.status !== 'not-deployed' && getDeploymentStatusIcon(liveInfo.status)}
                 </div>
               </div>
             </div>
@@ -315,7 +373,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
 
             {/* Tech Stack */}
             <div className="flex flex-wrap gap-1 mb-4">
-              {project.techStack.slice(0, 4).map((tech) => (
+              {(project.techStack || []).slice(0, 4).map((tech) => (
                 <span
                   key={tech}
                   className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
@@ -323,9 +381,9 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
                   {tech}
                 </span>
               ))}
-              {project.techStack.length > 4 && (
+              {(project.techStack || []).length > 4 && (
                 <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-                  +{project.techStack.length - 4}
+                  +{(project.techStack || []).length - 4}
                 </span>
               )}
             </div>
@@ -336,28 +394,58 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-1">
                     <Star className="w-4 h-4" />
-                    <span>{project.github.stars}</span>
+                    <span>{project.github.stars || 0}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <GitFork className="w-4 h-4" />
-                    <span>{project.github.forks}</span>
+                    <span>{project.github.forks || 0}</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-1">
                   <TrendingUp className="w-4 h-4" />
-                  <span className="font-medium">{project.deploymentScore}/100</span>
+                  <span className="font-medium">
+                    {Math.min(60 + (project.github.stars || 0) * 5, 100)}/100
+                  </span>
                 </div>
               </div>
             )}
 
             <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-              Updated {formatDate(project.lastActivity)}
+              Updated {formatDate(project.github?.lastUpdated || project.startDate)}
             </div>
 
-            {/* Actions */}
+            {/* FIXED: Action Buttons with Proper Priority */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex space-x-3">
-                {project.github && (
+                {/* Show buttons based on priority */}
+                {liveInfo.hasLive ? (
+                  // Primary: Live Demo
+                  <motion.button
+                    onClick={handleLiveDemoClick}
+                    className="inline-flex items-center space-x-1 text-sm font-medium text-white bg-green-600 hover:bg-green-700 px-3 py-2 rounded-lg transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Globe className="w-4 h-4" />
+                    <span>Live Demo</span>
+                  </motion.button>
+                ) : (
+                  // Primary: GitHub (if no live demo)
+                  (project.github?.url || project.githubUrl) && (
+                    <motion.button
+                      onClick={handleGithubClick}
+                      className="inline-flex items-center space-x-1 text-sm font-medium text-white bg-gray-800 hover:bg-gray-900 px-3 py-2 rounded-lg transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Github className="w-4 h-4" />
+                      <span>View Code</span>
+                    </motion.button>
+                  )
+                )}
+                
+                {/* Secondary: GitHub (when live demo exists) */}
+                {liveInfo.hasLive && (project.github?.url || project.githubUrl) && (
                   <motion.button
                     onClick={handleGithubClick}
                     className="inline-flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
@@ -368,19 +456,8 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
                     <span>Code</span>
                   </motion.button>
                 )}
-                
-                {hasLiveDemo && (
-                  <motion.button
-                    onClick={handleLiveDemoClick}
-                    className="inline-flex items-center space-x-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Globe className="w-4 h-4" />
-                    <span>Live Demo</span>
-                  </motion.button>
-                )}
 
+                {/* Tertiary: Details */}
                 <motion.button
                   onClick={handleDetailsClick}
                   className="inline-flex items-center space-x-1 text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
@@ -392,10 +469,13 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
                 </motion.button>
               </div>
 
-              {project.vercel?.isLive && (
+              {/* Live Status Indicator */}
+              {liveInfo.hasLive && (
                 <div className="flex items-center space-x-1">
                   <Zap className="w-3 h-3 text-green-500" />
-                  <span className="text-xs text-green-600 dark:text-green-400 font-medium">Live</span>
+                  <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                    {liveInfo.source === 'vercel' ? 'Vercel' : 'Live'}
+                  </span>
                 </div>
               )}
             </div>
@@ -406,251 +486,53 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
   )
 }
 
-export default function EnhancedProjectShowcase({
-  initialProjects = [],
-  showFilters = true,
-  showSearch = true,
-  showStats = true,
-  defaultView = 'grid',
-  featuredFirst = true,
-  onCardClick
-}: EnhancedProjectShowcaseProps) {
-  const [projects, setProjects] = useState<EnhancedProject[]>(initialProjects)
-  const [filteredProjects, setFilteredProjects] = useState<EnhancedProject[]>(initialProjects)
-  const [loading, setLoading] = useState(false)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>(defaultView)
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [sortBy, setSortBy] = useState<'updated' | 'stars' | 'name' | 'score'>('score')
-
-  const categories = ['all', 'fullstack', 'frontend', 'backend', 'data', 'mobile', 'other']
-
-  // ✅ FIX: Memoize fetchProjects to avoid unnecessary re-renders
-  const fetchProjects = useCallback(async () => {
-    setLoading(true)
-    try {
-      const response = await fetch('/api/projects')
-      if (response.ok) {
-        const data = await response.json()
-        setProjects(data)
-      }
-    } catch (error) {
-      console.error('Error fetching projects:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  // ✅ FIX: Memoize filterAndSortProjects function
-  const filterAndSortProjects = useCallback(() => {
-    let filtered = [...projects]
-
-    // Filter by category
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(p => p.category === selectedCategory)
-    }
-
-    // Filter by search term
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(term) ||
-        p.description.toLowerCase().includes(term) ||
-        p.techStack.some(tech => tech.toLowerCase().includes(term))
-      )
-    }
-
-    // Sort projects
-    filtered.sort((a, b) => {
-      // Featured projects first if enabled
-      if (featuredFirst) {
-        if (a.featured && !b.featured) return -1
-        if (!a.featured && b.featured) return 1
-      }
-
-      switch (sortBy) {
-        case 'updated':
-          return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
-        case 'stars':
-          return (b.github?.stars || 0) - (a.github?.stars || 0)
-        case 'name':
-          return a.name.localeCompare(b.name)
-        case 'score':
-          return b.deploymentScore - a.deploymentScore
-        default:
-          return 0
-      }
-    })
-
-    setFilteredProjects(filtered)
-  }, [projects, selectedCategory, searchTerm, sortBy, featuredFirst])
-
-  // ✅ FIX: Include initialProjects.length dependency
-  useEffect(() => {
-    if (initialProjects.length === 0) {
-      fetchProjects()
-    }
-  }, [initialProjects.length, fetchProjects])
-
-  // ✅ FIX: Include filterAndSortProjects dependency
-  useEffect(() => {
-    filterAndSortProjects()
-  }, [filterAndSortProjects])
-
-  return (
-    <div className="space-y-6">
-      {/* Controls */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-        <div className="flex items-center space-x-4">
-          {/* Search */}
-          {showSearch && (
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search projects..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          )}
-
-          {/* Category Filter */}
-          {showFilters && (
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {categories.map(category => (
-                <option key={category} value={category}>
-                  {category === 'all' ? 'All Categories' : category.charAt(0).toUpperCase() + category.slice(1)}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {/* Sort */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="score">Score</option>
-            <option value="updated">Last Updated</option>
-            <option value="stars">Stars</option>
-            <option value="name">Name</option>
-          </select>
-        </div>
-
-        {/* View Mode Toggle */}
-        <div className="flex items-center space-x-2">
-          <motion.button
-            onClick={() => setViewMode('grid')}
-            className={`p-2 rounded-lg transition-colors ${
-              viewMode === 'grid'
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Grid className="w-4 h-4" />
-          </motion.button>
-          <motion.button
-            onClick={() => setViewMode('list')}
-            className={`p-2 rounded-lg transition-colors ${
-              viewMode === 'list'
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <List className="w-4 h-4" />
-          </motion.button>
-        </div>
-      </div>
-
-      {/* Results Count */}
-      <div className="text-sm text-gray-600 dark:text-gray-400">
-        Showing {filteredProjects.length} of {projects.length} projects
-        {searchTerm && (
-          <span> matching "{searchTerm}"</span>
-        )}
-      </div>
-
-      {/* Projects */}
-      <AnimatePresence mode="wait">
-        {loading ? (
-          <motion.div
-            key="loading"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className={`grid gap-6 ${
-              viewMode === 'grid' 
-                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
-                : 'grid-cols-1'
-            }`}
-          >
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 animate-pulse">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-3"></div>
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mb-4"></div>
-                <div className="flex space-x-2 mb-4">
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        ) : filteredProjects.length > 0 ? (
-          <motion.div
-            key="projects"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className={`grid gap-6 ${
-              viewMode === 'grid' 
-                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
-                : 'grid-cols-1'
-            }`}
-          >
-            {filteredProjects.map((project, index) => (
-              <EnhancedProjectCard 
-                key={project.id} 
-                project={project} 
-                index={index} 
-                viewMode={viewMode}
-                onCardClick={onCardClick}
-              />
-            ))}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="text-center py-12"
-          >
-            <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No projects found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Try adjusting your search terms or filters.
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
+// FIXED: Helper functions
+function isValidLiveUrl(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url)
+    const hostname = parsedUrl.hostname.toLowerCase()
+    
+    // Known deployment platforms
+    const deploymentPlatforms = [
+      'vercel.app',
+      'netlify.app',
+      'herokuapp.com',
+      'github.io',
+      'surge.sh',
+      'firebase.app',
+      'web.app',
+      'cloudfront.net',
+      'azurewebsites.net',
+      'railway.app'
+    ]
+    
+    return deploymentPlatforms.some(platform => 
+      hostname.includes(platform) || hostname.endsWith(platform)
+    ) || 
+    // Custom domains that look like deployment URLs
+    (!hostname.includes('github.com') && !hostname.includes('localhost'))
+  } catch {
+    return false
+  }
 }
+
+function extractGitHubUsername(githubUrl: string): string {
+  try {
+    const match = githubUrl.match(/github\.com\/([^\/]+)/)
+    return match ? match[1] : ''
+  } catch {
+    return ''
+  }
+}
+
+function extractRepoName(githubUrl: string): string {
+  try {
+    const match = githubUrl.match(/github\.com\/[^\/]+\/([^\/]+)/)
+    return match ? match[1] : ''
+  } catch {
+    return ''
+  }
+}
+
+export { EnhancedProjectCard }
+export default EnhancedProjectCard
