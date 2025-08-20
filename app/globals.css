@@ -1,4 +1,4 @@
-/* Enhanced globals.css - Complete with Navigation Fixes and Modern Features */
+/* Enhanced globals.css - Complete with Stable Theming and 3D Effects */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -31,13 +31,13 @@
   font-named-instance: 'Italic';
 }
 
-/* ✅ CRITICAL: Enhanced CSS Variables with Fixed Z-Index Hierarchy */
+/* ✅ ENHANCED: CSS Variables with Stable Theme System */
 :root {
   /* Typography */
   --font-inter: 'Inter var', 'Inter', system-ui, -apple-system, sans-serif;
   --font-jetbrains-mono: 'JetBrains Mono', Menlo, Monaco, 'Courier New', monospace;
   
-  /* Viva Magenta Color Palette */
+  /* Viva Magenta Luxury Color Palette */
   --viva-magenta: #BE3455;
   --lux-gold: #D4AF37;
   --lux-sage: #98A869;
@@ -46,6 +46,16 @@
   --lux-gray: #A0A0A0;
   --lux-black: #121212;
   --lux-offwhite: #FAFAFA;
+  
+  /* Enhanced Color Variables for RGB usage */
+  --viva-magenta-rgb: 190, 52, 85;
+  --lux-gold-rgb: 212, 175, 55;
+  --lux-sage-rgb: 152, 168, 105;
+  --lux-teal-rgb: 0, 128, 128;
+  --lux-brown-rgb: 74, 44, 42;
+  --lux-gray-rgb: 160, 160, 160;
+  --lux-black-rgb: 18, 18, 18;
+  --lux-offwhite-rgb: 250, 250, 250;
   
   /* Enhanced Modern Color System */
   --primary-50: #eff6ff;
@@ -58,20 +68,38 @@
   --primary-700: #1d4ed8;
   --primary-800: #1e40af;
   --primary-900: #1e3a8a;
-  
-  /* Enhanced Color Variables for RGB usage */
-  --viva-magenta-rgb: 190, 52, 85;
-  --lux-gold-rgb: 212, 175, 55;
-  --lux-teal-rgb: 0, 128, 128;
   --primary-rgb: 59, 130, 246;
   --accent-rgb: 139, 92, 246;
   
-  /* Enhanced Glass Effect Variables */
+  /* ✅ ENHANCED: Theme-aware CSS Variables (Light Mode Defaults) */
+  --theme-bg: #ffffff;
+  --theme-fg: #0f172a;
+  --theme-secondary: #64748b;
+  --theme-muted: #94a3b8;
+  --theme-border: rgba(0, 0, 0, 0.1);
+  --theme-input: #f8fafc;
+  --theme-card: #ffffff;
+  --theme-popover: #ffffff;
+  --theme-primary: #0f172a;
+  --theme-primary-foreground: #f8fafc;
+  --theme-secondary-bg: #f1f5f9;
+  --theme-secondary-foreground: #0f172a;
+  --theme-muted-bg: #f1f5f9;
+  --theme-muted-foreground: #64748b;
+  --theme-accent: #f1f5f9;
+  --theme-accent-foreground: #0f172a;
+  --theme-destructive: #ef4444;
+  --theme-destructive-foreground: #f8fafc;
+  --theme-ring: #94a3b8;
+  
+  /* ✅ ENHANCED: Glass Effect Variables */
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-card-bg: rgba(255, 255, 255, 0.8);
   --glass-3d-bg: rgba(255, 255, 255, 0.05);
   --glass-3d-border: rgba(255, 255, 255, 0.1);
+  --glass-nav-bg: rgba(255, 255, 255, 0.8);
+  --glass-nav-border: rgba(0, 0, 0, 0.1);
   --glass-blur: blur(16px);
   --glass-saturation: saturate(180%);
   
@@ -114,7 +142,7 @@
   --active-scale: scale(0.98);
   --focus-ring: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
   
-  /* ✅ CRITICAL: Fixed z-index hierarchy to prevent conflicts */
+  /* ✅ ENHANCED: Stable z-index hierarchy */
   --z-backdrop: -1;
   --z-base: 0;
   --z-content: 10;
@@ -130,18 +158,44 @@
   --z-tooltip: 10000;
 }
 
-/* Enhanced Dark mode variables */
+/* ✅ ENHANCED: Dark mode variables with consistent theming */
 .dark {
+  /* Theme-aware variables for dark mode */
+  --theme-bg: #0f172a;
+  --theme-fg: #f8fafc;
+  --theme-secondary: #94a3b8;
+  --theme-muted: #64748b;
+  --theme-border: rgba(255, 255, 255, 0.1);
+  --theme-input: #1e293b;
+  --theme-card: #1e293b;
+  --theme-popover: #1e293b;
+  --theme-primary: #f8fafc;
+  --theme-primary-foreground: #0f172a;
+  --theme-secondary-bg: #1e293b;
+  --theme-secondary-foreground: #f8fafc;
+  --theme-muted-bg: #1e293b;
+  --theme-muted-foreground: #94a3b8;
+  --theme-accent: #1e293b;
+  --theme-accent-foreground: #f8fafc;
+  --theme-destructive: #ef4444;
+  --theme-destructive-foreground: #f8fafc;
+  --theme-ring: #334155;
+  
+  /* Glass effects for dark mode */
   --glass-bg: rgba(0, 0, 0, 0.1);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-card-bg: rgba(0, 0, 0, 0.8);
   --glass-3d-bg: rgba(0, 0, 0, 0.05);
   --glass-3d-border: rgba(255, 255, 255, 0.1);
+  --glass-nav-bg: rgba(31, 41, 55, 0.8);
+  --glass-nav-border: rgba(255, 255, 255, 0.1);
+  
+  /* Dark mode specific colors */
   --glow-color: rgba(190, 52, 85, 0.8);
   --particle-color: rgba(190, 52, 85, 0.6);
 }
 
-/* Enhanced Base Layer - Foundation Styles */
+/* ✅ ENHANCED: Base Layer with Stable Foundation */
 @layer base {
   /* Global Reset and Layout Foundation */
   * {
@@ -160,6 +214,8 @@
     scroll-padding-top: var(--header-height);
     overflow-x: hidden;
     height: 100%;
+    /* ✅ ENHANCED: Smooth theme transitions */
+    transition: color-scheme 0.3s ease;
   }
 
   body {
@@ -174,10 +230,16 @@
     overflow-x: hidden;
     position: relative;
     min-height: 100vh;
-    background: #0f172a;
-    color: white;
-    /* Enhanced transitions for theme switching */
-    transition: background-color 0.3s var(--animation-spring), color 0.3s var(--animation-spring);
+    
+    /* ✅ ENHANCED: Theme-aware background and colors */
+    background: var(--theme-bg);
+    color: var(--theme-fg);
+    
+    /* ✅ ENHANCED: Smooth theme transitions */
+    transition: background-color 0.3s var(--animation-spring), 
+                color 0.3s var(--animation-spring),
+                border-color 0.3s var(--animation-spring);
+    
     padding-top: var(--header-height);
   }
 
@@ -186,21 +248,25 @@
     font-variation-settings: 'wght' 850;
     line-height: 1.1;
     letter-spacing: -0.025em;
+    color: var(--theme-fg);
   }
 
   h2 {
     font-variation-settings: 'wght' 750;
     line-height: 1.2;
     letter-spacing: -0.02em;
+    color: var(--theme-fg);
   }
 
   h3, h4, h5, h6 {
     font-variation-settings: 'wght' 650;
     line-height: 1.3;
+    color: var(--theme-fg);
   }
 
   p {
     line-height: 1.7;
+    color: var(--theme-secondary);
   }
 
   /* Enhanced Code styling */
@@ -211,6 +277,7 @@
     padding: 0.125rem 0.375rem;
     border-radius: var(--border-radius-sm);
     border: 1px solid rgba(var(--viva-magenta-rgb), 0.2);
+    color: var(--theme-fg);
   }
 
   /* Enhanced link styles */
@@ -229,16 +296,17 @@
     cursor: pointer;
     outline: inherit;
     transition: all var(--animation-normal) var(--animation-spring);
+    color: var(--theme-fg);
   }
 
-  /* Enhanced scrollbar */
+  /* ✅ ENHANCED: Theme-aware scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
+    background: var(--theme-bg);
   }
 
   ::-webkit-scrollbar-thumb {
@@ -254,7 +322,7 @@
   /* Firefox scrollbar */
   html {
     scrollbar-width: thin;
-    scrollbar-color: var(--viva-magenta) rgba(0, 0, 0, 0.1);
+    scrollbar-color: var(--viva-magenta) var(--theme-bg);
   }
 
   /* Enhanced selection */
@@ -282,9 +350,9 @@
   }
 }
 
-/* ✅ CRITICAL: Fixed Navigation System - Components Layer */
+/* ✅ ENHANCED: Components Layer with Stable Navigation */
 @layer components {
-  /* ✅ FIXED: Force navbar to always stay visible and stable */
+  /* ✅ ENHANCED: Force navbar to stay stable and themed properly */
   nav,
   .navbar,
   header[role="navigation"] {
@@ -298,15 +366,24 @@
     max-height: 5rem !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    /* ✅ FIXED: Prevent navbar from disappearing during animations */
+    
+    /* ✅ ENHANCED: Stable rendering with theme support */
     will-change: background-color, backdrop-filter !important;
     backface-visibility: hidden !important;
     transform: translateZ(0) !important;
-    /* ✅ FIXED: Stable transition that doesn't cause flickering */
-    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+    
+    /* ✅ ENHANCED: Theme-aware background transitions */
+    background: var(--glass-nav-bg) !important;
+    backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
+    border-bottom: 1px solid var(--glass-nav-border) !important;
+    
+    /* ✅ ENHANCED: Smooth transitions */
+    transition: background-color 0.3s ease, 
+                border-color 0.3s ease, 
+                box-shadow 0.3s ease !important;
   }
 
-  /* ✅ FIXED: Ensure navbar container stability */
+  /* ✅ ENHANCED: Navbar container stability */
   .navbar-container,
   .nav-container,
   nav > div,
@@ -322,7 +399,7 @@
     box-sizing: border-box !important;
   }
 
-  /* ✅ FIXED: Stable scroll progress bar positioning */
+  /* ✅ ENHANCED: Stable scroll progress bar with theme support */
   .scroll-progress,
   nav .scroll-progress {
     position: absolute !important;
@@ -331,17 +408,13 @@
     height: 2px !important;
     z-index: var(--z-scroll-progress) !important;
     pointer-events: none !important;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
+    background: linear-gradient(135deg, var(--viva-magenta), var(--lux-gold)) !important;
     user-select: none !important;
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    /* ✅ FIXED: Prevent progress bar from interfering with navbar */
     transform: translateZ(0) !important;
     will-change: transform !important;
   }
 
-  /* ✅ FIXED: Ensure all clickable navbar elements work */
+  /* ✅ ENHANCED: Theme-aware navigation links */
   nav a,
   nav button,
   nav [role="button"] {
@@ -350,16 +423,23 @@
     position: relative !important;
     cursor: pointer !important;
     transform: translateZ(0) !important;
+    color: var(--theme-fg) !important;
+    transition: color 0.3s ease !important;
   }
 
-  /* ✅ FIXED: Glass effects that don't interfere with functionality */
+  nav a:hover,
+  nav button:hover {
+    color: var(--viva-magenta) !important;
+  }
+
+  /* ✅ ENHANCED: Glass effects that work with theming */
   nav .glass,
   nav .backdrop-blur {
     position: relative !important;
     z-index: 1 !important;
-    /* ✅ FIXED: Stable backdrop filter */
-    backdrop-filter: blur(16px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+    background: var(--glass-nav-bg) !important;
+    backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
+    border: 1px solid var(--glass-nav-border) !important;
   }
 
   nav .glass > *,
@@ -369,12 +449,7 @@
     pointer-events: auto !important;
   }
 
-  /* ✅ FIXED: Prevent any elements from appearing above navbar */
-  nav {
-    isolation: isolate !important;
-  }
-
-  /* ✅ FIXED: Theme toggle stability */
+  /* ✅ ENHANCED: Theme toggle stability */
   .theme-toggle-container,
   .theme-toggle {
     z-index: var(--z-theme-toggle) !important;
@@ -382,7 +457,7 @@
     transform: translateZ(0) !important;
   }
 
-  /* ✅ FIXED: Mobile menu positioning */
+  /* ✅ ENHANCED: Mobile menu with proper theming */
   .mobile-menu-backdrop {
     position: fixed !important;
     inset: 0 !important;
@@ -395,243 +470,30 @@
     position: relative !important;
     z-index: var(--z-dropdown) !important;
     pointer-events: auto !important;
+    background: var(--glass-card-bg) !important;
+    border: 1px solid var(--theme-border) !important;
+    color: var(--theme-fg) !important;
   }
 
-  /* ✅ FIXED: Location message positioning - below navbar */
-  .location-welcome-container {
-    position: fixed !important;
-    top: 6rem !important; /* navbar height + 1rem gap */
-    right: 1.5rem !important;
-    z-index: var(--z-location-message) !important;
-    pointer-events: auto !important;
-    max-width: 24rem !important;
-  }
-
-  /* ✅ FIXED: Prevent navbar content from flickering during scroll */
-  nav *:not(.scroll-progress) {
-    will-change: auto !important;
-  }
-
-  /* ✅ FIXED: Skills card stability - prevent animation resets */
-  .hero-3d-card,
-  .interactive-hero-3d-card {
-    transform-style: preserve-3d !important;
-    backface-visibility: hidden !important;
-    /* ✅ FIXED: Prevent constant animation recalculation */
-    will-change: transform !important;
-    transform: translateZ(0) !important;
-  }
-
-  /* ✅ FIXED: Stable 3D transforms that don't reset */
-  .preserve-3d {
-    transform-style: preserve-3d !important;
-    backface-visibility: hidden !important;
-    transform: translateZ(0) !important;
-  }
-
-  /* ✅ FIXED: Prevent stats from flickering in hero card */
-  .hero-stats-container,
-  .interactive-hero-stats {
-    transform: translateZ(0) !important;
-    will-change: auto !important;
-    /* ✅ FIXED: Stable positioning */
-    position: relative !important;
-  }
-
-  /* ✅ FIXED: Remove problematic animations on scroll elements */
-  .hero-3d-content,
-  .interactive-3d-hero-content {
-    /* ✅ FIXED: Prevent scroll-based animation interference */
-    will-change: auto !important;
-  }
-
-  /* ✅ FIXED: Stable mouse interaction effects */
-  .card-3d-enhanced,
-  .hero-3d-card {
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-    /* ✅ FIXED: Prevent animation conflicts */
-    animation: none !important;
-  }
-
-  /* Fix icon disappearing on hover */
-  .nav-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.25rem;
-    height: 1.25rem;
-    pointer-events: none; /* Icons shouldn't intercept clicks */
-  }
-
-  /* Fix navigation link hover area */
-  .nav-link {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.75rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-    text-decoration: none;
-    color: inherit;
-    min-height: 2.5rem;
-    pointer-events: auto;
-    transform: translateZ(0);
-    will-change: transform;
-    backface-visibility: hidden;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-  }
-
-  .nav-link:hover {
-    background-color: rgba(59, 130, 246, 0.1);
-    transform: translateY(-2px) scale(1.02);
-  }
-
-  .nav-link.active {
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: white;
-  }
-
-  /* Fix mobile navigation issues */
-  .mobile-nav-button {
-    position: relative;
-    z-index: 2;
-    width: 2.5rem;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.75rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    cursor: pointer;
-    pointer-events: auto;
-    transform: translateZ(0);
-    will-change: transform;
-    backface-visibility: hidden;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-  }
-  
-  .mobile-nav-button:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.05);
-  }
-
-  /* Fix overflow and clipping issues */
-  .navigation-container {
-    position: relative;
-    z-index: var(--z-navigation);
-    width: 100%;
-    overflow: visible;
-  }
-
-  .navigation-content {
-    position: relative;
-    z-index: 1;
-    overflow: visible;
-  }
-
-  /* Fix logo clickability */
-  .logo-container {
-    position: relative;
-    z-index: 2;
-    pointer-events: auto;
-  }
-
-  .logo-container a {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    text-decoration: none;
-    color: inherit;
-    pointer-events: auto;
-  }
-
-  /* Fix social links */
-  .social-links {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    position: relative;
-    z-index: 2;
-  }
-
-  .social-link {
-    position: relative;
-    width: 2.5rem;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.75rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: inherit;
-    text-decoration: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: auto;
-    transform: translateZ(0);
-    will-change: transform;
-    backface-visibility: hidden;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-  }
-
-  .social-link:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-3px) scale(1.1);
-  }
-
-  /* Fix contact button */
-  .contact-button {
-    position: relative;
-    z-index: 2;
+  /* ✅ ENHANCED: Buttons with consistent theming */
+  .btn-primary {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-    padding: 0.5rem 1.5rem;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: white;
-    border-radius: 0.75rem;
+    padding: 0.75rem 1.5rem;
     font-weight: 600;
-    text-decoration: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: auto;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    transform: translateZ(0);
-    will-change: transform;
-    backface-visibility: hidden;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-  }
-
-  .contact-button:hover {
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
-  }
-
-  /* Enhanced Button System */
-  .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2;
-    background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+    border-radius: var(--border-radius-lg);
+    transition: all var(--animation-normal) var(--animation-spring);
+    background: linear-gradient(135deg, var(--viva-magenta), var(--lux-gold));
     color: white;
     box-shadow: var(--shadow-lg);
     transform: translateZ(0);
+    border: none;
+    cursor: pointer;
   }
 
   .btn-primary:hover {
-    background: linear-gradient(135deg, var(--primary-700), var(--primary-800));
     box-shadow: var(--shadow-xl);
     transform: var(--hover-lift) var(--hover-scale);
   }
@@ -641,85 +503,91 @@
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2;
-    border-color: var(--primary-600);
-    color: var(--primary-600);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: var(--border-radius-lg);
+    border: 2px solid var(--viva-magenta);
+    color: var(--viva-magenta);
     background: transparent;
+    transition: all var(--animation-normal) var(--animation-spring);
     transform: translateZ(0);
+    cursor: pointer;
   }
 
   .btn-secondary:hover {
-    background: rgba(var(--primary-rgb), 0.1);
+    background: rgba(var(--viva-magenta-rgb), 0.1);
     transform: var(--hover-lift) var(--hover-scale);
   }
 
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2;
-    color: rgba(255, 255, 255, 0.8);
-    background: transparent;
-    transform: translateZ(0);
-  }
-
-  .btn-ghost:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    transform: var(--hover-lift) var(--hover-scale);
-  }
-
-  /* Enhanced Card System */
+  /* ✅ ENHANCED: Cards with consistent theming */
   .card {
-    @apply rounded-2xl border transition-all duration-300;
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: var(--glass-blur);
     padding: 1.5rem;
+    border-radius: var(--border-radius-lg);
+    background: var(--glass-card-bg);
+    border: 1px solid var(--theme-border);
+    backdrop-filter: var(--glass-blur);
     box-shadow: var(--shadow-lg);
+    transition: all var(--animation-normal) ease;
+    color: var(--theme-fg);
   }
 
   .card-hover {
-    @apply card;
     transform: translateZ(0);
   }
 
   .card-hover:hover {
     box-shadow: var(--shadow-2xl);
     transform: translateY(-8px) scale(1.02);
-    border-color: rgba(var(--primary-rgb), 0.3);
+    border-color: rgba(var(--viva-magenta-rgb), 0.3);
   }
 
-  /* Enhanced Form Elements */
+  /* ✅ ENHANCED: Form elements with theme support */
   .input {
-    @apply w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: white;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--theme-border);
+    background: var(--theme-input);
+    color: var(--theme-fg);
     backdrop-filter: var(--glass-blur);
+    transition: all var(--animation-normal) ease;
   }
 
   .input:focus {
-    border-color: var(--primary-500);
+    border-color: var(--viva-magenta);
     box-shadow: var(--focus-ring);
+    outline: none;
   }
 
   .input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--theme-muted);
   }
 
   .textarea {
-    @apply input resize-none;
     min-height: 120px;
+    resize: vertical;
   }
 
-  /* Tech stack badges */
+  /* ✅ ENHANCED: Tech badges with theme support */
   .tech-badge {
-    @apply px-3 py-1 rounded-full text-xs font-medium border backdrop-blur-sm;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid rgba(var(--viva-magenta-rgb), 0.3);
     background: linear-gradient(135deg, 
       rgba(var(--viva-magenta-rgb), 0.1) 0%, 
       rgba(var(--lux-gold-rgb), 0.1) 100%
     );
-    border-color: rgba(var(--viva-magenta-rgb), 0.3);
-    color: rgb(var(--viva-magenta-rgb));
+    color: var(--viva-magenta);
     transition: all var(--animation-normal) ease;
+    backdrop-filter: blur(8px);
   }
 
   .tech-badge:hover {
@@ -731,48 +599,119 @@
     box-shadow: 0 4px 15px rgba(var(--viva-magenta-rgb), 0.2);
   }
 
-  /* ✅ FIXED: Hero card animation stability */
-  @keyframes stableFloat {
-    0%, 100% { 
-      transform: translateY(0px) translateZ(0px); 
-    }
-    50% { 
-      transform: translateY(-5px) translateZ(0px); 
-    }
+  /* ✅ ENHANCED: Glass morphism utilities */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur) var(--glass-saturation);
+    border: 1px solid var(--glass-border);
   }
 
-  .hero-floating-element {
-    animation: stableFloat 6s ease-in-out infinite !important;
-    transform: translateZ(0) !important;
-    will-change: transform !important;
+  .glass-card {
+    background: var(--glass-card-bg);
+    backdrop-filter: var(--glass-blur) var(--glass-saturation);
+    border: 1px solid var(--glass-border);
   }
 
-  /* Performance optimizations */
-  .nav-link,
-  .social-link,
-  .contact-button,
-  .mobile-nav-button {
+  .glass-3d {
+    background: var(--glass-3d-bg);
+    backdrop-filter: var(--glass-blur) var(--glass-saturation);
+    border: 1px solid var(--glass-3d-border);
+  }
+
+  .glass-hero {
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.1) 0%, 
+      rgba(255, 255, 255, 0.02) 100%
+    );
+    backdrop-filter: blur(32px) saturate(180%);
+    border: 1px solid var(--glass-border);
+  }
+
+  .dark .glass-hero {
+    background: linear-gradient(135deg, 
+      rgba(0, 0, 0, 0.1) 0%, 
+      rgba(0, 0, 0, 0.02) 100%
+    );
+  }
+
+  /* ✅ ENHANCED: 3D card effects with stable animations */
+  .card-3d-enhanced {
+    transform-style: preserve-3d;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+
+  .card-3d-enhanced:hover {
+    transform: rotateY(5deg) rotateX(3deg) translateZ(20px);
+  }
+
+  /* ✅ ENHANCED: Hero elements with theme support */
+  .hero-3d-card {
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backdrop-filter: var(--glass-blur) var(--glass-saturation);
+    background: var(--glass-card-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-2xl);
+    backface-visibility: hidden;
     transform: translateZ(0);
     will-change: transform;
-    backface-visibility: hidden;
   }
 
-  /* Focus states */
-  .nav-link:focus-visible,
-  .social-link:focus-visible,
-  .contact-button:focus-visible,
-  .mobile-nav-button:focus-visible,
-  .theme-toggle:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 0 0 0 4px rgba(59, 130, 246, 0.5);
+  .hero-3d-card:hover {
+    transform: rotateY(10deg) rotateX(5deg) translateZ(20px);
+    box-shadow: var(--shadow-3d), 
+                0 0 40px rgba(var(--viva-magenta-rgb), 0.2);
+  }
+
+  /* ✅ ENHANCED: Status indicators with theme support */
+  .status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    backdrop-filter: blur(8px);
+    border: 1px solid;
+    transition: all 0.3s ease;
+  }
+
+  .status-indicator.live {
+    background: rgba(34, 197, 94, 0.1);
+    color: rgb(34, 197, 94);
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+
+  .status-indicator.live::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: rgb(34, 197, 94);
+    animation: status-pulse 2s ease-in-out infinite;
+  }
+
+  .status-indicator.building {
+    background: rgba(59, 130, 246, 0.1);
+    color: rgb(59, 130, 246);
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+
+  .status-indicator.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: rgb(239, 68, 68);
+    border-color: rgba(239, 68, 68, 0.3);
   }
 }
 
-/* Enhanced Utilities Layer */
+/* ✅ ENHANCED: Utilities Layer with theme support */
 @layer utilities {
-  /* Enhanced Text Utilities */
+  /* ✅ ENHANCED: Text utilities with theme awareness */
   .gradient-text {
-    background: linear-gradient(135deg, var(--primary-600), var(--primary-400));
+    background: linear-gradient(135deg, var(--viva-magenta), var(--lux-gold));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -787,15 +726,6 @@
     background-size: 200% 100%;
   }
 
-  .gradient-text-luxury {
-    background: linear-gradient(135deg, var(--viva-magenta), var(--lux-gold), var(--lux-teal));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    background-size: 200% 100%;
-    animation: gradientShift 6s ease-in-out infinite;
-  }
-
   .text-shadow {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
@@ -808,7 +738,7 @@
     text-shadow: 0 0 20px rgba(var(--viva-magenta-rgb), 0.8);
   }
 
-  /* Enhanced Layout Utilities */
+  /* ✅ ENHANCED: Layout utilities */
   .preserve-3d {
     transform-style: preserve-3d;
   }
@@ -834,7 +764,7 @@
     will-change: transform;
   }
 
-  /* Interactive state utilities */
+  /* ✅ ENHANCED: Interactive utilities */
   .hover-lift {
     transition: transform var(--animation-normal) var(--animation-spring);
   }
@@ -860,23 +790,52 @@
     transform: rotateY(5deg) rotateX(3deg) translateZ(20px);
   }
 
-  /* Focus utilities */
+  /* ✅ ENHANCED: Focus utilities with theme support */
   .focus-ring {
     transition: box-shadow var(--animation-normal) ease;
   }
 
   .focus-ring:focus-visible {
     box-shadow: var(--focus-ring);
+    outline: none;
+  }
+
+  /* ✅ ENHANCED: Theme-aware utilities */
+  .theme-bg {
+    background: var(--theme-bg);
+  }
+
+  .theme-fg {
+    color: var(--theme-fg);
+  }
+
+  .theme-border {
+    border-color: var(--theme-border);
+  }
+
+  .theme-card {
+    background: var(--theme-card);
   }
 }
 
-/* Enhanced Keyframe Animations */
+/* ✅ ENHANCED: Keyframe Animations */
 @keyframes gradientShift {
   0%, 100% {
     background-position: 0% 50%;
   }
   50% {
     background-position: 100% 50%;
+  }
+}
+
+@keyframes status-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
   }
 }
 
@@ -898,44 +857,7 @@
   }
 }
 
-/* ✅ FIXED: Prevent reduced motion from causing layout issues */
-@media (prefers-reduced-motion: reduce) {
-  nav,
-  .navbar,
-  .hero-3d-card,
-  .interactive-hero-3d-card {
-    animation: none !important;
-    transition: opacity 0.3s ease !important;
-  }
-  
-  .hero-floating-element {
-    animation: none !important;
-  }
-  
-  nav .glass {
-    backdrop-filter: blur(8px) !important;
-  }
-}
-
-/* ✅ FIXED: High performance mode for older devices */
-@media (max-width: 480px) and (prefers-reduced-motion: reduce) {
-  nav .glass {
-    backdrop-filter: none !important;
-    background: rgba(255, 255, 255, 0.95) !important;
-  }
-  
-  .dark nav .glass {
-    background: rgba(31, 41, 55, 0.95) !important;
-  }
-  
-  .hero-3d-card,
-  .interactive-hero-3d-card {
-    transform: none !important;
-    transform-style: auto !important;
-  }
-}
-
-/* ✅ FIXED: Mobile responsive navbar */
+/* ✅ ENHANCED: Responsive Design with theme support */
 @media (max-width: 1024px) {
   :root {
     --header-height: 4rem;
@@ -952,19 +874,10 @@
   body {
     padding-top: 4rem !important;
   }
-  
-  .location-welcome-container {
-    top: 5rem !important; /* 4rem navbar + 1rem gap */
-    right: 1rem !important;
-    max-width: 20rem !important;
-  }
 
-  /* Mobile navigation specific fixes */
-  .nav-link:hover,
-  .social-link:hover,
-  .contact-button:hover,
-  .mobile-nav-button:hover {
-    transform: translateY(-1px) scale(1.01);
+  .hero-3d-card:hover,
+  .card-3d-enhanced:hover {
+    transform: translateY(-5px) scale(1.01);
   }
 }
 
@@ -997,205 +910,14 @@
     padding-left: var(--container-padding);
     padding-right: var(--container-padding);
   }
-  
-  .location-welcome-container {
-    top: 4.5rem !important; /* 3.5rem navbar + 1rem gap */
-    left: 0.75rem !important;
-    right: 0.75rem !important;
-    max-width: none !important;
-  }
-  
-  /* Mobile navigation adjustments */
-  .navbar-theme-toggle {
-    margin-left: 0.75rem;
-    margin-right: 0;
-  }
-  
-  .theme-toggle-container {
-    min-width: 3rem;
-    min-height: 2rem;
-  }
 
-  /* Ensure proper touch targets on mobile */
-  .nav-link,
-  .social-link,
-  .contact-button,
-  .mobile-nav-button {
-    min-height: 44px;
-    min-width: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .nav-link {
-    padding: 0.75rem 1rem;
+  .tech-badge {
+    font-size: 0.6875rem;
+    padding: 0.25rem 0.5rem;
   }
 }
 
-/* ✅ ADDITIONAL STABILITY FIXES */
-
-/* Prevent any overflow issues that might hide navbar */
-html, body {
-  overflow-x: hidden !important;
-}
-
-/* Ensure navbar is always visible during page transitions */
-.page-transition nav {
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-/* Fix for any CSS Grid/Flexbox issues that might affect navbar */
-nav {
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-nav > div {
-  flex: 1 !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-/* Prevent any transform-based layouts from affecting navbar */
-body > nav {
-  transform: none !important;
-}
-
-/* Ensure navbar stays on top during any CSS animations */
-@keyframes preventNavbarHide {
-  0%, 100% {
-    opacity: 1;
-    visibility: visible;
-    z-index: var(--z-navbar);
-  }
-}
-
-nav {
-  animation: preventNavbarHide 0.1s linear infinite !important;
-}
-
-/* Final failsafe - force navbar visibility */
-nav[style*="display: none"],
-nav[style*="visibility: hidden"],
-nav[style*="opacity: 0"] {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* Fix for Safari backdrop-filter */
-@supports (-webkit-backdrop-filter: blur(16px)) {
-  nav .glass {
-    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-    backdrop-filter: blur(16px) saturate(180%) !important;
-  }
-}
-
-/* Prevent text selection on interactive elements */
-.nav-link,
-.social-link,
-.contact-button,
-.mobile-nav-button,
-.theme-toggle {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-
-/* Fix for Safari touch handling */
-@supports (-webkit-touch-callout: none) {
-  .nav-link,
-  .social-link,
-  .contact-button,
-  .mobile-nav-button {
-    -webkit-touch-callout: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .min-h-screen {
-    min-height: -webkit-fill-available;
-  }
-}
-
-/* ✅ CRITICAL: Additional Navigation Interaction Fixes */
-
-/* Ensure all clickable elements in navigation are properly layered */
-nav * {
-  position: relative;
-}
-
-nav a,
-nav button,
-nav [role="button"] {
-  z-index: 2;
-  pointer-events: auto !important;
-  cursor: pointer !important;
-}
-
-/* Fix for nested elements inside navigation links */
-.nav-link * {
-  pointer-events: none;
-}
-
-.nav-link {
-  pointer-events: auto !important;
-}
-
-/* Fix for icon containers */
-.nav-link svg,
-.social-link svg,
-.contact-button svg,
-.mobile-nav-button svg {
-  pointer-events: none;
-  display: block;
-}
-
-/* Fix for text elements */
-.nav-link span,
-.social-link span,
-.contact-button span {
-  pointer-events: none;
-}
-
-/* Fix for glass backdrop interference */
-nav::before,
-nav::after {
-  pointer-events: none;
-}
-
-/* Fix for backdrop elements */
-.glass-backdrop,
-.backdrop-blur {
-  pointer-events: none;
-}
-
-.glass-backdrop > *,
-.backdrop-blur > * {
-  pointer-events: auto;
-}
-
-/* Enhanced focus states for better accessibility */
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1), 0 0 0 4px var(--primary-500);
-}
-
-.dark button:focus-visible,
-.dark a:focus-visible,
-.dark input:focus-visible,
-.dark textarea:focus-visible,
-.dark select:focus-visible {
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1), 0 0 0 4px var(--viva-magenta);
-}
-
-/* Enhanced Reduced Motion Support */
+/* ✅ ENHANCED: Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1206,100 +928,153 @@ select:focus-visible {
     scroll-behavior: auto !important;
   }
   
-  /* Fixed navigation elements for reduced motion */
-  .nav-link:hover,
-  .social-link:hover,
-  .contact-button:hover,
-  .mobile-nav-button:hover {
+  nav,
+  .navbar,
+  .hero-3d-card,
+  .card-3d-enhanced {
+    animation: none !important;
+    transition: opacity 0.3s ease !important;
+  }
+  
+  .hero-3d-card:hover,
+  .card-3d-enhanced:hover {
     transform: none !important;
+  }
+  
+  .gradient-text-3d {
+    animation: none !important;
+    background: var(--viva-magenta) !important;
+    -webkit-text-fill-color: initial !important;
+    background-clip: initial !important;
+    color: var(--viva-magenta) !important;
   }
 }
 
-/* Prevent horizontal scroll */
-html, body {
-  overflow-x: hidden;
-  scroll-behavior: smooth;
+/* ✅ ENHANCED: High performance mode */
+@media (max-width: 480px) and (prefers-reduced-motion: reduce) {
+  nav .glass {
+    backdrop-filter: none !important;
+    background: var(--theme-card) !important;
+  }
+  
+  .hero-3d-card,
+  .card-3d-enhanced {
+    transform: none !important;
+    transform-style: auto !important;
+  }
 }
 
-/* ✅ FINAL CRITICAL FIXES - Add to bottom */
-
-/* Enhanced z-index hierarchy to prevent navbar conflicts */
-:root {
-  /* Update z-index variables with cleaner hierarchy */
-  --z-backdrop: -1;
-  --z-base: 0;
-  --z-content: 10;
-  --z-floating-elements: 950;
-  --z-location-message: 998;
-  --z-scroll-progress: 999;
-  --z-navbar: 1000;
-  --z-theme-toggle: 1002;
-  --z-dropdown: 1050;
-  --z-modal: 9999;
-  --z-tooltip: 10000;
+/* ✅ ENHANCED: Print styles */
+@media print {
+  .glass,
+  .glass-card,
+  .glass-3d,
+  .glass-hero {
+    background: var(--theme-card) !important;
+    backdrop-filter: none !important;
+    border: 1px solid var(--theme-border) !important;
+  }
+  
+  .gradient-text,
+  .gradient-text-3d {
+    -webkit-text-fill-color: initial !important;
+    background: none !important;
+    color: var(--theme-fg) !important;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    background: var(--theme-card) !important;
+    color: var(--theme-fg) !important;
+    border: 1px solid var(--theme-border) !important;
+  }
 }
 
-/* Ensure navbar elements are always clickable */
-nav [data-clickable="true"] {
-  pointer-events: auto !important;
-  cursor: pointer !important;
+/* ✅ ENHANCED: Focus management for accessibility */
+.focus-trap {
   position: relative;
-  z-index: 2;
 }
 
-nav [data-clickable="false"] {
-  pointer-events: none !important;
+.focus-trap:focus-within {
+  z-index: calc(var(--z-modal) + 1);
 }
 
-/* Ensure all interactive elements are above glass effects */
-nav .interactive {
+/* ✅ ENHANCED: Loading states with theme support */
+.loading-skeleton {
+  background: linear-gradient(135deg, 
+    var(--theme-muted-bg) 0%, 
+    rgba(var(--lux-gray-rgb), 0.1) 100%
+  );
+  backdrop-filter: blur(8px);
+  border-radius: inherit;
+  animation: skeleton-pulse 2s ease-in-out infinite;
   position: relative;
-  z-index: 10;
-  pointer-events: auto;
+  overflow: hidden;
 }
 
-/* Final safety measures for location message */
-.location-welcome-message button,
-.location-welcome-message a,
-.location-welcome-message [role="button"] {
-  pointer-events: auto !important;
-  z-index: 10 !important;
-  position: relative !important;
-  cursor: pointer !important;
+.loading-skeleton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent
+  );
+  animation: skeleton-shimmer 2s linear infinite;
 }
 
-.location-welcome-message * {
-  pointer-events: auto !important;
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
-/* Mobile menu fixes */
-.mobile-menu,
-nav + div[role="dialog"] {
-  top: calc(var(--header-height) + 0.25rem) !important;
-  z-index: var(--z-dropdown) !important;
+@keyframes skeleton-shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
-/* Floating elements positioning */
-.floating-actions,
-.scroll-to-top {
-  z-index: var(--z-floating-elements) !important;
+/* ✅ ENHANCED: Safari specific fixes */
+@supports (-webkit-backdrop-filter: blur(16px)) {
+  .glass,
+  .glass-card,
+  .glass-3d,
+  nav .glass {
+    -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
+    backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
+  }
 }
 
-/* Error notifications positioning */
-.error-notification {
-  position: fixed !important;
-  top: calc(var(--header-height) + 1rem) !important;
-  right: 1rem !important;
-  z-index: 997 !important;
+/* ✅ ENHANCED: Theme transition prevention during initial load */
+.theme-transition-disabled *,
+.theme-transition-disabled *::before,
+.theme-transition-disabled *::after {
+  transition: none !important;
 }
 
-/* Data attribute selectors for additional safety */
-[data-scroll-progress] {
-  z-index: var(--z-scroll-progress) !important;
+/* ✅ ENHANCED: Ensure navbar always stays visible */
+body > nav {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
 }
 
-[data-location-welcome] {
-  z-index: var(--z-location-message) !important;
-  position: fixed !important;
-  top: calc(var(--header-height) + 1rem) !important;
+nav[style*="display: none"],
+nav[style*="visibility: hidden"],
+nav[style*="opacity: 0"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }

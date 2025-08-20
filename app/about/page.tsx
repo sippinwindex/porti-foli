@@ -1,8 +1,9 @@
+// Enhanced About Page - Fixed Layout, Theme Integration, and 3D Effects
 'use client'
 
-import { Suspense, useState, useEffect, useRef } from 'react'
+import { Suspense, useState, useEffect, useRef, useMemo } from 'react'
 import dynamic from 'next/dynamic'
-import { motion, useScroll, useTransform, useInView } from 'framer-motion'
+import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion'
 import { 
   Code2, 
   Palette, 
@@ -18,15 +19,26 @@ import {
   Linkedin,
   Download,
   ExternalLink,
-  Loader
+  Loader,
+  ArrowRight,
+  Star,
+  GitBranch,
+  Award,
+  Users,
+  Calendar,
+  Heart,
+  Coffee
 } from 'lucide-react'
 
-// Lightweight imports - keep these
+// Import your theme components
 import ThemeToggle from '@/components/ThemeToggle'
 
-// Lazy load heavy components with optimized loading states
+// Enhanced Dynamic imports with better error handling
 const Navigation = dynamic(
-  () => import('@/components/Navigation'),
+  () => import('@/components/Navigation').catch(() => {
+    console.warn('Failed to load Navigation, using fallback')
+    return { default: () => <NavigationSkeleton /> }
+  }),
   { 
     ssr: false,
     loading: () => <NavigationSkeleton />
@@ -34,22 +46,25 @@ const Navigation = dynamic(
 )
 
 const Footer = dynamic(
-  () => import('@/components/Footer'),
+  () => import('@/components/Footer').catch(() => {
+    console.warn('Failed to load Footer, using fallback')  
+    return { default: () => <FooterSkeleton /> }
+  }),
   { 
     ssr: false,
     loading: () => <FooterSkeleton />
   }
 )
 
-// Loading Skeletons for better UX
+// Enhanced Loading Skeletons that match your theme
 function NavigationSkeleton() {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[1000] h-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50">
+    <nav className="fixed top-0 left-0 right-0 z-[1000] h-20 bg-lux-offwhite/80 dark:bg-lux-black/80 backdrop-blur-md border-b border-lux-gray-200/50 dark:border-lux-gray-700/50">
       <div className="container mx-auto h-full flex justify-between items-center px-4">
-        <div className="w-32 h-8 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+        <div className="w-32 h-8 bg-lux-gray-200 dark:bg-lux-gray-800 rounded animate-pulse" />
         <div className="flex gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="w-20 h-8 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+            <div key={i} className="w-20 h-8 bg-lux-gray-200 dark:bg-lux-gray-800 rounded animate-pulse" />
           ))}
         </div>
       </div>
@@ -59,38 +74,92 @@ function NavigationSkeleton() {
 
 function FooterSkeleton() {
   return (
-    <footer className="bg-gray-900 dark:bg-black py-8">
+    <footer className="bg-lux-black py-16 relative mt-20">
       <div className="container mx-auto px-4">
-        <div className="w-64 h-4 bg-gray-700 rounded mx-auto animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="space-y-4">
+            <div className="w-48 h-6 bg-lux-gray-700 rounded animate-pulse" />
+            <div className="w-32 h-4 bg-lux-gray-700 rounded animate-pulse" />
+          </div>
+          <div className="space-y-4">
+            <div className="w-32 h-6 bg-lux-gray-700 rounded animate-pulse" />
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="w-24 h-4 bg-lux-gray-700 rounded animate-pulse" />
+              ))}
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div className="w-28 h-6 bg-lux-gray-700 rounded animate-pulse" />
+            <div className="flex gap-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="w-10 h-10 bg-lux-gray-700 rounded-full animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </footer>
   )
 }
 
-// Page Loading Component
+// Enhanced Page Loading Component with your theme
 function PageLoading() {
+  const [loadingText, setLoadingText] = useState('Loading About Page...')
+  const [progress, setProgress] = useState(0)
+  
+  useEffect(() => {
+    const messages = [
+      'Loading About Page...',
+      'Preparing Interactive Elements...',
+      'Setting up Animations...',
+      'Almost Ready...'
+    ]
+    
+    let index = 0
+    const interval = setInterval(() => {
+      index = (index + 1) % messages.length
+      setLoadingText(messages[index])
+      setProgress((index + 1) * 25)
+    }, 600)
+    
+    return () => clearInterval(interval)
+  }, [])
+
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 flex items-center justify-center z-[9999]">
-      <div className="relative">
-        <div className="animate-spin rounded-full h-32 w-32 border-4 border-blue-500 border-t-transparent"></div>
-        <div className="absolute inset-0 animate-pulse rounded-full h-32 w-32 border-2 border-purple-400 opacity-30"></div>
-        <div className="absolute inset-4 flex items-center justify-center">
-          <Code2 className="w-8 h-8 text-blue-400 animate-pulse" />
+    <div className="fixed inset-0 bg-gradient-to-br from-lux-offwhite via-viva-magenta-50/20 to-lux-gold-50/20 dark:from-lux-black dark:via-viva-magenta-900/10 dark:to-lux-gold-900/10 flex items-center justify-center z-[9999]">
+      <div className="relative text-center max-w-md mx-auto px-4">
+        <div className="relative mb-8">
+          <div className="animate-spin rounded-full h-32 w-32 border-4 border-viva-magenta border-t-transparent mx-auto"></div>
+          <div className="absolute inset-0 animate-pulse rounded-full h-32 w-32 border-2 border-lux-gold opacity-30 mx-auto"></div>
+          <div className="absolute inset-4 flex items-center justify-center">
+            <Code2 className="w-8 h-8 text-viva-magenta animate-pulse" />
+          </div>
         </div>
+        
+        <motion.div
+          className="space-y-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <p className="text-lux-gray-900 dark:text-lux-offwhite font-medium text-lg">{loadingText}</p>
+          <div className="w-full h-2 bg-lux-gray-200 dark:bg-lux-gray-800 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-viva-magenta to-lux-gold rounded-full"
+              initial={{ width: '0%' }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            />
+          </div>
+          <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm">{progress}% Complete</p>
+        </motion.div>
       </div>
-      <motion.p 
-        className="absolute bottom-20 text-gray-600 dark:text-gray-300 font-medium"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-      >
-        Loading About Page...
-      </motion.p>
     </div>
   )
 }
 
-// Animation variants (optimized)
+// Enhanced Animation variants with your theme
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -127,15 +196,22 @@ const cardVariants = {
   }
 }
 
-// Optimized 3D Card Component
-function Card3D({ children, className = "", delay = 0 }: { 
+// Enhanced 3D Card Component with proper theme integration
+function Card3D({ 
+  children, 
+  className = "", 
+  delay = 0,
+  enableEffects = true 
+}: { 
   children: React.ReactNode; 
   className?: string; 
-  delay?: number 
+  delay?: number;
+  enableEffects?: boolean;
 }) {
   const [rotateX, setRotateX] = useState(0)
   const [rotateY, setRotateY] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
+  const shouldReduceMotion = useReducedMotion()
   
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -145,7 +221,7 @@ function Card3D({ children, className = "", delay = 0 }: {
   }, [])
   
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isMobile) return // Disable 3D effects on mobile for performance
+    if (isMobile || shouldReduceMotion || !enableEffects) return
     
     const rect = e.currentTarget.getBoundingClientRect()
     const centerX = rect.left + rect.width / 2
@@ -172,14 +248,16 @@ function Card3D({ children, className = "", delay = 0 }: {
       transition={{ delay }}
     >
       <motion.div
-        className="transform-gpu transition-transform duration-200 ease-out"
+        className="transform-gpu transition-transform duration-300 ease-out preserve-3d"
         style={{
-          rotateX: isMobile ? 0 : rotateX,
-          rotateY: isMobile ? 0 : rotateY,
+          rotateX: (isMobile || shouldReduceMotion || !enableEffects) ? 0 : rotateX,
+          rotateY: (isMobile || shouldReduceMotion || !enableEffects) ? 0 : rotateY,
         }}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        whileHover={{ scale: isMobile ? 1.01 : 1.02 }}
+        whileHover={{ 
+          scale: shouldReduceMotion ? 1 : (isMobile ? 1.01 : 1.02) 
+        }}
       >
         {children}
       </motion.div>
@@ -187,23 +265,31 @@ function Card3D({ children, className = "", delay = 0 }: {
   )
 }
 
-// Optimized Skill Badge Component
-function SkillBadge({ icon: Icon, skill, level }: { 
+// Enhanced Skill Badge Component with your theme
+function SkillBadge({ 
+  icon: Icon, 
+  skill, 
+  level,
+  color = "viva-magenta" 
+}: { 
   icon: React.ComponentType<{ className?: string }>; 
   skill: string; 
-  level: string 
+  level: string;
+  color?: string;
 }) {
+  const shouldReduceMotion = useReducedMotion()
+  
   return (
     <motion.div
       className="group relative"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+      whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
     >
-      <div className="flex items-center gap-2 px-4 py-2 bg-white/5 dark:bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:border-blue-500/50 transition-all duration-300">
-        <Icon className="w-4 h-4 text-blue-400" />
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{skill}</span>
+      <div className="flex items-center gap-2 px-4 py-2 glass-card rounded-lg border border-lux-gray-200/50 dark:border-lux-gray-700/50 hover:border-viva-magenta/50 transition-all duration-300">
+        <Icon className="w-4 h-4 text-viva-magenta" />
+        <span className="text-sm font-medium text-lux-gray-700 dark:text-lux-gray-300">{skill}</span>
       </div>
-      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-lux-black text-lux-offwhite text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
         {level}
       </div>
     </motion.div>
@@ -217,16 +303,17 @@ export default function AboutPage() {
   
   const containerRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
+  const shouldReduceMotion = useReducedMotion()
   
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start end", "end start"]
   })
   
-  const y = useTransform(scrollYProgress, [0, 1], [0, -50])
+  const y = useTransform(scrollYProgress, [0, 1], [0, shouldReduceMotion ? 0 : -50])
   const opacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.4, 1, 0.4])
 
-  // Check if mobile
+  // Check if mobile and set up intersection observer
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
     checkMobile()
@@ -234,17 +321,18 @@ export default function AboutPage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Initial loading
+  // Enhanced loading with proper timing
   useEffect(() => {
+    const minLoadTime = shouldReduceMotion ? 500 : 1000
     const timer = setTimeout(() => {
       setIsLoading(false)
-    }, 800)
+    }, minLoadTime)
     return () => clearTimeout(timer)
-  }, [])
+  }, [shouldReduceMotion])
 
-  // Lazy load sections as they come into view
+  // Enhanced section observer
   useEffect(() => {
-    const sections = ['hero', 'about', 'skills', 'experience', 'education', 'cta']
+    const sections = ['hero', 'about', 'skills', 'experience', 'education', 'projects', 'cta']
     
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -260,7 +348,6 @@ export default function AboutPage() {
       }
     )
 
-    // Small delay to ensure DOM is ready
     const timeoutId = setTimeout(() => {
       sections.forEach(sectionId => {
         const element = document.getElementById(sectionId)
@@ -278,67 +365,70 @@ export default function AboutPage() {
     }
   }, [])
 
-  const skills = {
+  // Enhanced skills data with your theme colors
+  const skills = useMemo(() => ({
     frontend: [
-      { icon: Code2, skill: "React/Next.js", level: "Expert" },
-      { icon: Code2, skill: "TypeScript", level: "Advanced" },
-      { icon: Palette, skill: "Tailwind CSS", level: "Expert" },
-      { icon: Sparkles, skill: "Framer Motion", level: "Advanced" },
-      { icon: Code2, skill: "Three.js", level: "Intermediate" }
+      { icon: Code2, skill: "React/Next.js", level: "Expert", color: "primary" },
+      { icon: Code2, skill: "TypeScript", level: "Advanced", color: "viva-magenta" },
+      { icon: Palette, skill: "Tailwind CSS", level: "Expert", color: "lux-teal" },
+      { icon: Sparkles, skill: "Framer Motion", level: "Advanced", color: "lux-gold" },
+      { icon: Code2, skill: "Three.js", level: "Intermediate", color: "lux-sage" }
     ],
     backend: [
-      { icon: Database, skill: "Flask/Python", level: "Advanced" },
-      { icon: Database, skill: "Node.js", level: "Intermediate" },
-      { icon: Database, skill: "PostgreSQL", level: "Advanced" },
-      { icon: Code2, skill: "RESTful APIs", level: "Expert" },
-      { icon: Database, skill: "MongoDB", level: "Intermediate" }
+      { icon: Database, skill: "Flask/Python", level: "Advanced", color: "lux-sage" },
+      { icon: Database, skill: "Node.js", level: "Intermediate", color: "lux-teal" },
+      { icon: Database, skill: "PostgreSQL", level: "Advanced", color: "primary" },
+      { icon: Code2, skill: "RESTful APIs", level: "Expert", color: "viva-magenta" },
+      { icon: Database, skill: "MongoDB", level: "Intermediate", color: "lux-brown" }
     ],
     tools: [
-      { icon: Cloud, skill: "AWS", level: "Intermediate" },
-      { icon: Cloud, skill: "Docker", level: "Intermediate" },
-      { icon: Code2, skill: "Git/GitHub", level: "Expert" },
-      { icon: Palette, skill: "Figma", level: "Expert" },
-      { icon: Code2, skill: "Vercel", level: "Advanced" }
+      { icon: Cloud, skill: "AWS", level: "Intermediate", color: "lux-gold" },
+      { icon: Cloud, skill: "Docker", level: "Intermediate", color: "primary" },
+      { icon: Code2, skill: "Git/GitHub", level: "Expert", color: "lux-gray" },
+      { icon: Palette, skill: "Figma", level: "Expert", color: "viva-magenta" },
+      { icon: Code2, skill: "Vercel", level: "Advanced", color: "lux-teal" }
     ]
-  }
+  }), [])
+
+  // Enhanced contact options
+  const contactOptions = useMemo(() => [
+    {
+      icon: Mail,
+      title: 'Email',
+      description: 'jafernandez94@gmail.com',
+      href: 'mailto:jafernandez94@gmail.com',
+      color: 'from-viva-magenta to-lux-gold'
+    },
+    {
+      icon: Linkedin,
+      title: 'LinkedIn',
+      description: 'Connect professionally',
+      href: 'https://www.linkedin.com/in/juan-fernandez-fullstack/',
+      color: 'from-primary-600 to-primary-700'
+    },
+    {
+      icon: Github,
+      title: 'GitHub',
+      description: 'View my repositories',
+      href: 'https://github.com/sippinwindex',
+      color: 'from-lux-gray-700 to-lux-gray-900'
+    },
+    {
+      icon: Download,
+      title: 'Resume',
+      description: 'Download my CV',
+      href: 'https://flowcv.com/resume/moac4k9d8767',
+      color: 'from-lux-teal to-lux-sage'
+    }
+  ], [])
 
   if (isLoading) {
     return <PageLoading />
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 transition-colors duration-300 overflow-x-hidden">
-      {/* Performance optimizations */}
-      <style jsx global>{`
-        * {
-          -webkit-backface-visibility: hidden;
-          -moz-backface-visibility: hidden;
-          backface-visibility: hidden;
-        }
-        
-        main {
-          isolation: isolate;
-        }
-        
-        section {
-          position: relative;
-          contain: layout style paint;
-          will-change: auto;
-        }
-        
-        @media (max-width: 768px) {
-          .hero-particles,
-          .hero-3d-background::before {
-            display: none;
-          }
-          
-          .glass-card {
-            backdrop-filter: blur(8px);
-          }
-        }
-      `}</style>
-
-      {/* Lazy loaded Navigation */}
+    <div className="relative min-h-screen bg-lux-offwhite dark:bg-lux-black text-lux-gray-900 dark:text-lux-offwhite transition-colors duration-300 overflow-x-hidden">
+      {/* Enhanced Navigation */}
       <div className="fixed top-0 left-0 right-0 z-[1000]">
         <Suspense fallback={<NavigationSkeleton />}>
           <Navigation />
@@ -350,11 +440,11 @@ export default function AboutPage() {
         <ThemeToggle />
       </div>
 
-      {/* Animated Background Elements - Only on desktop */}
-      {!isMobile && (
+      {/* Enhanced Background Elements */}
+      {!isMobile && !shouldReduceMotion && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
-            className="absolute top-20 left-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl"
+            className="absolute top-20 left-10 w-72 h-72 bg-viva-magenta/20 rounded-full blur-3xl"
             animate={{
               scale: [1, 1.2, 1],
               opacity: [0.3, 0.5, 0.3]
@@ -366,7 +456,7 @@ export default function AboutPage() {
             }}
           />
           <motion.div
-            className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl"
+            className="absolute bottom-20 right-10 w-96 h-96 bg-lux-gold/20 rounded-full blur-3xl"
             animate={{
               scale: [1.2, 1, 1.2],
               opacity: [0.2, 0.4, 0.2]
@@ -378,11 +468,24 @@ export default function AboutPage() {
               delay: 2
             }}
           />
+          <motion.div
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-lux-teal/20 rounded-full blur-3xl"
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.2, 0.3, 0.2]
+            }}
+            transition={{
+              duration: 12,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 4
+            }}
+          />
         </div>
       )}
 
       {/* Main Content */}
-      <main className="relative z-10 pt-24">
+      <main className="relative z-10 pt-24 pb-20">
         <div ref={containerRef} className="relative">
           <motion.div 
             className="container mx-auto px-4 sm:px-6 lg:px-8 py-16"
@@ -394,7 +497,7 @@ export default function AboutPage() {
               initial="hidden"
               animate="visible"
             >
-              {/* Hero Section */}
+              {/* Enhanced Hero Section */}
               <section id="hero">
                 <motion.div 
                   className="text-center mb-20"
@@ -402,17 +505,17 @@ export default function AboutPage() {
                 >
                   <motion.div
                     className="relative inline-block mb-8"
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   >
-                    <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-1">
-                      <div className="w-full h-full rounded-full bg-white dark:bg-gray-800 flex items-center justify-center">
-                        <span className="text-4xl font-bold text-blue-600 dark:text-blue-400">JF</span>
+                    <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-viva-magenta to-lux-gold p-1">
+                      <div className="w-full h-full rounded-full bg-lux-offwhite dark:bg-lux-black flex items-center justify-center">
+                        <span className="text-4xl font-bold gradient-text">JF</span>
                       </div>
                     </div>
-                    {!isMobile && (
+                    {!isMobile && !shouldReduceMotion && (
                       <motion.div
-                        className="absolute -inset-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full blur opacity-30"
+                        className="absolute -inset-4 bg-gradient-to-r from-viva-magenta to-lux-gold rounded-full blur opacity-30"
                         animate={{ rotate: 360 }}
                         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                       />
@@ -420,14 +523,14 @@ export default function AboutPage() {
                   </motion.div>
                   
                   <motion.h1 
-                    className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent mb-6"
+                    className="hero-title text-5xl md:text-6xl font-bold gradient-text mb-6"
                     variants={itemVariants}
                   >
                     Juan A. Fernandez
                   </motion.h1>
                   
                   <motion.p 
-                    className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto"
+                    className="text-xl md:text-2xl text-lux-gray-600 dark:text-lux-gray-400 mb-8 max-w-3xl mx-auto"
                     variants={itemVariants}
                   >
                     Full-Stack Developer blending analytical precision with creative UI/UX design
@@ -437,53 +540,58 @@ export default function AboutPage() {
                     className="flex flex-wrap justify-center gap-4 mb-8"
                     variants={itemVariants}
                   >
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full border border-gray-200 dark:border-gray-700">
-                      <MapPin className="w-4 h-4 text-blue-500" />
-                      <span className="text-gray-700 dark:text-gray-300">Miami, Florida</span>
+                    <div className="flex items-center gap-2 px-4 py-2 glass-card rounded-full border border-lux-gray-200 dark:border-lux-gray-700">
+                      <MapPin className="w-4 h-4 text-viva-magenta" />
+                      <span className="text-lux-gray-700 dark:text-lux-gray-300">Miami, Florida</span>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full border border-gray-200 dark:border-gray-700">
-                      <Briefcase className="w-4 h-4 text-green-500" />
-                      <span className="text-gray-700 dark:text-gray-300">Available for hire</span>
+                    <div className="flex items-center gap-2 px-4 py-2 glass-card rounded-full border border-lux-gray-200 dark:border-lux-gray-700">
+                      <Briefcase className="w-4 h-4 text-lux-teal" />
+                      <span className="text-lux-gray-700 dark:text-lux-gray-300">Available for hire</span>
                     </div>
                   </motion.div>
 
                   <motion.div 
-                    className="flex justify-center gap-4"
+                    className="flex flex-col sm:flex-row justify-center gap-4"
                     variants={itemVariants}
                   >
-                    <motion.button
-                      className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors duration-200"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <motion.a
+                      href="https://flowcv.com/resume/moac4k9d8767"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-primary inline-flex items-center gap-2 px-6 py-3"
+                      whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+                      whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
                     >
                       <Download className="w-4 h-4" />
                       Download Resume
-                    </motion.button>
-                    <motion.button
-                      className="flex items-center gap-2 px-6 py-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      <ExternalLink className="w-4 h-4" />
+                    </motion.a>
+                    <motion.a
+                      href="mailto:jafernandez94@gmail.com?subject=Let's work together&body=Hi Juan, I'd like to discuss a project with you."
+                      className="btn-secondary inline-flex items-center gap-2 px-6 py-3"
+                      whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+                      whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
                     >
                       <Mail className="w-4 h-4" />
                       Get in Touch
-                    </motion.button>
+                    </motion.a>
                   </motion.div>
                 </motion.div>
               </section>
 
-              {/* About Section - Only render when in view */}
+              {/* Enhanced About Section */}
               {sectionsInView.has('about') && (
                 <section id="about">
                   <Card3D className="mb-16" delay={0.2}>
-                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 dark:border-gray-700 shadow-xl">
+                    <div className="glass-card p-8 rounded-2xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 shadow-xl">
                       <motion.h2 
-                        className="text-3xl font-bold text-gray-900 dark:text-white mb-6"
+                        className="text-3xl font-bold text-lux-gray-900 dark:text-lux-offwhite mb-6"
                         variants={itemVariants}
                       >
                         About Me
                       </motion.h2>
                       <motion.div 
-                        className="prose prose-lg dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 space-y-4"
+                        className="prose prose-lg dark:prose-invert max-w-none text-lux-gray-600 dark:text-lux-gray-300 space-y-4"
                         variants={itemVariants}
                       >
                         <p>
@@ -499,7 +607,7 @@ export default function AboutPage() {
                 </section>
               )}
 
-              {/* Skills Section - Only render when in view */}
+              {/* Enhanced Skills Section */}
               {sectionsInView.has('skills') && (
                 <section id="skills">
                   <motion.div 
@@ -507,7 +615,7 @@ export default function AboutPage() {
                     variants={itemVariants}
                   >
                     <motion.h2 
-                      className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12"
+                      className="text-3xl font-bold text-center text-lux-gray-900 dark:text-lux-offwhite mb-12"
                       variants={itemVariants}
                     >
                       Technical Expertise
@@ -515,9 +623,9 @@ export default function AboutPage() {
                     
                     <div className="grid md:grid-cols-3 gap-8">
                       <Card3D delay={0.1}>
-                        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-700 h-full">
-                          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                            <Code2 className="w-5 h-5 text-blue-500" />
+                        <div className="glass-card p-6 rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 h-full">
+                          <h3 className="text-xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-4 flex items-center gap-2">
+                            <Code2 className="w-5 h-5 text-viva-magenta" />
                             Frontend
                           </h3>
                           <div className="space-y-3">
@@ -529,9 +637,9 @@ export default function AboutPage() {
                       </Card3D>
 
                       <Card3D delay={0.2}>
-                        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-700 h-full">
-                          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                            <Database className="w-5 h-5 text-green-500" />
+                        <div className="glass-card p-6 rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 h-full">
+                          <h3 className="text-xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-4 flex items-center gap-2">
+                            <Database className="w-5 h-5 text-lux-teal" />
                             Backend
                           </h3>
                           <div className="space-y-3">
@@ -543,9 +651,9 @@ export default function AboutPage() {
                       </Card3D>
 
                       <Card3D delay={0.3}>
-                        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-700 h-full">
-                          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                            <Cloud className="w-5 h-5 text-purple-500" />
+                        <div className="glass-card p-6 rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 h-full">
+                          <h3 className="text-xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-4 flex items-center gap-2">
+                            <Cloud className="w-5 h-5 text-lux-gold" />
                             Tools & DevOps
                           </h3>
                           <div className="space-y-3">
@@ -560,32 +668,32 @@ export default function AboutPage() {
                 </section>
               )}
 
-              {/* Experience & Education - Only render when in view */}
+              {/* Enhanced Experience & Education */}
               {sectionsInView.has('experience') && (
                 <section id="experience">
                   <div className="grid lg:grid-cols-2 gap-8 mb-16">
                     <Card3D delay={0.1}>
-                      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-700 h-full">
-                        <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                          <Briefcase className="w-6 h-6 text-blue-500" />
+                      <div className="glass-card p-6 rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 h-full">
+                        <h3 className="text-2xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-6 flex items-center gap-2">
+                          <Briefcase className="w-6 h-6 text-viva-magenta" />
                           Experience
                         </h3>
                         <div className="space-y-6">
-                          <div className="border-l-4 border-blue-500 pl-4">
-                            <h4 className="font-semibold text-gray-900 dark:text-white">Full-Stack Instructor Assistant (TA)</h4>
-                            <p className="text-blue-600 dark:text-blue-400 font-medium">4Geeks Academy • Present</p>
-                            <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
+                          <div className="border-l-4 border-viva-magenta pl-4">
+                            <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">Full-Stack Instructor Assistant (TA)</h4>
+                            <p className="text-viva-magenta font-medium">4Geeks Academy • Present</p>
+                            <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
                               Supporting full-stack students with debugging, mentorship, and code reviews using React, Flask, and PostgreSQL.
                             </p>
                           </div>
-                          <div className="border-l-4 border-green-500 pl-4">
-                            <h4 className="font-semibold text-gray-900 dark:text-white">Healthcare Data Analyst</h4>
-                            <p className="text-green-600 dark:text-green-400 font-medium">Group 1001 • 2022 – 2025</p>
+                          <div className="border-l-4 border-lux-teal pl-4">
+                            <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">Healthcare Data Analyst</h4>
+                            <p className="text-lux-teal font-medium">Group 1001 • 2022 – 2025</p>
                           </div>
-                          <div className="border-l-4 border-purple-500 pl-4">
-                            <h4 className="font-semibold text-gray-900 dark:text-white">UX/UI Researcher</h4>
-                            <p className="text-purple-600 dark:text-purple-400 font-medium">What Is Hot • 2017 – 2019</p>
-                            <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
+                          <div className="border-l-4 border-lux-gold pl-4">
+                            <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">UX/UI Researcher</h4>
+                            <p className="text-lux-gold font-medium">What Is Hot • 2017 – 2019</p>
+                            <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
                               Drove 32% increase in user engagement through data-driven UX design and A/B testing.
                             </p>
                           </div>
@@ -594,30 +702,30 @@ export default function AboutPage() {
                     </Card3D>
 
                     <Card3D delay={0.2}>
-                      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-700 h-full">
-                        <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                          <GraduationCap className="w-6 h-6 text-green-500" />
+                      <div className="glass-card p-6 rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 h-full">
+                        <h3 className="text-2xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-6 flex items-center gap-2">
+                          <GraduationCap className="w-6 h-6 text-lux-teal" />
                           Education
                         </h3>
                         <div className="space-y-6">
-                          <div className="border-l-4 border-blue-500 pl-4">
-                            <h4 className="font-semibold text-gray-900 dark:text-white">Full-Stack Development Certification</h4>
-                            <p className="text-blue-600 dark:text-blue-400 font-medium">4Geeks Academy • 2025</p>
-                            <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
+                          <div className="border-l-4 border-viva-magenta pl-4">
+                            <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">Full-Stack Development Certification</h4>
+                            <p className="text-viva-magenta font-medium">4Geeks Academy • 2025</p>
+                            <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
                               Comprehensive program covering React, Flask, PostgreSQL, and modern development practices.
                             </p>
                           </div>
-                          <div className="border-l-4 border-purple-500 pl-4">
-                            <h4 className="font-semibold text-gray-900 dark:text-white">UX/UI Certification</h4>
-                            <p className="text-purple-600 dark:text-purple-400 font-medium">Thinkful • 2021 – 2022</p>
-                            <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
+                          <div className="border-l-4 border-lux-gold pl-4">
+                            <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">UX/UI Certification</h4>
+                            <p className="text-lux-gold font-medium">Thinkful • 2021 – 2022</p>
+                            <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
                               User-centered design, usability testing, and accessibility principles.
                             </p>
                           </div>
-                          <div className="border-l-4 border-green-500 pl-4">
-                            <h4 className="font-semibold text-gray-900 dark:text-white">Upcoming Certifications</h4>
-                            <p className="text-green-600 dark:text-green-400 font-medium">Azure & AWS • 2025</p>
-                            <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
+                          <div className="border-l-4 border-lux-teal pl-4">
+                            <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">Upcoming Certifications</h4>
+                            <p className="text-lux-teal font-medium">Azure & AWS • 2025</p>
+                            <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
                               Cloud computing and DevOps specializations in progress.
                             </p>
                           </div>
@@ -628,24 +736,24 @@ export default function AboutPage() {
                 </section>
               )}
 
-              {/* Featured Projects - Only render when in view */}
+              {/* Enhanced Featured Projects */}
               {(sectionsInView.has('projects') || sectionsInView.has('hero')) && (
                 <section id="projects">
                   <Card3D className="mb-16" delay={0.3}>
-                    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 dark:border-gray-700">
-                      <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 flex items-center gap-2">
-                        <Rocket className="w-8 h-8 text-blue-500" />
+                    <div className="glass-card p-8 rounded-2xl border border-lux-gray-200/50 dark:border-lux-gray-700/50">
+                      <h2 className="text-3xl font-bold text-lux-gray-900 dark:text-lux-offwhite mb-8 flex items-center gap-2">
+                        <Rocket className="w-8 h-8 text-viva-magenta" />
                         Featured Projects
                       </h2>
                       
                       <div className="grid md:grid-cols-2 gap-6">
                         <motion.div 
-                          className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 p-6 text-white"
-                          whileHover={{ scale: 1.02 }}
+                          className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-viva-magenta to-lux-gold p-6 text-lux-offwhite"
+                          whileHover={{ scale: shouldReduceMotion ? 1 : 1.02 }}
                           transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         >
                           <h3 className="text-xl font-semibold mb-2">GameGraft</h3>
-                          <p className="text-blue-100 mb-4">Game Discovery App with real-time API integration</p>
+                          <p className="text-lux-offwhite/80 mb-4">Game Discovery App with real-time API integration</p>
                           <div className="flex flex-wrap gap-2 mb-4">
                             <span className="px-2 py-1 bg-white/20 rounded-md text-xs">React.js</span>
                             <span className="px-2 py-1 bg-white/20 rounded-md text-xs">Flask</span>
@@ -653,19 +761,19 @@ export default function AboutPage() {
                           </div>
                           <motion.button
                             className="flex items-center gap-2 text-sm font-medium hover:underline"
-                            whileHover={{ x: 5 }}
+                            whileHover={{ x: shouldReduceMotion ? 0 : 5 }}
                           >
                             View Project <ExternalLink className="w-4 h-4" />
                           </motion.button>
                         </motion.div>
 
                         <motion.div 
-                          className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-green-500 to-teal-600 p-6 text-white"
-                          whileHover={{ scale: 1.02 }}
+                          className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-lux-teal to-lux-sage p-6 text-lux-offwhite"
+                          whileHover={{ scale: shouldReduceMotion ? 1 : 1.02 }}
                           transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         >
                           <h3 className="text-xl font-semibold mb-2">SquadUp</h3>
-                          <p className="text-green-100 mb-4">Gaming Collaboration App with real-time features</p>
+                          <p className="text-lux-offwhite/80 mb-4">Gaming Collaboration App with real-time features</p>
                           <div className="flex flex-wrap gap-2 mb-4">
                             <span className="px-2 py-1 bg-white/20 rounded-md text-xs">React</span>
                             <span className="px-2 py-1 bg-white/20 rounded-md text-xs">Flask</span>
@@ -673,7 +781,7 @@ export default function AboutPage() {
                           </div>
                           <motion.button
                             className="flex items-center gap-2 text-sm font-medium hover:underline"
-                            whileHover={{ x: 5 }}
+                            whileHover={{ x: shouldReduceMotion ? 0 : 5 }}
                           >
                             View Project <ExternalLink className="w-4 h-4" />
                           </motion.button>
@@ -684,7 +792,7 @@ export default function AboutPage() {
                 </section>
               )}
 
-              {/* CTA Section - Only render when in view */}
+              {/* Enhanced CTA Section */}
               {(sectionsInView.has('cta') || sectionsInView.has('hero')) && (
                 <section id="cta">
                   <motion.div 
@@ -692,28 +800,29 @@ export default function AboutPage() {
                     variants={itemVariants}
                   >
                     <Card3D delay={0.4}>
-                      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white">
+                      <div className="bg-gradient-to-r from-viva-magenta to-lux-gold rounded-2xl p-8 text-lux-offwhite">
                         <h2 className="text-3xl font-bold mb-4">Let's Build Something Amazing</h2>
-                        <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+                        <p className="text-xl text-lux-offwhite/80 mb-8 max-w-2xl mx-auto">
                           Ready to bring your ideas to life? I'm available for freelance projects and full-time opportunities.
                         </p>
                         <div className="flex flex-wrap justify-center gap-4">
-                          <motion.button
-                            className="flex items-center gap-2 px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <Mail className="w-4 h-4" />
-                            Start a Project
-                          </motion.button>
-                          <motion.button
-                            className="flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-lg font-semibold hover:bg-white/30 transition-colors duration-200"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <Github className="w-4 h-4" />
-                            View GitHub
-                          </motion.button>
+                          {contactOptions.map((option, index) => {
+                            const IconComponent = option.icon
+                            return (
+                              <motion.a
+                                key={option.title}
+                                href={option.href}
+                                target={option.title !== 'Email' ? '_blank' : undefined}
+                                rel={option.title !== 'Email' ? 'noopener noreferrer' : undefined}
+                                className="flex items-center gap-2 px-6 py-3 bg-lux-offwhite/20 backdrop-blur-sm border border-lux-offwhite/30 text-lux-offwhite rounded-lg font-semibold hover:bg-lux-offwhite/30 transition-colors duration-200"
+                                whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+                                whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+                              >
+                                <IconComponent className="w-4 h-4" />
+                                {option.title}
+                              </motion.a>
+                            )
+                          })}
                         </div>
                       </div>
                     </Card3D>
@@ -725,10 +834,12 @@ export default function AboutPage() {
         </div>
       </main>
 
-      {/* Lazy loaded Footer */}
-      <Suspense fallback={<FooterSkeleton />}>
-        <Footer />
-      </Suspense>
+      {/* Enhanced Footer with proper spacing */}
+      <div className="relative z-10">
+        <Suspense fallback={<FooterSkeleton />}>
+          <Footer />
+        </Suspense>
+      </div>
     </div>
   )
 }

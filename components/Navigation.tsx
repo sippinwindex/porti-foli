@@ -1,4 +1,4 @@
-// components/Navigation.tsx - Fixed version
+// components/Navigation.tsx - FIXED VERSION with single theme toggle
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -21,9 +21,10 @@ import {
   Twitter,
   FileText,
   Calendar,
-  Briefcase
+  Briefcase,
+  Sun,
+  Moon
 } from 'lucide-react'
-import ThemeToggle from './ThemeToggle'
 
 interface NavItem {
   id: string
@@ -46,9 +47,8 @@ interface SocialLink {
 }
 
 const Navigation: React.FC = () => {
-  // State management
+  // ✅ FIXED: Single state management for everything
   const [isOpen, setIsOpen] = useState(false)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
   const [currentSection, setCurrentSection] = useState('home')
@@ -65,27 +65,85 @@ const Navigation: React.FC = () => {
   const navRef = useRef<HTMLElement>(null)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   
-  // ✅ FIXED: Stable scroll progress that doesn't cause navbar to disappear
+  // ✅ FIXED: Stable scroll progress
   const { scrollYProgress } = useScroll()
   const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1])
 
-  // Initialize theme and mounted state
+  // ✅ FIXED: Robust theme initialization and persistence
   useEffect(() => {
+    // Set mounted first to prevent hydration issues
     setMounted(true)
-    const savedTheme = localStorage.getItem('theme')
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const shouldUseDarkMode = savedTheme === 'dark' || (!savedTheme && systemPrefersDark)
     
-    setDarkMode(shouldUseDarkMode)
-    document.documentElement.classList.toggle('dark', shouldUseDarkMode)
+    // Initialize theme from localStorage or system preference
+    const initializeTheme = () => {
+      try {
+        const savedTheme = localStorage.getItem('theme')
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        const shouldUseDarkMode = savedTheme === 'dark' || (!savedTheme && systemPrefersDark)
+        
+        setDarkMode(shouldUseDarkMode)
+        
+        // Apply theme immediately to prevent flashing
+        if (shouldUseDarkMode) {
+          document.documentElement.classList.add('dark')
+          document.documentElement.style.colorScheme = 'dark'
+        } else {
+          document.documentElement.classList.remove('dark')
+          document.documentElement.style.colorScheme = 'light'
+        }
+      } catch (error) {
+        console.warn('Theme initialization failed:', error)
+        // Fallback to light mode
+        setDarkMode(false)
+        document.documentElement.classList.remove('dark')
+        document.documentElement.style.colorScheme = 'light'
+      }
+    }
+
+    initializeTheme()
+
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+      // Only update if user hasn't manually set a preference
+      if (!localStorage.getItem('theme')) {
+        setDarkMode(e.matches)
+        if (e.matches) {
+          document.documentElement.classList.add('dark')
+          document.documentElement.style.colorScheme = 'dark'
+        } else {
+          document.documentElement.classList.remove('dark')
+          document.documentElement.style.colorScheme = 'light'
+        }
+      }
+    }
+
+    mediaQuery.addEventListener('change', handleSystemThemeChange)
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleSystemThemeChange)
+    }
   }, [])
 
-  // Theme toggle function
+  // ✅ FIXED: Single theme toggle function with proper error handling
   const toggleTheme = useCallback(() => {
-    const newDarkMode = !darkMode
-    setDarkMode(newDarkMode)
-    document.documentElement.classList.toggle('dark', newDarkMode)
-    localStorage.setItem('theme', newDarkMode ? 'dark' : 'light')
+    try {
+      const newDarkMode = !darkMode
+      setDarkMode(newDarkMode)
+      
+      // Apply theme changes immediately
+      if (newDarkMode) {
+        document.documentElement.classList.add('dark')
+        document.documentElement.style.colorScheme = 'dark'
+        localStorage.setItem('theme', 'dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+        document.documentElement.style.colorScheme = 'light'
+        localStorage.setItem('theme', 'light')
+      }
+    } catch (error) {
+      console.warn('Theme toggle failed:', error)
+    }
   }, [darkMode])
 
   // Navigation items
@@ -179,7 +237,7 @@ const Navigation: React.FC = () => {
     }
   ], [])
 
-  // ✅ FIXED: Stable scroll detection that doesn't cause flickering
+  // ✅ FIXED: Stable scroll detection
   useEffect(() => {
     let ticking = false
     
@@ -190,8 +248,7 @@ const Navigation: React.FC = () => {
           const maxScroll = document.documentElement.scrollHeight - window.innerHeight
           const progress = Math.min(scrollY / Math.max(maxScroll, 1), 1)
           
-          // ✅ FIXED: Use a threshold to prevent constant toggling
-          setScrolled(scrollY > 100) // Increased threshold
+          setScrolled(scrollY > 50) // Reduced threshold for earlier activation
           setScrollProgress(progress)
           ticking = false
         })
@@ -257,7 +314,6 @@ const Navigation: React.FC = () => {
   // Close mobile menu on route change
   useEffect(() => {
     setIsOpen(false)
-    setIsMenuOpen(false)
   }, [pathname])
 
   // Close mobile menu when clicking outside
@@ -265,11 +321,10 @@ const Navigation: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
         setIsOpen(false)
-        setIsMenuOpen(false)
       }
     }
 
-    if (isOpen || isMenuOpen) {
+    if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
       document.body.style.overflow = 'hidden'
     } else {
@@ -280,25 +335,23 @@ const Navigation: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside)
       document.body.style.overflow = 'unset'
     }
-  }, [isOpen, isMenuOpen])
+  }, [isOpen])
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && (isOpen || isMenuOpen)) {
+      if (e.key === 'Escape' && isOpen) {
         setIsOpen(false)
-        setIsMenuOpen(false)
       }
     }
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, isMenuOpen])
+  }, [isOpen])
 
   // Navigation handler
   const handleNavigation = useCallback((href: string) => {
     setIsOpen(false)
-    setIsMenuOpen(false)
     
     if (href.startsWith('/#') && pathname === '/') {
       const targetId = href.replace('/#', '')
@@ -321,6 +374,43 @@ const Navigation: React.FC = () => {
                    (href.includes('#') && pathname === '/' && `/#${currentSection}` === href)
     return isActive
   }, [pathname, currentSection])
+
+  // ✅ FIXED: Single Theme Toggle Component (removed duplicate)
+  const ThemeToggleComponent = React.memo(() => {
+    if (!mounted) {
+      return (
+        <div className="w-12 h-6 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+      )
+    }
+
+    return (
+      <motion.button
+        onClick={toggleTheme}
+        className="relative w-12 h-6 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-viva-magenta-500 focus:ring-offset-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+        whileTap={{ scale: 0.95 }}
+        aria-label={`Switch to ${darkMode ? 'light' : 'dark'} mode`}
+      >
+        <motion.div
+          className="absolute top-0.5 w-5 h-5 bg-white dark:bg-gray-900 rounded-full shadow-lg flex items-center justify-center"
+          animate={{
+            x: darkMode ? 24 : 2,
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 500,
+            damping: 30
+          }}
+        >
+          {darkMode ? (
+            <Moon className="w-3 h-3 text-viva-magenta-500" />
+          ) : (
+            <Sun className="w-3 h-3 text-lux-gold-500" />
+          )}
+        </motion.div>
+      </motion.button>
+    )
+  })
+  ThemeToggleComponent.displayName = 'ThemeToggleComponent'
 
   // Navigation Link Component
   const NavLink = React.memo<{
@@ -441,47 +531,6 @@ const Navigation: React.FC = () => {
   })
   SocialLink.displayName = 'SocialLink'
 
-  // Theme Toggle Component
-  const ThemeToggleComponent = React.memo(() => {
-    if (!mounted) {
-      return (
-        <div className="w-12 h-6 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
-      )
-    }
-
-    return (
-      <motion.button
-        onClick={toggleTheme}
-        className="relative w-12 h-6 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-viva-magenta-500 focus:ring-offset-2 bg-gray-200 dark:bg-gray-700"
-        whileTap={{ scale: 0.95 }}
-        aria-label={`Switch to ${darkMode ? 'light' : 'dark'} mode`}
-      >
-        <motion.div
-          className="absolute top-0.5 w-5 h-5 bg-white dark:bg-gray-900 rounded-full shadow-lg flex items-center justify-center"
-          animate={{
-            x: darkMode ? 24 : 2,
-          }}
-          transition={{
-            type: "spring",
-            stiffness: 500,
-            damping: 30
-          }}
-        >
-          {darkMode ? (
-            <svg className="w-3 h-3 text-viva-magenta-500" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-            </svg>
-          ) : (
-            <svg className="w-3 h-3 text-lux-gold-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-            </svg>
-          )}
-        </motion.div>
-      </motion.button>
-    )
-  })
-  ThemeToggleComponent.displayName = 'ThemeToggleComponent'
-
   // Loading state
   if (!mounted) {
     return (
@@ -501,13 +550,13 @@ const Navigation: React.FC = () => {
 
   return (
     <>
-      {/* ✅ FIXED: Enhanced navbar with stable positioning */}
+      {/* ✅ FIXED: Stable navbar with consistent theming */}
       <motion.nav 
         ref={navRef}
         className={`
           fixed top-0 left-0 right-0 z-[1000] transition-all duration-500 ease-out
           ${scrolled 
-            ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg' 
+            ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg' 
             : 'bg-transparent'
           }
         `}
@@ -574,6 +623,7 @@ const Navigation: React.FC = () => {
               
               <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2" />
               
+              {/* ✅ FIXED: Single theme toggle */}
               <ThemeToggleComponent />
 
               {/* Email Button */}
@@ -596,15 +646,13 @@ const Navigation: React.FC = () => {
               </motion.a>
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Button & Theme Toggle */}
             <div className="flex lg:hidden items-center gap-3">
+              {/* ✅ FIXED: Single theme toggle for mobile */}
               <ThemeToggleComponent />
               
               <button
-                onClick={() => {
-                  setIsOpen(!isOpen)
-                  setIsMenuOpen(!isMenuOpen)
-                }}
+                onClick={() => setIsOpen(!isOpen)}
                 className="lg:hidden p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors z-20 relative"
                 aria-label="Toggle mobile menu"
               >
@@ -631,7 +679,7 @@ const Navigation: React.FC = () => {
 
       {/* Mobile Menu */}
       <AnimatePresence>
-        {(isOpen || isMenuOpen) && (
+        {isOpen && (
           <>
             {/* Backdrop */}
             <motion.div
@@ -640,10 +688,7 @@ const Navigation: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              onClick={() => {
-                setIsOpen(false)
-                setIsMenuOpen(false)
-              }}
+              onClick={() => setIsOpen(false)}
             />
 
             {/* Mobile Menu */}
