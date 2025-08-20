@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from 'next-themes'
 
 // Game constants - adjusted for proper Google Dino-like physics
-const GRAVITY = 0.8
-const JUMP_FORCE = -16
+const GRAVITY = 0.6 // Slightly reduced for more floaty feel
+const JUMP_FORCE = -15 // Slightly reduced for better arc
 const GROUND_Y = 50 // Distance from bottom of canvas
 const PLAYER_WIDTH = 44
 const PLAYER_HEIGHT = 47
@@ -14,6 +14,7 @@ const GAME_WIDTH = 800
 const GAME_HEIGHT = 400
 const BASE_SPEED = 6 // Reduced starting speed
 const MAX_SPEED = 12 // Reduced max speed for better progression
+const JUMP_DURATION = 600 // Approximate jump duration in ms
 
 interface Obstacle {
   id: number
@@ -133,7 +134,7 @@ export default function SynthwaveRunnerGame() {
     collectibles.current = []
     speed.current = BASE_SPEED
     distance.current = 0
-    obstacleTimer.current = 0 // Reset obstacle timer
+    obstacleTimer.current = 1000 // Start with a grace period
     lastObstacleX.current = GAME_WIDTH
     shieldActive.current = false
     shieldTimeLeft.current = 0
@@ -144,9 +145,10 @@ export default function SynthwaveRunnerGame() {
     lastTimeRef.current = 0
   }, [])
 
-  // Game controls
+  // Game controls with proper single-jump mechanics
   const jump = useCallback(() => {
-    if (playerY.current >= GROUND_Y - 2) { // Only jump when on ground
+    // Strict single-jump: only when completely on ground and not in any jump state
+    if (Math.abs(playerY.current - GROUND_Y) < 0.1 && Math.abs(velocity.current) < 0.1 && !isJumping.current) {
       velocity.current = JUMP_FORCE
       isJumping.current = true
       playJumpSound()
@@ -171,14 +173,22 @@ export default function SynthwaveRunnerGame() {
     setGameState('playing')
   }, [initGame])
 
-  // Input handling
+  // Input handling with WASD support and anti-spam protection
   useEffect(() => {
+    let lastJumpTime = 0
+    const jumpCooldown = 100 // Minimum 100ms between jump attempts
+    
     const handleKeyDown = (e: KeyboardEvent) => {
       if (gameState === 'playing') {
-        if (e.code === 'Space' || e.code === 'ArrowUp') {
+        if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
           e.preventDefault()
-          jump()
-        } else if (e.code === 'ArrowDown') {
+          // Anti-spam: only jump on key press (not hold) with cooldown
+          const now = Date.now()
+          if (!e.repeat && now - lastJumpTime > jumpCooldown) {
+            jump()
+            lastJumpTime = now
+          }
+        } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
           e.preventDefault()
           startDucking()
         }
@@ -192,14 +202,16 @@ export default function SynthwaveRunnerGame() {
     }
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'ArrowDown') {
+      if (e.code === 'ArrowDown' || e.code === 'KeyS') {
         stopDucking()
       }
     }
 
     const handleClick = () => {
-      if (gameState === 'playing') {
+      const now = Date.now()
+      if (gameState === 'playing' && now - lastJumpTime > jumpCooldown) {
         jump()
+        lastJumpTime = now
       } else if (gameState === 'menu') {
         startGame()
       } else if (gameState === 'gameOver') {
@@ -327,72 +339,283 @@ export default function SynthwaveRunnerGame() {
       ctx.globalAlpha = 1
     }
     
-    // Player body with your luxury gradient
-    const playerGradient = ctx.createLinearGradient(playerX, playerYPos, playerX + PLAYER_WIDTH, playerYPos + playerHeight)
-    playerGradient.addColorStop(0, '#BE3455') // viva-magenta
-    playerGradient.addColorStop(0.5, '#D4AF37') // lux-gold
-    playerGradient.addColorStop(1, '#008080') // lux-teal
-    ctx.fillStyle = playerGradient
+  // Pixelated player drawing functions
+  const drawPixelPlayer = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, state: 'running' | 'jumping' | 'ducking') => {
+    const pixelSize = 3 // Larger pixels for the main character
     
-    // Main body
-    ctx.fillRect(playerX, playerYPos, PLAYER_WIDTH, playerHeight)
+    // Running animation (2 frames)
+    const runningFrames = [
+      [
+        "  ████████  ",
+        " ██████████ ",
+        " ██  ██  ██ ",
+        " ██████████ ",
+        " ██████████ ",
+        " ██████████ ",
+        " ████  ████ ",
+        " ████  ████ ",
+        " ████  ████ ",
+        " ████  ████ ",
+        " ████  ████ ",
+        " ████  ████ ",
+        "  ██    ██  ",
+        "  ██    ██  ",
+        " ████  ████ ",
+        " ████  ████ "
+      ],
+      [
+        "  ████████  ",
+        " ██████████ ",
+        " ██  ██  ██ ",
+        " ██████████ ",
+        " ██████████ ",
+        " ██████████ ",
+        " ████  ████ ",
+        " ████  ████ ",
+        " ████  ████ ",
+        " ████  ████ ",
+        " ████  ████ ",
+        "  ██    ██  ",
+        "  ██    ██  ",
+        " ████  ████ ",
+        " ████  ████ ",
+        "████    ████"
+      ]
+    ]
     
-    // Player eyes (only if not ducking)
-    if (!isDucking.current) {
-      ctx.fillStyle = 'white'
-      ctx.fillRect(playerX + 8, playerYPos + 8, 8, 8)
-      ctx.fillRect(playerX + 24, playerYPos + 8, 8, 8)
-      ctx.fillStyle = isDark ? 'black' : '#121212'
-      ctx.fillRect(playerX + 10, playerYPos + 10, 4, 4)
-      ctx.fillRect(playerX + 26, playerYPos + 10, 4, 4)
+    // Jumping sprite
+    const jumpingSprite = [
+      "  ████████  ",
+      " ██████████ ",
+      " ██  ██  ██ ",
+      " ██████████ ",
+      " ██████████ ",
+      " ██████████ ",
+      " ████  ████ ",
+      " ████  ████ ",
+      " ████  ████ ",
+      " ████  ████ ",
+      "██████  ████",
+      "██████  ████",
+      "██████    ██",
+      "██████    ██",
+      " ████    ███",
+      " ████    ███"
+    ]
+    
+    // Ducking sprite (shorter)
+    const duckingSprite = [
+      "            ",
+      "            ",
+      "            ",
+      "            ",
+      "            ",
+      "  ████████  ",
+      " ██████████ ",
+      " ██  ██  ██ ",
+      " ██████████ ",
+      " ████████████",
+      " ████████████",
+      " ████████████",
+      "  ██      ██ ",
+      " ████    ████",
+      " ████    ████",
+      "████      ████"
+    ]
+    
+    let pattern: string[]
+    
+    // Select sprite based on state
+    if (state === 'jumping') {
+      pattern = jumpingSprite
+    } else if (state === 'ducking') {
+      pattern = duckingSprite
+    } else {
+      // Running animation - alternate between frames
+      const frameIndex = Math.floor(Date.now() / 200) % 2
+      pattern = runningFrames[frameIndex]
     }
     
-    // Player outline
-    ctx.strokeStyle = isDark ? 'white' : '#121212'
-    ctx.lineWidth = 1
-    ctx.strokeRect(playerX, playerYPos, PLAYER_WIDTH, playerHeight)
+    // Define pixelated gradient colors - retro style
+    const colors = isDark 
+      ? ['#BE3455', '#D4AF37', '#008080'] // viva-magenta, lux-gold, lux-teal
+      : ['#8b1538', '#ca8a04', '#006666'] // darker versions for light theme
     
-    // Draw obstacles with theme awareness
-    obstacles.current.forEach(obstacle => {
-      ctx.strokeStyle = isDark ? 'white' : '#121212'
-      ctx.lineWidth = 1
-      
-      if (obstacle.type === 'cactus') {
-        const gradient = ctx.createLinearGradient(obstacle.x, obstacle.y, obstacle.x, obstacle.y + obstacle.height)
-        gradient.addColorStop(0, '#98A869') // lux-sage
-        gradient.addColorStop(1, '#6B7E4A') // darker sage
-        ctx.fillStyle = gradient
-        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height)
-        ctx.strokeRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height)
-        
-        // Cactus spikes
-        ctx.fillStyle = '#7A8C5A'
-        for (let i = 5; i < obstacle.height - 5; i += 8) {
-          ctx.fillRect(obstacle.x - 3, obstacle.y + i, 6, 4)
-          ctx.fillRect(obstacle.x + obstacle.width - 3, obstacle.y + i, 6, 4)
+    // Draw the character with pixelated gradient
+    pattern.forEach((row, rowIndex) => {
+      [...row].forEach((pixel, colIndex) => {
+        if (pixel === '█') {
+          // Calculate which color to use based on row position (vertical gradient)
+          const gradientProgress = rowIndex / (pattern.length - 1)
+          let colorIndex: number
+          
+          if (gradientProgress < 0.33) {
+            colorIndex = 0 // Top color (magenta)
+          } else if (gradientProgress < 0.66) {
+            colorIndex = 1 // Middle color (gold)
+          } else {
+            colorIndex = 2 // Bottom color (teal)
+          }
+          
+          ctx.fillStyle = colors[colorIndex]
+          ctx.fillRect(
+            x + colIndex * pixelSize, 
+            y + rowIndex * pixelSize, 
+            pixelSize, 
+            pixelSize
+          )
         }
+      })
+    })
+    
+    // Add character outline for better definition
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.6)'
+    ctx.lineWidth = 1
+    
+    // Draw outline around non-empty pixels
+    pattern.forEach((row, rowIndex) => {
+      [...row].forEach((pixel, colIndex) => {
+        if (pixel === '█') {
+          const pixelX = x + colIndex * pixelSize
+          const pixelY = y + rowIndex * pixelSize
+          ctx.strokeRect(pixelX, pixelY, pixelSize, pixelSize)
+        }
+      })
+    })
+    
+    // Draw eyes only when not ducking
+    if (state !== 'ducking') {
+      ctx.fillStyle = 'white'
+      // Left eye
+      ctx.fillRect(x + 3 * pixelSize, y + 2 * pixelSize, pixelSize, pixelSize)
+      // Right eye  
+      ctx.fillRect(x + 7 * pixelSize, y + 2 * pixelSize, pixelSize, pixelSize)
+      
+      // Eye pupils
+      ctx.fillStyle = isDark ? 'black' : '#121212'
+      ctx.fillRect(x + 3 * pixelSize + 1, y + 2 * pixelSize + 1, pixelSize - 1, pixelSize - 1)
+      ctx.fillRect(x + 7 * pixelSize + 1, y + 2 * pixelSize + 1, pixelSize - 1, pixelSize - 1)
+    }
+  }, [isDark])
+    
+  // Pixel art drawing functions with theme-aware colors
+  const drawPixelCactus = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) => {
+    const pixelSize = 2
+    const cactusPattern = [
+      "  ████  ",
+      "  ████  ",
+      "██████  ",
+      "██████  ",
+      "██████  ",
+      "  ████  ",
+      "  ████  ",
+      "  ████  ",
+      "  ████  ",
+      "  ████  "
+    ]
+    
+    ctx.fillStyle = isDark ? '#98A869' : '#6B7E4A' // Theme-aware green
+    cactusPattern.forEach((row, rowIndex) => {
+      [...row].forEach((pixel, colIndex) => {
+        if (pixel === '█') {
+          ctx.fillRect(
+            x + colIndex * pixelSize, 
+            y + rowIndex * pixelSize, 
+            pixelSize, 
+            pixelSize
+          )
+        }
+      })
+    })
+    
+    // Add outline for better visibility
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.4)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(x, y, width, height)
+  }, [isDark])
+
+  const drawPixelRock = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) => {
+    const pixelSize = 2
+    const rockPattern = [
+      "  ████  ",
+      " ██████ ",
+      "████████",
+      "████████",
+      "████████",
+      " ██████ ",
+      "  ████  "
+    ]
+    
+    ctx.fillStyle = isDark ? '#4A2C2A' : '#2A1A1A' // Theme-aware brown
+    rockPattern.forEach((row, rowIndex) => {
+      [...row].forEach((pixel, colIndex) => {
+        if (pixel === '█') {
+          ctx.fillRect(
+            x + colIndex * pixelSize, 
+            y + rowIndex * pixelSize, 
+            pixelSize, 
+            pixelSize
+          )
+        }
+      })
+    })
+    
+    // Add outline for better visibility
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.4)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(x, y, width, height)
+  }, [isDark])
+
+  const drawPixelBird = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) => {
+    const pixelSize = 2
+    const wingFlap = Math.sin(Date.now() * 0.01) > 0
+    const birdPattern = wingFlap ? [
+      "██    ██",
+      "  ████  ",
+      "  ████  ",
+      "    ██  "
+    ] : [
+      "    ██  ",
+      "  ████  ",
+      "  ████  ",
+      "██    ██"
+    ]
+    
+    ctx.fillStyle = isDark ? '#BE3455' : '#8b1538' // Theme-aware magenta
+    birdPattern.forEach((row, rowIndex) => {
+      [...row].forEach((pixel, colIndex) => {
+        if (pixel === '█') {
+          ctx.fillRect(
+            x + colIndex * pixelSize, 
+            y + rowIndex * pixelSize, 
+            pixelSize, 
+            pixelSize
+          )
+        }
+      })
+    })
+    
+    // Add outline for better visibility
+    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.4)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(x, y, width, height)
+  }, [isDark])
+        // Draw pixelated player character
+    let playerState: 'running' | 'jumping' | 'ducking' = 'running'
+    if (isDucking.current) {
+      playerState = 'ducking'
+    } else if (isJumping.current || playerY.current > GROUND_Y) {
+      playerState = 'jumping'
+    }
+    
+    drawPixelPlayer(ctx, playerX, playerYPos, PLAYER_WIDTH, playerHeight, playerState)
+    obstacles.current.forEach(obstacle => {
+      if (obstacle.type === 'cactus') {
+        drawPixelCactus(ctx, obstacle.x, obstacle.y, obstacle.width, obstacle.height)
       } else if (obstacle.type === 'rock') {
-        const gradient = ctx.createLinearGradient(obstacle.x, obstacle.y, obstacle.x, obstacle.y + obstacle.height)
-        gradient.addColorStop(0, '#4A2C2A') // lux-brown
-        gradient.addColorStop(1, '#2A1A1A') // darker brown
-        ctx.fillStyle = gradient
-        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height)
-        ctx.strokeRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height)
+        drawPixelRock(ctx, obstacle.x, obstacle.y, obstacle.width, obstacle.height)
       } else if (obstacle.type === 'bird') {
-        // Flying obstacle with viva-magenta
-        const centerX = obstacle.x + obstacle.width / 2
-        const centerY = obstacle.y + obstacle.height / 2
-        const wingFlap = Math.sin(Date.now() * 0.01) * 5
-        
-        ctx.fillStyle = '#BE3455' // viva-magenta
-        // Body
-        ctx.fillRect(obstacle.x + 10, obstacle.y + 8, 15, 8)
-        // Wings
-        ctx.fillRect(obstacle.x + 5, centerY - 3 + wingFlap, 8, 3)
-        ctx.fillRect(obstacle.x + 22, centerY - 3 - wingFlap, 8, 3)
-        
-        ctx.strokeStyle = isDark ? 'white' : '#121212'
-        ctx.strokeRect(obstacle.x + 10, obstacle.y + 8, 15, 8)
+        drawPixelBird(ctx, obstacle.x, obstacle.y, obstacle.width, obstacle.height)
       }
     })
     
@@ -404,8 +627,8 @@ export default function SynthwaveRunnerGame() {
         ctx.rotate(Date.now() * 0.003)
         
         const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 15)
-        gradient.addColorStop(0, '#D4AF37') // lux-gold
-        gradient.addColorStop(1, '#BE3455') // viva-magenta
+        gradient.addColorStop(0, isDark ? '#D4AF37' : '#ca8a04') // Theme-aware gold
+        gradient.addColorStop(1, isDark ? '#BE3455' : '#8b1538') // Theme-aware magenta
         ctx.fillStyle = gradient
         ctx.fillRect(-15, -15, 30, 30)
         
@@ -413,7 +636,7 @@ export default function SynthwaveRunnerGame() {
         ctx.lineWidth = 2
         ctx.strokeRect(-15, -15, 30, 30)
         
-        ctx.fillStyle = 'white'
+        ctx.fillStyle = isDark ? 'white' : '#121212'
         ctx.font = 'bold 16px monospace'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
@@ -432,11 +655,11 @@ export default function SynthwaveRunnerGame() {
         ctx.translate(collectible.x + 10, collectible.y + 10)
         ctx.rotate(Date.now() * 0.005)
         
-        ctx.fillStyle = '#D4AF37' // lux-gold
+        ctx.fillStyle = isDark ? '#D4AF37' : '#ca8a04' // Theme-aware gold
         ctx.font = 'bold 20px monospace'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.strokeStyle = '#4A2C2A' // lux-brown for outline
+        ctx.strokeStyle = isDark ? '#4A2C2A' : '#2A1A1A' // Theme-aware brown outline
         ctx.lineWidth = 1
         ctx.strokeText('★', 0, 0)
         ctx.fillText('★', 0, 0)
@@ -445,29 +668,29 @@ export default function SynthwaveRunnerGame() {
       }
     })
     
-    // Draw UI with theme awareness
+    // Draw UI with proper theme awareness
     ctx.fillStyle = isDark ? 'white' : '#121212'
     ctx.font = 'bold 24px monospace'
     ctx.textAlign = 'left'
     ctx.fillText(score.toString().padStart(5, '0'), 20, 40)
     
     ctx.font = '14px monospace'
-    ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(18, 18, 18, 0.7)'
+    ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(18, 18, 18, 0.8)'
     ctx.fillText(`HI: ${highScore.toString().padStart(5, '0')}`, 20, 60)
     ctx.fillText(`${Math.floor(distance.current)}m`, 20, 80)
     
-    // Speed indicator
-    ctx.fillStyle = '#BE3455'
+    // Speed indicator with theme awareness
+    ctx.fillStyle = isDark ? '#BE3455' : '#8b1538'
     ctx.fillText(`${speed.current.toFixed(1)}x`, 20, 100)
     
-    // Power-up indicators
+    // Power-up indicators with theme awareness
     if (shieldActive.current) {
-      ctx.fillStyle = '#98A869'
+      ctx.fillStyle = isDark ? '#98A869' : '#6B7E4A'
       ctx.textAlign = 'right'
       ctx.fillText(`Shield: ${Math.ceil(shieldTimeLeft.current / 1000)}s`, GAME_WIDTH - 20, 40)
     }
     if (magnetActive.current) {
-      ctx.fillStyle = '#008080'
+      ctx.fillStyle = isDark ? '#008080' : '#006666'
       ctx.textAlign = 'right'
       ctx.fillText(`Magnet: ${Math.ceil(magnetTimeLeft.current / 1000)}s`, GAME_WIDTH - 20, 60)
     }
@@ -489,17 +712,22 @@ export default function SynthwaveRunnerGame() {
     const deltaTime = Math.min(currentTime - lastTimeRef.current, 50)
     lastTimeRef.current = currentTime
 
-    // Update player physics
+    // Enhanced player physics with strict ground checking
     if (isJumping.current || playerY.current > GROUND_Y) {
       velocity.current += GRAVITY
       playerY.current -= velocity.current
       
-      // Land on ground
+      // Strict landing detection
       if (playerY.current <= GROUND_Y) {
         playerY.current = GROUND_Y
         velocity.current = 0
         isJumping.current = false
       }
+    } else {
+      // Force player to stay grounded when not jumping
+      playerY.current = GROUND_Y
+      velocity.current = 0
+      isJumping.current = false
     }
 
     // Update game speed with Google Dino-style progression
@@ -519,34 +747,34 @@ export default function SynthwaveRunnerGame() {
     groundOffset.current += speed.current
 
     // Google Dino-style obstacle spawning with proper difficulty curve
-    const baseSpawnRate = 1200 // Base time between obstacles (ms) - much more generous
-    const speedMultiplier = Math.max(0.3, 1 - (distance.current / 2000)) // Reduce time between obstacles as distance increases
+    const baseSpawnRate = 1500 // Increased base time for easier start
+    const speedMultiplier = Math.max(0.4, 1 - (distance.current / 3000)) // Slower difficulty ramp
     const currentSpawnRate = baseSpawnRate * speedMultiplier
     
     // Track time since last obstacle
     obstacleTimer.current += deltaTime
     
     // Only spawn if enough time has passed and we don't have too many obstacles
-    if (obstacleTimer.current >= currentSpawnRate && obstacles.current.length < 3) {
+    if (obstacleTimer.current >= currentSpawnRate && obstacles.current.length < 2) { // Reduced to 2 max
       
       // Progressive spawn chance - starts lower, increases gradually
-      const baseChance = 0.7 + (distance.current / 5000) * 0.3 // 70% to 100% over 5000m
+      const baseChance = 0.6 + (distance.current / 8000) * 0.4 // 60% to 100% over longer distance
       
       if (Math.random() < Math.min(baseChance, 1.0)) {
         
-        // Obstacle type progression
-        const canSpawnBirds = distance.current > 1000
+        // Obstacle type progression - birds introduced much later
+        const canSpawnBirds = distance.current > 1500 // Increased threshold
         let selectedType: 'cactus' | 'rock' | 'bird'
         
         if (!canSpawnBirds) {
           // Early game: only ground obstacles, favor smaller ones
-          selectedType = Math.random() < 0.6 ? 'cactus' : 'rock'
+          selectedType = Math.random() < 0.7 ? 'cactus' : 'rock' // Favor cacti more
         } else {
-          // Late game: mix of all types, but still favor ground obstacles
+          // Late game: mix of all types, but still heavily favor ground obstacles
           const rand = Math.random()
-          if (rand < 0.5) {
+          if (rand < 0.6) {
             selectedType = 'cactus'
-          } else if (rand < 0.8) {
+          } else if (rand < 0.9) { // Increased ground obstacle chance
             selectedType = 'rock'
           } else {
             selectedType = 'bird'
@@ -561,27 +789,27 @@ export default function SynthwaveRunnerGame() {
         if (selectedType === 'bird') {
           width = 35
           height = 20
-          // Birds at fixed, duck-able heights
-          const birdHeights = [65, 80] // All heights allow ducking
+          // Birds at strategic heights - some require ducking, some require jumping
+          const birdHeights = [45, 55, 85] // Mix of low (duck/jump), medium (duck), high (duck)
           const selectedHeight = birdHeights[Math.floor(Math.random() * birdHeights.length)]
           y = GAME_HEIGHT - GROUND_Y - selectedHeight
         } else if (selectedType === 'cactus') {
-          // Standardized cactus heights - all jumpable
-          const cactusHeights = [30, 35, 40] // All heights are jumpable with standard jump
+          // More conservative cactus heights
+          const cactusHeights = [28, 32, 36] // Slightly lower, easier to jump
           height = cactusHeights[Math.floor(Math.random() * cactusHeights.length)]
-          width = 20 + Math.random() * 8 // Slight width variation
+          width = 18 + Math.random() * 6 // Slightly narrower
           y = GAME_HEIGHT - GROUND_Y - height
         } else if (selectedType === 'rock') {
-          // Standardized rock heights - all jumpable
-          const rockHeights = [25, 30, 35] // All heights are jumpable
+          // Conservative rock heights
+          const rockHeights = [22, 26, 30] // Lower rocks
           height = rockHeights[Math.floor(Math.random() * rockHeights.length)]
-          width = 25 + Math.random() * 8 // Slight width variation
+          width = 22 + Math.random() * 6 // Slightly narrower
           y = GAME_HEIGHT - GROUND_Y - height
         }
         
         const newObstacle = {
           id: Date.now(),
-          x: GAME_WIDTH + 50, // Spawn further off screen for fairness
+          x: GAME_WIDTH + 80, // Spawn even further for better reaction time
           type: selectedType,
           width,
           height,
@@ -592,11 +820,11 @@ export default function SynthwaveRunnerGame() {
         obstacleTimer.current = 0 // Reset timer
         
         // Add some randomness to prevent predictable patterns
-        const randomDelay = Math.random() * 200 // 0-200ms additional delay
+        const randomDelay = Math.random() * 300 // 0-300ms additional delay
         obstacleTimer.current = -randomDelay
       } else {
         // If we don't spawn, reset timer with a shorter delay for next chance
-        obstacleTimer.current = currentSpawnRate * 0.3
+        obstacleTimer.current = currentSpawnRate * 0.4 // Increased reset time
       }
     }
 
@@ -606,8 +834,8 @@ export default function SynthwaveRunnerGame() {
       return obstacle.x > -100
     })
 
-    // Spawn power-ups less frequently for balanced gameplay
-    if (Math.random() < 0.0005) { // Much rarer than before
+    // Spawn power-ups very rarely for balanced gameplay
+    if (Math.random() < 0.0003 && distance.current > 500) { // Even rarer and only after 500m
       const types: PowerUp['type'][] = ['shield', 'magnet', 'star']
       powerUps.current.push({
         id: Date.now(),
@@ -624,8 +852,8 @@ export default function SynthwaveRunnerGame() {
       return powerUp.x > -50
     })
 
-    // Spawn collectibles more moderately
-    if (Math.random() < 0.002) { // Balanced frequency
+    // Spawn collectibles moderately and only after some progress
+    if (Math.random() < 0.0015 && distance.current > 300) { // Slightly more frequent but delayed start
       collectibles.current.push({
         id: Date.now(),
         x: GAME_WIDTH + 30,
@@ -782,10 +1010,10 @@ export default function SynthwaveRunnerGame() {
         ctx.font = '20px monospace'
         ctx.fillStyle = isDark ? 'white' : '#121212'
         ctx.fillText('Press SPACE or Click to Start', GAME_WIDTH / 2, GAME_HEIGHT / 2)
-        ctx.fillText('↑ or SPACE: Jump  |  ↓: Duck', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 40)
+        ctx.fillText('↑/W or SPACE: Jump  |  ↓/S: Duck', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 40)
       } else if (gameState === 'gameOver') {
         ctx.font = 'bold 48px monospace'
-        ctx.fillStyle = '#BE3455'
+        ctx.fillStyle = isDark ? '#BE3455' : '#8b1538'
         ctx.fillText('GAME OVER', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 60)
         
         ctx.font = '24px monospace'
@@ -793,7 +1021,7 @@ export default function SynthwaveRunnerGame() {
         ctx.fillText(`Final Score: ${score}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 10)
         
         if (score === highScore && score > 0) {
-          ctx.fillStyle = '#D4AF37'
+          ctx.fillStyle = isDark ? '#D4AF37' : '#ca8a04'
           ctx.fillText('NEW HIGH SCORE!', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20)
         }
         
@@ -1001,11 +1229,11 @@ export default function SynthwaveRunnerGame() {
                 <h4 className={`text-lg font-semibold mb-3 ${isDark ? 'text-pink-400' : 'text-lux-gold'}`}>Controls</h4>
                 <ul className={`space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                   <li className="flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded text-xs font-mono ${isDark ? 'bg-cyan-600' : 'bg-viva-magenta text-white'}`}>SPACE</span>
+                    <span className={`px-2 py-1 rounded text-xs font-mono ${isDark ? 'bg-cyan-600' : 'bg-viva-magenta text-white'}`}>SPACE/W</span>
                     or click to jump
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded text-xs font-mono ${isDark ? 'bg-cyan-600' : 'bg-viva-magenta text-white'}`}>↓</span>
+                    <span className={`px-2 py-1 rounded text-xs font-mono ${isDark ? 'bg-cyan-600' : 'bg-viva-magenta text-white'}`}>↓/S</span>
                     Hold to duck under flying obstacles
                   </li>
                   <li className="flex items-center gap-2">

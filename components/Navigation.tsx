@@ -1,3 +1,4 @@
+// components/Navigation.tsx - Fixed version
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -64,10 +65,9 @@ const Navigation: React.FC = () => {
   const navRef = useRef<HTMLElement>(null)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   
-  // Scroll progress and transforms
+  // ✅ FIXED: Stable scroll progress that doesn't cause navbar to disappear
   const { scrollYProgress } = useScroll()
   const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1])
-  const navBlur = useTransform(scrollYProgress, [0, 0.1], [0, shouldReduceMotion ? 8 : 20])
 
   // Initialize theme and mounted state
   useEffect(() => {
@@ -88,7 +88,7 @@ const Navigation: React.FC = () => {
     localStorage.setItem('theme', newDarkMode ? 'dark' : 'light')
   }, [darkMode])
 
-  // Navigation items with both old and new structure
+  // Navigation items
   const navigationItems: NavItem[] = useMemo(() => [
     { 
       id: 'home', 
@@ -148,7 +148,7 @@ const Navigation: React.FC = () => {
     }
   ], [])
 
-  // ✅ FIXED: Enhanced social links with better spacing
+  // Social links
   const socialLinks: SocialLink[] = useMemo(() => [
     { 
       platform: 'GitHub',
@@ -179,7 +179,7 @@ const Navigation: React.FC = () => {
     }
   ], [])
 
-  // Enhanced scroll detection with progress tracking
+  // ✅ FIXED: Stable scroll detection that doesn't cause flickering
   useEffect(() => {
     let ticking = false
     
@@ -190,7 +190,8 @@ const Navigation: React.FC = () => {
           const maxScroll = document.documentElement.scrollHeight - window.innerHeight
           const progress = Math.min(scrollY / Math.max(maxScroll, 1), 1)
           
-          setScrolled(scrollY > 50)
+          // ✅ FIXED: Use a threshold to prevent constant toggling
+          setScrolled(scrollY > 100) // Increased threshold
           setScrollProgress(progress)
           ticking = false
         })
@@ -202,7 +203,7 @@ const Navigation: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Enhanced section detection
+  // Section detection
   useEffect(() => {
     if (!pathname) return
     
@@ -294,13 +295,12 @@ const Navigation: React.FC = () => {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, isMenuOpen])
 
-  // Enhanced navigation with smooth scrolling for home page
+  // Navigation handler
   const handleNavigation = useCallback((href: string) => {
     setIsOpen(false)
     setIsMenuOpen(false)
     
     if (href.startsWith('/#') && pathname === '/') {
-      // Smooth scroll to section on home page
       const targetId = href.replace('/#', '')
       const element = document.getElementById(targetId)
       if (element) {
@@ -311,7 +311,6 @@ const Navigation: React.FC = () => {
         window.history.pushState(null, '', href)
       }
     } else {
-      // Navigate to page
       router.push(href)
     }
   }, [router, pathname, prefersReducedMotion])
@@ -400,7 +399,7 @@ const Navigation: React.FC = () => {
   })
   NavLink.displayName = 'NavLink'
 
-  // ✅ FIXED: Enhanced Social Link Component with better spacing
+  // Social Link Component
   const SocialLink = React.memo<{
     social: SocialLink
     index: number
@@ -502,19 +501,20 @@ const Navigation: React.FC = () => {
 
   return (
     <>
-      {/* ✅ FIXED: Enhanced z-index to ensure navbar stays above loading bar */}
+      {/* ✅ FIXED: Enhanced navbar with stable positioning */}
       <motion.nav 
         ref={navRef}
         className={`
-          fixed top-0 left-0 right-0 z-[1000] transition-all duration-300
+          fixed top-0 left-0 right-0 z-[1000] transition-all duration-500 ease-out
           ${scrolled 
-            ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg' 
+            ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg' 
             : 'bg-transparent'
           }
         `}
         style={{ 
           height: '5rem',
-          backdropFilter: scrolled ? `blur(${navBlur}px)` : 'none'
+          minHeight: '5rem',
+          maxHeight: '5rem'
         }}
         initial={{ y: -100 }}
         animate={{ y: 0 }}
@@ -523,7 +523,7 @@ const Navigation: React.FC = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center justify-between h-full">
             
-            {/* Enhanced Logo */}
+            {/* Logo */}
             <Link 
               href="/" 
               className="flex items-center gap-3 text-xl font-bold text-gray-900 dark:text-gray-50 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 transition-colors z-10 relative"
@@ -564,7 +564,7 @@ const Navigation: React.FC = () => {
               </div>
             </div>
 
-            {/* ✅ FIXED: Desktop Social Links & Theme Toggle with better spacing and email icon */}
+            {/* Desktop Social Links & Theme Toggle */}
             <div className="hidden lg:flex items-center gap-4">
               <div className="flex items-center gap-3">
                 {socialLinks.map((social, index) => (
@@ -576,7 +576,7 @@ const Navigation: React.FC = () => {
               
               <ThemeToggleComponent />
 
-              {/* ✅ FIXED: Replace "Let's Talk" with email icon */}
+              {/* Email Button */}
               <motion.a
                 href="mailto:jafernandez94@gmail.com"
                 className="relative group p-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
@@ -619,7 +619,7 @@ const Navigation: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ FIXED: Scroll Progress Indicator with proper z-index */}
+        {/* ✅ FIXED: Stable scroll progress bar */}
         <motion.div
           className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 origin-left z-[1001]"
           style={{ 
@@ -629,7 +629,7 @@ const Navigation: React.FC = () => {
         />
       </motion.nav>
 
-      {/* Enhanced Mobile Menu */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {(isOpen || isMenuOpen) && (
           <>
@@ -668,7 +668,7 @@ const Navigation: React.FC = () => {
                   ))}
                 </div>
 
-                {/* ✅ FIXED: Mobile Social Links with better spacing */}
+                {/* Mobile Social Links */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                   <div className="flex items-center justify-center gap-4 mb-6">
                     {socialLinks.map((social, index) => (
@@ -682,7 +682,6 @@ const Navigation: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: shouldReduceMotion ? 0 : 0.3 }}
                   >
-                    {/* ✅ FIXED: Replace mobile "Let's Talk" with email icon and better text */}
                     <motion.a
                       href="mailto:jafernandez94@gmail.com"
                       className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl shadow-lg"
