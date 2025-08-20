@@ -1,4 +1,4 @@
-// lib/github-api.ts - FIXED TYPE IMPORTS
+// lib/github-api.ts - FIXED: Added missing type exports
 import { Octokit } from '@octokit/rest'
 
 // FIXED: Import utility functions as regular imports, not type imports
@@ -8,7 +8,14 @@ import {
   calculateRepositoryScore 
 } from '@/utils/github-helpers'
 
-// Keep type imports separate
+// FIXED: Re-export types from the types file
+export type { 
+  GitHubRepository, 
+  GitHubUser, 
+  GitHubStats 
+} from '@/types/github'
+
+// Keep type imports separate for internal use
 import type { 
   GitHubRepository, 
   GitHubUser, 

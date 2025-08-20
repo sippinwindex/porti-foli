@@ -1,8 +1,11 @@
-// lib/portfolio-integration.ts - Updated with Real GitHub Integration
-import { getCachedRepositories, getCachedGitHubStats, GitHubRepository } from './github-api'
+// lib/portfolio-integration.ts - FIXED: Updated with correct type imports
+import { getCachedRepositories, getCachedGitHubStats } from './github-api'
 import { getCachedProjectsWithStatus } from './vercel-api'
 
-// Re-export GitHubRepository from github-api for consistency
+// FIXED: Import GitHubRepository as a type, not a value
+import type { GitHubRepository } from '@/types/github'
+
+// Re-export GitHubRepository type for consistency
 export type { GitHubRepository }
 
 export interface EnhancedProject {
@@ -199,7 +202,7 @@ class RealPortfolioIntegration {
         liveProjects: projects.filter(p => p.vercel?.isLive || p.metadata.liveUrl).length,
         totalStars: githubStats?.totalStars || 0,
         totalForks: githubStats?.totalForks || 0,
-        languageStats: this.processLanguageStats({}), // FIXED: Removed githubStats.languages reference
+        languageStats: this.processLanguageStats(githubStats?.languageStats || {}), // FIXED: Use languageStats from githubStats
         categoryStats: this.getCategoryStats(projects),
         deploymentStats: this.getDeploymentStats(projects),
         recentActivity: {
@@ -391,27 +394,102 @@ class RealPortfolioIntegration {
     }
   }
   
-  // Fallback mock data
+  // FIXED: Fallback mock data with proper error handling
   private getMockProjects(): EnhancedProject[] {
-    const { mockProjects } = require('./mock-data')
-    return mockProjects.map((p: any, index: number) => ({
-      ...p,
-      slug: p.id,
-      lastActivity: new Date().toISOString(),
-      deploymentScore: 85,
-      order: index,
-      metadata: {
-        images: [],
-        tags: p.techStack,
-        highlights: [],
-      },
-      techStack: p.techStack,
-    }))
+    try {
+      // Create fallback mock projects inline to avoid module import issues
+      const mockProjects = [
+        {
+          id: 'portfolio-website',
+          name: 'portfolio-website',
+          description: 'Modern 3D portfolio with live GitHub integration',
+          techStack: ['Next.js', 'Three.js', 'TypeScript', 'Framer Motion'],
+          category: 'fullstack' as const,
+          status: 'completed' as const,
+          featured: true
+        },
+        {
+          id: 'synthwave-runner',
+          name: 'synthwave-runner', 
+          description: 'High-performance endless runner game with synthwave aesthetics',
+          techStack: ['React', 'TypeScript', 'HTML5 Canvas'],
+          category: 'frontend' as const,
+          status: 'completed' as const,
+          featured: true
+        }
+      ]
+
+      return mockProjects.map((p: any, index: number) => ({
+        ...p,
+        slug: p.id,
+        lastActivity: new Date().toISOString(),
+        deploymentScore: 85,
+        order: index,
+        metadata: {
+          images: [],
+          tags: p.techStack,
+          highlights: [],
+        },
+        techStack: p.techStack,
+      }))
+    } catch (error) {
+      console.error('Error creating mock projects:', error)
+      return []
+    }
   }
   
   private getMockStats(): PortfolioStats {
-    const { mockStats } = require('./mock-data')
-    return mockStats
+    try {
+      return {
+        totalProjects: 25,
+        featuredProjects: 8,
+        liveProjects: 12,
+        totalStars: 150,
+        totalForks: 45,
+        languageStats: {
+          'TypeScript': 40,
+          'JavaScript': 30,
+          'Python': 20,
+          'Other': 10
+        },
+        categoryStats: {
+          'fullstack': 8,
+          'frontend': 6,
+          'backend': 4,
+          'data': 3,
+          'mobile': 2,
+          'other': 2
+        },
+        deploymentStats: {
+          successful: 18,
+          failed: 2,
+          building: 1,
+          pending: 4
+        },
+        recentActivity: {
+          lastCommit: new Date().toISOString(),
+          lastDeployment: new Date().toISOString(),
+          activeProjects: 8
+        }
+      }
+    } catch (error) {
+      console.error('Error creating mock stats:', error)
+      return {
+        totalProjects: 0,
+        featuredProjects: 0,
+        liveProjects: 0,
+        totalStars: 0,
+        totalForks: 0,
+        languageStats: {},
+        categoryStats: {},
+        deploymentStats: { successful: 0, failed: 0, building: 0, pending: 0 },
+        recentActivity: {
+          lastCommit: new Date().toISOString(),
+          lastDeployment: new Date().toISOString(),
+          activeProjects: 0
+        }
+      }
+    }
   }
 }
 

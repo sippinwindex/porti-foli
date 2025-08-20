@@ -1,8 +1,10 @@
-// pages/api/projects.ts - FIXED VERSION with unified types
+// pages/api/projects.ts - FIXED VERSION with correct imports
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getCachedRepositories } from '@/lib/github-api'
 import { getCachedProjectsWithStatus } from '@/lib/vercel-api'
-import type { GitHubRepository } from '@/types/github' // FIXED: Import from unified types
+
+// FIXED: Import GitHubRepository type correctly from types file
+import type { GitHubRepository } from '@/types/github'
 import type { PortfolioProject } from '@/types/portfolio'
 
 // FIXED: Enhanced project transformation with unified types
@@ -230,7 +232,7 @@ function transformGitHubRepoToProject(repo: GitHubRepository, vercelData?: any):
   }
 }
 
-// Helper functions remain the same
+// Helper functions
 function isValidDeploymentUrl(url: string): boolean {
   try {
     const parsedUrl = new URL(url)

@@ -217,11 +217,24 @@ export function useThemeStyles() {
   }
 }
 
-// Theme-aware CSS class utility
+// Theme-aware CSS class utility - FIXED VERSION
 export function themeClass(lightClass: string, darkClass: string, resolvedTheme?: 'light' | 'dark') {
-  const { resolvedTheme: currentTheme } = useTheme()
-  const theme = resolvedTheme || currentTheme
-  return theme === 'dark' ? darkClass : lightClass
+  // If resolvedTheme is provided, use it directly without calling useTheme
+  if (resolvedTheme) {
+    return resolvedTheme === 'dark' ? darkClass : lightClass
+  }
+  
+  // If no resolvedTheme provided, this function can't be used outside of a React component
+  throw new Error('themeClass: resolvedTheme parameter is required when called outside a React component. Use useThemeClass hook instead.')
+}
+
+// New custom hook for theme-aware CSS classes
+export function useThemeClass() {
+  const { resolvedTheme } = useTheme()
+  
+  return (lightClass: string, darkClass: string) => {
+    return resolvedTheme === 'dark' ? darkClass : lightClass
+  }
 }
 
 // Theme transition utility

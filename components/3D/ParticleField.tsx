@@ -1,4 +1,4 @@
-// components/3D/ParticleField.tsx - FIXED VERSION
+// components/3D/ParticleField.tsx - FIXED VERSION with Viva Magenta
 'use client'
 
 import { useEffect, useRef, useCallback, useMemo } from 'react'
@@ -17,8 +17,8 @@ interface Particle {
 
 interface ParticleFieldProps {
   particleCount?: number
-  colorScheme?: 'cyberpunk' | 'synthwave' | 'cosmic' | 'aurora'
-  animation?: 'float' | 'drift' | 'spiral' | 'chaos'
+  colorScheme?: 'cyberpunk' | 'synthwave' | 'cosmic' | 'aurora' | 'viva-magenta'
+  animation?: 'float' | 'drift' | 'spiral' | 'chaos' | 'constellation'
   interactive?: boolean
   speed?: number
   className?: string
@@ -63,6 +63,12 @@ export default function ParticleField({
       secondary: [30, 144, 255], // Dodger blue
       accent: [255, 20, 147], // Deep pink
       hueRange: [120, 200]
+    },
+    'viva-magenta': {
+      primary: [190, 52, 115], // Viva Magenta
+      secondary: [255, 20, 147], // Deep pink
+      accent: [255, 105, 180], // Hot pink
+      hueRange: [320, 350]
     }
   }), [])
 
@@ -141,6 +147,12 @@ export default function ParticleField({
           particle.vy += (Math.random() - 0.5) * 0.1
           particle.x += particle.vx * speed
           particle.y += particle.vy * speed
+          break
+        case 'constellation':
+          // Gentle floating with constellation-like movement
+          particle.y += particle.vy * speed * 0.2
+          particle.x += Math.sin(particle.life * 0.005) * 0.3
+          particle.vy += Math.sin(particle.life * 0.01) * 0.01
           break
         case 'float':
         default:

@@ -959,9 +959,8 @@ export default function HomePage() {
               <Suspense fallback={null}>
                 <ParticleField 
                   particleCount={isMobile ? 15 : 35}
-                  colorScheme="multi"
+                  colorScheme="aurora"
                   animation="constellation"
-                  showConnections={!isMobile}
                   interactive={!shouldReduceMotion}
                   speed={0.3}
                 />
@@ -1464,38 +1463,34 @@ export default function HomePage() {
         </motion.a>
       </div>
 
-      {/* ✅ FIXED: Location Welcome Message - Properly positioned below navbar */}
-{/* ✅ FIXED: Location Welcome Message - Optimally placed for UX */}
-
-
-  {/* ✅ FIXED: Location Welcome Message - Optimally placed for UX */}
-  <AnimatePresence>
-    {showLocationMessage && (
-      <motion.div
-        style={isMobile ? mobileLocationMessageStyles : locationMessageStyles}
-        initial={{ opacity: 0, y: -20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -20, scale: 0.95 }}
-        transition={{ 
-          duration: shouldReduceMotion ? 0.1 : 0.3,
-          ease: "easeOut"
-        }}
-      >
-        <div 
-          className="pointer-events-auto w-full"
-          style={{ pointerEvents: 'auto' }}
-        >
-          <LocationWelcomeMessage 
-            onClose={() => {
-              console.log('HomePage: Location message closed')
-              setShowLocationMessage(false)
-              setHasShownLocationMessage(true)
+      {/* ✅ FIXED: Location Welcome Message - Optimally placed for UX */}
+      <AnimatePresence>
+        {showLocationMessage && (
+          <motion.div
+            style={isMobile ? mobileLocationMessageStyles : locationMessageStyles}
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ 
+              duration: shouldReduceMotion ? 0.1 : 0.3,
+              ease: "easeOut"
             }}
-          />
-        </div>
-      </motion.div>
-    )}
-  </AnimatePresence>
+          >
+            <div 
+              className="pointer-events-auto w-full"
+              style={{ pointerEvents: 'auto' }}
+            >
+              <LocationWelcomeMessage 
+                onClose={() => {
+                  console.log('HomePage: Location message closed')
+                  setShowLocationMessage(false)
+                  setHasShownLocationMessage(true)
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
