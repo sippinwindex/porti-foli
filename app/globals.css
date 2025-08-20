@@ -1843,3 +1843,164 @@ nav + div[role="dialog"] {
     top: 3rem !important;
   }
 }
+
+/* ✅ CRITICAL Z-INDEX FIXES - Add to bottom of globals.css */
+
+/* Enhanced z-index hierarchy to prevent navbar conflicts */
+:root {
+  /* Z-index hierarchy - clearly defined layers */
+  --z-backdrop: -1;
+  --z-base: 0;
+  --z-content: 10;
+  --z-floating-elements: 950;
+  --z-location-message: 998;
+  --z-navbar: 1000;
+  --z-scroll-progress: 1001;
+  --z-theme-toggle: 1002;
+  --z-dropdown: 1050;
+  --z-modal: 9999;
+  --z-tooltip: 10000;
+}
+
+/* Force navbar to always be on top with consistent height */
+nav,
+.navbar,
+header[role="navigation"] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: var(--z-navbar) !important;
+  height: 3.5rem !important;
+  min-height: 3.5rem !important;
+  max-height: 3.5rem !important;
+}
+
+/* Scroll progress bar - positioned above navbar but below dropdowns */
+.scroll-progress,
+nav .scroll-progress {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  height: 1px !important;
+  z-index: var(--z-scroll-progress) !important;
+  pointer-events: none !important;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
+}
+
+/* Body padding for navbar */
+body {
+  padding-top: 3.5rem !important;
+}
+
+/* Location welcome message positioning */
+.location-welcome-container {
+  position: fixed !important;
+  top: 4rem !important; /* Below navbar */
+  right: 1.5rem !important;
+  z-index: var(--z-location-message) !important;
+  pointer-events: auto !important;
+  max-width: 24rem !important;
+}
+
+/* Ensure floating elements stay below navbar */
+.floating-actions,
+.scroll-to-top {
+  z-index: var(--z-floating-elements) !important;
+}
+
+/* Error notifications positioning */
+.error-notification {
+  position: fixed !important;
+  top: 4rem !important;
+  right: 1rem !important;
+  z-index: 997 !important; /* Below location message */
+}
+
+/* Theme toggle within navbar */
+.theme-toggle-container,
+.theme-toggle {
+  z-index: var(--z-theme-toggle) !important;
+  position: relative !important;
+}
+
+/* Mobile menu positioning */
+.mobile-menu,
+nav + div[role="dialog"] {
+  top: 3.5rem !important;
+  z-index: var(--z-dropdown) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  nav,
+  .navbar,
+  header[role="navigation"] {
+    height: 3rem !important;
+    min-height: 3rem !important;
+    max-height: 3rem !important;
+  }
+  
+  body {
+    padding-top: 3rem !important;
+  }
+  
+  .location-welcome-container {
+    top: 3.5rem !important;
+    right: 1rem !important;
+    max-width: 20rem !important;
+  }
+  
+  .mobile-menu,
+  nav + div[role="dialog"] {
+    top: 3rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  nav,
+  .navbar,
+  header[role="navigation"] {
+    height: 2.75rem !important;
+    min-height: 2.75rem !important;
+    max-height: 2.75rem !important;
+  }
+  
+  body {
+    padding-top: 2.75rem !important;
+  }
+  
+  .location-welcome-container {
+    top: 3.25rem !important;
+    right: 0.75rem !important;
+    left: 0.75rem !important;
+    max-width: none !important;
+  }
+  
+  .mobile-menu,
+  nav + div[role="dialog"] {
+    top: 2.75rem !important;
+  }
+}
+
+/* Prevent layout shifts and ensure smooth operation */
+nav,
+.navbar {
+  contain: layout style paint !important;
+  will-change: transform !important;
+}
+
+/* Ensure scroll progress doesn't interfere with clicks */
+.scroll-progress {
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+/* Focus states remain visible above navbar when needed */
+nav *:focus-visible {
+  z-index: calc(var(--z-navbar) + 1) !important;
+  position: relative !important;
+}

@@ -35,7 +35,11 @@ interface WelcomeMessage {
   color: string
 }
 
-const LocationWelcomeMessage: React.FC = () => {
+interface LocationWelcomeMessageProps {
+  onClose?: () => void
+}
+
+const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose }) => {
   const [location, setLocation] = useState<LocationData | null>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -263,8 +267,14 @@ const LocationWelcomeMessage: React.FC = () => {
   const handleDismiss = useCallback(() => {
     setIsVisible(false)
     localStorage.setItem('locationWelcomeDismissed', new Date().toDateString())
+    
+    // Call the onClose prop if provided (for parent component control)
+    if (onClose) {
+      onClose()
+    }
+    
     setTimeout(() => setIsDismissed(true), 300)
-  }, [])
+  }, [onClose])
 
   // Don't render if dismissed or still loading
   if (isDismissed || isLoading || !location) return null
@@ -276,10 +286,10 @@ const LocationWelcomeMessage: React.FC = () => {
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="fixed bottom-8 left-8 right-8 md:left-8 md:right-auto md:max-w-md z-40"
-          initial={{ opacity: 0, y: 100, scale: 0.9 }}
+          className="relative w-full max-w-md"
+          initial={{ opacity: 0, y: -20, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 100, scale: 0.9 }}
+          exit={{ opacity: 0, y: -20, scale: 0.9 }}
           transition={{ 
             type: "spring", 
             stiffness: 300, 
@@ -344,7 +354,7 @@ const LocationWelcomeMessage: React.FC = () => {
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <motion.a
-                  href="mailto:jafernandez94@gmail.com?subject=Hello from {location.city}!"
+                  href={`mailto:jafernandez94@gmail.com?subject=Hello from ${location.city}!`}
                   className="flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/30"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -374,6 +384,31 @@ const LocationWelcomeMessage: React.FC = () => {
               <div className="mt-4 text-xs opacity-60">
                 <span>Built with ❤️ in Miami, FL</span>
               </div>
+            </div>
+
+            {/* Enhanced Floating Particles for extra polish */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 bg-white/30 rounded-full"
+                  style={{
+                    left: `${20 + i * 30}%`,
+                    top: `${30 + i * 20}%`,
+                  }}
+                  animate={{
+                    y: [0, -10, 0],
+                    opacity: [0.3, 0.7, 0.3],
+                    scale: [0.5, 1, 0.5],
+                  }}
+                  transition={{
+                    duration: 2 + i * 0.5,
+                    repeat: Infinity,
+                    delay: i * 0.3,
+                    ease: "easeInOut"
+                  }}
+                />
+              ))}
             </div>
           </motion.div>
         </motion.div>
