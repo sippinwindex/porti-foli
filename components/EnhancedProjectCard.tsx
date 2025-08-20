@@ -1,4 +1,4 @@
-// components/EnhancedProjectShowcase.tsx - FIXED VERSION
+// components/EnhancedProjectShowcase.tsx
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
@@ -25,32 +25,30 @@ import {
   Activity,
   Users
 } from 'lucide-react'
-import type { PortfolioProject } from '@/types/portfolio'
+import type { EnhancedProject } from '@/lib/portfolio-integration'
 
 interface EnhancedProjectShowcaseProps {
-  initialProjects?: PortfolioProject[]
+  initialProjects?: EnhancedProject[]
   showFilters?: boolean
   showSearch?: boolean
   showStats?: boolean
   defaultView?: 'grid' | 'list'
   featuredFirst?: boolean
-  onCardClick?: (project: PortfolioProject) => void
+  onCardClick?: (project: EnhancedProject) => void
 }
 
 // Enhanced Project Card Component
 interface EnhancedProjectCardProps {
-  project: PortfolioProject
+  project: EnhancedProject
   index: number
   viewMode: 'grid' | 'list'
-  onCardClick?: (project: PortfolioProject) => void
+  onCardClick?: (project: EnhancedProject) => void
 }
 
 const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: EnhancedProjectCardProps) => {
   const [isHovered, setIsHovered] = useState(false)
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Recently'
-    
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
     const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
@@ -65,29 +63,17 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
   const getDeploymentStatusIcon = (status?: string) => {
     switch (status) {
       case 'success':
-      case 'completed':
-      case 'READY':
         return <CheckCircle className="w-4 h-4 text-green-500" />
       case 'error':
-      case 'failed':
-      case 'ERROR':
         return <XCircle className="w-4 h-4 text-red-500" />
       case 'building':
-      case 'in-progress':
-      case 'BUILDING':
         return <Clock className="w-4 h-4 text-blue-500 animate-spin" />
       default:
         return null
     }
   }
 
-  // Check for live demo URL from various sources
-  const hasLiveDemo = Boolean(
-    project.vercel?.liveUrl || 
-    project.liveUrl || 
-    project.vercel?.isLive
-  )
-
+  const hasLiveDemo = project.vercel?.liveUrl || project.metadata.liveUrl
   const canClickCard = !hasLiveDemo && onCardClick
 
   const handleCardClick = () => {
@@ -98,7 +84,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
 
   const handleLiveDemoClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const liveUrl = project.vercel?.liveUrl || project.liveUrl
+    const liveUrl = project.vercel?.liveUrl || project.metadata.liveUrl
     if (liveUrl) {
       window.open(liveUrl, '_blank', 'noopener,noreferrer')
     }
@@ -106,16 +92,15 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
 
   const handleGithubClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const githubUrl = project.github?.url || project.githubUrl
-    if (githubUrl) {
-      window.open(githubUrl, '_blank', 'noopener,noreferrer')
+    if (project.github?.url) {
+      window.open(project.github.url, '_blank', 'noopener,noreferrer')
     }
   }
 
   const handleDetailsClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    // Navigate to project details - using project.id
-    window.location.href = `/projects/${project.id}`
+    // Navigate to project details
+    window.location.href = `/projects/${project.slug}`
   }
 
   return (
@@ -173,7 +158,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
           )}
 
           {/* Live Status */}
-          {(project.vercel?.isLive || hasLiveDemo) && (
+          {project.vercel?.isLive && (
             <motion.div 
               className="absolute top-4 right-4"
               initial={{ scale: 0 }}
@@ -188,9 +173,9 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
           )}
 
           {/* Deployment Status */}
-          {(project.vercel?.deploymentStatus || project.status) && (
+          {project.vercel && (
             <div className="absolute bottom-4 right-4">
-              {getDeploymentStatusIcon(project.vercel?.deploymentStatus || project.status)}
+              {getDeploymentStatusIcon(project.vercel.buildStatus)}
             </div>
           )}
 
@@ -233,12 +218,12 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-1">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
-                      {project.title || project.name}
+                      {project.name}
                     </h3>
                     {project.featured && (
                       <Star className="w-4 h-4 text-yellow-500 flex-shrink-0" />
                     )}
-                    {(project.vercel?.isLive || hasLiveDemo) && (
+                    {project.vercel?.isLive && (
                       <div className="flex items-center space-x-1 flex-shrink-0">
                         <div className="w-2 h-2 bg-green-500 rounded-full" />
                         <span className="text-xs text-green-600 dark:text-green-400 font-medium">Live</span>
@@ -252,17 +237,17 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
 
                   <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                     <span className="capitalize text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                      {project.category || 'Project'}
+                      {project.category}
                     </span>
                     {project.github && (
                       <>
                         <div className="flex items-center space-x-1">
                           <Star className="w-3 h-3" />
-                          <span>{project.github.stars || 0}</span>
+                          <span>{project.github.stars}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Activity className="w-3 h-3" />
-                          <span>{formatDate(project.github.lastUpdated)}</span>
+                          <span>{formatDate(project.lastActivity)}</span>
                         </div>
                       </>
                     )}
@@ -271,7 +256,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
 
                 {/* Action Buttons */}
                 <div className="flex items-center space-x-2 ml-4">
-                  {(project.github?.url || project.githubUrl) && (
+                  {project.github && (
                     <motion.button
                       onClick={handleGithubClick}
                       className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -312,13 +297,13 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <h3 className="font-semibold text-lg text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
-                  {project.title || project.name}
+                  {project.name}
                 </h3>
                 <div className="flex items-center space-x-2 mt-1">
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 capitalize">
-                    {project.category || 'Project'}
+                    {project.category}
                   </span>
-                  {(project.vercel?.deploymentStatus || project.status) && getDeploymentStatusIcon(project.vercel?.deploymentStatus || project.status)}
+                  {project.vercel && getDeploymentStatusIcon(project.vercel.buildStatus)}
                 </div>
               </div>
             </div>
@@ -330,7 +315,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
 
             {/* Tech Stack */}
             <div className="flex flex-wrap gap-1 mb-4">
-              {(project.techStack || []).slice(0, 4).map((tech) => (
+              {project.techStack.slice(0, 4).map((tech) => (
                 <span
                   key={tech}
                   className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
@@ -338,9 +323,9 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
                   {tech}
                 </span>
               ))}
-              {(project.techStack || []).length > 4 && (
+              {project.techStack.length > 4 && (
                 <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-                  +{(project.techStack || []).length - 4}
+                  +{project.techStack.length - 4}
                 </span>
               )}
             </div>
@@ -351,30 +336,28 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-1">
                     <Star className="w-4 h-4" />
-                    <span>{project.github.stars || 0}</span>
+                    <span>{project.github.stars}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <GitFork className="w-4 h-4" />
-                    <span>{project.github.forks || 0}</span>
+                    <span>{project.github.forks}</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-1">
                   <TrendingUp className="w-4 h-4" />
-                  <span className="font-medium">
-                    {Math.min(60 + (project.github.stars || 0) * 5, 100)}/100
-                  </span>
+                  <span className="font-medium">{project.deploymentScore}/100</span>
                 </div>
               </div>
             )}
 
             <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-              Updated {formatDate(project.github?.lastUpdated || project.startDate)}
+              Updated {formatDate(project.lastActivity)}
             </div>
 
             {/* Actions */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex space-x-3">
-                {(project.github?.url || project.githubUrl) && (
+                {project.github && (
                   <motion.button
                     onClick={handleGithubClick}
                     className="inline-flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
@@ -409,7 +392,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
                 </motion.button>
               </div>
 
-              {(project.vercel?.isLive || hasLiveDemo) && (
+              {project.vercel?.isLive && (
                 <div className="flex items-center space-x-1">
                   <Zap className="w-3 h-3 text-green-500" />
                   <span className="text-xs text-green-600 dark:text-green-400 font-medium">Live</span>
@@ -423,9 +406,6 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
   )
 }
 
-// Export the EnhancedProjectCard for external use if needed
-export { EnhancedProjectCard }
-
 export default function EnhancedProjectShowcase({
   initialProjects = [],
   showFilters = true,
@@ -435,37 +415,33 @@ export default function EnhancedProjectShowcase({
   featuredFirst = true,
   onCardClick
 }: EnhancedProjectShowcaseProps) {
-  const [projects, setProjects] = useState<PortfolioProject[]>(initialProjects)
-  const [filteredProjects, setFilteredProjects] = useState<PortfolioProject[]>(initialProjects)
+  const [projects, setProjects] = useState<EnhancedProject[]>(initialProjects)
+  const [filteredProjects, setFilteredProjects] = useState<EnhancedProject[]>(initialProjects)
   const [loading, setLoading] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(defaultView)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'updated' | 'stars' | 'name' | 'score'>('score')
 
-  const categories = ['all', 'fullstack', 'frontend', 'backend', 'web', 'mobile', 'api', 'data', 'other']
+  const categories = ['all', 'fullstack', 'frontend', 'backend', 'data', 'mobile', 'other']
 
-  // Fetch projects from API
+  // ✅ FIX: Memoize fetchProjects to avoid unnecessary re-renders
   const fetchProjects = useCallback(async () => {
-    if (initialProjects.length > 0) return // Use initial projects if provided
-    
     setLoading(true)
     try {
       const response = await fetch('/api/projects')
       if (response.ok) {
         const data = await response.json()
-        if (data.success && data.projects) {
-          setProjects(data.projects)
-        }
+        setProjects(data)
       }
     } catch (error) {
       console.error('Error fetching projects:', error)
     } finally {
       setLoading(false)
     }
-  }, [initialProjects.length])
+  }, [])
 
-  // Filter and sort projects
+  // ✅ FIX: Memoize filterAndSortProjects function
   const filterAndSortProjects = useCallback(() => {
     let filtered = [...projects]
 
@@ -478,10 +454,9 @@ export default function EnhancedProjectShowcase({
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
       filtered = filtered.filter(p => 
-        (p.name || p.title || '').toLowerCase().includes(term) ||
-        (p.description || '').toLowerCase().includes(term) ||
-        (p.techStack || []).some(tech => tech.toLowerCase().includes(term)) ||
-        (p.tags || []).some(tag => tag.toLowerCase().includes(term))
+        p.name.toLowerCase().includes(term) ||
+        p.description.toLowerCase().includes(term) ||
+        p.techStack.some(tech => tech.toLowerCase().includes(term))
       )
     }
 
@@ -495,18 +470,13 @@ export default function EnhancedProjectShowcase({
 
       switch (sortBy) {
         case 'updated':
-          const aDate = new Date(a.github?.lastUpdated || a.startDate || '2020-01-01').getTime()
-          const bDate = new Date(b.github?.lastUpdated || b.startDate || '2020-01-01').getTime()
-          return bDate - aDate
+          return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
         case 'stars':
           return (b.github?.stars || 0) - (a.github?.stars || 0)
         case 'name':
-          return (a.name || a.title || '').localeCompare(b.name || b.title || '')
+          return a.name.localeCompare(b.name)
         case 'score':
-          // Calculate a simple score based on stars and featured status
-          const aScore = (a.github?.stars || 0) + (a.featured ? 50 : 0)
-          const bScore = (b.github?.stars || 0) + (b.featured ? 50 : 0)
-          return bScore - aScore
+          return b.deploymentScore - a.deploymentScore
         default:
           return 0
       }
@@ -515,11 +485,14 @@ export default function EnhancedProjectShowcase({
     setFilteredProjects(filtered)
   }, [projects, selectedCategory, searchTerm, sortBy, featuredFirst])
 
-  // Effects
+  // ✅ FIX: Include initialProjects.length dependency
   useEffect(() => {
-    fetchProjects()
-  }, [fetchProjects])
+    if (initialProjects.length === 0) {
+      fetchProjects()
+    }
+  }, [initialProjects.length, fetchProjects])
 
+  // ✅ FIX: Include filterAndSortProjects dependency
   useEffect(() => {
     filterAndSortProjects()
   }, [filterAndSortProjects])

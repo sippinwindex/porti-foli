@@ -1,40 +1,33 @@
+// app/projects/page.tsx - FIXED with correct imports
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
-import Link from 'next/link'
 import { 
   ExternalLink, Github, Filter, Grid, List, Star, GitFork, 
-  Calendar, Code, Zap, Search, TrendingUp, Eye, Clock, Loader
+  Calendar, Code, Zap, Search, TrendingUp, Eye, Clock, Loader,
+  Globe, AlertCircle
 } from 'lucide-react'
 import usePortfolioData from '@/hooks/usePortfolioData'
+import { EnhancedProjectCard } from '@/components/EnhancedProjectShowcase' // FIXED: Correct import
 import type { PortfolioProject } from '@/types/portfolio'
 
 // Lazy load heavy components
-const Navigation = dynamic(
-  () => import('@/components/Navigation'),
-  { 
-    ssr: false,
-    loading: () => <NavigationSkeleton />
-  }
-)
+const Navigation = dynamic(() => import('@/components/Navigation'), { 
+  ssr: false,
+  loading: () => <NavigationSkeleton />
+})
 
-const Footer = dynamic(
-  () => import('@/components/Footer'),
-  { 
-    ssr: false,
-    loading: () => <FooterSkeleton />
-  }
-)
+const Footer = dynamic(() => import('@/components/Footer'), { 
+  ssr: false,
+  loading: () => <FooterSkeleton />
+})
 
-const ParticleField = dynamic(
-  () => import('@/components/3D/ParticleField'),
-  { 
-    ssr: false,
-    loading: () => null
-  }
-)
+const ParticleField = dynamic(() => import('@/components/3D/ParticleField'), { 
+  ssr: false,
+  loading: () => null
+})
 
 // Loading Skeletons
 function NavigationSkeleton() {
@@ -72,7 +65,7 @@ function ProjectsSkeleton() {
   )
 }
 
-// ✅ Fixed: Debounce utility function with proper typing
+// Debounce utility function
 function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout
   return (...args: Parameters<T>) => {
@@ -81,7 +74,7 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
   }
 }
 
-// Optimized Project Showcase Component
+// Main Project Showcase Component
 function ProjectShowcase() {
   const { projects, loading, error, refetch } = usePortfolioData()
   const [filteredProjects, setFilteredProjects] = useState<PortfolioProject[]>([])
@@ -90,7 +83,7 @@ function ProjectShowcase() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'stars' | 'updated'>('updated')
   const [isMobile, setIsMobile] = useState(false)
-  const [visibleProjects, setVisibleProjects] = useState(6) // Pagination
+  const [visibleProjects, setVisibleProjects] = useState(9) // Show 9 initially
   
   const containerRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(containerRef, { once: true })
@@ -103,15 +96,12 @@ function ProjectShowcase() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // ✅ Fixed: Debounced search with proper implementation
+  // Debounced search
   const debouncedSearch = useCallback(
-    (term: string) => {
-      const debouncedFn = debounce((searchTerm: string) => {
-        setSearchTerm(searchTerm)
-      }, 300)
-      debouncedFn(term)
-    },
-    [] // ✅ Empty dependency array is correct here
+    debounce((term: string) => {
+      setSearchTerm(term)
+    }, 300),
+    []
   )
 
   // Update filtered projects when data changes
@@ -120,7 +110,7 @@ function ProjectShowcase() {
 
     let filtered = [...projects]
 
-    // Filter by tag - Safe property access
+    // Filter by tag
     if (activeTag !== 'All') {
       filtered = filtered.filter(project => {
         const projectTags = project.tags || []
@@ -166,7 +156,7 @@ function ProjectShowcase() {
     setFilteredProjects(filtered)
   }, [projects, activeTag, searchTerm, sortBy])
 
-  // Get all unique tags - Safe property access
+  // Get all unique tags
   const allTags = React.useMemo(() => {
     const tagSet = new Set(['All'])
     projects.forEach(project => {
@@ -188,252 +178,26 @@ function ProjectShowcase() {
     setVisibleProjects(prev => prev + 6)
   }
 
-  // ✅ Fixed: Optimized Project Card with proper component structure and display name
-  const ProjectCard = React.memo<{ project: PortfolioProject; index: number }>(({ project, index }) => {
-    const cardRef = useRef<HTMLDivElement>(null)
-    const [rotation, setRotation] = useState({ x: 0, y: 0 })
-    const [glowPosition, setGlowPosition] = useState({ x: 50, y: 50 })
-
-    const handleMouseMove = useCallback((e: React.MouseEvent) => {
-      if (isMobile) return // Disable 3D effects on mobile
-      
-      const card = cardRef.current
-      if (!card) return
-
-      const rect = card.getBoundingClientRect()
-      const centerX = rect.left + rect.width / 2
-      const centerY = rect.top + rect.height / 2
-      
-      const rotateX = (e.clientY - centerY) / 30
-      const rotateY = (centerX - e.clientX) / 30
-      
-      const glowX = ((e.clientX - rect.left) / rect.width) * 100
-      const glowY = ((e.clientY - rect.top) / rect.height) * 100
-      
-      setRotation({ x: rotateX, y: rotateY })
-      setGlowPosition({ x: glowX, y: glowY })
-    }, []) // ✅ Removed isMobile from dependencies since it's not reactive
-
-    const handleMouseLeave = useCallback(() => {
-      setRotation({ x: 0, y: 0 })
-      setGlowPosition({ x: 50, y: 50 })
-    }, [])
-
-    return (
-      <motion.div
-        ref={cardRef}
-        initial={{ opacity: 0, scale: 0.8, y: 50 }}
-        animate={isInView ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.8, y: 50 }}
-        transition={{ duration: 0.6, delay: index * 0.1 }}
-        style={{
-          transformStyle: 'preserve-3d',
-          transform: isMobile ? 'none' : `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`
-        }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        className={`group relative ${
-          viewMode === 'grid' 
-            ? 'h-auto' 
-            : 'flex flex-col sm:flex-row h-auto'
-        }`}
-      >
-        <div className={`project-card-3d relative overflow-hidden transition-all duration-500 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl ${
-          viewMode === 'list' ? 'sm:w-full flex' : ''
-        }`}>
-          
-          {/* Dynamic Glow Effect - Only on desktop */}
-          {!isMobile && (
-            <div 
-              className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-2xl"
-              style={{
-                background: `radial-gradient(circle at ${glowPosition.x}% ${glowPosition.y}%, rgba(59, 130, 246, 0.3) 0%, transparent 70%)`
-              }}
-            />
-          )}
-
-          {/* Project Header/Image */}
-          <div className={`relative ${
-            viewMode === 'list' ? 'sm:w-1/3 h-48' : 'h-56'
-          }`}>
-            <div className="w-full h-full bg-gradient-to-br from-blue-500/20 via-purple-500/10 to-pink-500/20 flex items-center justify-center relative overflow-hidden">
-              <Code className="w-16 h-16 text-blue-400/40" />
-              
-              {/* Animated tech stack background - Only on desktop */}
-              {!isMobile && (
-                <div className="absolute inset-0 opacity-10">
-                  {project.techStack?.slice(0, 3).map((tech: string, i: number) => (
-                    <motion.div
-                      key={tech}
-                      className="absolute text-xs font-mono text-blue-600 dark:text-blue-400"
-                      style={{
-                        left: `${20 + i * 25}%`,
-                        top: `${30 + i * 15}%`,
-                      }}
-                      animate={{
-                        y: [0, -10, 0],
-                        opacity: [0.3, 0.6, 0.3],
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        delay: i * 0.5,
-                      }}
-                    >
-                      {tech}
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            {/* Status badges */}
-            <div className="absolute top-4 left-4 flex flex-col gap-2">
-              {project.featured && (
-                <motion.span 
-                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-700"
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <Star className="w-3 h-3 mr-1" />
-                  Featured
-                </motion.span>
-              )}
-              {(project.liveUrl || project.vercel?.isLive) && (
-                <motion.span 
-                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-700"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Zap className="w-3 h-3 mr-1" />
-                  Live
-                </motion.span>
-              )}
-            </div>
-
-            {/* GitHub stats overlay */}
-            {project.github && (
-              <div className="absolute bottom-4 right-4 flex gap-2">
-                <motion.div 
-                  className="glass px-2 py-1 rounded-md text-xs text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <Star className="w-3 h-3 inline mr-1" />
-                  {project.github.stars}
-                </motion.div>
-                <motion.div 
-                  className="glass px-2 py-1 rounded-md text-xs text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <GitFork className="w-3 h-3 inline mr-1" />
-                  {project.github.forks}
-                </motion.div>
-              </div>
-            )}
-          </div>
-
-          {/* Content */}
-          <div className="p-6 flex flex-col justify-between flex-1 relative z-10">
-            <div>
-              <h3 className="text-xl font-bold mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                {project.title || project.name.replace(/[-_]/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3">
-                {project.description}
-              </p>
-              
-              {/* Tech stack */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {project.techStack?.slice(0, 4).map((tech: string) => (
-                  <motion.span
-                    key={tech}
-                    className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full border border-blue-200 dark:border-blue-800"
-                    whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.2)" }}
-                  >
-                    {tech}
-                  </motion.span>
-                ))}
-                {project.techStack && project.techStack.length > 4 && (
-                  <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs rounded-full">
-                    +{project.techStack.length - 4}
-                  </span>
-                )}
-              </div>
-
-              {/* Detailed stats */}
-              {project.github && (
-                <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500 mb-4">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    <span>{new Date(project.github.lastUpdated || Date.now()).toLocaleDateString()}</span>
-                  </div>
-                  {project.github.language && (
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-blue-500" />
-                      <span>{project.github.language}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex gap-2">
-                {(project.githubUrl || project.github?.url) && (
-                  <motion.a
-                    href={project.githubUrl || project.github?.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 glass rounded-full border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 transition-all duration-300 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
-                    whileHover={{ scale: 1.1, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Github className="w-4 h-4" />
-                  </motion.a>
-                )}
-                {(project.liveUrl || project.vercel?.liveUrl) && (
-                  <motion.a
-                    href={project.liveUrl || project.vercel?.liveUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 glass rounded-full border border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-600 transition-all duration-300 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
-                    whileHover={{ scale: 1.1, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </motion.a>
-                )}
-              </div>
-              <motion.div whileHover={{ x: 5 }}>
-                <Link
-                  href={`/projects/${project.id}`}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
-                >
-                  View Details →
-                </Link>
-              </motion.div>
-            </div>
-          </div>
-
-          {/* Scan line effect on hover - Only on desktop */}
-          {!isMobile && (
-            <motion.div
-              className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-0 group-hover:opacity-100"
-              animate={{
-                top: ['0%', '100%'],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-            />
-          )}
-        </div>
-      </motion.div>
+  // Handle card click - navigate to project details or open live demo
+  const handleCardClick = useCallback((project: PortfolioProject) => {
+    // Check if it has a live deployment
+    const hasLiveDeployment = Boolean(
+      project.vercel?.isLive || 
+      project.liveUrl || 
+      project.vercel?.liveUrl
     )
-  })
-  // ✅ Fixed: Add display name
-  ProjectCard.displayName = 'ProjectCard'
+
+    if (hasLiveDeployment) {
+      // Open live demo
+      const liveUrl = project.vercel?.liveUrl || project.liveUrl
+      if (liveUrl) {
+        window.open(liveUrl, '_blank', 'noopener,noreferrer')
+      }
+    } else {
+      // Navigate to project details page
+      window.location.href = `/projects/${project.id}`
+    }
+  }, [])
 
   if (loading) {
     return (
@@ -461,10 +225,10 @@ function ProjectShowcase() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center p-8 glass rounded-2xl border border-red-200 dark:border-red-800 max-w-md bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
+          className="text-center p-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-red-200 dark:border-red-800 max-w-md"
         >
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Code className="w-8 h-8 text-red-600 dark:text-red-400" />
+            <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
           </div>
           <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">
             Failed to Load Projects
@@ -492,7 +256,7 @@ function ProjectShowcase() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8 p-4 glass rounded-xl border border-green-200 dark:border-green-800 max-w-md mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
+          className="text-center mb-8 p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl border border-green-200 dark:border-green-800 max-w-md mx-auto"
         >
           <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
             <motion.div
@@ -513,7 +277,7 @@ function ProjectShowcase() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="glass rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 mb-12 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
+        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 mb-12"
       >
         {/* Search and Sort */}
         <div className="flex flex-col lg:flex-row gap-4 mb-6">
@@ -588,7 +352,7 @@ function ProjectShowcase() {
         </div>
       </motion.div>
 
-      {/* Projects Grid/List with Pagination */}
+      {/* Projects Grid/List with Enhanced Cards */}
       <motion.div
         layout
         className={`grid gap-8 ${
@@ -599,7 +363,13 @@ function ProjectShowcase() {
       >
         <AnimatePresence mode="popLayout">
           {filteredProjects.slice(0, visibleProjects).map((project, index) => (
-            <ProjectCard key={project.id} project={project} index={index} />
+            <EnhancedProjectCard
+              key={project.id}
+              project={project}
+              index={index}
+              viewMode={viewMode}
+              onCardClick={handleCardClick}
+            />
           ))}
         </AnimatePresence>
       </motion.div>
@@ -700,37 +470,7 @@ export default function ProjectsPage() {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-white via-blue-50/20 to-purple-50/20 dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10 overflow-x-hidden">
-      <style jsx global>{`
-        /* Performance optimizations */
-        * {
-          -webkit-backface-visibility: hidden;
-          -moz-backface-visibility: hidden;
-          backface-visibility: hidden;
-        }
-        
-        main {
-          isolation: isolate;
-        }
-        
-        section {
-          position: relative;
-          contain: layout style paint;
-          will-change: auto;
-        }
-        
-        @media (max-width: 768px) {
-          .hero-particles,
-          .hero-3d-background::before {
-            display: none;
-          }
-          
-          .glass {
-            backdrop-filter: blur(8px);
-          }
-        }
-      `}</style>
-
-      {/* Lazy loaded Navigation */}
+      {/* Navigation */}
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000 }}>
         <Navigation />
       </div>
@@ -783,7 +523,7 @@ export default function ProjectsPage() {
         </div>
       </main>
       
-      {/* Lazy loaded Footer */}
+      {/* Footer */}
       <Footer />
     </div>
   )

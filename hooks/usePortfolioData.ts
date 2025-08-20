@@ -1,254 +1,326 @@
-// hooks/usePortfolioData.ts - COMPLETELY FIXED for real GitHub integration
-'use client'
-
+// hooks/usePortfolioData.ts - Enhanced with better GitHub integration
 import { useState, useEffect, useCallback } from 'react'
 import type { PortfolioProject, PortfolioStats, UsePortfolioDataReturn } from '@/types/portfolio'
 
-// Enhanced fallback projects that match your sophisticated implementation
-const ENHANCED_FALLBACK_PROJECTS: PortfolioProject[] = [
-  {
-    id: 'portfolio-website',
-    name: 'Portfolio Website',
-    title: '3D Interactive Portfolio',
-    description: 'Modern 3D portfolio with live GitHub integration, interactive animations, and cutting-edge web technologies',
-    longDescription: 'A sophisticated portfolio showcasing advanced React/Next.js development with real-time GitHub API integration, 3D animations using Framer Motion, and professional UI/UX design.',
-    techStack: ['Next.js 14', 'Three.js', 'TypeScript', 'Framer Motion', 'Tailwind CSS', 'GitHub API'],
-    tags: ['Portfolio', 'Next.js', 'TypeScript', '3D', 'GitHub Integration'],
-    featured: true,
-    category: 'fullstack',
-    status: 'completed',
-    github: {
-      stars: 25,
-      forks: 8,
-      url: 'https://github.com/sippinwindex',
-      topics: ['nextjs', 'portfolio', 'typescript', '3d', 'github-api'],
-      lastUpdated: new Date().toISOString(),
-      language: 'TypeScript'
-    },
-    vercel: {
-      isLive: true,
-      liveUrl: 'https://juanfernandez.dev',
-      deploymentStatus: 'READY'
-    },
-    githubUrl: 'https://github.com/sippinwindex',
-    liveUrl: 'https://juanfernandez.dev',
-    topics: ['portfolio', 'nextjs', 'typescript', '3d'],
-    complexity: 'advanced',
-    teamSize: 1,
-    role: 'Lead Full-Stack Developer',
-    highlights: [
-      'Real-time GitHub API integration',
-      'Advanced 3D animations with Three.js',
-      'Professional UI/UX with glass morphism',
-      'Mobile-first responsive design',
-      'Optimized performance with 95+ Lighthouse score'
-    ]
-  },
-  {
-    id: 'synthwave-runner-game', 
-    name: 'Synthwave Runner',
-    title: 'Professional Browser Game',
-    description: 'High-performance endless runner game with retro synthwave aesthetics and smooth HTML5 Canvas animations',
-    techStack: ['React', 'TypeScript', 'HTML5 Canvas', 'Framer Motion', 'Web Audio API'],
-    tags: ['Game', 'Canvas', 'TypeScript', 'Performance'],
-    featured: true,
-    category: 'frontend',
-    status: 'completed',
-    github: {
-      stars: 15,
-      forks: 4,
-      url: 'https://github.com/sippinwindex/synthwave-runner',
-      topics: ['game', 'canvas', 'typescript', 'synthwave'],
-      lastUpdated: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      language: 'TypeScript'
-    },
-    vercel: {
-      isLive: true,
-      liveUrl: '/dino-game',
-      deploymentStatus: 'READY'
-    },
-    complexity: 'intermediate',
-    teamSize: 1,
-    role: 'Game Developer',
-    highlights: [
-      '60 FPS performance optimization',
-      'Retro synthwave aesthetic design',
-      'Responsive touch and keyboard controls',
-      'Web Audio API integration for sound'
-    ]
-  },
-  {
-    id: 'github-integration-system',
-    name: 'GitHub Integration System', 
-    title: 'Real-Time GitHub Data Sync',
-    description: 'Sophisticated GitHub API integration with caching, rate limiting, and real-time data synchronization',
-    techStack: ['Next.js', 'GitHub API', 'TypeScript', 'SWR', 'Redis', 'Webhook'],
-    tags: ['API Integration', 'GitHub', 'Real-time', 'Caching'],
-    featured: true,
-    category: 'backend',
-    status: 'completed',
-    github: {
-      stars: 12,
-      forks: 2,
-      url: 'https://github.com/sippinwindex/github-integration',
-      topics: ['github-api', 'webhook', 'real-time', 'caching'],
-      lastUpdated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      language: 'TypeScript'
-    },
-    vercel: {
-      isLive: true,
-      liveUrl: 'https://juanfernandez.dev/projects',
-      deploymentStatus: 'READY'
-    },
-    complexity: 'advanced',
-    teamSize: 1,
-    role: 'Backend Developer',
-    highlights: [
-      'Intelligent caching with 5-minute TTL',
-      'Rate limit handling with exponential backoff',
-      'Real-time webhook integration',
-      'Graceful fallback strategies'
-    ]
-  }
-]
-
-const ENHANCED_FALLBACK_STATS: PortfolioStats = {
-  totalProjects: 25,
-  totalStars: 150,
-  liveProjects: 18,
-  totalForks: 45,
-  topLanguages: ['TypeScript', 'JavaScript', 'Python', 'Go', 'Rust'],
-  recentActivity: {
-    activeProjects: 12
-  },
-  deploymentSuccessRate: 96
+interface UsePortfolioDataOptions {
+  autoFetch?: boolean
+  refreshInterval?: number
+  includePrivate?: boolean
+  source?: 'auto' | 'github' | 'mock'
+  limit?: number
 }
 
-export default function usePortfolioData(): UsePortfolioDataReturn {
-  const [projects, setProjects] = useState<PortfolioProject[]>(ENHANCED_FALLBACK_PROJECTS)
-  const [stats, setStats] = useState<PortfolioStats | null>(ENHANCED_FALLBACK_STATS)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+export function usePortfolioData(options: UsePortfolioDataOptions = {}): UsePortfolioDataReturn {
+  const {
+    autoFetch = true,
+    refreshInterval = 0, // No auto-refresh by default
+    includePrivate = false,
+    source = 'auto',
+    limit = 20
+  } = options
 
-  const fetchPortfolioData = useCallback(async () => {
-    console.log('🔄 Fetching enhanced portfolio data...')
+  const [projects, setProjects] = useState<PortfolioProject[]>([])
+  const [stats, setStats] = useState<PortfolioStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [lastFetch, setLastFetch] = useState<number>(0)
+
+  // Cache duration: 5 minutes for better UX
+  const CACHE_DURATION = 5 * 60 * 1000
+
+  const shouldRefresh = useCallback(() => {
+    return Date.now() - lastFetch > CACHE_DURATION
+  }, [lastFetch])
+
+  const fetchProjects = useCallback(async () => {
+    try {
+      setError(null)
+      console.log('🔄 Fetching portfolio projects...')
+
+      // Build query parameters
+      const params = new URLSearchParams({
+        limit: limit.toString(),
+        source,
+        ...(includePrivate && { includePrivate: 'true' })
+      })
+
+      const response = await fetch(`/api/projects?${params}`)
+      
+      if (!response.ok) {
+        throw new Error(`Projects API error: ${response.status} ${response.statusText}`)
+      }
+
+      const data = await response.json()
+
+      if (data.success) {
+        const fetchedProjects = data.projects || []
+        setProjects(fetchedProjects)
+        
+        console.log(`✅ Fetched ${fetchedProjects.length} projects from ${data.source}`)
+        
+        // Log live deployments for debugging
+        const liveProjects = fetchedProjects.filter((p: PortfolioProject) => 
+          p.vercel?.isLive || p.liveUrl
+        )
+        console.log(`📡 Found ${liveProjects.length} live deployments:`, 
+          liveProjects.map((p: PortfolioProject) => ({ 
+            name: p.name, 
+            liveUrl: p.vercel?.liveUrl || p.liveUrl 
+          }))
+        )
+
+        // Update last fetch timestamp
+        setLastFetch(Date.now())
+        
+        return fetchedProjects
+      } else {
+        throw new Error(data.error || 'Failed to fetch projects')
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch projects'
+      console.error('❌ Error fetching projects:', errorMessage)
+      setError(errorMessage)
+      
+      // Don't clear existing projects on error
+      return projects
+    }
+  }, [source, limit, includePrivate, projects])
+
+  const fetchStats = useCallback(async () => {
+    try {
+      console.log('📊 Fetching portfolio stats...')
+      
+      const response = await fetch('/api/portfolio-stats')
+      
+      if (!response.ok) {
+        throw new Error(`Stats API error: ${response.status}`)
+      }
+
+      const statsData = await response.json()
+      
+      // Ensure we have proper PortfolioStats structure
+      const formattedStats: PortfolioStats = {
+        totalProjects: statsData.totalProjects || 0,
+        totalStars: statsData.totalStars || 0,
+        liveProjects: statsData.liveProjects || 0,
+        totalForks: statsData.totalForks || 0,
+        topLanguages: statsData.topLanguages || [],
+        recentActivity: {
+          activeProjects: statsData.recentActivity?.activeProjects || 0,
+          lastUpdated: statsData.recentActivity?.lastUpdated || new Date().toISOString()
+        }
+      }
+      
+      setStats(formattedStats)
+      console.log('✅ Portfolio stats updated:', formattedStats)
+      
+      return formattedStats
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch stats'
+      console.error('❌ Error fetching stats:', errorMessage)
+      
+      // Set fallback stats on error
+      const fallbackStats: PortfolioStats = {
+        totalProjects: projects.length,
+        totalStars: projects.reduce((sum, p) => sum + (p.github?.stars || 0), 0),
+        liveProjects: projects.filter(p => p.vercel?.isLive || p.liveUrl).length,
+        totalForks: projects.reduce((sum, p) => sum + (p.github?.forks || 0), 0),
+        topLanguages: [...new Set(projects.flatMap(p => p.techStack || []))].slice(0, 5),
+        recentActivity: {
+          activeProjects: projects.filter(p => p.featured).length,
+          lastUpdated: new Date().toISOString()
+        }
+      }
+      
+      setStats(fallbackStats)
+      return fallbackStats
+    }
+  }, [projects])
+
+  const refetch = useCallback(async () => {
+    if (loading) return
+
     setLoading(true)
     setError(null)
 
     try {
-      // Strategy: Try real APIs first, graceful fallback to enhanced data
-      const [projectsResult, statsResult] = await Promise.allSettled([
-        fetchRealProjects(),
-        fetchRealStats()
+      // Fetch projects and stats in parallel
+      const [fetchedProjects] = await Promise.all([
+        fetchProjects(),
+        fetchStats()
       ])
 
-      // Handle projects with intelligent fallback
-      if (projectsResult.status === 'fulfilled' && projectsResult.value.success) {
-        const realProjects = projectsResult.value.projects
-        if (realProjects && realProjects.length > 0) {
-          // Enhance real projects with fallback data where needed
-          const enhancedProjects = realProjects.map((project: any) => ({
-            ...project,
-            title: project.title || project.name,
-            tags: project.tags || project.techStack || [],
-            topics: project.topics || project.github?.topics || [],
-            complexity: project.complexity || 'intermediate',
-            highlights: project.highlights || [`${project.github?.stars || 0} GitHub stars`]
-          }))
-          
-          setProjects(enhancedProjects)
-          console.log('✅ Using real project data with enhancements')
-        } else {
-          setProjects(ENHANCED_FALLBACK_PROJECTS)
-          console.log('⚠️ Empty real data, using enhanced fallback projects')
-        }
-      } else {
-        setProjects(ENHANCED_FALLBACK_PROJECTS)
-        console.log('⚠️ Real projects failed, using enhanced fallback')
-      }
-
-      // Handle stats with intelligent fallback
-      if (statsResult.status === 'fulfilled' && statsResult.value) {
-        const realStats = statsResult.value
-        // Enhance real stats with computed values
-        const enhancedStats: PortfolioStats = {
-          totalProjects: realStats.totalProjects || ENHANCED_FALLBACK_STATS.totalProjects,
-          totalStars: realStats.totalStars || ENHANCED_FALLBACK_STATS.totalStars,
-          liveProjects: realStats.liveProjects || ENHANCED_FALLBACK_STATS.liveProjects,
-          totalForks: realStats.totalForks || ENHANCED_FALLBACK_STATS.totalForks,
-          topLanguages: realStats.topLanguages || ENHANCED_FALLBACK_STATS.topLanguages,
-          recentActivity: {
-            activeProjects: realStats.recentActivity?.activeProjects || ENHANCED_FALLBACK_STATS.recentActivity?.activeProjects || 12
-          },
-          deploymentSuccessRate: realStats.deploymentSuccessRate || ENHANCED_FALLBACK_STATS.deploymentSuccessRate
-        }
-        
-        setStats(enhancedStats)
-        console.log('✅ Using real stats data with enhancements')
-      } else {
-        setStats(ENHANCED_FALLBACK_STATS)
-        console.log('⚠️ Real stats failed, using enhanced fallback')
-      }
-
+      console.log('✅ Portfolio data refreshed successfully')
+      
     } catch (err) {
-      console.error('❌ Error fetching portfolio data:', err)
-      setError(err instanceof Error ? err.message : 'Failed to fetch data')
-      // Ensure we always have data, even on error
-      setProjects(ENHANCED_FALLBACK_PROJECTS)
-      setStats(ENHANCED_FALLBACK_STATS)
+      console.error('❌ Error during refetch:', err)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [loading, fetchProjects, fetchStats])
 
-  // Helper function to fetch real projects with proper error handling
-  async function fetchRealProjects() {
-    try {
-      const response = await fetch('/api/projects?limit=20&source=github')
-      
-      if (!response.ok) {
-        console.warn(`⚠️ Projects API returned ${response.status}`)
-        return { success: false, projects: [] }
-      }
-      
-      const data = await response.json()
-      return {
-        success: data.success || false,
-        projects: data.projects || []
-      }
-    } catch (error) {
-      console.warn('⚠️ Projects API error:', error)
-      return { success: false, projects: [] }
-    }
-  }
-
-  // Helper function to fetch real stats with proper error handling  
-  async function fetchRealStats() {
-    try {
-      const response = await fetch('/api/portfolio-stats')
-      
-      if (!response.ok) {
-        console.warn(`⚠️ Stats API returned ${response.status}`)
-        return null
-      }
-      
-      return await response.json()
-    } catch (error) {
-      console.warn('⚠️ Stats API error:', error)
-      return null
-    }
-  }
-
-  // Initial fetch on mount
+  // Initial data fetch
   useEffect(() => {
-    fetchPortfolioData()
-  }, [fetchPortfolioData])
+    if (autoFetch && (projects.length === 0 || shouldRefresh())) {
+      refetch()
+    } else if (projects.length > 0) {
+      // Update stats based on existing projects
+      fetchStats()
+      setLoading(false)
+    }
+  }, [autoFetch, shouldRefresh, refetch, fetchStats, projects.length])
+
+  // Auto-refresh functionality
+  useEffect(() => {
+    if (!refreshInterval || refreshInterval <= 0) return
+
+    const interval = setInterval(() => {
+      if (shouldRefresh()) {
+        console.log('🔄 Auto-refreshing portfolio data...')
+        refetch()
+      }
+    }, refreshInterval)
+
+    return () => clearInterval(interval)
+  }, [refreshInterval, shouldRefresh, refetch])
+
+  // Refresh when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && shouldRefresh()) {
+        console.log('🔄 Page visible - refreshing portfolio data...')
+        refetch()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [shouldRefresh, refetch])
 
   return {
     projects,
     stats,
     loading,
     error,
-    refetch: fetchPortfolioData
+    refetch
   }
 }
+
+// Enhanced version with more options
+export function useEnhancedPortfolioData(options: UsePortfolioDataOptions & {
+  featured?: boolean
+  sortBy?: 'name' | 'stars' | 'updated' | 'featured'
+  searchTerm?: string
+  category?: string
+} = {}) {
+  const {
+    featured,
+    sortBy = 'featured',
+    searchTerm = '',
+    category,
+    ...baseOptions
+  } = options
+
+  const baseResult = usePortfolioData(baseOptions)
+  const [filteredProjects, setFilteredProjects] = useState<PortfolioProject[]>([])
+
+  // Apply filters and sorting
+  useEffect(() => {
+    if (!baseResult.projects.length) {
+      setFilteredProjects([])
+      return
+    }
+
+    let filtered = [...baseResult.projects]
+
+    // Filter by featured
+    if (featured !== undefined) {
+      filtered = filtered.filter(project => project.featured === featured)
+    }
+
+    // Filter by category
+    if (category && category !== 'all') {
+      filtered = filtered.filter(project => project.category === category)
+    }
+
+    // Filter by search term
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter(project =>
+        project.name.toLowerCase().includes(term) ||
+        project.description?.toLowerCase().includes(term) ||
+        project.techStack?.some(tech => tech.toLowerCase().includes(term)) ||
+        project.tags?.some(tag => tag.toLowerCase().includes(term))
+      )
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name)
+        case 'stars':
+          return (b.github?.stars || 0) - (a.github?.stars || 0)
+        case 'updated':
+          const aDate = new Date(a.github?.lastUpdated || '2020-01-01').getTime()
+          const bDate = new Date(b.github?.lastUpdated || '2020-01-01').getTime()
+          return bDate - aDate
+        case 'featured':
+        default:
+          // Featured first, then live deployments, then by stars
+          if (a.featured && !b.featured) return -1
+          if (!a.featured && b.featured) return 1
+          
+          const aLive = a.vercel?.isLive || Boolean(a.liveUrl)
+          const bLive = b.vercel?.isLive || Boolean(b.liveUrl)
+          if (aLive && !bLive) return -1
+          if (!aLive && bLive) return 1
+          
+          return (b.github?.stars || 0) - (a.github?.stars || 0)
+      }
+    })
+
+    setFilteredProjects(filtered)
+  }, [baseResult.projects, featured, sortBy, searchTerm, category])
+
+  return {
+    ...baseResult,
+    projects: filteredProjects,
+    allProjects: baseResult.projects, // Access to unfiltered projects
+    filteredCount: filteredProjects.length,
+    totalCount: baseResult.projects.length
+  }
+}
+
+// Utility hooks for specific use cases
+export function useFeaturedProjects(limit = 6) {
+  return useEnhancedPortfolioData({
+    featured: true,
+    limit,
+    sortBy: 'featured'
+  })
+}
+
+export function useLiveProjects(limit = 10) {
+  const { projects, ...rest } = usePortfolioData({ limit })
+  
+  const liveProjects = projects.filter(project => 
+    project.vercel?.isLive || project.liveUrl
+  )
+
+  return {
+    ...rest,
+    projects: liveProjects
+  }
+}
+
+export function useProjectsByCategory(category: string, limit = 10) {
+  return useEnhancedPortfolioData({
+    category,
+    limit,
+    sortBy: 'featured'
+  })
+}
+
+// Export the main hook as default
+export default usePortfolioData
