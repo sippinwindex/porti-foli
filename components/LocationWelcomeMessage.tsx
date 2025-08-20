@@ -263,8 +263,15 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
     return welcomeMessage
   }, [])
 
-  // Handle dismiss
-  const handleDismiss = useCallback(() => {
+  // ✅ FIXED: Enhanced dismiss handler with proper event handling
+  const handleDismiss = useCallback((e?: React.MouseEvent) => {
+    // Prevent event bubbling if called from click event
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    
+    console.log('LocationWelcomeMessage: Dismissing message')
     setIsVisible(false)
     localStorage.setItem('locationWelcomeDismissed', new Date().toDateString())
     
@@ -276,6 +283,48 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
     setTimeout(() => setIsDismissed(true), 300)
   }, [onClose])
 
+  // ✅ FIXED: Enhanced contact handler with proper navigation
+  const handleContactClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    console.log('LocationWelcomeMessage: Contact clicked')
+    
+    // Create and trigger email link
+    const emailSubject = encodeURIComponent(`Hello from ${location?.city || 'a visitor'}!`)
+    const emailBody = encodeURIComponent(`Hi Juan,\n\nI visited your portfolio from ${location?.city}, ${location?.region} and would love to connect!\n\nBest regards`)
+    const emailUrl = `mailto:jafernandez94@gmail.com?subject=${emailSubject}&body=${emailBody}`
+    
+    // Open email client
+    window.location.href = emailUrl
+    
+    // Dismiss the message after clicking
+    setTimeout(() => handleDismiss(), 500)
+  }, [location, handleDismiss])
+
+  // ✅ FIXED: Enhanced view work handler with proper scrolling
+  const handleViewWorkClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    console.log('LocationWelcomeMessage: View work clicked')
+    
+    // Scroll to projects section
+    const projectsSection = document.getElementById('projects')
+    if (projectsSection) {
+      projectsSection.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      })
+    } else {
+      // Fallback: navigate to projects page if section not found
+      window.location.href = '/projects'
+    }
+    
+    // Dismiss the message
+    handleDismiss()
+  }, [handleDismiss])
+
   // Don't render if dismissed or still loading
   if (isDismissed || isLoading || !location) return null
 
@@ -286,7 +335,7 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="relative w-full max-w-md"
+          className="relative w-full max-w-md z-20" // ✅ FIXED: Proper z-index below navbar
           initial={{ opacity: 0, y: -20, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.9 }}
@@ -313,13 +362,18 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
               <div className="absolute top-1/2 right-1/4 h-8 w-8 rounded-full bg-white/15" />
             </div>
 
-            {/* Dismiss Button */}
+            {/* ✅ FIXED: Enhanced dismiss button with proper event handling */}
             <button
               onClick={handleDismiss}
-              className="absolute top-3 right-3 rounded-full bg-white/20 p-2 transition-all duration-200 hover:bg-white/30 hover:scale-110"
+              className="absolute top-3 right-3 rounded-full bg-white/20 p-2 transition-all duration-200 hover:bg-white/30 hover:scale-110 z-30 cursor-pointer"
               aria-label="Dismiss welcome message"
+              type="button"
+              style={{ 
+                pointerEvents: 'auto',
+                userSelect: 'none'
+              }}
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4 pointer-events-none" />
             </button>
 
             {/* Content */}
@@ -351,29 +405,33 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
                 {welcomeMessage.message}
               </p>
 
-              {/* Action Buttons */}
+              {/* ✅ FIXED: Enhanced action buttons with proper event handling */}
               <div className="flex gap-3">
-                <motion.a
-                  href={`mailto:jafernandez94@gmail.com?subject=Hello from ${location.city}!`}
-                  className="flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/30"
+                <motion.button
+                  onClick={handleContactClick}
+                  className="flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/30 cursor-pointer"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  type="button"
+                  style={{ 
+                    pointerEvents: 'auto',
+                    userSelect: 'none'
+                  }}
                 >
                   <Coffee className="h-4 w-4" />
                   <span>Let's Connect</span>
-                </motion.a>
+                </motion.button>
                 
                 <motion.button
-                  onClick={() => {
-                    const projectsSection = document.getElementById('projects')
-                    if (projectsSection) {
-                      projectsSection.scrollIntoView({ behavior: 'smooth' })
-                      handleDismiss()
-                    }
-                  }}
-                  className="flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/20"
+                  onClick={handleViewWorkClick}
+                  className="flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/20 cursor-pointer"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  type="button"
+                  style={{ 
+                    pointerEvents: 'auto',
+                    userSelect: 'none'
+                  }}
                 >
                   <Waves className="h-4 w-4" />
                   <span>View Work</span>

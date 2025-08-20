@@ -156,6 +156,28 @@ const Interactive3DHero = dynamic(
   }
 )
 
+  // After all your useState and useRef declarations, add:
+  const locationMessageStyles = {
+    position: 'fixed' as const,
+    top: '6rem',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 998,
+    pointerEvents: 'none' as const,
+    maxWidth: '24rem',
+    width: '100%',
+    padding: '0 1rem'
+  }
+
+  const mobileLocationMessageStyles = {
+    ...locationMessageStyles,
+    top: '5rem',
+    left: '0.75rem',
+    right: '0.75rem',
+    transform: 'none',
+    maxWidth: 'none'
+  }
+
 const FloatingCodeBlocks = dynamic(
   () => import('@/components/3D/FloatingCodeBlocks').catch(() => {
     console.warn('Failed to load FloatingCodeBlocks, using fallback')
@@ -747,21 +769,55 @@ export default function HomePage() {
     return () => clearTimeout(timer)
   }, [shouldReduceMotion, portfolioLoading, githubLoading])
 
-  // ✅ ADDED: Smart location message timing - shows after user has seen hero section (unchanged)
+// ✅ ALSO UPDATE: The location message timing useEffect
+  // Replace your existing location message useEffect with:
   useEffect(() => {
     if (currentSection === 'hero' && !hasShownLocationMessage && !isLoading) {
-      // Show after 4 seconds on hero section, giving user time to appreciate the 3D content
       const timer = setTimeout(() => {
+        console.log('HomePage: Showing location message')
         setShowLocationMessage(true)
         setHasShownLocationMessage(true)
       }, 4000)
       
       return () => clearTimeout(timer)
-    } else if (currentSection !== 'hero') {
-      // Hide when user scrolls away from hero
+    } else if (currentSection !== 'hero' && showLocationMessage) {
+      console.log('HomePage: Hiding location message due to section change')
       setShowLocationMessage(false)
     }
-  }, [currentSection, hasShownLocationMessage, isLoading])
+  }, [currentSection, hasShownLocationMessage, isLoading, showLocationMessage])
+
+  // ADD these after your existing useEffects:
+
+  // Enhanced responsive handling for location message
+  useEffect(() => {
+    if (!showLocationMessage) return
+
+    const handleResize = () => {
+      const newIsMobile = window.innerWidth < 768
+      if (newIsMobile !== isMobile) {
+        setIsMobile(newIsMobile)
+      }
+    }
+
+    window.addEventListener('resize', handleResize, { passive: true })
+    return () => window.removeEventListener('resize', handleResize)
+  }, [showLocationMessage, isMobile])
+
+  // Keyboard accessibility for location message
+  useEffect(() => {
+    if (!showLocationMessage) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showLocationMessage) {
+        console.log('HomePage: Location message dismissed via Escape key')
+        setShowLocationMessage(false)
+        setHasShownLocationMessage(true)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [showLocationMessage])
 
   // Enhanced scroll tracking (unchanged)
   useEffect(() => {
@@ -1408,14 +1464,38 @@ export default function HomePage() {
         </motion.a>
       </div>
 
-      {/* ✅ ADDED: Location Welcome Message - Optimally placed for UX */}
-      <AnimatePresence>
-        {showLocationMessage && (
-          <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-30 pointer-events-none">
-            <LocationWelcomeMessage />
-          </div>
-        )}
-      </AnimatePresence>
+      {/* ✅ FIXED: Location Welcome Message - Properly positioned below navbar */}
+{/* ✅ FIXED: Location Welcome Message - Optimally placed for UX */}
+
+
+  {/* ✅ FIXED: Location Welcome Message - Optimally placed for UX */}
+  <AnimatePresence>
+    {showLocationMessage && (
+      <motion.div
+        style={isMobile ? mobileLocationMessageStyles : locationMessageStyles}
+        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+        transition={{ 
+          duration: shouldReduceMotion ? 0.1 : 0.3,
+          ease: "easeOut"
+        }}
+      >
+        <div 
+          className="pointer-events-auto w-full"
+          style={{ pointerEvents: 'auto' }}
+        >
+          <LocationWelcomeMessage 
+            onClose={() => {
+              console.log('HomePage: Location message closed')
+              setShowLocationMessage(false)
+              setHasShownLocationMessage(true)
+            }}
+          />
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
     </div>
   )
 }

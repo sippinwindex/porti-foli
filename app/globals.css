@@ -1844,7 +1844,7 @@ nav + div[role="dialog"] {
   }
 }
 
-/* ✅ CRITICAL Z-INDEX FIXES - Add to bottom of globals.css */
+/* ✅ CRITICAL Z-INDEX FIXES - Add to bottom of your globals.css */
 
 /* Enhanced z-index hierarchy to prevent navbar conflicts */
 :root {
@@ -1855,14 +1855,14 @@ nav + div[role="dialog"] {
   --z-floating-elements: 950;
   --z-location-message: 998;
   --z-navbar: 1000;
-  --z-scroll-progress: 1001;
+  --z-scroll-progress: 999; /* ✅ FIXED: Lower than navbar */
   --z-theme-toggle: 1002;
   --z-dropdown: 1050;
   --z-modal: 9999;
   --z-tooltip: 10000;
 }
 
-/* Force navbar to always be on top with consistent height */
+/* ✅ FIXED: Force navbar to always be on top with consistent height */
 nav,
 .navbar,
 header[role="navigation"] {
@@ -1871,34 +1871,34 @@ header[role="navigation"] {
   left: 0 !important;
   right: 0 !important;
   z-index: var(--z-navbar) !important;
-  height: 3.5rem !important;
-  min-height: 3.5rem !important;
-  max-height: 3.5rem !important;
+  height: 5rem !important;
+  min-height: 5rem !important;
+  max-height: 5rem !important;
 }
 
-/* Scroll progress bar - positioned above navbar but below dropdowns */
+/* ✅ FIXED: Scroll progress bar - positioned BELOW navbar */
 .scroll-progress,
 nav .scroll-progress {
   position: absolute !important;
   bottom: 0 !important;
   left: 0 !important;
-  height: 1px !important;
-  z-index: var(--z-scroll-progress) !important;
+  height: 2px !important;
+  z-index: var(--z-scroll-progress) !important; /* Lower than navbar */
   pointer-events: none !important;
   background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
 }
 
 /* Body padding for navbar */
 body {
-  padding-top: 3.5rem !important;
+  padding-top: 5rem !important;
 }
 
-/* Location welcome message positioning */
+/* ✅ FIXED: Location welcome message positioning - BELOW navbar */
 .location-welcome-container {
   position: fixed !important;
-  top: 4rem !important; /* Below navbar */
+  top: 6rem !important; /* Below navbar (5rem) + gap */
   right: 1.5rem !important;
-  z-index: var(--z-location-message) !important;
+  z-index: var(--z-location-message) !important; /* Below navbar */
   pointer-events: auto !important;
   max-width: 24rem !important;
 }
@@ -1912,7 +1912,7 @@ body {
 /* Error notifications positioning */
 .error-notification {
   position: fixed !important;
-  top: 4rem !important;
+  top: 6rem !important; /* Below navbar */
   right: 1rem !important;
   z-index: 997 !important; /* Below location message */
 }
@@ -1927,70 +1927,11 @@ body {
 /* Mobile menu positioning */
 .mobile-menu,
 nav + div[role="dialog"] {
-  top: 3.5rem !important;
+  top: 5rem !important;
   z-index: var(--z-dropdown) !important;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  nav,
-  .navbar,
-  header[role="navigation"] {
-    height: 3rem !important;
-    min-height: 3rem !important;
-    max-height: 3rem !important;
-  }
-  
-  body {
-    padding-top: 3rem !important;
-  }
-  
-  .location-welcome-container {
-    top: 3.5rem !important;
-    right: 1rem !important;
-    max-width: 20rem !important;
-  }
-  
-  .mobile-menu,
-  nav + div[role="dialog"] {
-    top: 3rem !important;
-  }
-}
-
-@media (max-width: 768px) {
-  nav,
-  .navbar,
-  header[role="navigation"] {
-    height: 2.75rem !important;
-    min-height: 2.75rem !important;
-    max-height: 2.75rem !important;
-  }
-  
-  body {
-    padding-top: 2.75rem !important;
-  }
-  
-  .location-welcome-container {
-    top: 3.25rem !important;
-    right: 0.75rem !important;
-    left: 0.75rem !important;
-    max-width: none !important;
-  }
-  
-  .mobile-menu,
-  nav + div[role="dialog"] {
-    top: 2.75rem !important;
-  }
-}
-
-/* Prevent layout shifts and ensure smooth operation */
-nav,
-.navbar {
-  contain: layout style paint !important;
-  will-change: transform !important;
-}
-
-/* Ensure scroll progress doesn't interfere with clicks */
+/* ✅ FIXED: Ensure scroll progress doesn't interfere with clicks */
 .scroll-progress {
   pointer-events: none !important;
   user-select: none !important;
@@ -1999,8 +1940,469 @@ nav,
   -ms-user-select: none !important;
 }
 
-/* Focus states remain visible above navbar when needed */
+/* ✅ FIXED: Location message specific positioning fixes */
+.location-welcome-message {
+  z-index: var(--z-location-message) !important;
+  position: relative !important;
+}
+
+.location-welcome-message button,
+.location-welcome-message a {
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 2 !important;
+  cursor: pointer !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  nav,
+  .navbar,
+  header[role="navigation"] {
+    height: 4rem !important;
+    min-height: 4rem !important;
+    max-height: 4rem !important;
+  }
+  
+  body {
+    padding-top: 4rem !important;
+  }
+  
+  .location-welcome-container {
+    top: 5rem !important; /* Below 4rem navbar + gap */
+    right: 1rem !important;
+    max-width: 20rem !important;
+  }
+  
+  .mobile-menu,
+  nav + div[role="dialog"] {
+    top: 4rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  nav,
+  .navbar,
+  header[role="navigation"] {
+    height: 3.5rem !important;
+    min-height: 3.5rem !important;
+    max-height: 3.5rem !important;
+  }
+  
+  body {
+    padding-top: 3.5rem !important;
+  }
+  
+  .location-welcome-container {
+    top: 4.5rem !important; /* Below 3.5rem navbar + gap */
+    right: 0.75rem !important;
+    left: 0.75rem !important;
+    max-width: none !important;
+  }
+  
+  .mobile-menu,
+  nav + div[role="dialog"] {
+    top: 3.5rem !important;
+  }
+}
+
+/* ✅ FIXED: Prevent layout shifts and ensure smooth operation */
+nav,
+.navbar {
+  contain: layout style paint !important;
+  will-change: transform !important;
+}
+
+/* ✅ FIXED: Focus states remain visible above navbar when needed */
 nav *:focus-visible {
   z-index: calc(var(--z-navbar) + 1) !important;
   position: relative !important;
+}
+
+/* ✅ FIXED: Loading states and overlays */
+.loading-overlay {
+  z-index: 10000 !important; /* Above everything during loading */
+}
+
+.page-loading {
+  z-index: 9999 !important;
+}
+
+/* ✅ FIXED: Ensure all clickable elements in location message work */
+.location-welcome-message * {
+  pointer-events: auto !important;
+}
+
+.location-welcome-message .bg-white\/20,
+.location-welcome-message .bg-white\/10 {
+  pointer-events: auto !important;
+}
+
+/* ✅ FIXED: Make sure close button is always clickable */
+.location-welcome-message button[aria-label="Dismiss welcome message"] {
+  z-index: 50 !important;
+  position: relative !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* ✅ FIXED: Ensure action buttons are clickable */
+.location-welcome-message button[type="button"] {
+  z-index: 10 !important;
+  position: relative !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* ✅ ADDITIONAL NAVBAR FIXES */
+
+/* Prevent scroll progress from showing above navbar content */
+nav::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: calc(var(--z-navbar) + 1);
+  pointer-events: none;
+}
+
+/* Fix navbar glass effect z-index issues */
+nav .glass,
+nav .backdrop-blur {
+  position: relative;
+  z-index: 1;
+}
+
+nav .glass > *,
+nav .backdrop-blur > * {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+/* Ensure navbar links are always clickable */
+nav a,
+nav button,
+nav [role="button"] {
+  z-index: 3 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative !important;
+}
+
+/* Fix mobile menu backdrop */
+.mobile-menu-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: calc(var(--z-navbar) - 1) !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Fix mobile menu content */
+.mobile-menu-content {
+  position: relative !important;
+  z-index: var(--z-dropdown) !important;
+  pointer-events: auto !important;
+}
+
+/* ✅ FINAL CRITICAL FIXES */
+
+/* Ensure nothing can appear above the navbar except modals */
+nav {
+  isolation: isolate !important;
+}
+
+/* Fix any remaining scroll progress issues */
+[data-scroll-progress] {
+  z-index: var(--z-scroll-progress) !important;
+}
+
+/* Location message container positioning */
+[data-location-welcome] {
+  z-index: var(--z-location-message) !important;
+  position: fixed !important;
+  top: calc(var(--header-height, 5rem) + 1rem) !important;
+}
+
+/* Responsive header height variables */
+@media (max-width: 1024px) {
+  :root {
+    --header-height: 4rem;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: 3.5rem;
+  }
+}
+
+/* ✅ CLEAN Z-INDEX FIXES - Add this to the very end of your globals.css */
+/* Make sure there are no syntax errors above this section */
+
+/* Enhanced z-index hierarchy - Override existing values */
+:root {
+  /* Update existing z-index variables with cleaner hierarchy */
+  --z-backdrop: -1;
+  --z-base: 0;
+  --z-content: 10;
+  --z-floating-elements: 950;
+  --z-location-message: 998;
+  --z-scroll-progress: 999;
+  --z-navbar: 1000;
+  --z-theme-toggle: 1002;
+  --z-dropdown: 1050;
+  --z-modal: 9999;
+  --z-tooltip: 10000;
+}
+
+/* Navbar always on top - Override existing styles */
+nav,
+.navbar,
+header[role="navigation"] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: var(--z-navbar) !important;
+  height: 5rem !important;
+  min-height: 5rem !important;
+  max-height: 5rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Scroll progress bar below navbar - Override existing styles */
+.scroll-progress,
+nav .scroll-progress {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  height: 2px !important;
+  z-index: var(--z-scroll-progress) !important;
+  pointer-events: none !important;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+/* Body padding for navbar - Override existing styles */
+body {
+  padding-top: 5rem !important;
+}
+
+/* Location welcome message positioning - New consolidated styles */
+.location-welcome-container {
+  position: fixed !important;
+  top: 6rem !important; /* navbar height + 1rem gap */
+  right: 1.5rem !important;
+  z-index: var(--z-location-message) !important;
+  pointer-events: auto !important;
+  max-width: 24rem !important;
+}
+
+/* Location message button fixes - Ensure all buttons work */
+.location-welcome-message button,
+.location-welcome-message a,
+.location-welcome-message [role="button"] {
+  pointer-events: auto !important;
+  z-index: 10 !important;
+  position: relative !important;
+  cursor: pointer !important;
+}
+
+/* Location message container fixes */
+.location-welcome-message * {
+  pointer-events: auto !important;
+}
+
+.location-welcome-message .bg-white\/20,
+.location-welcome-message .bg-white\/10,
+.location-welcome-message .backdrop-blur {
+  pointer-events: auto !important;
+}
+
+/* Mobile responsive navbar - Override existing responsive styles */
+@media (max-width: 1024px) {
+  :root {
+    --header-height: 4rem;
+  }
+  
+  nav,
+  .navbar,
+  header[role="navigation"] {
+    height: 4rem !important;
+    min-height: 4rem !important;
+    max-height: 4rem !important;
+  }
+  
+  body {
+    padding-top: 4rem !important;
+  }
+  
+  .location-welcome-container {
+    top: 5rem !important; /* 4rem navbar + 1rem gap */
+    right: 1rem !important;
+    max-width: 20rem !important;
+  }
+  
+  .mobile-menu,
+  nav + div[role="dialog"] {
+    top: 4rem !important;
+    z-index: var(--z-dropdown) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: 3.5rem;
+  }
+  
+  nav,
+  .navbar,
+  header[role="navigation"] {
+    height: 3.5rem !important;
+    min-height: 3.5rem !important;
+    max-height: 3.5rem !important;
+  }
+  
+  body {
+    padding-top: 3.5rem !important;
+  }
+  
+  .location-welcome-container {
+    top: 4.5rem !important; /* 3.5rem navbar + 1rem gap */
+    left: 0.75rem !important;
+    right: 0.75rem !important;
+    max-width: none !important;
+  }
+  
+  .mobile-menu,
+  nav + div[role="dialog"] {
+    top: 3.5rem !important;
+    z-index: var(--z-dropdown) !important;
+  }
+}
+
+/* Ensure navbar elements are always clickable - Override existing styles */
+nav a,
+nav button,
+nav [role="button"] {
+  z-index: 3 !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  cursor: pointer !important;
+}
+
+/* Fix navbar glass effects - Override existing styles */
+nav .glass,
+nav .backdrop-blur {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+nav .glass > *,
+nav .backdrop-blur > * {
+  position: relative !important;
+  z-index: 2 !important;
+  pointer-events: auto !important;
+}
+
+/* Theme toggle positioning - Override existing styles */
+.theme-toggle-container,
+.theme-toggle {
+  z-index: var(--z-theme-toggle) !important;
+  position: relative !important;
+}
+
+/* Mobile menu backdrop and content - Override existing styles */
+.mobile-menu-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: calc(var(--z-navbar) - 1) !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.mobile-menu-content {
+  position: relative !important;
+  z-index: var(--z-dropdown) !important;
+  pointer-events: auto !important;
+}
+
+/* Floating elements positioning */
+.floating-actions,
+.scroll-to-top {
+  z-index: var(--z-floating-elements) !important;
+}
+
+/* Error notifications positioning */
+.error-notification {
+  position: fixed !important;
+  top: calc(var(--header-height, 5rem) + 1rem) !important;
+  right: 1rem !important;
+  z-index: 997 !important;
+}
+
+/* Prevent navbar from interfering with focus states */
+nav {
+  isolation: isolate !important;
+}
+
+/* Fix focus states visibility */
+nav *:focus-visible {
+  z-index: calc(var(--z-navbar) + 1) !important;
+  position: relative !important;
+}
+
+/* Loading states */
+.loading-overlay {
+  z-index: 10000 !important;
+}
+
+.page-loading {
+  z-index: 9999 !important;
+}
+
+/* Data attribute selectors for additional safety */
+[data-scroll-progress] {
+  z-index: var(--z-scroll-progress) !important;
+}
+
+[data-location-welcome] {
+  z-index: var(--z-location-message) !important;
+  position: fixed !important;
+  top: calc(var(--header-height, 5rem) + 1rem) !important;
+}
+
+/* Ensure navbar container proper setup */
+.navbar-container,
+.nav-container,
+nav > div,
+nav > .container,
+nav > .container-fluid {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Final safety measures */
+nav::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: calc(var(--z-navbar) + 1);
+  pointer-events: none;
 }
