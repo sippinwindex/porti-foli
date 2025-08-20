@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { 
   MapPin, 
   Globe, 
@@ -13,19 +13,20 @@ import {
   Waves,
   Building2,
   TreePine,
-  Sparkles
+  Sparkles,
+  Clock,
+  Eye,
+  Palette
 } from 'lucide-react'
 
-interface LocationData {
-  country: string
-  countryCode: string
-  region: string
-  city: string
-  timezone: string
-  latitude: number
-  longitude: number
-  isp: string
-}
+// ✅ UPDATED: Import the enhanced location hook and utilities
+import { 
+  useUserLocation, 
+  getTimeGreeting, 
+  getCurrentTimeInTimezone, 
+  getCountryFlag,
+  type LocationData 
+} from '@/hooks/useUserLocation'
 
 interface WelcomeMessage {
   greeting: string
@@ -40,216 +41,183 @@ interface LocationWelcomeMessageProps {
 }
 
 const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose }) => {
-  const [location, setLocation] = useState<LocationData | null>(null)
+  // ✅ UPDATED: Use the enhanced location hook with custom options
+  const { 
+    data: location, 
+    loading: locationLoading, 
+    error: locationError,
+    refetch,
+    clearCache 
+  } = useUserLocation({
+    enableCaching: true,
+    cacheExpiry: 30 * 60 * 1000, // 30 minutes for welcome messages
+    fallbackToNavigatorAPI: true,
+    onSuccess: (data) => {
+      console.log('LocationWelcomeMessage: Location loaded successfully:', data.city, data.country)
+    },
+    onError: (error) => {
+      console.warn('LocationWelcomeMessage: Location error:', error)
+    }
+  })
+  
   const [isVisible, setIsVisible] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
   const [isDismissed, setIsDismissed] = useState(false)
   const [currentTime, setCurrentTime] = useState<string>('')
+  const [mounted, setMounted] = useState(false)
+  
+  const prefersReducedMotion = useReducedMotion()
 
-  // Check if user has already dismissed the message today
+  // ✅ Set mounted state
   useEffect(() => {
-    const dismissedDate = localStorage.getItem('locationWelcomeDismissed')
-    const today = new Date().toDateString()
-    
-    if (dismissedDate === today) {
-      setIsDismissed(true)
-      setIsLoading(false)
-    }
+    setMounted(true)
   }, [])
 
-  // Fetch location data
+  // ✅ Check if user has already dismissed the message today
   useEffect(() => {
-    if (isDismissed) return
-
-    const fetchLocation = async () => {
-      try {
-        // Using ipapi.co for location data (free tier: 1000 requests/day)
-        const response = await fetch('https://ipapi.co/json/')
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch location')
-        }
-        
-        const data = await response.json()
-        
-        const locationData: LocationData = {
-          country: data.country_name || 'Unknown',
-          countryCode: data.country_code || 'XX',
-          region: data.region || 'Unknown',
-          city: data.city || 'Unknown',
-          timezone: data.timezone || 'UTC',
-          latitude: data.latitude || 0,
-          longitude: data.longitude || 0,
-          isp: data.org || 'Unknown ISP'
-        }
-        
-        setLocation(locationData)
-        
-        // Show message after a delay
-        setTimeout(() => {
-          setIsVisible(true)
-        }, 2000)
-        
-      } catch (error) {
-        console.warn('Could not fetch location data:', error)
-        // Fallback to generic message
-        setLocation({
-          country: 'Earth',
-          countryCode: 'XX', 
-          region: 'Internet',
-          city: 'Somewhere',
-          timezone: 'UTC',
-          latitude: 0,
-          longitude: 0,
-          isp: 'Unknown'
-        })
-        
-        setTimeout(() => {
-          setIsVisible(true)
-        }, 2000)
-      } finally {
-        setIsLoading(false)
+    if (!mounted) return
+    
+    try {
+      const dismissedDate = localStorage.getItem('locationWelcomeDismissed')
+      const today = new Date().toDateString()
+      
+      if (dismissedDate === today) {
+        console.log('LocationWelcomeMessage: Already dismissed today')
+        setIsDismissed(true)
+        return
       }
+    } catch (error) {
+      console.warn('LocalStorage not available:', error)
     }
+  }, [mounted])
 
-    fetchLocation()
-  }, [isDismissed])
-
-  // Update current time in user's timezone
+  // ✅ Show message when location data is ready
   useEffect(() => {
-    if (!location?.timezone) return
+    if (isDismissed || !mounted || locationLoading || !location) return
+
+    // Show message after location is loaded
+    const timer = setTimeout(() => {
+      console.log('LocationWelcomeMessage: Showing welcome message for:', location.city)
+      setIsVisible(true)
+    }, 1500)
+    
+    return () => clearTimeout(timer)
+  }, [isDismissed, mounted, locationLoading, location])
+
+  // ✅ Update current time using your utility function
+  useEffect(() => {
+    if (!location?.timezone || !mounted) return
 
     const updateTime = () => {
-      try {
-        const now = new Date()
-        const timeString = now.toLocaleTimeString('en-US', {
-          timeZone: location.timezone,
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        })
-        setCurrentTime(timeString)
-      } catch (error) {
-        setCurrentTime(new Date().toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        }))
-      }
+      const timeString = getCurrentTimeInTimezone(location.timezone)
+      setCurrentTime(timeString)
     }
 
     updateTime()
-    const interval = setInterval(updateTime, 60000) // Update every minute
-
+    const interval = setInterval(updateTime, 60000)
     return () => clearInterval(interval)
-  }, [location?.timezone])
+  }, [location?.timezone, mounted])
 
-  // Generate personalized welcome message
+  // ✅ Enhanced welcome message generator using your location data
   const generateWelcomeMessage = useCallback((locationData: LocationData): WelcomeMessage => {
     const { country, city, region, countryCode } = locationData
-    const hour = new Date().getHours()
+    const timeGreeting = getTimeGreeting(locationData.timezone)
+    const flag = getCountryFlag(countryCode)
     
-    // Time-based greetings
-    let timeGreeting = 'Hello'
-    if (hour < 12) timeGreeting = 'Good morning'
-    else if (hour < 17) timeGreeting = 'Good afternoon'
-    else timeGreeting = 'Good evening'
-
     // Country-specific messages
     const countryMessages: Record<string, WelcomeMessage> = {
       'US': {
         greeting: `${timeGreeting} from ${city}!`,
-        message: `Welcome to my portfolio! It's great to connect with someone from the ${region === city ? 'great state of' : ''} ${region}. I hope you find my work inspiring! 🇺🇸`,
-        emoji: '🇺🇸',
+        message: `Welcome to my portfolio! It's great to connect with someone from the ${region === city ? 'great state of' : ''} ${region}. I hope you find my work inspiring! ${flag}`,
+        emoji: flag,
         icon: Building2,
-        color: 'from-blue-600 to-red-600'
+        color: 'from-blue-500 via-red-500 to-blue-600'
       },
       'CA': {
         greeting: `${timeGreeting} from ${city}!`,
-        message: `Hello neighbor to the north! Thanks for visiting from beautiful ${city}. I'd love to collaborate on projects across borders! 🇨🇦`,
-        emoji: '🇨🇦',
+        message: `Hello neighbor to the north! Thanks for visiting from beautiful ${city}. I'd love to collaborate on projects across borders! ${flag}`,
+        emoji: flag,
         icon: Mountain,
-        color: 'from-red-600 to-red-700'
+        color: 'from-red-500 via-white to-red-600'
       },
       'GB': {
         greeting: `${timeGreeting} from ${city}!`,
-        message: `Cheers from across the pond! Lovely to have a visitor from ${city}. Hope you enjoy browsing my work! 🇬🇧`,
-        emoji: '🇬🇧',
+        message: `Cheers from across the pond! Lovely to have a visitor from ${city}. Hope you enjoy browsing my work! ${flag}`,
+        emoji: flag,
         icon: Building2,
-        color: 'from-blue-800 to-red-600'
+        color: 'from-blue-700 via-white to-red-600'
       },
       'AU': {
         greeting: `G'day from ${city}!`,
-        message: `Thanks for stopping by from down under! ${city} looks amazing from here. Let's build something great together! 🇦🇺`,
-        emoji: '🇦🇺',
+        message: `Thanks for stopping by from down under! ${city} looks amazing from here. Let's build something great together! ${flag}`,
+        emoji: flag,
         icon: Sun,
-        color: 'from-yellow-500 to-green-600'
+        color: 'from-blue-600 via-yellow-400 to-green-600'
       },
       'DE': {
         greeting: `Guten Tag from ${city}!`,
-        message: `Wonderful to connect with someone from ${city}! I admire German engineering and would love to collaborate. 🇩🇪`,
-        emoji: '🇩🇪',
+        message: `Wonderful to connect with someone from ${city}! I admire German engineering and would love to collaborate. ${flag}`,
+        emoji: flag,
         icon: Building2,
-        color: 'from-gray-800 to-red-600'
+        color: 'from-black via-red-500 to-yellow-500'
       },
       'FR': {
         greeting: `Bonjour from ${city}!`,
-        message: `Enchanté! It's a pleasure to have a visitor from beautiful ${city}. I hope my work inspires you! 🇫🇷`,
-        emoji: '🇫🇷',
+        message: `Enchanté! It's a pleasure to have a visitor from beautiful ${city}. I hope my work inspires you! ${flag}`,
+        emoji: flag,
         icon: Heart,
-        color: 'from-blue-600 to-red-600'
+        color: 'from-blue-600 via-white to-red-600'
       },
       'JP': {
         greeting: `こんにちは from ${city}!`,
-        message: `Arigatou gozaimasu for visiting from ${city}! I have great respect for Japanese innovation and design. 🇯🇵`,
-        emoji: '🇯🇵',
+        message: `Arigatou gozaimasu for visiting from ${city}! I have great respect for Japanese innovation and design. ${flag}`,
+        emoji: flag,
         icon: Mountain,
-        color: 'from-red-600 to-white'
+        color: 'from-red-600 via-white to-red-600'
       },
       'BR': {
         greeting: `Olá from ${city}!`,
-        message: `Bem-vindo! Great to connect with someone from vibrant ${city}. Let's create something amazing together! 🇧🇷`,
-        emoji: '🇧🇷',
+        message: `Bem-vindo! Great to connect with someone from vibrant ${city}. Let's create something amazing together! ${flag}`,
+        emoji: flag,
         icon: Sun,
-        color: 'from-green-500 to-yellow-500'
+        color: 'from-green-500 via-yellow-400 to-blue-600'
       },
       'IN': {
         greeting: `Namaste from ${city}!`,
-        message: `Welcome! It's wonderful to have a visitor from ${city}. I'm excited about the incredible tech innovation in India! 🇮🇳`,
-        emoji: '🇮🇳',
+        message: `Welcome! It's wonderful to have a visitor from ${city}. I'm excited about the incredible tech innovation in India! ${flag}`,
+        emoji: flag,
         icon: Sparkles,
-        color: 'from-orange-500 to-green-600'
+        color: 'from-orange-500 via-white to-green-600'
       },
       'MX': {
         greeting: `¡Hola from ${city}!`,
-        message: `¡Bienvenidos! So happy to connect with someone from beautiful ${city}. Let's build something increíble! 🇲🇽`,
-        emoji: '🇲🇽',
+        message: `¡Bienvenidos! So happy to connect with someone from beautiful ${city}. Let's build something increíble! ${flag}`,
+        emoji: flag,
         icon: Sun,
-        color: 'from-green-600 to-red-600'
+        color: 'from-green-600 via-white to-red-600'
       }
     }
 
     // City-specific messages for major cities
     const cityMessages: Record<string, Partial<WelcomeMessage>> = {
-      'New York': { message: 'The city that never sleeps! I love the energy and innovation of NYC. 🗽' },
-      'San Francisco': { message: 'From one tech hub to another! Hope you\'re enjoying the Bay Area innovation scene. 🌉' },
-      'Los Angeles': { message: 'City of Angels! Love the creative energy that flows from LA. 🌴' },
-      'Miami': { message: 'Hey neighbor! We\'re practically in the same backyard. Let\'s grab a coffee sometime! ☕' },
-      'London': { message: 'Brilliant! The tech scene in London is absolutely thriving. 🎡' },
-      'Tokyo': { message: 'Incredible tech innovation comes from Tokyo! Huge inspiration for my work. 🗼' },
-      'Berlin': { message: 'Amazing startup culture in Berlin! Would love to visit and collaborate. 🚀' },
-      'Toronto': { message: 'Toronto\'s tech scene is booming! Great to connect with my northern neighbors. 🍁' },
-      'Sydney': { message: 'Beautiful harbor city! The Australian tech scene is really impressive. 🏄‍♂️' },
-      'Paris': { message: 'The City of Light! French elegance meets modern innovation. ✨' }
+      'New York': { message: `The city that never sleeps! I love the energy and innovation of NYC. 🗽` },
+      'San Francisco': { message: `From one tech hub to another! Hope you're enjoying the Bay Area innovation scene. 🌉` },
+      'Los Angeles': { message: `City of Angels! Love the creative energy that flows from LA. 🌴` },
+      'Miami': { message: `Hey neighbor! We're practically in the same backyard. Let's grab a coffee sometime! ☕` },
+      'London': { message: `Brilliant! The tech scene in London is absolutely thriving. 🎡` },
+      'Tokyo': { message: `Incredible tech innovation comes from Tokyo! Huge inspiration for my work. 🗼` },
+      'Berlin': { message: `Amazing startup culture in Berlin! Would love to visit and collaborate. 🚀` },
+      'Toronto': { message: `Toronto's tech scene is booming! Great to connect with my northern neighbors. 🍁` },
+      'Sydney': { message: `Beautiful harbor city! The Australian tech scene is really impressive. 🏄‍♂️` },
+      'Paris': { message: `The City of Light! French elegance meets modern innovation. ✨` }
     }
 
     // Get base message
     let welcomeMessage = countryMessages[countryCode] || {
       greeting: `${timeGreeting} from ${city}!`,
-      message: `Welcome to my portfolio! It's amazing to connect with someone from ${city}, ${country}. Thanks for stopping by! 🌍`,
-      emoji: '🌍',
+      message: `Welcome to my portfolio! It's amazing to connect with someone from ${city}, ${country}. Thanks for stopping by! ${flag}`,
+      emoji: flag,
       icon: Globe,
-      color: 'from-blue-500 to-purple-600'
+      color: 'from-blue-500 via-purple-600 to-pink-600'
     }
 
     // Override with city-specific message if available
@@ -263,9 +231,8 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
     return welcomeMessage
   }, [])
 
-  // ✅ FIXED: Enhanced dismiss handler with proper event handling
+  // ✅ Enhanced dismiss handler
   const handleDismiss = useCallback((e?: React.MouseEvent) => {
-    // Prevent event bubbling if called from click event
     if (e) {
       e.preventDefault()
       e.stopPropagation()
@@ -273,36 +240,54 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
     
     console.log('LocationWelcomeMessage: Dismissing message')
     setIsVisible(false)
-    localStorage.setItem('locationWelcomeDismissed', new Date().toDateString())
     
-    // Call the onClose prop if provided (for parent component control)
-    if (onClose) {
-      onClose()
+    try {
+      localStorage.setItem('locationWelcomeDismissed', new Date().toDateString())
+    } catch (error) {
+      console.warn('Could not save to localStorage:', error)
     }
     
-    setTimeout(() => setIsDismissed(true), 300)
+    // Call parent onClose
+    setTimeout(() => {
+      if (onClose) {
+        onClose()
+      }
+      setIsDismissed(true)
+    }, 300)
   }, [onClose])
 
-  // ✅ FIXED: Enhanced contact handler with proper navigation
+  // ✅ Auto-dismiss after 8 seconds
+  useEffect(() => {
+    if (!isVisible || isDismissed) return
+    
+    const timer = setTimeout(() => {
+      console.log('LocationWelcomeMessage: Auto-dismissing')
+      handleDismiss()
+    }, 8000)
+    
+    return () => clearTimeout(timer)
+  }, [isVisible, isDismissed, handleDismiss])
+
+  // ✅ Enhanced contact handler
   const handleContactClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     
     console.log('LocationWelcomeMessage: Contact clicked')
     
-    // Create and trigger email link
-    const emailSubject = encodeURIComponent(`Hello from ${location?.city || 'a visitor'}!`)
-    const emailBody = encodeURIComponent(`Hi Juan,\n\nI visited your portfolio from ${location?.city}, ${location?.region} and would love to connect!\n\nBest regards`)
-    const emailUrl = `mailto:jafernandez94@gmail.com?subject=${emailSubject}&body=${emailBody}`
+    // Scroll to contact section
+    const contactSection = document.getElementById('contact')
+    if (contactSection) {
+      contactSection.scrollIntoView({ 
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'start'
+      })
+    }
     
-    // Open email client
-    window.location.href = emailUrl
-    
-    // Dismiss the message after clicking
-    setTimeout(() => handleDismiss(), 500)
-  }, [location, handleDismiss])
+    handleDismiss()
+  }, [prefersReducedMotion, handleDismiss])
 
-  // ✅ FIXED: Enhanced view work handler with proper scrolling
+  // ✅ Enhanced view work handler
   const handleViewWorkClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -313,20 +298,85 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
     const projectsSection = document.getElementById('projects')
     if (projectsSection) {
       projectsSection.scrollIntoView({ 
-        behavior: 'smooth',
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
         block: 'start'
       })
-    } else {
-      // Fallback: navigate to projects page if section not found
-      window.location.href = '/projects'
     }
     
-    // Dismiss the message
     handleDismiss()
-  }, [handleDismiss])
+  }, [prefersReducedMotion, handleDismiss])
 
-  // Don't render if dismissed or still loading
-  if (isDismissed || isLoading || !location) return null
+  // ✅ NEW: Manual retry handler for failed location requests
+  const handleRetryLocation = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    console.log('LocationWelcomeMessage: Retrying location fetch')
+    clearCache()
+    await refetch()
+  }, [clearCache, refetch])
+
+  // Don't render until mounted
+  if (!mounted) return null
+  
+  // ✅ UPDATED: Show error state with retry option
+  if (locationError && !location) {
+    return (
+      <motion.div
+        className="relative w-full max-w-md mx-auto"
+        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <div className="relative overflow-hidden rounded-2xl backdrop-blur-xl border border-white/20 shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800" />
+          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm" />
+          
+          <div className="relative z-10 p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30">
+                  <Globe className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-white">Welcome to my portfolio!</h3>
+                  <p className="text-sm text-white/80">Location detection failed</p>
+                </div>
+              </div>
+              <button
+                onClick={handleDismiss}
+                className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <p className="text-white/90 text-sm mb-4">
+              I couldn't detect your location, but I'm excited you're here! Feel free to explore my work.
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={handleRetryLocation}
+                className="flex-1 py-2 px-4 bg-white/20 hover:bg-white/30 rounded-xl text-white text-sm font-semibold transition-colors"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={handleViewWorkClick}
+                className="flex-1 py-2 px-4 bg-white hover:bg-gray-50 rounded-xl text-gray-800 text-sm font-semibold transition-colors"
+              >
+                View Work
+              </button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
+  
+  // Don't render if dismissed, still loading, or no location
+  if (isDismissed || locationLoading || !location) return null
 
   const welcomeMessage = generateWelcomeMessage(location)
   const IconComponent = welcomeMessage.icon
@@ -335,140 +385,207 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="relative w-full max-w-md z-20" // ✅ FIXED: Proper z-index below navbar
-          initial={{ opacity: 0, y: -20, scale: 0.9 }}
+          className="relative w-full max-w-md mx-auto"
+          initial={{ opacity: 0, y: -20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.9 }}
+          exit={{ opacity: 0, y: -20, scale: 0.95 }}
           transition={{ 
-            type: "spring", 
-            stiffness: 300, 
-            damping: 30,
-            duration: 0.6 
+            duration: prefersReducedMotion ? 0.2 : 0.4,
+            ease: "easeOut"
           }}
         >
-          <motion.div
-            className={`
-              relative overflow-hidden rounded-2xl border border-white/20 
-              bg-gradient-to-br ${welcomeMessage.color} p-6 text-white shadow-2xl 
-              backdrop-blur-xl
-            `}
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.2 }}
-          >
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute -top-4 -right-4 h-20 w-20 rounded-full bg-white/20" />
-              <div className="absolute -bottom-4 -left-4 h-16 w-16 rounded-full bg-white/10" />
-              <div className="absolute top-1/2 right-1/4 h-8 w-8 rounded-full bg-white/15" />
-            </div>
+          <div className="relative overflow-hidden rounded-2xl backdrop-blur-xl border border-white/20 shadow-2xl">
+            {/* ✅ Enhanced gradient background with your color scheme */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${welcomeMessage.color}`} />
+            
+            {/* ✅ Better glass overlay for readability */}
+            <div className="absolute inset-0 bg-white/10 backdrop-blur-sm" />
+            
+            {/* ✅ Subtle animated background pattern */}
+            {!prefersReducedMotion && (
+              <div className="absolute inset-0 opacity-20">
+                <motion.div 
+                  className="absolute top-2 right-4 w-16 h-16 rounded-full bg-white/20"
+                  animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div 
+                  className="absolute bottom-4 left-6 w-12 h-12 rounded-full bg-white/15"
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.3, 0.15] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                />
+                <motion.div 
+                  className="absolute top-8 left-12 w-8 h-8 rounded-full bg-white/25"
+                  animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.5, 0.25] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                />
+              </div>
+            )}
 
-            {/* ✅ FIXED: Enhanced dismiss button with proper event handling */}
-            <button
-              onClick={handleDismiss}
-              className="absolute top-3 right-3 rounded-full bg-white/20 p-2 transition-all duration-200 hover:bg-white/30 hover:scale-110 z-30 cursor-pointer"
-              aria-label="Dismiss welcome message"
-              type="button"
-              style={{ 
-                pointerEvents: 'auto',
-                userSelect: 'none'
-              }}
-            >
-              <X className="h-4 w-4 pointer-events-none" />
-            </button>
-
-            {/* Content */}
-            <div className="relative">
-              {/* Header */}
-              <div className="mb-4 flex items-center gap-3">
-                <div className="rounded-full bg-white/20 p-2">
-                  <IconComponent className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg">
-                    {welcomeMessage.greeting}
-                  </h3>
-                  <div className="flex items-center gap-2 text-sm opacity-90">
-                    <MapPin className="h-3 w-3" />
-                    <span>{location.city}, {location.region}</span>
-                    {currentTime && (
-                      <>
-                        <span>•</span>
-                        <span>{currentTime}</span>
-                      </>
-                    )}
+            <div className="relative z-10 p-6">
+              {/* ✅ Header with location data */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3 flex-1">
+                  <motion.div
+                    className="p-2 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg"
+                    initial={prefersReducedMotion ? {} : { rotate: 0 }}
+                    animate={prefersReducedMotion ? {} : { rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <IconComponent className="w-5 h-5 text-white drop-shadow-sm" />
+                  </motion.div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-bold text-white drop-shadow-sm truncate">
+                      {welcomeMessage.greeting}
+                    </h3>
+                    <div className="flex items-center gap-2 text-sm text-white/90 font-medium">
+                      <MapPin className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate">{location.city}, {location.region}</span>
+                      {currentTime && (
+                        <>
+                          <span className="text-white/70">•</span>
+                          <span className="flex-shrink-0">{currentTime}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Message */}
-              <p className="text-sm leading-relaxed opacity-95 mb-4">
-                {welcomeMessage.message}
-              </p>
-
-              {/* ✅ FIXED: Enhanced action buttons with proper event handling */}
-              <div className="flex gap-3">
+                {/* ✅ Close button */}
                 <motion.button
-                  onClick={handleContactClick}
-                  className="flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/30 cursor-pointer"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  onClick={handleDismiss}
+                  className="flex-shrink-0 p-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 text-white shadow-lg transition-all duration-200 ml-3"
+                  whileHover={prefersReducedMotion ? {} : { scale: 1.1 }}
+                  whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
+                  aria-label="Close welcome message"
                   type="button"
-                  style={{ 
-                    pointerEvents: 'auto',
-                    userSelect: 'none'
-                  }}
                 >
-                  <Coffee className="h-4 w-4" />
-                  <span>Let's Connect</span>
-                </motion.button>
-                
-                <motion.button
-                  onClick={handleViewWorkClick}
-                  className="flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/20 cursor-pointer"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  type="button"
-                  style={{ 
-                    pointerEvents: 'auto',
-                    userSelect: 'none'
-                  }}
-                >
-                  <Waves className="h-4 w-4" />
-                  <span>View Work</span>
+                  <X className="w-4 h-4 drop-shadow-sm" />
                 </motion.button>
               </div>
 
-              {/* Small Credits */}
-              <div className="mt-4 text-xs opacity-60">
-                <span>Built with ❤️ in Miami, FL</span>
+              {/* ✅ Enhanced message content */}
+              <div className="space-y-4">
+                <p className="text-white/95 text-sm leading-relaxed font-medium drop-shadow-sm">
+                  {welcomeMessage.message}
+                </p>
+
+                {/* ✅ Enhanced info grid with your location data */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+                    <Clock className="w-4 h-4 text-white/90 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-white/80 font-medium">Local Time</p>
+                      <p className="text-sm text-white font-semibold drop-shadow-sm truncate">
+                        {currentTime || 'Loading...'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+                    <Globe className="w-4 h-4 text-white/90 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-white/80 font-medium">Country</p>
+                      <p className="text-sm text-white font-semibold drop-shadow-sm truncate">
+                        {location.country}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ✅ Enhanced action buttons */}
+                <div className="flex gap-3 pt-2">
+                  <motion.button
+                    onClick={handleViewWorkClick}
+                    className="flex-1 py-2.5 px-4 bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-xl text-white text-sm font-semibold shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                    whileHover={prefersReducedMotion ? {} : { scale: 1.02, y: -1 }}
+                    whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+                    type="button"
+                  >
+                    <Palette className="w-4 h-4 flex-shrink-0" />
+                    <span>View Work</span>
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={handleContactClick}
+                    className="flex-1 py-2.5 px-4 bg-white text-blue-600 hover:bg-gray-50 rounded-xl text-sm font-semibold shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                    whileHover={prefersReducedMotion ? {} : { scale: 1.02, y: -1 }}
+                    whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
+                    type="button"
+                  >
+                    <Coffee className="w-4 h-4 flex-shrink-0" />
+                    <span>Let's Connect</span>
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* ✅ Built with indicator */}
+              <div className="mt-4 pt-4 border-t border-white/20">
+                <p className="text-center text-xs text-white/70 font-medium">
+                  Built with ❤️ in Miami, FL
+                </p>
               </div>
             </div>
 
-            {/* Enhanced Floating Particles for extra polish */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-              {Array.from({ length: 3 }).map((_, i) => (
+            {/* ✅ Auto-dismiss progress indicator */}
+            <div className="absolute bottom-2 left-6 right-6">
+              <div className="h-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
                 <motion.div
-                  key={i}
-                  className="absolute w-1 h-1 bg-white/30 rounded-full"
-                  style={{
-                    left: `${20 + i * 30}%`,
-                    top: `${30 + i * 20}%`,
-                  }}
-                  animate={{
-                    y: [0, -10, 0],
-                    opacity: [0.3, 0.7, 0.3],
-                    scale: [0.5, 1, 0.5],
-                  }}
-                  transition={{
-                    duration: 2 + i * 0.5,
-                    repeat: Infinity,
-                    delay: i * 0.3,
-                    ease: "easeInOut"
-                  }}
+                  className="h-full bg-white/60 rounded-full origin-left"
+                  initial={{ scaleX: 1 }}
+                  animate={{ scaleX: 0 }}
+                  transition={{ duration: 8, ease: "linear" }}
                 />
-              ))}
+              </div>
             </div>
-          </motion.div>
+
+            {/* ✅ Enhanced floating particles */}
+            {!prefersReducedMotion && (
+              <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 bg-white/30 rounded-full"
+                    style={{
+                      left: `${20 + i * 30}%`,
+                      top: `${30 + i * 20}%`,
+                    }}
+                    animate={{
+                      y: [0, -10, 0],
+                      opacity: [0.3, 0.7, 0.3],
+                      scale: [0.5, 1, 0.5],
+                    }}
+                    transition={{
+                      duration: 2 + i * 0.5,
+                      repeat: Infinity,
+                      delay: i * 0.3,
+                      ease: "easeInOut"
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* ✅ Animated border effect */}
+            {!prefersReducedMotion && (
+              <div className="absolute inset-0 rounded-2xl border-2 border-white/20 pointer-events-none">
+                <motion.div
+                  className="absolute inset-0 rounded-2xl"
+                  style={{
+                    background: 'linear-gradient(90deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(255,255,255,0.2) 100%)'
+                  }}
+                  animate={{ 
+                    background: [
+                      'linear-gradient(0deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(255,255,255,0.2) 100%)',
+                      'linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(255,255,255,0.2) 100%)',
+                      'linear-gradient(0deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(255,255,255,0.2) 100%)'
+                    ]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+            )}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
