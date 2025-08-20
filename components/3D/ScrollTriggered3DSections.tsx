@@ -512,13 +512,13 @@ const ScrollTriggered3DSections: React.FC<ScrollTriggered3DSectionsProps> = ({
       totalCommits: 0
     })
 
-    // Target stats object
-    const targetStats = {
+    // Target stats object - Memoized to prevent recreation
+    const targetStats = useMemo(() => ({
       totalProjects: processedStats.totalProjects || 25,
       totalStars: processedStats.totalStars || 150,
       liveProjects: processedStats.liveProjects || 12,
       totalCommits: 500 // Could be calculated from other data
-    }
+    }), [processedStats.totalProjects, processedStats.totalStars, processedStats.liveProjects])
 
     // Enhanced number animation with proper dependencies
     useEffect(() => {
@@ -555,7 +555,7 @@ const ScrollTriggered3DSections: React.FC<ScrollTriggered3DSectionsProps> = ({
       }, interval)
 
       return () => clearInterval(timer)
-    }, [isInView, shouldReduceMotion])
+    }, [isInView, shouldReduceMotion, targetStats])
 
     // Memoized tech data to prevent recreation
     const techData = useMemo(() => [

@@ -136,45 +136,46 @@ const Interactive3DHero: React.FC<Interactive3DHeroProps> = ({
     ]
   }, [projects])
 
+  // ✅ FIXED: Move particle generation outside component to prevent recreation
+  const particleData = useMemo(() => 
+    Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      delay: Math.random() * 2,
+      duration: 3 + Math.random() * 4,
+      moveX: Math.random() * 40 - 20
+    })), []
+  )
+
   // ✅ FIXED: Stable particles that don't re-render
   const FloatingParticles = React.memo(() => {
     if (prefersReducedMotion) return null
 
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {Array.from({ length: PARTICLE_COUNT }, (_, i) => {
-          const particle = useMemo(() => ({
-            id: i,
-            x: Math.random() * 100,
-            y: Math.random() * 100,
-            delay: Math.random() * 2,
-            duration: 3 + Math.random() * 4,
-            moveX: Math.random() * 40 - 20
-          }), [i])
-
-          return (
-            <motion.div
-              key={particle.id}
-              className="absolute w-1 h-1 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-60"
-              style={{
-                left: `${particle.x}%`,
-                top: `${particle.y}%`,
-              }}
-              animate={{
-                y: [0, -30, 0],
-                x: [0, particle.moveX, 0],
-                opacity: [0.3, 0.8, 0.3],
-                scale: [0.5, 1.2, 0.5],
-              }}
-              transition={{
-                duration: particle.duration,
-                repeat: Infinity,
-                delay: particle.delay,
-                ease: "easeInOut"
-              }}
-            />
-          )
-        })}
+        {particleData.map((particle) => (
+          <motion.div
+            key={particle.id}
+            className="absolute w-1 h-1 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-60"
+            style={{
+              left: `${particle.x}%`,
+              top: `${particle.y}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              x: [0, particle.moveX, 0],
+              opacity: [0.3, 0.8, 0.3],
+              scale: [0.5, 1.2, 0.5],
+            }}
+            transition={{
+              duration: particle.duration,
+              repeat: Infinity,
+              delay: particle.delay,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
       </div>
     )
   })

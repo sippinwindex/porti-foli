@@ -1,3 +1,4 @@
+// Fixed components/3D/FloatingCodeBlocks.tsx
 'use client'
 
 import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
@@ -324,7 +325,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
     })
   }, [techStack, maxBlocks, codeSnippets])
 
-  // Optimized mouse tracking with proper dependencies
+  // ✅ FIXED: Optimized mouse tracking without unnecessary dependencies
   const handleMouseMove = useCallback((e: MouseEvent) => {
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect) return
@@ -339,7 +340,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
         y: Math.max(-1, Math.min(1, y)) 
       })
     })
-  }, [])
+  }, []) // ✅ FIXED: Remove prefersReducedMotion dependency
 
   useEffect(() => {
     const container = containerRef.current

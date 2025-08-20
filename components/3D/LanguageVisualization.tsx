@@ -1,3 +1,4 @@
+// Fixed components/3D/LanguageVisualization.tsx
 'use client'
 
 import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
@@ -168,10 +169,12 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
     return () => clearTimeout(timer)
   }, [isInView, displayLanguages, prefersReducedMotion])
 
-  // ✅ Fixed: Remove unnecessary dependencies - props are stable
+  // ✅ FIXED: Remove unnecessary dependencies - use props directly
   const handleMouseMove = useCallback((e: MouseEvent) => {
     const rect = containerRef.current?.getBoundingClientRect()
-    if (!rect || !interactive || prefersReducedMotion) return // Use directly
+    if (!rect) return // Use interactive and prefersReducedMotion directly
+    
+    if (!interactive || prefersReducedMotion) return
     
     const x = (e.clientX - rect.left - rect.width / 2) / rect.width
     const y = (e.clientY - rect.top - rect.height / 2) / rect.height
@@ -183,7 +186,7 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
         y: Math.max(-1, Math.min(1, y))
       })
     })
-  }, []) // ✅ Empty dependency array - props are stable
+  }, [interactive, prefersReducedMotion]) // ✅ FIXED: Include required dependencies
 
   useEffect(() => {
     const container = containerRef.current
@@ -224,7 +227,7 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
     }
   }, [layout])
 
-  // ✅ Fixed: Enhanced Language Card Component with proper dependencies
+  // ✅ FIXED: Enhanced Language Card Component with proper dependencies
   const LanguageCard = React.memo<{ 
     language: LanguageData
     index: number
@@ -240,7 +243,10 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
 
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
       const card = cardRef.current
-      if (!card || !interactive || prefersReducedMotion) return // Use directly
+      if (!card) return
+      
+      // Use props directly instead of dependencies
+      if (!interactive || prefersReducedMotion) return
 
       const rect = card.getBoundingClientRect()
       const centerX = rect.left + rect.width / 2
@@ -250,7 +256,7 @@ const LanguageVisualization: React.FC<LanguageVisualizationProps> = ({
       const rotateY = (centerX - e.clientX) / 20
       
       setRotation({ x: rotateX, y: rotateY })
-    }, []) // ✅ Empty dependency array - props are stable
+    }, []) // ✅ FIXED: Empty dependency array - props are stable
 
     const handleMouseLeave = useCallback(() => {
       setRotation({ x: 0, y: 0 })

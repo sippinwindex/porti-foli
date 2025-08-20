@@ -88,7 +88,7 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
       maxLife: Math.random() * 1000 + 500,
       trail: []
     }
-  }, [dimensions.width, dimensions.height, colors, speed]) // FIXED: Include all dependencies
+  }, [dimensions.width, dimensions.height, colors, speed])
 
   // Initialize particles when dimensions change
   useEffect(() => {
@@ -96,7 +96,7 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
       const newParticles = Array.from({ length: particleCount }, (_, i) => createParticle(i))
       setParticles(newParticles)
     }
-  }, [dimensions.width, dimensions.height, particleCount, createParticle]) // FIXED: Include createParticle
+  }, [dimensions.width, dimensions.height, particleCount, createParticle])
 
   // Handle window resize
   useEffect(() => {
@@ -188,9 +188,83 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
         particle.z += particle.vz
         break
     }
-  }, [animation, interactive, mousePos.x, mousePos.y, mouseInfluence, speed, dimensions.height, dimensions.width]) // FIXED: Include all dependencies
+  }, [animation, interactive, mousePos.x, mousePos.y, mouseInfluence, speed, dimensions.height, dimensions.width])
 
-  // Main animation loop - FIXED: Include all dependencies
+  // FIXED: Separate the drawing logic from the animation logic
+  const drawParticles = useCallback((ctx: CanvasRenderingContext2D, particles: Particle[]) => {
+    // Draw connections
+    if (showConnections) {
+      ctx.strokeStyle = 'rgba(190, 52, 85, 0.1)'
+      ctx.lineWidth = 0.5
+      
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const p1 = particles[i]
+          const p2 = particles[j]
+          const dx = p1.x - p2.x
+          const dy = p1.y - p2.y
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          
+          if (distance < 100) {
+            const opacity = (100 - distance) / 100 * 0.2
+            ctx.globalAlpha = opacity
+            ctx.beginPath()
+            ctx.moveTo(p1.x, p1.y)
+            ctx.lineTo(p2.x, p2.y)
+            ctx.stroke()
+          }
+        }
+      }
+    }
+
+    // Draw particles
+    particles.forEach((particle, index) => {
+      // Draw trail
+      if (particle.trail.length > 1) {
+        ctx.strokeStyle = particle.color
+        ctx.lineWidth = 1
+        ctx.globalAlpha = 0.3
+        
+        ctx.beginPath()
+        ctx.moveTo(particle.trail[0].x, particle.trail[0].y)
+        
+        for (let i = 1; i < particle.trail.length; i++) {
+          ctx.lineTo(particle.trail[i].x, particle.trail[i].y)
+        }
+        ctx.stroke()
+      }
+
+      // Draw particle
+      const size = particle.size * (1 + particle.z * 0.01)
+      ctx.globalAlpha = particle.opacity
+      
+      // Create gradient
+      const gradient = ctx.createRadialGradient(
+        particle.x, particle.y, 0,
+        particle.x, particle.y, size
+      )
+      gradient.addColorStop(0, particle.color)
+      gradient.addColorStop(1, 'transparent')
+      
+      ctx.fillStyle = gradient
+      ctx.beginPath()
+      ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Draw glow effect for special particles
+      if (index % 10 === 0) {
+        ctx.globalAlpha = 0.1
+        ctx.fillStyle = particle.color
+        ctx.beginPath()
+        ctx.arc(particle.x, particle.y, size * 3, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    })
+
+    ctx.globalAlpha = 1
+  }, [showConnections])
+
+  // FIXED: Main animation loop with proper dependencies
   const animate = useCallback((time: number) => {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext('2d')
@@ -209,9 +283,9 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
     // Clear canvas
     ctx.clearRect(0, 0, dimensions.width, dimensions.height)
 
-    // Update and draw particles
+    // Update particles
     setParticles(prevParticles => {
-      const newParticles = prevParticles.map(particle => {
+      const newParticles = prevParticles.map((particle, index) => {
         const newParticle = { ...particle }
         
         // Update particle life
@@ -238,93 +312,20 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
         
         // Respawn particle if life exceeded
         if (newParticle.life > newParticle.maxLife) {
-          return createParticle(prevParticles.indexOf(particle))
+          return createParticle(index)
         }
         
         return newParticle
       })
 
-      // Draw connections
-      if (showConnections) {
-        ctx.strokeStyle = 'rgba(190, 52, 85, 0.1)'
-        ctx.lineWidth = 0.5
-        
-        for (let i = 0; i < newParticles.length; i++) {
-          for (let j = i + 1; j < newParticles.length; j++) {
-            const p1 = newParticles[i]
-            const p2 = newParticles[j]
-            const dx = p1.x - p2.x
-            const dy = p1.y - p2.y
-            const distance = Math.sqrt(dx * dx + dy * dy)
-            
-            if (distance < 100) {
-              const opacity = (100 - distance) / 100 * 0.2
-              ctx.globalAlpha = opacity
-              ctx.beginPath()
-              ctx.moveTo(p1.x, p1.y)
-              ctx.lineTo(p2.x, p2.y)
-              ctx.stroke()
-            }
-          }
-        }
-      }
-
-      // Draw particles
-      newParticles.forEach((particle, index) => {
-        // Draw trail
-        if (particle.trail.length > 1) {
-          ctx.strokeStyle = particle.color
-          ctx.lineWidth = 1
-          ctx.globalAlpha = 0.3
-          
-          ctx.beginPath()
-          ctx.moveTo(particle.trail[0].x, particle.trail[0].y)
-          
-          for (let i = 1; i < particle.trail.length; i++) {
-            ctx.lineTo(particle.trail[i].x, particle.trail[i].y)
-          }
-          ctx.stroke()
-        }
-
-        // Draw particle
-        const size = particle.size * (1 + particle.z * 0.01)
-        ctx.globalAlpha = particle.opacity
-        
-        // Create gradient
-        const gradient = ctx.createRadialGradient(
-          particle.x, particle.y, 0,
-          particle.x, particle.y, size
-        )
-        gradient.addColorStop(0, particle.color)
-        gradient.addColorStop(1, 'transparent')
-        
-        ctx.fillStyle = gradient
-        ctx.beginPath()
-        ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2)
-        ctx.fill()
-
-        // Draw glow effect for special particles
-        if (index % 10 === 0) {
-          ctx.globalAlpha = 0.1
-          ctx.fillStyle = particle.color
-          ctx.beginPath()
-          ctx.arc(particle.x, particle.y, size * 3, 0, Math.PI * 2)
-          ctx.fill()
-        }
-      })
-
-      ctx.globalAlpha = 1
+      // Draw the updated particles
+      drawParticles(ctx, newParticles)
+      
       return newParticles
     })
 
     animationRef.current = requestAnimationFrame(animate)
-  }, [
-    dimensions.width, 
-    dimensions.height, 
-    createParticle, 
-    applyAnimation,
-    showConnections
-  ]) // FIXED: Include all dependencies
+  }, [dimensions.width, dimensions.height, applyAnimation, createParticle, drawParticles])
 
   // Start animation
   useEffect(() => {
@@ -355,7 +356,7 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
     return () => observer.disconnect()
   }, [])
 
-  // Preset configurations - FIXED: Memoized to prevent recreation
+  // FIXED: Preset configurations - memoized to prevent recreation
   const presetConfigs = useMemo(() => ({
     hero: () => controls.start({
       filter: "brightness(1.2) contrast(1.1)",
@@ -370,6 +371,11 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
       transition: { duration: 1 }
     })
   }), [controls])
+
+  // FIXED: Memoize the preset handler to prevent recreation
+  const handlePresetClick = useCallback((preset: keyof typeof presetConfigs) => {
+    presetConfigs[preset]()
+  }, [presetConfigs])
 
   return (
     <motion.div
@@ -427,7 +433,7 @@ const ParticleField: React.FC<ParticleFieldProps> = ({
         {Object.keys(presetConfigs).map(preset => (
           <button
             key={preset}
-            onClick={() => presetConfigs[preset as keyof typeof presetConfigs]()}
+            onClick={() => handlePresetClick(preset as keyof typeof presetConfigs)}
             className="px-2 py-1 text-xs bg-lux-gray-800/50 text-white rounded backdrop-blur-sm hover:bg-lux-gray-700/50 transition-colors"
           >
             {preset}

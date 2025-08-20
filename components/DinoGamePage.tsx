@@ -68,9 +68,9 @@ export default function SynthwaveRunnerGame() {
   
   const isDark = mounted ? resolvedTheme === 'dark' : true
   
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setTheme(isDark ? 'light' : 'dark')
-  }
+  }, [isDark, setTheme]) // ✅ FIXED: Added proper dependencies
   
   // Player state - using refs for smooth animation
   const playerY = useRef(GROUND_Y)
@@ -97,7 +97,7 @@ export default function SynthwaveRunnerGame() {
   const backgroundOffset = useRef(0)
   const groundOffset = useRef(0)
 
-  // Sound effects
+  // ✅ FIXED: Move sound functions to top level and memoize them
   const playSound = useCallback((frequency: number, duration: number, type: OscillatorType = 'sine') => {
     if (!soundEnabled || typeof window === 'undefined') return
     try {
@@ -173,173 +173,7 @@ export default function SynthwaveRunnerGame() {
     setGameState('playing')
   }, [initGame])
 
-  // Input handling with WASD support and anti-spam protection
-  useEffect(() => {
-    let lastJumpTime = 0
-    const jumpCooldown = 100 // Minimum 100ms between jump attempts
-    
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (gameState === 'playing') {
-        if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
-          e.preventDefault()
-          // Anti-spam: only jump on key press (not hold) with cooldown
-          const now = Date.now()
-          if (!e.repeat && now - lastJumpTime > jumpCooldown) {
-            jump()
-            lastJumpTime = now
-          }
-        } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
-          e.preventDefault()
-          startDucking()
-        }
-      } else if (gameState === 'menu' && (e.code === 'Space' || e.code === 'Enter')) {
-        e.preventDefault()
-        startGame()
-      } else if (gameState === 'gameOver' && (e.code === 'Space' || e.code === 'Enter')) {
-        e.preventDefault()
-        restartGame()
-      }
-    }
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'ArrowDown' || e.code === 'KeyS') {
-        stopDucking()
-      }
-    }
-
-    const handleClick = () => {
-      const now = Date.now()
-      if (gameState === 'playing' && now - lastJumpTime > jumpCooldown) {
-        jump()
-        lastJumpTime = now
-      } else if (gameState === 'menu') {
-        startGame()
-      } else if (gameState === 'gameOver') {
-        restartGame()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    window.addEventListener('keyup', handleKeyUp)
-    
-    const canvas = canvasRef.current
-    if (canvas) {
-      canvas.addEventListener('click', handleClick)
-    }
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('keyup', handleKeyUp)
-      if (canvas) {
-        canvas.removeEventListener('click', handleClick)
-      }
-    }
-  }, [gameState, jump, startDucking, stopDucking, startGame, restartGame])
-
-  // Improved collision detection with more forgiving hitboxes
-  const checkCollision = useCallback((playerRect: any, obstacleRect: any) => {
-    // More generous buffer for fairer gameplay
-    const buffer = 4
-    return (
-      playerRect.x + buffer < obstacleRect.x + obstacleRect.width &&
-      playerRect.x + playerRect.width - buffer > obstacleRect.x &&
-      playerRect.y + buffer < obstacleRect.y + obstacleRect.height &&
-      playerRect.y + playerRect.height - buffer > obstacleRect.y
-    )
-  }, [])
-
-  // Drawing function
-  const draw = useCallback((ctx: CanvasRenderingContext2D) => {
-    // Clear canvas
-    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
-    
-    // Draw background gradient with theme awareness
-    const gradient = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT)
-    if (isDark) {
-      gradient.addColorStop(0, '#121212') // lux-black
-      gradient.addColorStop(0.3, '#1a1a1a')
-      gradient.addColorStop(0.7, '#2a2a2a')
-      gradient.addColorStop(1, '#0f0f0f')
-    } else {
-      gradient.addColorStop(0, '#FAFAFA') // lux-offwhite
-      gradient.addColorStop(0.3, '#f0f0f0')
-      gradient.addColorStop(0.7, '#e0e0e0')
-      gradient.addColorStop(1, '#d0d0d0')
-    }
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
-    
-    // Draw animated grid background with theme colors
-    ctx.strokeStyle = isDark ? 'rgba(190, 52, 85, 0.15)' : 'rgba(190, 52, 85, 0.25)' // viva-magenta with theme opacity
-    ctx.lineWidth = 1
-    for (let i = 0; i < GAME_WIDTH + 50; i += 50) {
-      const x = (i - backgroundOffset.current % 50)
-      if (x >= -50 && x <= GAME_WIDTH) {
-        ctx.beginPath()
-        ctx.moveTo(x, 0)
-        ctx.lineTo(x, GAME_HEIGHT)
-        ctx.stroke()
-      }
-    }
-    
-    // Draw ground line with luxury gold
-    const groundLineY = GAME_HEIGHT - GROUND_Y
-    ctx.strokeStyle = '#D4AF37' // lux-gold
-    ctx.lineWidth = 3
-    ctx.beginPath()
-    ctx.moveTo(0, groundLineY)
-    ctx.lineTo(GAME_WIDTH, groundLineY)
-    ctx.stroke()
-    
-    // Draw moving ground pattern with viva-magenta
-    ctx.strokeStyle = '#BE3455' // viva-magenta
-    ctx.lineWidth = 1
-    ctx.setLineDash([10, 10])
-    for (let i = 0; i < GAME_WIDTH + 40; i += 40) {
-      const x = (i - groundOffset.current) % (GAME_WIDTH + 40)
-      if (x >= -40 && x <= GAME_WIDTH) {
-        ctx.beginPath()
-        ctx.moveTo(x, groundLineY + 5)
-        ctx.lineTo(x + 20, groundLineY + 5)
-        ctx.stroke()
-      }
-    }
-    ctx.setLineDash([])
-    
-    // Calculate player position
-    const playerHeight = isDucking.current ? DUCK_HEIGHT : PLAYER_HEIGHT
-    const playerYPos = GAME_HEIGHT - GROUND_Y - playerHeight - playerY.current + GROUND_Y
-    const playerX = 80
-    
-    // Player shadow with theme awareness
-    ctx.fillStyle = isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.2)'
-    ctx.fillRect(playerX - 2, GAME_HEIGHT - GROUND_Y, PLAYER_WIDTH + 4, 4)
-    
-    // Shield effect with theme colors
-    if (shieldActive.current) {
-      ctx.strokeStyle = '#98A869' // lux-sage for shield
-      ctx.lineWidth = 3
-      ctx.globalAlpha = 0.6 + Math.sin(Date.now() * 0.01) * 0.3
-      ctx.beginPath()
-      ctx.arc(playerX + PLAYER_WIDTH/2, playerYPos + playerHeight/2, 35, 0, Math.PI * 2)
-      ctx.stroke()
-      ctx.globalAlpha = 1
-    }
-    
-    // Magnet effect with theme colors
-    if (magnetActive.current) {
-      ctx.strokeStyle = '#008080' // lux-teal for magnet
-      ctx.lineWidth = 2
-      ctx.globalAlpha = 0.4 + Math.sin(Date.now() * 0.008) * 0.2
-      for (let i = 0; i < 3; i++) {
-        ctx.beginPath()
-        ctx.arc(playerX + PLAYER_WIDTH/2, playerYPos + playerHeight/2, 40 + i * 8, 0, Math.PI * 2)
-        ctx.stroke()
-      }
-      ctx.globalAlpha = 1
-    }
-    
-  // Pixelated player drawing functions
+  // ✅ FIXED: Memoize drawing functions to prevent recreation
   const drawPixelPlayer = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, state: 'running' | 'jumping' | 'ducking') => {
     const pixelSize = 3 // Larger pixels for the main character
     
@@ -498,7 +332,7 @@ export default function SynthwaveRunnerGame() {
     }
   }, [isDark])
     
-  // Pixel art drawing functions with theme-aware colors
+  // ✅ FIXED: Memoize pixel art drawing functions
   const drawPixelCactus = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) => {
     const pixelSize = 2
     const cactusPattern = [
@@ -600,7 +434,99 @@ export default function SynthwaveRunnerGame() {
     ctx.lineWidth = 1
     ctx.strokeRect(x, y, width, height)
   }, [isDark])
-        // Draw pixelated player character
+
+  // Drawing function
+  const draw = useCallback((ctx: CanvasRenderingContext2D) => {
+    // Clear canvas
+    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+    
+    // Draw background gradient with theme awareness
+    const gradient = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT)
+    if (isDark) {
+      gradient.addColorStop(0, '#121212') // lux-black
+      gradient.addColorStop(0.3, '#1a1a1a')
+      gradient.addColorStop(0.7, '#2a2a2a')
+      gradient.addColorStop(1, '#0f0f0f')
+    } else {
+      gradient.addColorStop(0, '#FAFAFA') // lux-offwhite
+      gradient.addColorStop(0.3, '#f0f0f0')
+      gradient.addColorStop(0.7, '#e0e0e0')
+      gradient.addColorStop(1, '#d0d0d0')
+    }
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+    
+    // Draw animated grid background with theme colors
+    ctx.strokeStyle = isDark ? 'rgba(190, 52, 85, 0.15)' : 'rgba(190, 52, 85, 0.25)' // viva-magenta with theme opacity
+    ctx.lineWidth = 1
+    for (let i = 0; i < GAME_WIDTH + 50; i += 50) {
+      const x = (i - backgroundOffset.current % 50)
+      if (x >= -50 && x <= GAME_WIDTH) {
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, GAME_HEIGHT)
+        ctx.stroke()
+      }
+    }
+    
+    // Draw ground line with luxury gold
+    const groundLineY = GAME_HEIGHT - GROUND_Y
+    ctx.strokeStyle = '#D4AF37' // lux-gold
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    ctx.moveTo(0, groundLineY)
+    ctx.lineTo(GAME_WIDTH, groundLineY)
+    ctx.stroke()
+    
+    // Draw moving ground pattern with viva-magenta
+    ctx.strokeStyle = '#BE3455' // viva-magenta
+    ctx.lineWidth = 1
+    ctx.setLineDash([10, 10])
+    for (let i = 0; i < GAME_WIDTH + 40; i += 40) {
+      const x = (i - groundOffset.current) % (GAME_WIDTH + 40)
+      if (x >= -40 && x <= GAME_WIDTH) {
+        ctx.beginPath()
+        ctx.moveTo(x, groundLineY + 5)
+        ctx.lineTo(x + 20, groundLineY + 5)
+        ctx.stroke()
+      }
+    }
+    ctx.setLineDash([])
+    
+    // Calculate player position
+    const playerHeight = isDucking.current ? DUCK_HEIGHT : PLAYER_HEIGHT
+    const playerYPos = GAME_HEIGHT - GROUND_Y - playerHeight - playerY.current + GROUND_Y
+    const playerX = 80
+    
+    // Player shadow with theme awareness
+    ctx.fillStyle = isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.2)'
+    ctx.fillRect(playerX - 2, GAME_HEIGHT - GROUND_Y, PLAYER_WIDTH + 4, 4)
+    
+    // Shield effect with theme colors
+    if (shieldActive.current) {
+      ctx.strokeStyle = '#98A869' // lux-sage for shield
+      ctx.lineWidth = 3
+      ctx.globalAlpha = 0.6 + Math.sin(Date.now() * 0.01) * 0.3
+      ctx.beginPath()
+      ctx.arc(playerX + PLAYER_WIDTH/2, playerYPos + playerHeight/2, 35, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.globalAlpha = 1
+    }
+    
+    // Magnet effect with theme colors
+    if (magnetActive.current) {
+      ctx.strokeStyle = '#008080' // lux-teal for magnet
+      ctx.lineWidth = 2
+      ctx.globalAlpha = 0.4 + Math.sin(Date.now() * 0.008) * 0.2
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath()
+        ctx.arc(playerX + PLAYER_WIDTH/2, playerYPos + playerHeight/2, 40 + i * 8, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+      ctx.globalAlpha = 1
+    }
+    
+    // Draw pixelated player character
     let playerState: 'running' | 'jumping' | 'ducking' = 'running'
     if (isDucking.current) {
       playerState = 'ducking'
@@ -694,7 +620,82 @@ export default function SynthwaveRunnerGame() {
       ctx.textAlign = 'right'
       ctx.fillText(`Magnet: ${Math.ceil(magnetTimeLeft.current / 1000)}s`, GAME_WIDTH - 20, 60)
     }
-  }, [score, highScore, isDark])
+  }, [score, highScore, isDark, drawPixelPlayer, drawPixelCactus, drawPixelRock, drawPixelBird])
+
+  // Improved collision detection with more forgiving hitboxes
+  const checkCollision = useCallback((playerRect: any, obstacleRect: any) => {
+    // More generous buffer for fairer gameplay
+    const buffer = 4
+    return (
+      playerRect.x + buffer < obstacleRect.x + obstacleRect.width &&
+      playerRect.x + playerRect.width - buffer > obstacleRect.x &&
+      playerRect.y + buffer < obstacleRect.y + obstacleRect.height &&
+      playerRect.y + playerRect.height - buffer > obstacleRect.y
+    )
+  }, [])
+
+  // Input handling with WASD support and anti-spam protection
+  useEffect(() => {
+    let lastJumpTime = 0
+    const jumpCooldown = 100 // Minimum 100ms between jump attempts
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameState === 'playing') {
+        if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+          e.preventDefault()
+          // Anti-spam: only jump on key press (not hold) with cooldown
+          const now = Date.now()
+          if (!e.repeat && now - lastJumpTime > jumpCooldown) {
+            jump()
+            lastJumpTime = now
+          }
+        } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+          e.preventDefault()
+          startDucking()
+        }
+      } else if (gameState === 'menu' && (e.code === 'Space' || e.code === 'Enter')) {
+        e.preventDefault()
+        startGame()
+      } else if (gameState === 'gameOver' && (e.code === 'Space' || e.code === 'Enter')) {
+        e.preventDefault()
+        restartGame()
+      }
+    }
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+        stopDucking()
+      }
+    }
+
+    const handleClick = () => {
+      const now = Date.now()
+      if (gameState === 'playing' && now - lastJumpTime > jumpCooldown) {
+        jump()
+        lastJumpTime = now
+      } else if (gameState === 'menu') {
+        startGame()
+      } else if (gameState === 'gameOver') {
+        restartGame()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    
+    const canvas = canvasRef.current
+    if (canvas) {
+      canvas.addEventListener('click', handleClick)
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+      if (canvas) {
+        canvas.removeEventListener('click', handleClick)
+      }
+    }
+  }, [gameState, jump, startDucking, stopDucking, startGame, restartGame])
 
   // Game loop
   const gameLoop = useCallback((currentTime: number) => {
@@ -982,7 +983,7 @@ export default function SynthwaveRunnerGame() {
     }
   }, [gameLoop])
 
-  // Draw menu/game over screen
+  // Draw menu/game over screen - ✅ FIXED: Added missing dependency
   useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext('2d')
@@ -1030,7 +1031,7 @@ export default function SynthwaveRunnerGame() {
         ctx.fillText('Press SPACE or Click to Restart', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 60)
       }
     }
-  }, [gameState, draw, score, highScore])
+  }, [gameState, draw, score, highScore, isDark]) // ✅ FIXED: Added isDark dependency
 
   return (
     <div className={`min-h-screen transition-colors duration-500 p-4 ${
