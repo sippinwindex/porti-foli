@@ -1,4 +1,4 @@
-// Fixed Navigation Component with proper progress bar positioning
+// Fixed Navigation Component with proper progress bar positioning and all pages
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -17,7 +17,10 @@ import {
   X,
   Twitter,
   Sun,
-  Moon
+  Moon,
+  BookOpen,
+  Gamepad2,
+  Settings
 } from 'lucide-react'
 
 interface NavItem {
@@ -58,10 +61,10 @@ const FixedNavigation: React.FC = () => {
   const navRef = useRef<HTMLElement>(null)
   const progressBarRef = useRef<HTMLDivElement>(null)
   
-  // ✅ FIXED: Stable navigation items
+  // ✅ UPDATED: Navigation items with all your pages
   const navigationItems: NavItem[] = useMemo(() => [
     { 
-      id: 'hero',
+      id: 'home',
       name: 'Home', 
       label: 'Home', 
       href: '/', 
@@ -72,7 +75,7 @@ const FixedNavigation: React.FC = () => {
       id: 'about', 
       name: 'About', 
       label: 'About', 
-      href: '/#about',
+      href: '/about',
       icon: User, 
       description: 'Learn about me' 
     },
@@ -80,17 +83,41 @@ const FixedNavigation: React.FC = () => {
       id: 'projects', 
       name: 'Projects', 
       label: 'Projects', 
-      href: '/#projects',
+      href: '/projects',
       icon: FolderOpen, 
       description: 'My work' 
+    },
+    { 
+      id: 'blog', 
+      name: 'Blog', 
+      label: 'Blog', 
+      href: '/blog',
+      icon: BookOpen, 
+      description: 'Latest articles' 
     },
     { 
       id: 'contact', 
       name: 'Contact', 
       label: 'Contact', 
-      href: '/#contact',
+      href: '/contact',
       icon: MessageCircle, 
       description: 'Get in touch' 
+    },
+    { 
+      id: 'dino-game', 
+      name: 'Game', 
+      label: 'Game', 
+      href: '/dino-game',
+      icon: Gamepad2, 
+      description: 'Synthwave Runner' 
+    },
+    { 
+      id: 'admin', 
+      name: 'Admin', 
+      label: 'Admin', 
+      href: '/admin',
+      icon: Settings, 
+      description: 'Admin panel' 
     }
   ], [])
 
@@ -215,52 +242,65 @@ const FixedNavigation: React.FC = () => {
     }
   }, [])
 
-  // Navigation and section detection (same as before)
+  // ✅ UPDATED: Navigation and section detection for all pages
   useEffect(() => {
-    if (pathname !== '/') {
-      if (pathname === '/blog') {
-        setCurrentSection('blog')
+    // Update current section based on pathname
+    if (pathname === '/') {
+      setCurrentSection('home')
+    } else if (pathname === '/about') {
+      setCurrentSection('about')
+    } else if (pathname === '/projects') {
+      setCurrentSection('projects')
+    } else if (pathname === '/blog') {
+      setCurrentSection('blog')
+    } else if (pathname === '/contact') {
+      setCurrentSection('contact')
+    } else if (pathname === '/dino-game') {
+      setCurrentSection('dino-game')
+    } else if (pathname === '/admin') {
+      setCurrentSection('admin')
+    }
+
+    // For homepage sections (if you still have sections on homepage)
+    if (pathname === '/') {
+      const sections = ['hero', 'about', 'projects', 'contact']
+      const observerOptions = {
+        threshold: 0.3,
+        rootMargin: '-10% 0px -60% 0px'
       }
-      return
-    }
 
-    const sections = ['hero', 'about', 'projects', 'contact']
-    const observerOptions = {
-      threshold: 0.3,
-      rootMargin: '-10% 0px -60% 0px'
-    }
-
-    let currentActiveSection = 'hero'
-    
-    const observer = new IntersectionObserver((entries) => {
-      let maxRatio = 0
-      let activeSection = currentActiveSection
+      let currentActiveSection = 'hero'
       
-      entries.forEach(entry => {
-        if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {
-          maxRatio = entry.intersectionRatio
-          activeSection = entry.target.id
+      const observer = new IntersectionObserver((entries) => {
+        let maxRatio = 0
+        let activeSection = currentActiveSection
+        
+        entries.forEach(entry => {
+          if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {
+            maxRatio = entry.intersectionRatio
+            activeSection = entry.target.id
+          }
+        })
+        
+        if (maxRatio > 0 && activeSection !== currentActiveSection) {
+          currentActiveSection = activeSection
+          setCurrentSection(activeSection)
+        }
+      }, observerOptions)
+
+      const elements: Element[] = []
+      sections.forEach(sectionId => {
+        const element = document.getElementById(sectionId)
+        if (element) {
+          observer.observe(element)
+          elements.push(element)
         }
       })
-      
-      if (maxRatio > 0 && activeSection !== currentActiveSection) {
-        currentActiveSection = activeSection
-        setCurrentSection(activeSection)
-      }
-    }, observerOptions)
 
-    const elements: Element[] = []
-    sections.forEach(sectionId => {
-      const element = document.getElementById(sectionId)
-      if (element) {
-        observer.observe(element)
-        elements.push(element)
+      return () => {
+        elements.forEach(element => observer.unobserve(element))
+        observer.disconnect()
       }
-    })
-
-    return () => {
-      elements.forEach(element => observer.unobserve(element))
-      observer.disconnect()
     }
   }, [pathname])
 
@@ -292,16 +332,23 @@ const FixedNavigation: React.FC = () => {
   }, [router, pathname, prefersReducedMotion])
 
   const isActivePath = useCallback((href: string, id: string) => {
-    if (pathname !== '/') {
-      return pathname === href
+    // Direct page matching
+    if (pathname === href) {
+      return true
     }
     
-    if (href.startsWith('/#')) {
+    // Homepage special handling
+    if (pathname === '/' && href === '/') {
+      return currentSection === 'home' || currentSection === 'hero'
+    }
+    
+    // Section-based matching for homepage anchors
+    if (href.startsWith('/#') && pathname === '/') {
       const sectionId = href.replace('/#', '')
       return currentSection === sectionId
     }
     
-    return currentSection === id
+    return false
   }, [pathname, currentSection])
 
   // Theme Toggle Component (same as before)
@@ -545,10 +592,10 @@ const FixedNavigation: React.FC = () => {
               <span className="hidden sm:block">Juan Fernandez</span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-10">
+            {/* Desktop Navigation - ✅ UPDATED: Better spacing for more items */}
+            <div className="hidden lg:flex items-center gap-8">
               <div 
-                className="flex items-center gap-2 rounded-xl p-2"
+                className="flex items-center gap-1 rounded-xl p-2"
                 style={{
                   background: darkMode 
                     ? 'rgba(31, 41, 55, 0.8)' 
@@ -564,8 +611,8 @@ const FixedNavigation: React.FC = () => {
             </div>
 
             {/* Desktop Controls */}
-            <div className="hidden lg:flex items-center gap-6">
-              <div className="flex items-center gap-4">
+            <div className="hidden lg:flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 {socialLinks.map((social, index) => (
                   <SocialLink key={social.platform} social={social} index={index} />
                 ))}

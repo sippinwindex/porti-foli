@@ -1,3 +1,4 @@
+// 📁 app/admin/page.tsx - Updated Secure Version
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -5,57 +6,107 @@ import { redirect } from 'next/navigation'
 import ProjectEditModal from '@/components/ProjectEditModal'
 import { getSmartProjects, SmartProjectData } from '@/lib/smart-project-manager'
 
-// Simple password protection
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'JuanPortfolio2025!SecureAdmin'
-
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
   const [projects, setProjects] = useState<SmartProjectData[]>([])
   const [selectedProject, setSelectedProject] = useState<SmartProjectData | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authError, setAuthError] = useState('')
   const [mounted, setMounted] = useState(false)
 
   // Check if we're in development mode
   const isDevelopment = process.env.NODE_ENV === 'development'
 
-  // Prevent hydration issues and ensure client-side only
+  // Prevent hydration issues
   useEffect(() => {
     setMounted(true)
   }, [])
   
-  // Auto-authenticate in development
+  // Check authentication status on mount
   useEffect(() => {
-    if (!mounted) return // Wait for client-side mount
+    if (!mounted) return
     
+    checkAuthStatus()
+  }, [mounted])
+
+  const checkAuthStatus = async () => {
     if (isDevelopment) {
+      // Auto-authenticate in development
       setIsAuthenticated(true)
       loadProjects()
-    } else {
-      // Check if already authenticated in session
-      const sessionAuth = sessionStorage.getItem('admin-auth')
-      if (sessionAuth === 'true') {
+      setLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch('/api/admin-verify')
+      const data = await response.json()
+      
+      if (response.ok && data.authenticated) {
         setIsAuthenticated(true)
         loadProjects()
       }
-    }
-  }, [isDevelopment, mounted])
-
-  const handleLogin = () => {
-    if (password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true)
-      sessionStorage.setItem('admin-auth', 'true')
-      loadProjects()
-    } else {
-      alert('Incorrect password')
+    } catch (error) {
+      console.error('Auth check failed:', error)
+      // In production, redirect if not localhost/vercel
+      const hostname = window.location.hostname
+      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1'
+      const isVercelPreview = hostname.includes('vercel.app')
+      const isYourDomain = hostname === 'juanfernandez.dev' || hostname === 'juan-fernandez.vercel.app'
+      
+      if (!isLocalhost && !isVercelPreview && !isYourDomain) {
+        redirect('/')
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleLogout = () => {
-    setIsAuthenticated(false)
-    sessionStorage.removeItem('admin-auth')
-    setPassword('')
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setAuthLoading(true)
+    setAuthError('')
+
+    try {
+      const response = await fetch('/api/admin-auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setIsAuthenticated(true)
+        setPassword('') // Clear password from memory
+        loadProjects()
+      } else {
+        setAuthError(data.error || 'Invalid password')
+      }
+    } catch (error) {
+      setAuthError('Authentication failed. Please try again.')
+      console.error('Login error:', error)
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin-logout', { method: 'POST' })
+      setIsAuthenticated(false)
+      setPassword('')
+      setProjects([])
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Force logout even if API fails
+      setIsAuthenticated(false)
+    }
   }
 
   const loadProjects = async () => {
@@ -80,26 +131,16 @@ export default function AdminPage() {
     loadProjects() // Refresh the list
   }
 
-  // Redirect in production if not on localhost or vercel preview
-  useEffect(() => {
-    if (!mounted || isDevelopment) return
-    
-    const hostname = window.location.hostname
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1'
-    const isVercelPreview = hostname.includes('vercel.app')
-    const isYourDomain = hostname === 'juanfernandez.dev' || hostname === 'juan-fernandez.vercel.app'
-    
-    // Only allow access from specific sources
-    if (!isLocalhost && !isVercelPreview && !isYourDomain) {
-      redirect('/')
-    }
-  }, [isDevelopment, mounted])
-
   // Show loading during hydration
-  if (!mounted) {
+  if (!mounted || loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">
+            {!mounted ? 'Initializing...' : 'Loading admin panel...'}
+          </p>
+        </div>
       </div>
     )
   }
@@ -119,7 +160,7 @@ export default function AdminPage() {
               </p>
             </div>
 
-            <div className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Password
@@ -128,20 +169,28 @@ export default function AdminPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
                   className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter admin password"
+                  required
                   autoFocus
+                  disabled={authLoading}
                 />
               </div>
 
+              {authError && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm text-red-600 dark:text-red-400">{authError}</p>
+                </div>
+              )}
+
               <button
-                onClick={handleLogin}
-                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                type="submit"
+                disabled={authLoading}
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                Access Admin Panel
+                {authLoading ? 'Authenticating...' : 'Access Admin Panel'}
               </button>
-            </div>
+            </form>
 
             {isDevelopment && (
               <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
