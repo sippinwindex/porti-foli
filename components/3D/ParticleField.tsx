@@ -1,4 +1,4 @@
-// components/3D/ParticleField.tsx - FIXED VERSION with Viva Magenta
+// Fixed components/3D/ParticleField.tsx - Uses your theme colors and stable rendering
 'use client'
 
 import { useEffect, useRef, useCallback, useMemo } from 'react'
@@ -13,6 +13,7 @@ interface Particle {
   hue: number
   life: number
   maxLife: number
+  color: string
 }
 
 interface ParticleFieldProps {
@@ -26,8 +27,8 @@ interface ParticleFieldProps {
 
 export default function ParticleField({
   particleCount = 50,
-  colorScheme = 'cyberpunk',
-  animation = 'float',
+  colorScheme = 'viva-magenta',
+  animation = 'constellation',
   interactive = true,
   speed = 1,
   className = ''
@@ -38,92 +39,67 @@ export default function ParticleField({
   const mouseRef = useRef({ x: 0, y: 0 })
   const dimensionsRef = useRef({ width: 0, height: 0 })
 
-  // Color schemes
+  // Enhanced color schemes using your theme colors
   const colorSchemes = useMemo(() => ({
     cyberpunk: {
-      primary: [0, 255, 255], // Cyan
-      secondary: [255, 0, 255], // Magenta
-      accent: [255, 255, 0], // Yellow
-      hueRange: [180, 300]
+      colors: ['#00FFFF', '#FF00FF', '#FFFF00'],
+      primary: '#00FFFF',
+      secondary: '#FF00FF',
+      accent: '#FFFF00'
     },
     synthwave: {
-      primary: [255, 20, 147], // Deep pink
-      secondary: [138, 43, 226], // Blue violet
-      accent: [0, 255, 255], // Cyan
-      hueRange: [280, 320]
+      colors: ['#FF1493', '#8A2BE2', '#00FFFF'],
+      primary: '#FF1493',
+      secondary: '#8A2BE2', 
+      accent: '#00FFFF'
     },
     cosmic: {
-      primary: [75, 0, 130], // Indigo
-      secondary: [138, 43, 226], // Blue violet
-      accent: [255, 215, 0], // Gold
-      hueRange: [240, 280]
+      colors: ['#4B0082', '#8A2BE2', '#FFD700'],
+      primary: '#4B0082',
+      secondary: '#8A2BE2',
+      accent: '#FFD700'
     },
     aurora: {
-      primary: [0, 255, 127], // Spring green
-      secondary: [30, 144, 255], // Dodger blue
-      accent: [255, 20, 147], // Deep pink
-      hueRange: [120, 200]
+      colors: ['#00FF7F', '#1E90FF', '#FF1493'],
+      primary: '#00FF7F',
+      secondary: '#1E90FF',
+      accent: '#FF1493'
     },
     'viva-magenta': {
-      primary: [190, 52, 115], // Viva Magenta
-      secondary: [255, 20, 147], // Deep pink
-      accent: [255, 105, 180], // Hot pink
-      hueRange: [320, 350]
+      colors: ['#BE3455', '#D4AF37', '#98A869', '#008080'],
+      primary: '#BE3455',    // Your viva-magenta
+      secondary: '#D4AF37',  // Your lux-gold
+      accent: '#98A869'      // Your lux-sage
     }
   }), [])
 
-  // FIXED: Safe gradient creation with validation
-  const createSafeRadialGradient = useCallback((
-    ctx: CanvasRenderingContext2D,
-    x0: number,
-    y0: number,
-    r0: number,
-    x1: number,
-    y1: number,
-    r1: number
-  ) => {
-    // Ensure all values are finite and non-negative
-    const safeR0 = Math.max(0, isFinite(r0) ? r0 : 0)
-    const safeR1 = Math.max(0, isFinite(r1) ? r1 : 1) // Minimum radius of 1
-    const safeX0 = isFinite(x0) ? x0 : 0
-    const safeY0 = isFinite(y0) ? y0 : 0
-    const safeX1 = isFinite(x1) ? x1 : 0
-    const safeY1 = isFinite(y1) ? y1 : 0
+  const currentColorScheme = colorSchemes[colorScheme]
 
-    // Additional safety: ensure r1 is not zero when r0 is zero
-    const finalR1 = safeR0 === 0 && safeR1 === 0 ? 1 : safeR1
-
-    try {
-      return ctx.createRadialGradient(safeX0, safeY0, safeR0, safeX1, safeY1, finalR1)
-    } catch (error) {
-      console.warn('Gradient creation failed, using fallback:', error)
-      // Fallback: create a simple gradient
-      return ctx.createRadialGradient(safeX0, safeY0, 0, safeX1, safeY1, 10)
-    }
-  }, [])
-
-  // Initialize particles
+  // Enhanced particle initialization
   const initializeParticles = useCallback(() => {
     const { width, height } = dimensionsRef.current
     if (width === 0 || height === 0) return
 
-    particlesRef.current = Array.from({ length: particleCount }, () => {
-      const hueRange = colorSchemes[colorScheme].hueRange
+    particlesRef.current = Array.from({ length: particleCount }, (_, i) => {
+      const colors = currentColorScheme.colors
+      const selectedColor = colors[Math.floor(Math.random() * colors.length)]
+      
       return {
         x: Math.random() * width,
         y: Math.random() * height,
         vx: (Math.random() - 0.5) * speed * 0.5,
         vy: (Math.random() - 0.5) * speed * 0.5,
-        radius: Math.random() * 3 + 1, // Ensure minimum radius
-        opacity: Math.random() * 0.8 + 0.2,
-        hue: hueRange[0] + Math.random() * (hueRange[1] - hueRange[0]),
+        radius: Math.random() * 2 + 1, // Smaller particles for better performance
+        opacity: Math.random() * 0.6 + 0.2,
+        hue: 0, // Not used anymore, using direct colors
         life: 0,
-        maxLife: Math.random() * 200 + 100
+        maxLife: Math.random() * 300 + 200,
+        color: selectedColor
       }
     })
-  }, [particleCount, colorScheme, speed, colorSchemes])
+  }, [particleCount, speed, currentColorScheme])
 
-  // Update particle positions
+  // Enhanced particle updates with optimized animations
   const updateParticles = useCallback(() => {
     const { width, height } = dimensionsRef.current
     
@@ -138,68 +114,84 @@ export default function ParticleField({
           const centerX = width / 2
           const centerY = height / 2
           const angle = particle.life * 0.02
-          const distance = 50 + particle.life * 0.5
+          const distance = 50 + particle.life * 0.3
           particle.x = centerX + Math.cos(angle) * distance
           particle.y = centerY + Math.sin(angle) * distance
           break
         case 'chaos':
-          particle.vx += (Math.random() - 0.5) * 0.1
-          particle.vy += (Math.random() - 0.5) * 0.1
+          particle.vx += (Math.random() - 0.5) * 0.05
+          particle.vy += (Math.random() - 0.5) * 0.05
+          particle.vx = Math.max(-2, Math.min(2, particle.vx)) // Limit velocity
+          particle.vy = Math.max(-2, Math.min(2, particle.vy))
           particle.x += particle.vx * speed
           particle.y += particle.vy * speed
           break
         case 'constellation':
           // Gentle floating with constellation-like movement
-          particle.y += particle.vy * speed * 0.2
-          particle.x += Math.sin(particle.life * 0.005) * 0.3
-          particle.vy += Math.sin(particle.life * 0.01) * 0.01
+          particle.y += particle.vy * speed * 0.1
+          particle.x += Math.sin(particle.life * 0.003) * 0.2
+          particle.vy += Math.sin(particle.life * 0.005) * 0.005
           break
         case 'float':
         default:
-          particle.y += particle.vy * speed * 0.3
-          particle.x += Math.sin(particle.life * 0.01) * 0.5
+          particle.y += particle.vy * speed * 0.2
+          particle.x += Math.sin(particle.life * 0.008) * 0.3
           break
       }
 
-      // Interactive mode: attract to mouse
+      // Interactive mode: attract to mouse with smoother effect
       if (interactive) {
         const dx = mouseRef.current.x - particle.x
         const dy = mouseRef.current.y - particle.y
         const distance = Math.sqrt(dx * dx + dy * dy)
         
-        if (distance < 100) {
-          const force = (100 - distance) / 100 * 0.01
+        if (distance < 150 && distance > 0) {
+          const force = (150 - distance) / 150 * 0.005
           particle.vx += dx * force
           particle.vy += dy * force
+          
+          // Add slight repulsion when very close
+          if (distance < 50) {
+            const repulsion = (50 - distance) / 50 * 0.01
+            particle.vx -= dx * repulsion
+            particle.vy -= dy * repulsion
+          }
         }
       }
 
-      // Wrap around screen edges
-      if (particle.x < 0) particle.x = width
-      if (particle.x > width) particle.x = 0
-      if (particle.y < 0) particle.y = height
-      if (particle.y > height) particle.y = 0
+      // Wrap around screen edges with buffer
+      const buffer = 20
+      if (particle.x < -buffer) particle.x = width + buffer
+      if (particle.x > width + buffer) particle.x = -buffer
+      if (particle.y < -buffer) particle.y = height + buffer
+      if (particle.y > height + buffer) particle.y = -buffer
 
-      // Update life cycle
+      // Update life cycle with smooth transitions
       particle.life++
       if (particle.life > particle.maxLife) {
         particle.life = 0
         particle.x = Math.random() * width
         particle.y = Math.random() * height
-        particle.opacity = Math.random() * 0.8 + 0.2
+        particle.opacity = Math.random() * 0.6 + 0.2
+        // Reassign color
+        const colors = currentColorScheme.colors
+        particle.color = colors[Math.floor(Math.random() * colors.length)]
       }
 
-      // Fade in/out based on life cycle
+      // Enhanced fade in/out with smoother transitions
       const lifeCycle = particle.life / particle.maxLife
       if (lifeCycle < 0.1) {
         particle.opacity *= lifeCycle / 0.1
       } else if (lifeCycle > 0.9) {
         particle.opacity *= (1 - lifeCycle) / 0.1
       }
+      
+      // Ensure opacity stays within bounds
+      particle.opacity = Math.max(0, Math.min(1, particle.opacity))
     })
-  }, [animation, speed, interactive])
+  }, [animation, speed, interactive, currentColorScheme])
 
-  // FIXED: Safe rendering with gradient validation
+  // Enhanced rendering with better performance and your theme colors
   const render = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -209,67 +201,106 @@ export default function ParticleField({
 
     const { width, height } = dimensionsRef.current
 
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height)
+    // Clear canvas with slight trail effect for smoother animation
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.02)'
+    ctx.fillRect(0, 0, width, height)
 
-    // Render particles
+    // Render particles with enhanced effects
     particlesRef.current.forEach(particle => {
-      // Validate particle properties before rendering
+      // Validate particle properties
       if (!isFinite(particle.x) || !isFinite(particle.y) || 
           !isFinite(particle.radius) || particle.radius <= 0) {
-        return // Skip invalid particles
+        return
       }
 
-      // FIXED: Safe radius calculation
-      const safeRadius = Math.max(1, Math.min(50, particle.radius)) // Clamp between 1-50
+      const safeRadius = Math.max(0.5, Math.min(4, particle.radius))
+      const safeOpacity = Math.max(0, Math.min(1, particle.opacity))
       
       try {
-        // Create safe gradient
-        const gradient = createSafeRadialGradient(
-          ctx,
-          particle.x,
-          particle.y,
-          0,
-          particle.x,
-          particle.y,
-          safeRadius
+        // Create enhanced gradient with your theme colors
+        const gradient = ctx.createRadialGradient(
+          particle.x, particle.y, 0,
+          particle.x, particle.y, safeRadius * 2
         )
 
-        // Add color stops
-        const alpha = Math.max(0, Math.min(1, particle.opacity)) // Clamp alpha
-        gradient.addColorStop(0, `hsla(${particle.hue}, 70%, 60%, ${alpha})`)
-        gradient.addColorStop(0.7, `hsla(${particle.hue}, 80%, 50%, ${alpha * 0.5})`)
-        gradient.addColorStop(1, `hsla(${particle.hue}, 90%, 40%, 0)`)
+        // Use actual hex colors instead of HSL
+        const baseColor = particle.color
+        
+        // Convert hex to RGB for alpha manipulation
+        const hex = baseColor.replace('#', '')
+        const r = parseInt(hex.substr(0, 2), 16)
+        const g = parseInt(hex.substr(2, 2), 16)
+        const b = parseInt(hex.substr(4, 2), 16)
 
-        // Draw particle
+        gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${safeOpacity})`)
+        gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${safeOpacity * 0.6})`)
+        gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
+
+        // Draw particle with enhanced blend mode
         ctx.save()
         ctx.globalCompositeOperation = 'screen'
         ctx.fillStyle = gradient
         ctx.beginPath()
         ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
         ctx.fill()
+        
+        // Add subtle glow effect for viva-magenta scheme
+        if (colorScheme === 'viva-magenta') {
+          ctx.globalCompositeOperation = 'soft-light'
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${safeOpacity * 0.3})`
+          ctx.beginPath()
+          ctx.arc(particle.x, particle.y, safeRadius * 1.5, 0, Math.PI * 2)
+          ctx.fill()
+        }
+        
         ctx.restore()
       } catch (error) {
         console.warn('Particle rendering error:', error)
         // Fallback: draw simple circle
         ctx.save()
-        ctx.fillStyle = `hsla(${particle.hue}, 70%, 60%, ${particle.opacity})`
+        ctx.fillStyle = `${particle.color}${Math.floor(safeOpacity * 255).toString(16).padStart(2, '0')}`
         ctx.beginPath()
         ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
         ctx.fill()
         ctx.restore()
       }
     })
-  }, [createSafeRadialGradient])
 
-  // Animation loop
+    // Add connecting lines for constellation effect
+    if (animation === 'constellation' && particlesRef.current.length > 1) {
+      ctx.save()
+      ctx.globalCompositeOperation = 'soft-light'
+      ctx.strokeStyle = currentColorScheme.primary + '30' // Add transparency
+      ctx.lineWidth = 0.5
+      
+      for (let i = 0; i < particlesRef.current.length; i++) {
+        for (let j = i + 1; j < particlesRef.current.length; j++) {
+          const p1 = particlesRef.current[i]
+          const p2 = particlesRef.current[j]
+          const distance = Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2)
+          
+          if (distance < 100) {
+            const opacity = (100 - distance) / 100 * 0.3
+            ctx.globalAlpha = opacity
+            ctx.beginPath()
+            ctx.moveTo(p1.x, p1.y)
+            ctx.lineTo(p2.x, p2.y)
+            ctx.stroke()
+          }
+        }
+      }
+      ctx.restore()
+    }
+  }, [animation, colorScheme, currentColorScheme])
+
+  // Optimized animation loop
   const animate = useCallback(() => {
     updateParticles()
     render()
     animationRef.current = requestAnimationFrame(animate)
   }, [updateParticles, render])
 
-  // Handle mouse movement
+  // Enhanced mouse movement handling
   const handleMouseMove = useCallback((event: MouseEvent) => {
     if (!interactive) return
     
@@ -283,7 +314,7 @@ export default function ParticleField({
     }
   }, [interactive])
 
-  // Handle resize
+  // Enhanced resize handling with debouncing
   const handleResize = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -295,11 +326,18 @@ export default function ParticleField({
     const width = rect.width || window.innerWidth
     const height = rect.height || window.innerHeight
 
-    // Update canvas size
-    canvas.width = width
-    canvas.height = height
+    // Set canvas size with device pixel ratio for crisp rendering
+    const dpr = window.devicePixelRatio || 1
+    canvas.width = width * dpr
+    canvas.height = height * dpr
     canvas.style.width = `${width}px`
     canvas.style.height = `${height}px`
+
+    // Scale context for high DPI displays
+    const ctx = canvas.getContext('2d')
+    if (ctx) {
+      ctx.scale(dpr, dpr)
+    }
 
     dimensionsRef.current = { width, height }
     
@@ -307,21 +345,31 @@ export default function ParticleField({
     initializeParticles()
   }, [initializeParticles])
 
-  // Setup and cleanup
+  // Setup and cleanup with proper error handling
   useEffect(() => {
-    handleResize()
+    let resizeTimeout: NodeJS.Timeout
+
+    const debouncedResize = () => {
+      clearTimeout(resizeTimeout)
+      resizeTimeout = setTimeout(handleResize, 100)
+    }
+
+    // Initial setup
+    debouncedResize()
     
     const canvas = canvasRef.current
     if (canvas && interactive) {
-      canvas.addEventListener('mousemove', handleMouseMove)
+      canvas.addEventListener('mousemove', handleMouseMove, { passive: true })
     }
 
-    window.addEventListener('resize', handleResize)
+    window.addEventListener('resize', debouncedResize, { passive: true })
 
     // Start animation
-    animate()
+    animationRef.current = requestAnimationFrame(animate)
 
     return () => {
+      clearTimeout(resizeTimeout)
+      
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
       }
@@ -330,14 +378,16 @@ export default function ParticleField({
         canvas.removeEventListener('mousemove', handleMouseMove)
       }
       
-      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('resize', debouncedResize)
     }
   }, [handleResize, handleMouseMove, animate, interactive])
 
   // Reinitialize when props change
   useEffect(() => {
-    initializeParticles()
-  }, [initializeParticles])
+    if (dimensionsRef.current.width > 0 && dimensionsRef.current.height > 0) {
+      initializeParticles()
+    }
+  }, [initializeParticles, colorScheme, particleCount])
 
   return (
     <canvas
@@ -346,8 +396,10 @@ export default function ParticleField({
       style={{
         width: '100%',
         height: '100%',
-        opacity: 0.6
+        opacity: 0.4, // Reduced opacity for better readability
+        mixBlendMode: 'screen' // Enhanced blend mode for your theme
       }}
+      aria-hidden="true"
     />
   )
 }

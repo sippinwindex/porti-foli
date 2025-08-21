@@ -1,4 +1,4 @@
-/* Enhanced globals.css - Complete with Stable Theming and 3D Effects */
+/* Enhanced globals.css - Fixed Navbar and Scroll Bar Issues */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -142,7 +142,7 @@
   --active-scale: scale(0.98);
   --focus-ring: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
   
-  /* ✅ ENHANCED: Stable z-index hierarchy */
+  /* ✅ FIXED: Stable z-index hierarchy - Navbar always on top */
   --z-backdrop: -1;
   --z-base: 0;
   --z-content: 10;
@@ -350,9 +350,9 @@
   }
 }
 
-/* ✅ ENHANCED: Components Layer with Stable Navigation */
+/* ✅ FIXED: Components Layer with STABLE Navigation */
 @layer components {
-  /* ✅ ENHANCED: Force navbar to stay stable and themed properly */
+  /* ✅ CRITICAL FIX: Force navbar to stay stable and never disappear */
   nav,
   .navbar,
   header[role="navigation"] {
@@ -366,21 +366,32 @@
     max-height: 5rem !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    
+    /* ✅ CRITICAL: Prevent any transforms that could hide navbar */
+    transform: none !important;
     
     /* ✅ ENHANCED: Stable rendering with theme support */
     will-change: background-color, backdrop-filter !important;
     backface-visibility: hidden !important;
-    transform: translateZ(0) !important;
     
     /* ✅ ENHANCED: Theme-aware background transitions */
-    background: var(--glass-nav-bg) !important;
-    backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
-    border-bottom: 1px solid var(--glass-nav-border) !important;
-    
-    /* ✅ ENHANCED: Smooth transitions */
     transition: background-color 0.3s ease, 
-                border-color 0.3s ease, 
-                box-shadow 0.3s ease !important;
+                border-color 0.3s ease !important;
+    
+    /* ✅ CRITICAL: Override any external styles that might hide navbar */
+    animation: none !important;
+  }
+
+  /* ✅ CRITICAL: Force navbar to always be visible */
+  nav[style*="display: none"],
+  nav[style*="visibility: hidden"],
+  nav[style*="opacity: 0"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
   /* ✅ ENHANCED: Navbar container stability */
@@ -399,19 +410,21 @@
     box-sizing: border-box !important;
   }
 
-  /* ✅ ENHANCED: Stable scroll progress bar with theme support */
+  /* ✅ FIXED: Thin scroll progress bar that sits BELOW navbar */
   .scroll-progress,
   nav .scroll-progress {
     position: absolute !important;
     bottom: 0 !important;
     left: 0 !important;
-    height: 2px !important;
-    z-index: var(--z-scroll-progress) !important;
+    height: 4px !important; /* Thinner progress bar */
+    z-index: var(--z-scroll-progress) !important; /* Below navbar */
     pointer-events: none !important;
     background: linear-gradient(135deg, var(--viva-magenta), var(--lux-gold)) !important;
     user-select: none !important;
     transform: translateZ(0) !important;
     will-change: transform !important;
+    box-shadow: 0 0 8px rgba(var(--viva-magenta-rgb), 0.5) !important;
+    border-radius: 0 0 2px 2px !important;
   }
 
   /* ✅ ENHANCED: Theme-aware navigation links */
@@ -461,14 +474,14 @@
   .mobile-menu-backdrop {
     position: fixed !important;
     inset: 0 !important;
-    z-index: calc(var(--z-navbar) - 1) !important;
+    z-index: calc(var(--z-navbar) - 2) !important; /* Below navbar */
     background: rgba(0, 0, 0, 0.5) !important;
     backdrop-filter: blur(4px) !important;
   }
 
   .mobile-menu-content {
     position: relative !important;
-    z-index: var(--z-dropdown) !important;
+    z-index: calc(var(--z-navbar) - 1) !important; /* Below navbar but above backdrop */
     pointer-events: auto !important;
     background: var(--glass-card-bg) !important;
     border: 1px solid var(--theme-border) !important;
@@ -915,6 +928,12 @@
     font-size: 0.6875rem;
     padding: 0.25rem 0.5rem;
   }
+
+  /* ✅ FIXED: Thinner scroll progress bar on mobile */
+  .scroll-progress,
+  nav .scroll-progress {
+    height: 2px !important;
+  }
 }
 
 /* ✅ ENHANCED: Reduced motion support */
@@ -987,6 +1006,12 @@
     background: var(--theme-card) !important;
     color: var(--theme-fg) !important;
     border: 1px solid var(--theme-border) !important;
+  }
+
+  /* Hide scroll progress bar when printing */
+  .scroll-progress,
+  nav .scroll-progress {
+    display: none !important;
   }
 }
 
@@ -1063,18 +1088,253 @@
   transition: none !important;
 }
 
-/* ✅ ENHANCED: Ensure navbar always stays visible */
-body > nav {
+/* ✅ CRITICAL: Final navbar stability enforcement */
+body > nav,
+.navbar-root,
+#navbar,
+[data-navbar] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+  position: fixed !important;
+  top: 0 !important;
+  z-index: var(--z-navbar) !important;
+}
+
+/* ✅ CRITICAL: Override any inline styles that might hide navbar */
+nav[style*="display: none"],
+nav[style*="visibility: hidden"],
+nav[style*="opacity: 0"],
+nav[style*="transform: translate"] {
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
   transform: none !important;
 }
 
-nav[style*="display: none"],
-nav[style*="visibility: hidden"],
-nav[style*="opacity: 0"] {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+/* ✅ CRITICAL: Prevent scroll progress bar from covering navbar */
+.scroll-progress {
+  z-index: calc(var(--z-navbar) - 1) !important; /* Always below navbar */
+}
+
+/* ✅ ENHANCED: Smooth scrolling improvements */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-height) + 1rem);
+}
+
+/* ✅ ENHANCED: Prevent any CSS Grid/Flexbox issues */
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding-top: var(--header-height);
+}
+
+/* ✅ ENHANCED: Ensure proper stacking context */
+.page-container {
+  position: relative;
+  z-index: var(--z-base);
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+/* Additional theme fixes - Add to your main.css or globals.css */
+
+/* Ensure body and main container have proper theming */
+body {
+  background: linear-gradient(135deg, 
+    var(--lux-offwhite) 0%, 
+    rgba(255, 255, 255, 0.95) 100%
+  ) !important;
+  color: var(--lux-gray-900) !important;
+  transition: background-color 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              color 0.3s ease !important;
+}
+
+.dark body {
+  background: linear-gradient(135deg, 
+    var(--lux-black) 0%, 
+    rgba(31, 41, 55, 0.95) 100%
+  ) !important;
+  color: var(--lux-offwhite) !important;
+}
+
+/* Fix any black sections that break the theme */
+main > div {
+  background: transparent !important;
+}
+
+/* Ensure sections have proper backgrounds */
+.scroll-section {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Fix code showcase specifically */
+#code-showcase {
+  background: linear-gradient(135deg, 
+    rgba(var(--lux-offwhite), 0.9) 0%, 
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(59, 130, 246, 0.1) 100%
+  ) !important;
+}
+
+.dark #code-showcase {
+  background: linear-gradient(135deg, 
+    rgba(var(--lux-black), 0.9) 0%, 
+    rgba(31, 41, 55, 0.8) 50%,
+    rgba(190, 52, 85, 0.1) 100%
+  ) !important;
+}
+
+/* Fix hero section */
+#hero {
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.95) 0%, 
+    rgba(30, 41, 59, 0.9) 50%,
+    rgba(51, 65, 85, 0.85) 100%
+  ) !important;
+}
+
+.dark #hero {
+  background: linear-gradient(135deg, 
+    var(--lux-black) 0%, 
+    rgba(15, 23, 42, 0.95) 50%,
+    rgba(30, 41, 59, 0.9) 100%
+  ) !important;
+}
+
+/* Ensure canvas and particle fields don't create black backgrounds */
+canvas {
+  background: transparent !important;
+  mix-blend-mode: screen;
+}
+
+/* Fix any remaining black sections */
+div[style*="background: black"],
+div[style*="background: #000"],
+div[style*="background-color: black"],
+div[style*="background-color: #000"] {
+  background: transparent !important;
+}
+
+/* Enhanced glass effects for better theming */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+.dark .glass-card {
+  background: rgba(31, 41, 55, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Fix emoji squares by ensuring proper font rendering */
+.floating-code-blocks-container .emoji,
+.code-showcase .emoji {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', emoji !important;
+  font-style: normal !important;
+  font-variant: normal !important;
+  text-rendering: auto !important;
+}
+
+/* Force proper icon rendering */
+.lucide {
+  stroke: currentColor !important;
+  fill: none !important;
+  stroke-width: 2 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+/* Ensure text colors are properly themed */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--lux-gray-900) !important;
+}
+
+.dark h1, 
+.dark h2, 
+.dark h3, 
+.dark h4, 
+.dark h5, 
+.dark h6 {
+  color: var(--lux-offwhite) !important;
+}
+
+p, span, div {
+  color: inherit;
+}
+
+/* Fix gradient text to use your brand colors */
+.gradient-text {
+  background: linear-gradient(135deg, 
+    var(--viva-magenta) 0%, 
+    var(--lux-gold) 50%, 
+    var(--lux-teal) 100%
+  ) !important;
+  background-size: 200% 200% !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  animation: gradient-shift 4s ease-in-out infinite !important;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Ensure proper particle field rendering */
+.particle-field-container {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  opacity: 0.6 !important;
+}
+
+/* Fix any layout issues */
+.min-h-screen {
+  min-height: 100vh !important;
+  min-height: 100svh !important; /* For better mobile support */
+}
+
+/* Ensure scrolling works properly */
+html {
+  scroll-behavior: smooth !important;
+  overflow-x: hidden !important;
+}
+
+body {
+  overflow-x: hidden !important;
+}
+
+/* Performance optimizations */
+* {
+  backface-visibility: hidden !important;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d !important;
+}
+
+.transform-gpu {
+  transform: translateZ(0) !important;
+  will-change: transform !important;
 }

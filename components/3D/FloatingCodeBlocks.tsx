@@ -1,9 +1,22 @@
-// Fixed components/3D/FloatingCodeBlocks.tsx
+// Fixed components/3D/FloatingCodeBlocks.tsx - Uses Lucide icons and proper theming
 'use client'
 
 import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import { motion, useScroll, useTransform, useInView, useReducedMotion } from 'framer-motion'
-import { Code, Terminal, Braces, FileCode, Cpu, Database, Zap, Globe, Layers } from 'lucide-react'
+import { 
+  Code2, 
+  FileType, 
+  Braces, 
+  Terminal, 
+  Cpu, 
+  Database, 
+  Zap, 
+  Globe,
+  Layers,
+  Settings,
+  Sparkles,
+  Activity
+} from 'lucide-react'
 
 interface CodeBlock {
   id: string
@@ -43,7 +56,7 @@ interface FloatingCodeBlocksProps {
 
 // Optimized constants
 const DEFAULT_TECH_STACK = ['React', 'TypeScript', 'Next.js', 'Node.js', 'Python', 'Three.js']
-const PARTICLE_COUNT = 15 // Reduced for better performance
+const PARTICLE_COUNT = 12 // Reduced for better performance
 const RADIUS_BASE = 180
 const ANIMATION_SPEEDS = {
   slow: { duration: 8, delay: 0.3 },
@@ -76,10 +89,13 @@ const FloatingCodeBlocks: React.FC<FloatingCodeBlocksProps> = ({
   const y = useTransform(scrollYProgress, [0, 1], ["0%", prefersReducedMotion ? "-20%" : "-50%"])
   const rotateY = useTransform(scrollYProgress, [0, 1], [0, prefersReducedMotion ? 90 : 360])
 
-  // Enhanced code snippets with more realistic examples
+  // Enhanced code snippets with Lucide icons
   const codeSnippets = useMemo(() => ({
     React: {
-      code: `const Portfolio = () => {
+      code: `import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+
+const Portfolio = () => {
   const [projects, setProjects] = useState([])
   
   useEffect(() => {
@@ -87,13 +103,16 @@ const FloatingCodeBlocks: React.FC<FloatingCodeBlocksProps> = ({
   }, [])
 
   return (
-    <div className="portfolio-3d">
+    <motion.div className="portfolio-3d"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
       <Hero3D />
       <ProjectGrid projects={projects} />
-    </div>
+    </motion.div>
   )
 }`,
-      icon: Code,
+      icon: Code2,
       color: 'from-blue-500 to-blue-700',
       size: 'large' as const
     },
@@ -113,10 +132,11 @@ const juan: Developer = {
   passion: 'unlimited',
   currentProject: {
     name: 'Interactive Portfolio',
-    status: 'live'
+    status: 'live',
+    technologies: ['Next.js', 'TypeScript', 'Three.js']
   }
 }`,
-      icon: FileCode,
+      icon: FileType,
       color: 'from-blue-600 to-indigo-700',
       size: 'large' as const
     },
@@ -142,8 +162,9 @@ export const metadata = {
       size: 'medium' as const
     },
     'Node.js': {
-      code: `const express = require('express')
-const cors = require('cors')
+      code: `import express from 'express'
+import cors from 'cors'
+
 const app = express()
 
 app.use(cors())
@@ -162,7 +183,7 @@ app.get('/api/projects', async (req, res) => {
 })
 
 app.listen(3000, () => {
-  console.log('🚀 Portfolio API running on port 3000')
+  console.log('🚀 Portfolio API running')
 })`,
       icon: Database,
       color: 'from-green-500 to-green-700',
@@ -189,20 +210,18 @@ async def analyze_portfolio():
         lighthouse_score=98,
         user_engagement='excellent',
         performance_grade='A+'
-    )
-
-# Real-time performance monitoring
-metrics = await analyze_portfolio()`,
+    )`,
       icon: Cpu,
       color: 'from-yellow-500 to-orange-600',
       size: 'medium' as const
     },
     'Three.js': {
       code: `import * as THREE from 'three'
+import { Canvas, useFrame } from '@react-three/fiber'
 
 const scene = new THREE.Scene()
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-const renderer = new THREE.WebGLRenderer({ antialias: true })
+const camera = new THREE.PerspectiveCamera(75, 
+  window.innerWidth / window.innerHeight, 0.1, 1000)
 
 // Create floating portfolio cards
 const geometry = new THREE.PlaneGeometry(2, 1.2)
@@ -226,7 +245,7 @@ function animate() {
       color: 'from-purple-500 to-purple-700',
       size: 'large' as const
     },
-    'GraphQL': {
+    GraphQL: {
       code: `type Developer {
   id: ID!
   name: String!
@@ -325,7 +344,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
     })
   }, [techStack, maxBlocks, codeSnippets])
 
-  // ✅ FIXED: Optimized mouse tracking without unnecessary dependencies
+  // Optimized mouse tracking
   const handleMouseMove = useCallback((e: MouseEvent) => {
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect) return
@@ -333,14 +352,13 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
     const x = (e.clientX - rect.left - rect.width / 2) / rect.width
     const y = (e.clientY - rect.top - rect.height / 2) / rect.height
     
-    // Throttle updates for better performance
     requestAnimationFrame(() => {
       setMousePosition({ 
         x: Math.max(-1, Math.min(1, x)), 
         y: Math.max(-1, Math.min(1, y)) 
       })
     })
-  }, []) // ✅ FIXED: Remove prefersReducedMotion dependency
+  }, [])
 
   useEffect(() => {
     const container = containerRef.current
@@ -350,7 +368,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
     return () => container.removeEventListener('mousemove', handleMouseMove)
   }, [handleMouseMove, prefersReducedMotion])
 
-  // Enhanced block interactions with project integration
+  // Enhanced block interactions
   const handleBlockClick = useCallback((language: string) => {
     console.log('FloatingCodeBlocks: Block clicked:', language)
     setSelectedTech(selectedTech === language ? null : language)
@@ -359,7 +377,6 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
       onBlockClick(language)
     }
 
-    // Find a project that uses this technology and trigger project click
     if (onProjectClick && projects.length > 0) {
       const projectWithTech = projects.find(project => 
         project.techStack.some(tech => 
@@ -369,12 +386,9 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
       )
 
       if (projectWithTech) {
-        console.log('FloatingCodeBlocks: Found project with tech:', projectWithTech.name)
         setTimeout(() => {
           onProjectClick(projectWithTech)
-        }, 300) // Small delay for better UX
-      } else {
-        console.log('FloatingCodeBlocks: No project found for tech:', language)
+        }, 300)
       }
     }
   }, [selectedTech, onBlockClick, onProjectClick, projects])
@@ -383,7 +397,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
     setHoveredBlock(blockId)
   }, [])
 
-  // Enhanced CodeBlockCard with proper component structure
+  // Enhanced CodeBlockCard with proper Lucide icons
   const CodeBlockCard = React.memo<{ 
     block: CodeBlock
     index: number 
@@ -417,7 +431,6 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
       handleBlockHover(block.id)
     }, [block.id])
 
-    // Size variants for different code blocks
     const sizeClasses = {
       small: 'w-64 h-36',
       medium: 'w-80 h-48',
@@ -425,6 +438,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
     }
 
     const animationConfig = ANIMATION_SPEEDS[animationSpeed]
+    const IconComponent = block.icon
 
     return (
       <motion.div
@@ -465,7 +479,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
           bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl
           border-2 transition-all duration-300
           ${isSelected 
-            ? 'border-blue-400 dark:border-blue-600 shadow-2xl shadow-blue-500/25' 
+            ? 'border-viva-magenta-400 dark:border-viva-magenta-600 shadow-2xl shadow-viva-magenta-500/25' 
             : isHovered 
               ? 'border-gray-300/60 dark:border-gray-600/60 shadow-xl' 
               : 'border-gray-200/40 dark:border-gray-700/40 shadow-lg'
@@ -484,7 +498,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
             />
           )}
 
-          {/* Enhanced Header */}
+          {/* Enhanced Header with Lucide Icon */}
           <div className="relative z-10 p-4 border-b border-gray-200/30 dark:border-gray-600/30 bg-gray-50/50 dark:bg-gray-700/50">
             <div className="flex items-center gap-3">
               <motion.div
@@ -492,7 +506,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
                 animate={isHovered && !prefersReducedMotion ? { rotate: 360 } : { rotate: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <block.icon className="w-4 h-4 text-white" />
+                <IconComponent className="w-4 h-4 text-white" />
               </motion.div>
               <div className="flex-1">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">
@@ -544,7 +558,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
           {/* Enhanced Scanning Line Effect */}
           {(isHovered || isSelected) && !prefersReducedMotion && (
             <motion.div
-              className={`absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent`}
+              className={`absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-viva-magenta-500 to-transparent`}
               initial={{ top: '20%', opacity: 0 }}
               animate={{ 
                 top: ['20%', '90%'],
@@ -561,13 +575,13 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
           {/* Enhanced Selection Indicator */}
           {isSelected && (
             <motion.div
-              className="absolute top-2 right-2 w-3 h-3 bg-blue-500 rounded-full shadow-lg"
+              className="absolute top-2 right-2 w-3 h-3 bg-viva-magenta-500 rounded-full shadow-lg"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             >
               <motion.div
-                className="w-full h-full bg-blue-400 rounded-full"
+                className="w-full h-full bg-viva-magenta-400 rounded-full"
                 animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               />
@@ -579,7 +593,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
   })
   CodeBlockCard.displayName = 'CodeBlockCard'
 
-  // Optimized floating particles with proper useMemo
+  // Optimized floating particles with proper theming
   const FloatingParticles = React.memo(() => {
     if (prefersReducedMotion) return null
 
@@ -593,7 +607,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
             delay: Math.random() * 3,
             duration: 4 + Math.random() * 4,
             moveX: Math.random() * 60 - 30,
-            color: i % 3 === 0 ? 'bg-blue-400/20' : i % 3 === 1 ? 'bg-purple-400/20' : 'bg-pink-400/20'
+            color: i % 3 === 0 ? 'bg-viva-magenta-400/20' : i % 3 === 1 ? 'bg-lux-gold-400/20' : 'bg-blue-400/20'
           }
 
           return (
@@ -627,7 +641,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-screen overflow-hidden"
+      className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-lux-offwhite/90 via-blue-50/30 to-viva-magenta-50/20 dark:from-lux-black/90 dark:via-gray-800/50 dark:to-viva-magenta-900/10"
       style={{ 
         perspective: '2000px',
         transformStyle: 'preserve-3d'
@@ -644,8 +658,8 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
             className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
             style={{
               backgroundImage: `
-                linear-gradient(rgba(59, 130, 246, 0.4) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(59, 130, 246, 0.4) 1px, transparent 1px)
+                linear-gradient(rgba(190, 52, 85, 0.4) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(190, 52, 85, 0.4) 1px, transparent 1px)
               `,
               backgroundSize: '50px 50px',
               transform: `translate(${mousePosition.x * 15}px, ${mousePosition.y * 15}px) rotate(${mousePosition.x * 2}deg)`
@@ -672,7 +686,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
       >
         <div className="relative">
           <motion.div
-            className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg"
+            className="w-5 h-5 rounded-full bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 shadow-lg"
             animate={prefersReducedMotion ? {} : {
               scale: [1, 1.3, 1],
               opacity: [0.7, 1, 0.7]
@@ -685,7 +699,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
           />
           {!prefersReducedMotion && (
             <motion.div
-              className="absolute inset-0 w-5 h-5 rounded-full border-2 border-blue-400/50"
+              className="absolute inset-0 w-5 h-5 rounded-full border-2 border-viva-magenta-400/50"
               animate={{ rotate: 360 }}
               transition={{
                 duration: 8,
@@ -711,14 +725,14 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
               className={`
                 px-4 py-2 rounded-full text-sm font-medium border backdrop-blur-sm transition-all duration-300 shadow-sm
                 ${selectedTech === tech
-                  ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-400 dark:border-blue-600 shadow-lg'
+                  ? 'bg-viva-magenta-100 dark:bg-viva-magenta-900/50 text-viva-magenta-800 dark:text-viva-magenta-200 border-viva-magenta-400 dark:border-viva-magenta-600 shadow-lg'
                   : hoveredBlock?.includes(tech) 
                     ? 'bg-gray-100 dark:bg-gray-700/70 text-gray-800 dark:text-gray-200 border-gray-400 dark:border-gray-500'
                     : 'bg-white/70 dark:bg-gray-800/70 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
                 }
-                hover:bg-blue-50 dark:hover:bg-blue-900/30 
-                hover:text-blue-700 dark:hover:text-blue-300
-                hover:border-blue-300 dark:hover:border-blue-600
+                hover:bg-viva-magenta-50 dark:hover:bg-viva-magenta-900/30 
+                hover:text-viva-magenta-700 dark:hover:text-viva-magenta-300
+                hover:border-viva-magenta-300 dark:hover:border-viva-magenta-600
                 hover:shadow-md hover:scale-105
               `}
               whileHover={{ y: -2 }}
@@ -744,7 +758,7 @@ resource "aws_cloudfront_distribution" "portfolio_cdn" {
         >
           <div className="px-4 py-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-600 shadow-lg">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Viewing: <span className="text-blue-600 dark:text-blue-400">{selectedTech}</span>
+              Viewing: <span className="text-viva-magenta-600 dark:text-viva-magenta-400">{selectedTech}</span>
             </span>
           </div>
         </motion.div>

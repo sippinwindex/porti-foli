@@ -1,4 +1,3 @@
-// Updated app/page.tsx - Fixed project linking behavior while preserving existing design
 'use client'
 
 import { Suspense, useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -29,7 +28,13 @@ import {
   Heart,
   Coffee,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Code2,
+  FileType,
+  Terminal,
+  Database,
+  Settings,
+  Layers
 } from 'lucide-react'
 
 // Import your custom hooks
@@ -91,7 +96,7 @@ interface LanguageData {
   name: string
   percentage: number
   color: string
-  icon: string
+  icon: string // ✅ FIXED: Changed to string to match LanguageVisualization component
   projects: number
   experience: number
   proficiency: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert'
@@ -139,6 +144,7 @@ interface SectionVisibility {
   languages: boolean
   projects: boolean
   contact: boolean
+  game: boolean  // ← ADDED
 }
 
 // Navigation component import
@@ -156,27 +162,39 @@ const Interactive3DHero = dynamic(
   }
 )
 
-  // After all your useState and useRef declarations, add:
-  const locationMessageStyles = {
-    position: 'fixed' as const,
-    top: '6rem',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    zIndex: 998,
-    pointerEvents: 'none' as const,
-    maxWidth: '24rem',
-    width: '100%',
-    padding: '0 1rem'
+// ✅ ADDED: Rock 'Em Sock 'Em Game import
+const RockEmSockEm = dynamic(
+  () => import('@/components/RockEmSockEm').catch(() => {
+    console.warn('Failed to load RockEmSockEm, using fallback')
+    return { default: () => <GameSkeleton /> }
+  }),
+  { 
+    ssr: false,
+    loading: () => <GameSkeleton />
   }
+)
 
-  const mobileLocationMessageStyles = {
-    ...locationMessageStyles,
-    top: '5rem',
-    left: '0.75rem',
-    right: '0.75rem',
-    transform: 'none',
-    maxWidth: 'none'
-  }
+// Location message styles
+const locationMessageStyles = {
+  position: 'fixed' as const,
+  top: '6rem',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  zIndex: 998,
+  pointerEvents: 'none' as const,
+  maxWidth: '24rem',
+  width: '100%',
+  padding: '0 1rem'
+}
+
+const mobileLocationMessageStyles = {
+  ...locationMessageStyles,
+  top: '5rem',
+  left: '0.75rem',
+  right: '0.75rem',
+  transform: 'none',
+  maxWidth: 'none'
+}
 
 const FloatingCodeBlocks = dynamic(
   () => import('@/components/3D/FloatingCodeBlocks').catch(() => {
@@ -222,6 +240,22 @@ const ParticleField = dynamic(
     loading: () => null
   }
 )
+
+// ✅ ADDED: Game Skeleton Component
+function GameSkeleton() {
+  return (
+    <div className="min-h-[400px] flex items-center justify-center">
+      <div className="text-center">
+        <div className="relative mb-6">
+          <div className="w-24 h-24 border-4 border-viva-magenta-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="absolute inset-0 w-24 h-24 border-4 border-lux-gold-300 border-t-transparent rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '3s' }} />
+        </div>
+        <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">Loading Game...</p>
+        <p className="text-sm text-gray-500 dark:text-gray-500">Preparing Rock 'Em Sock 'Em</p>
+      </div>
+    </div>
+  )
+}
 
 // FIXED: Helper function to determine the best click action for a project
 function getProjectClickAction(project: PortfolioProject): {
@@ -294,7 +328,7 @@ function isValidDeploymentUrl(url: string): boolean {
   }
 }
 
-// Enhanced Loading Skeletons (unchanged)
+// Enhanced Loading Skeletons
 function HeroSkeleton() {
   return (
     <div className="min-h-screen flex items-center justify-center pt-20">
@@ -419,7 +453,7 @@ function ProjectsSkeleton() {
   )
 }
 
-// Enhanced Page Loading (unchanged)
+// Enhanced Page Loading
 function PageLoading() {
   const [loadingText, setLoadingText] = useState('Initializing...')
   const [progress, setProgress] = useState(0)
@@ -476,13 +510,13 @@ function PageLoading() {
   )
 }
 
-// Updated language data with realistic values for 2+ years experience (unchanged)
+// ✅ FIXED: Updated language data with string icon identifiers
 const LANGUAGE_DATA: LanguageData[] = [
   {
     name: 'TypeScript',
     percentage: 35,
-    color: 'var(--primary-600)',
-    icon: '⚡',
+    color: '#3178c6',
+    icon: 'zap', // ✅ FIXED: String identifier instead of component
     projects: 8,
     experience: 2,
     proficiency: 'Advanced',
@@ -492,8 +526,8 @@ const LANGUAGE_DATA: LanguageData[] = [
   {
     name: 'React',
     percentage: 28,
-    color: 'var(--viva-magenta)',
-    icon: '⚛️',
+    color: '#61dafb',
+    icon: 'code-2', // ✅ FIXED: String identifier instead of component
     projects: 12,
     experience: 2,
     proficiency: 'Advanced',
@@ -503,8 +537,8 @@ const LANGUAGE_DATA: LanguageData[] = [
   {
     name: 'Next.js',
     percentage: 22,
-    color: 'var(--lux-black)',
-    icon: '▲',
+    color: '#000000',
+    icon: 'layers', // ✅ FIXED: String identifier instead of component
     projects: 6,
     experience: 1,
     proficiency: 'Advanced',
@@ -514,8 +548,8 @@ const LANGUAGE_DATA: LanguageData[] = [
   {
     name: 'Node.js',
     percentage: 18,
-    color: 'var(--lux-sage)',
-    icon: '🟢',
+    color: '#68a063',
+    icon: 'terminal', // ✅ FIXED: String identifier instead of component
     projects: 7,
     experience: 2,
     proficiency: 'Advanced',
@@ -525,8 +559,8 @@ const LANGUAGE_DATA: LanguageData[] = [
   {
     name: 'Python',
     percentage: 15,
-    color: 'var(--lux-teal)',
-    icon: '🐍',
+    color: '#3776ab',
+    icon: 'file-type', // ✅ FIXED: String identifier instead of component
     projects: 4,
     experience: 1,
     proficiency: 'Intermediate',
@@ -536,8 +570,8 @@ const LANGUAGE_DATA: LanguageData[] = [
   {
     name: 'Three.js',
     percentage: 12,
-    color: 'var(--lux-gold)',
-    icon: '🎮',
+    color: '#049ef4',
+    icon: 'settings', // ✅ FIXED: String identifier instead of component
     projects: 3,
     experience: 1,
     proficiency: 'Intermediate',
@@ -546,7 +580,7 @@ const LANGUAGE_DATA: LanguageData[] = [
   }
 ]
 
-// Updated contact options with verified working links (unchanged)
+// Updated contact options with verified working links
 const CONTACT_OPTIONS: ContactOption[] = [
   {
     icon: Mail,
@@ -586,6 +620,32 @@ const CONTACT_OPTIONS: ContactOption[] = [
   }
 ]
 
+// Helper function to get tech icon component from string
+function getTechIcon(tech: string): React.ElementType {
+  switch (tech) {
+    case 'React': return Code2
+    case 'TypeScript': return Zap
+    case 'Next.js': return Layers
+    case 'Node.js': return Terminal
+    case 'Python': return FileType
+    case 'Three.js': return Settings
+    default: return Code
+  }
+}
+
+// Helper function to get icon component from string identifier
+function getIconComponent(iconName: string): React.ElementType {
+  switch (iconName) {
+    case 'zap': return Zap
+    case 'code-2': return Code2
+    case 'layers': return Layers
+    case 'terminal': return Terminal
+    case 'file-type': return FileType
+    case 'settings': return Settings
+    default: return Code
+  }
+}
+
 // Enhanced Main Component
 export default function HomePage() {
   // Use real data hooks with proper error handling
@@ -602,7 +662,8 @@ export default function HomePage() {
     about: false,
     languages: false,
     projects: false,
-    contact: false
+    contact: false,
+    game: false  // ← ADDED
   })
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [isScrolling, setIsScrolling] = useState(false)
@@ -731,7 +792,7 @@ export default function HomePage() {
     ['React', 'TypeScript', 'Next.js', 'Node.js', 'Python', 'Three.js'], []
   )
 
-  // Enhanced mobile detection (unchanged)
+  // Enhanced mobile detection
   useEffect(() => {
     let ticking = false
     
@@ -751,7 +812,7 @@ export default function HomePage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Enhanced loading with GitHub data waiting (unchanged)
+  // Enhanced loading with GitHub data waiting
   useEffect(() => {
     const minLoadTime = shouldReduceMotion ? 800 : 2000
     const maxLoadTime = shouldReduceMotion ? 1200 : 3000
@@ -769,8 +830,7 @@ export default function HomePage() {
     return () => clearTimeout(timer)
   }, [shouldReduceMotion, portfolioLoading, githubLoading])
 
-// ✅ ALSO UPDATE: The location message timing useEffect
-  // Replace your existing location message useEffect with:
+  // Location message timing
   useEffect(() => {
     if (currentSection === 'hero' && !hasShownLocationMessage && !isLoading) {
       const timer = setTimeout(() => {
@@ -785,8 +845,6 @@ export default function HomePage() {
       setShowLocationMessage(false)
     }
   }, [currentSection, hasShownLocationMessage, isLoading, showLocationMessage])
-
-  // ADD these after your existing useEffects:
 
   // Enhanced responsive handling for location message
   useEffect(() => {
@@ -819,7 +877,7 @@ export default function HomePage() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [showLocationMessage])
 
-  // Enhanced scroll tracking (unchanged)
+  // Enhanced scroll tracking
   useEffect(() => {
     let ticking = false
     
@@ -853,9 +911,9 @@ export default function HomePage() {
     }
   }, [])
 
-  // Enhanced intersection observer (unchanged)
+  // Enhanced intersection observer
   useEffect(() => {
-    const sections = ['hero', 'code-showcase', 'about', 'languages', 'projects', 'contact']
+    const sections = ['hero', 'code-showcase', 'about', 'languages', 'projects', 'contact', 'game'] // ← ADDED 'game'
     
     observerRef.current = new IntersectionObserver(
       (entries) => {
@@ -896,7 +954,7 @@ export default function HomePage() {
     }
   }, [isMobile])
 
-  // Utility functions (unchanged)
+  // Utility functions
   const scrollToTop = useCallback(() => {
     window.scrollTo({
       top: 0,
@@ -924,6 +982,45 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-screen bg-lux-offwhite dark:bg-lux-black text-lux-gray-900 dark:text-lux-offwhite overflow-x-hidden">
+      {/* ✅ FIXED: Full-page background with proper theme support */}
+      <div className="fixed inset-0 z-0">
+        {/* Theme-aware gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-lux-offwhite via-gray-50/80 to-blue-50/30 dark:from-lux-black dark:via-gray-900/90 dark:to-gray-800/50 transition-all duration-500" />
+        
+        {/* ✅ FIXED: Particle field spanning entire viewport with theme awareness */}
+        {!shouldReduceMotion && (
+          <div className="absolute inset-0">
+            <Suspense fallback={null}>
+              <ParticleField 
+                particleCount={isMobile ? 25 : 60}
+                colorScheme="aurora"
+                animation="constellation"
+                interactive={!shouldReduceMotion}
+                speed={0.4}
+                className="w-full h-full"
+              />
+            </Suspense>
+          </div>
+        )}
+        
+        {/* Enhanced gradient overlays with theme awareness */}
+        <div className="absolute inset-0 bg-gradient-to-br from-viva-magenta-500/5 via-transparent to-lux-gold-500/5 dark:from-viva-magenta-400/10 dark:to-lux-gold-400/10 transition-all duration-500" />
+        
+        {/* Subtle grid pattern with theme awareness */}
+        {!shouldReduceMotion && (
+          <div 
+            className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(190, 52, 85, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(190, 52, 85, 0.3) 1px, transparent 1px)
+              `,
+              backgroundSize: '50px 50px'
+            }}
+          />
+        )}
+      </div>
+
       {/* Error notification for data loading issues */}
       {hasErrors && (
         <div className="fixed top-20 right-4 z-50 max-w-sm">
@@ -951,24 +1048,10 @@ export default function HomePage() {
       {/* Enhanced Navigation */}
       <Navigation />
 
-      <main className="relative">
+      <main className="relative z-10">
         {/* Enhanced Hero Section */}
         <section id="hero" className="scroll-section relative min-h-screen">
-          {!isMobile && !shouldReduceMotion && (
-            <div className="absolute inset-0" style={{ zIndex: 0 }}>
-              <Suspense fallback={null}>
-                <ParticleField 
-                  particleCount={isMobile ? 15 : 35}
-                  colorScheme="aurora"
-                  animation="constellation"
-                  interactive={!shouldReduceMotion}
-                  speed={0.3}
-                />
-              </Suspense>
-            </div>
-          )}
-          
-          <div className="relative" style={{ zIndex: 1 }}>
+          <div className="relative z-10">
             <Suspense fallback={<HeroSkeleton />}>
               <Interactive3DHero 
                 projects={transformedProjects}
@@ -980,8 +1063,6 @@ export default function HomePage() {
 
         {/* Enhanced Code Showcase */}
         <section id="code-showcase" className="scroll-section relative min-h-screen">
-          <div className="absolute inset-0 bg-gradient-to-br from-lux-offwhite/50 via-viva-magenta-50/10 to-lux-gold-50/10 dark:from-lux-black/50 dark:via-viva-magenta-900/5 dark:to-lux-gold-900/5" />
-          
           <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
             <div className="text-center mb-16 max-w-4xl mx-auto">
               <motion.h2 
@@ -1004,6 +1085,7 @@ export default function HomePage() {
               </motion.p>
             </div>
             
+            {/* FIXED: Only show 3D on desktop when section is in view */}
             {sectionsInView.codeShowcase && !isMobile && (
               <Suspense fallback={<CodeBlocksSkeleton />}>
                 <FloatingCodeBlocks 
@@ -1016,33 +1098,80 @@ export default function HomePage() {
               </Suspense>
             )}
             
-            {/* Enhanced Mobile fallback */}
-            {(isMobile || !sectionsInView.codeShowcase) && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-                {techStack.map((tech, index) => (
-                  <motion.div
-                    key={tech}
-                    className="p-6 glass-card rounded-xl text-center cursor-pointer hover:scale-105 transition-transform duration-300"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
-                    whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
-                  >
-                    <div className="text-3xl mb-3">
-                      {tech === 'React' ? '⚛️' : 
-                       tech === 'TypeScript' ? '⚡' : 
-                       tech === 'Next.js' ? '▲' : 
-                       tech === 'Node.js' ? '🟢' : 
-                       tech === 'Python' ? '🐍' : '🎮'}
-                    </div>
-                    <div className="font-semibold text-lg">{tech}</div>
-                    <div className="text-sm text-lux-gray-500 dark:text-lux-gray-400 mt-2">
-                      {LANGUAGE_DATA.find(lang => lang.name === tech)?.proficiency || 'Advanced'}
-                    </div>
-                  </motion.div>
-                ))}
+            {/* ✅ FIXED: Enhanced themed fallback with consistent styling */}
+            {(!sectionsInView.codeShowcase || isMobile) && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                {techStack.map((tech, index) => {
+                  const IconComponent = getTechIcon(tech)
+                  const langData = LANGUAGE_DATA.find(lang => lang.name === tech)
+                  
+                  return (
+                    <motion.div
+                      key={tech}
+                      className="group relative p-6 rounded-xl backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50 hover:border-viva-magenta-400/40 dark:hover:border-viva-magenta-400/40 text-center cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-viva-magenta-500/20 dark:hover:shadow-viva-magenta-400/20"
+                      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                      whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ 
+                        delay: index * 0.1,
+                        duration: shouldReduceMotion ? 0.1 : 0.6,
+                        ease: "easeOut"
+                      }}
+                      whileHover={{ 
+                        scale: shouldReduceMotion ? 1 : 1.05,
+                        y: shouldReduceMotion ? 0 : -8
+                      }}
+                      whileTap={{ scale: shouldReduceMotion ? 1 : 0.98 }}
+                    >
+                      {/* Gradient overlay on hover */}
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-viva-magenta-500/0 via-lux-gold-500/0 to-viva-magenta-600/0 group-hover:from-viva-magenta-500/10 group-hover:via-lux-gold-500/5 group-hover:to-viva-magenta-600/10 transition-all duration-500" />
+                      
+                      {/* Icon container with proper theming */}
+                      <div className="relative flex justify-center mb-4">
+                        <div className="p-4 rounded-lg bg-gradient-to-br from-viva-magenta-500/20 via-viva-magenta-600/15 to-lux-gold-500/20 group-hover:from-viva-magenta-400/30 group-hover:via-viva-magenta-500/25 group-hover:to-lux-gold-400/30 border border-viva-magenta-400/20 group-hover:border-viva-magenta-300/40 transition-all duration-500 group-hover:scale-110">
+                          <IconComponent className="w-8 h-8 text-viva-magenta-600 dark:text-viva-magenta-400 group-hover:text-viva-magenta-500 dark:group-hover:text-viva-magenta-300 transition-all duration-300" />
+                        </div>
+                        
+                        {/* Animated background glow */}
+                        <div className="absolute inset-0 rounded-lg bg-viva-magenta-500 opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500 scale-150" />
+                      </div>
+                      
+                      {/* Tech name with gradient text */}
+                      <div className="relative">
+                        <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-gray-100 group-hover:bg-gradient-to-r group-hover:from-viva-magenta-600 group-hover:to-lux-gold-600 dark:group-hover:from-viva-magenta-400 dark:group-hover:to-lux-gold-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+                          {tech}
+                        </h3>
+                        
+                        {/* Proficiency level */}
+                        <div className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors duration-300 mb-3">
+                          {langData?.proficiency || 'Advanced'}
+                        </div>
+                        
+                        {/* Stats row */}
+                        <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors duration-300">
+                          <span className="flex items-center gap-1">
+                            <Code className="w-3 h-3" />
+                            {langData?.projects || 5}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {langData?.experience || 2}y
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Star className="w-3 h-3" />
+                            {langData?.percentage || 25}%
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Subtle animated border */}
+                      <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-viva-magenta-400/30 transition-all duration-500" />
+                      
+                      {/* Corner accent */}
+                      <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-lux-gold-400 opacity-0 group-hover:opacity-60 transition-all duration-300 animate-pulse" />
+                    </motion.div>
+                  )
+                })}
               </div>
             )}
           </div>
@@ -1080,7 +1209,7 @@ export default function HomePage() {
               </div>
             </motion.div>
 
-            {/* Enhanced Stats Cards with realistic data for 2+ years */}
+            {/* ✅ FIXED: Enhanced Stats Cards with consistent theming */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
               {[
                 { 
@@ -1116,7 +1245,7 @@ export default function HomePage() {
                 return (
                   <motion.div
                     key={stat.label}
-                    className="glass-card p-6 text-center hover-lift hover-scale transition-all duration-300 cursor-pointer"
+                    className="relative p-6 text-center backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50 rounded-xl hover:border-viva-magenta-400/40 dark:hover:border-viva-magenta-400/40 transition-all duration-300 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-viva-magenta-500/20 dark:hover:shadow-viva-magenta-400/20"
                     initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.9 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
@@ -1127,13 +1256,13 @@ export default function HomePage() {
                     }}
                   >
                     <div className="flex justify-center mb-4">
-                      <div className="p-3 rounded-lg bg-gradient-to-br from-viva-magenta-100 to-viva-magenta-200 dark:from-viva-magenta-800 dark:to-viva-magenta-900">
+                      <div className="p-3 rounded-lg bg-gradient-to-br from-viva-magenta-100 to-viva-magenta-200 dark:from-viva-magenta-800 dark:to-viva-magenta-900 group-hover:from-viva-magenta-200 group-hover:to-viva-magenta-300 dark:group-hover:from-viva-magenta-700 dark:group-hover:to-viva-magenta-800 transition-all duration-300">
                         <IconComponent className="w-6 h-6 text-viva-magenta-600 dark:text-viva-magenta-400" />
                       </div>
                     </div>
                     <div className="text-3xl font-bold mb-2 gradient-text">{stat.value}</div>
-                    <div className="text-sm text-lux-gray-600 dark:text-lux-gray-400 font-medium mb-1">{stat.label}</div>
-                    <div className="text-xs text-lux-gray-500 dark:text-lux-gray-500">{stat.description}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 font-medium mb-1">{stat.label}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-500">{stat.description}</div>
                   </motion.div>
                 )
               })}
@@ -1211,7 +1340,136 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* Enhanced Contact Section with verified links */}
+        {/* ✅ NEW: Game Section - Added right before contact */}
+        <section id="game" className="scroll-section relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-lux-black to-gray-800">
+          {/* Animated background */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-viva-magenta-500/20 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-lux-gold-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-lux-teal-500/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
+          </div>
+
+          {/* Grid pattern overlay */}
+          <div 
+            className="absolute inset-0 opacity-5"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(190, 52, 85, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(190, 52, 85, 0.3) 1px, transparent 1px)
+              `,
+              backgroundSize: '40px 40px'
+            }}
+          />
+          
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="max-w-6xl mx-auto">
+              {/* Game Header */}
+              <motion.div
+                className="text-center mb-12"
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: shouldReduceMotion ? 0.1 : 0.6 }}
+              >
+                <h2 className="hero-title text-4xl md:text-6xl font-bold mb-6 text-white">
+                  Ready to <span className="gradient-text">Battle?</span>
+                </h2>
+                <p className="text-xl text-gray-300 mb-4 max-w-3xl mx-auto leading-relaxed">
+                  Take a break and challenge yourself with this retro-inspired Rock 'Em Sock 'Em robot game!
+                </p>
+                <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+                    Click blue robot to punch
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                    Works on mobile & desktop
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+                    Multiple difficulty levels
+                  </span>
+                </div>
+              </motion.div>
+
+              {/* Game Container */}
+              <motion.div
+                className="relative"
+                initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: shouldReduceMotion ? 0.1 : 0.8, ease: "easeOut" }}
+              >
+                {/* Enhanced container with game-specific styling */}
+                <div className="relative max-w-4xl mx-auto">
+                  {/* Glowing border effect */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-viva-magenta-500 via-lux-gold-500 to-viva-magenta-500 rounded-2xl blur opacity-30 animate-pulse" />
+                  
+                  {/* Game wrapper with enhanced styling */}
+                  <div className="relative bg-gradient-to-br from-gray-900/95 via-lux-black/98 to-gray-800/95 backdrop-blur-xl rounded-2xl border border-gray-700/50 overflow-hidden shadow-2xl">
+                    {/* Top accent bar */}
+                    <div className="h-1 bg-gradient-to-r from-viva-magenta-500 via-lux-gold-500 to-viva-magenta-500" />
+                    
+                    {/* Game component container */}
+                    <div className="p-4 sm:p-6 lg:p-8">
+                      <Suspense fallback={<GameSkeleton />}>
+                        <RockEmSockEm />
+                      </Suspense>
+                    </div>
+                    
+                    {/* Bottom accent bar */}
+                    <div className="h-1 bg-gradient-to-r from-viva-magenta-500 via-lux-gold-500 to-viva-magenta-500" />
+                  </div>
+                </div>
+
+                {/* Floating game stats/info */}
+                <motion.div
+                  className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4 text-center"
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.5, duration: 0.3 }}
+                >
+                  <div className="px-4 py-2 bg-black/50 backdrop-blur-sm rounded-full border border-gray-600/30">
+                    <span className="text-xs text-gray-300">🎮 Interactive Game</span>
+                  </div>
+                  <div className="px-4 py-2 bg-black/50 backdrop-blur-sm rounded-full border border-gray-600/30">
+                    <span className="text-xs text-gray-300">🥊 Retro Fighting</span>
+                  </div>
+                  <div className="px-4 py-2 bg-black/50 backdrop-blur-sm rounded-full border border-gray-600/30">
+                    <span className="text-xs text-gray-300">⚡ Built with React</span>
+                  </div>
+                </motion.div>
+              </motion.div>
+
+              {/* Call-to-action below game */}
+              <motion.div
+                className="text-center mt-16"
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: shouldReduceMotion ? 0.1 : 0.6, delay: shouldReduceMotion ? 0 : 0.3 }}
+              >
+                <p className="text-lg text-gray-300 mb-6">
+                  Enjoyed the game? Let's collaborate on your next project!
+                </p>
+                <motion.button
+                  onClick={() => scrollToSection('contact')}
+                  className="btn-primary inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold"
+                  whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+                  whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+                >
+                  <Mail className="w-5 h-5" />
+                  <span>Get In Touch</span>
+                  <ArrowRight className="w-5 h-5" />
+                </motion.button>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* ✅ UPDATED: Streamlined Contact Section - Removed generic content */}
         <section id="contact" className="scroll-section relative py-20 bg-gradient-to-br from-lux-gray-50 via-viva-magenta-50/20 to-lux-gold-50/20 dark:from-lux-gray-900 dark:via-viva-magenta-900/10 dark:to-lux-gold-900/10">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
@@ -1222,11 +1480,11 @@ export default function HomePage() {
               transition={{ duration: shouldReduceMotion ? 0.1 : 0.6 }}
             >
               <h2 className="hero-title text-4xl md:text-6xl font-bold mb-8">
-                Let's Build Something <span className="gradient-text">Amazing</span>
+                <span className="gradient-text">Get In Touch</span>
               </h2>
               <p className="text-xl text-lux-gray-700 dark:text-lux-gray-300 mb-8 max-w-3xl mx-auto">
-                Ready to bring your ideas to life? I'm available for freelance projects, 
-                full-time opportunities, and consulting work.
+                I'm always interested in new opportunities and collaborations. 
+                Let's discuss how we can work together.
               </p>
               <div className="flex flex-wrap justify-center gap-4 text-sm text-lux-gray-600 dark:text-lux-gray-400">
                 <span className="flex items-center gap-2">
@@ -1244,7 +1502,7 @@ export default function HomePage() {
               </div>
             </motion.div>
 
-            {/* Enhanced Contact Options with status indicators */}
+            {/* Enhanced Contact Options with consistent theming */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
               {CONTACT_OPTIONS.map((contact, index) => {
                 const IconComponent = contact.icon
@@ -1254,7 +1512,7 @@ export default function HomePage() {
                     href={contact.href}
                     target={contact.external ? '_blank' : undefined}
                     rel={contact.external ? 'noopener noreferrer' : undefined}
-                    className="glass-card p-6 text-center group card-hover relative"
+                    className="relative p-6 text-center group backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50 rounded-xl hover:border-viva-magenta-400/40 dark:hover:border-viva-magenta-400/40 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-viva-magenta-500/20 dark:hover:shadow-viva-magenta-400/20"
                     initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -1274,21 +1532,21 @@ export default function HomePage() {
                         <IconComponent className="w-6 h-6 text-white" />
                       </div>
                     </div>
-                    <h3 className="text-lg font-bold mb-2 group-hover:text-viva-magenta-600 dark:group-hover:text-viva-magenta-400 transition-colors">
+                    <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-gray-100 group-hover:text-viva-magenta-600 dark:group-hover:text-viva-magenta-400 transition-colors">
                       {contact.title}
                     </h3>
-                    <p className="text-sm text-lux-gray-600 dark:text-lux-gray-400 group-hover:text-lux-gray-700 dark:group-hover:text-lux-gray-300 transition-colors">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
                       {contact.description}
                     </p>
                     {contact.external && (
-                      <ExternalLink className="w-4 h-4 mx-auto mt-2 text-lux-gray-400 group-hover:text-lux-gray-600 dark:group-hover:text-lux-gray-300 transition-colors" />
+                      <ExternalLink className="w-4 h-4 mx-auto mt-2 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
                     )}
                   </motion.a>
                 )
               })}
             </div>
 
-            {/* Enhanced CTA Section */}
+            {/* Streamlined CTA Section */}
             <div className="text-center space-y-6">
               <motion.div
                 className="flex flex-col sm:flex-row gap-4 justify-center items-center"
@@ -1298,13 +1556,13 @@ export default function HomePage() {
                 transition={{ duration: shouldReduceMotion ? 0.1 : 0.6, delay: shouldReduceMotion ? 0 : 0.3 }}
               >
                 <motion.a
-                  href="mailto:jafernandez94@gmail.com?subject=Let's work together&body=Hi Juan, I'd like to discuss a project with you."
+                  href="mailto:jafernandez94@gmail.com?subject=Project Collaboration&body=Hi Juan, I'd like to discuss a project with you."
                   className="btn-primary inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold"
                   whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
                   whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
                 >
                   <Mail className="w-5 h-5" />
-                  <span>Start a Project</span>
+                  <span>Send Message</span>
                   <ArrowRight className="w-5 h-5" />
                 </motion.a>
                 
@@ -1320,17 +1578,6 @@ export default function HomePage() {
                   <span>View Resume</span>
                 </motion.a>
               </motion.div>
-              
-              <motion.p
-                className="text-sm text-lux-gray-500 dark:text-lux-gray-400 max-w-md mx-auto"
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: shouldReduceMotion ? 0.1 : 0.6, delay: shouldReduceMotion ? 0 : 0.5 }}
-              >
-                Whether you're a startup looking to build an MVP or an enterprise needing to scale, 
-                I'm here to help turn your vision into reality.
-              </motion.p>
             </div>
           </div>
         </section>
@@ -1373,6 +1620,12 @@ export default function HomePage() {
                   className="text-lux-gray-400 hover:text-lux-gray-300 transition-colors"
                 >
                   Projects
+                </button>
+                <button 
+                  onClick={() => scrollToSection('game')}
+                  className="text-lux-gray-400 hover:text-lux-gray-300 transition-colors"
+                >
+                  Game
                 </button>
                 <button 
                   onClick={() => scrollToSection('contact')}
@@ -1436,7 +1689,7 @@ export default function HomePage() {
           {showScrollTop && (
             <motion.button
               onClick={scrollToTop}
-              className="p-3 bg-lux-gray-800 dark:bg-lux-gray-200 text-lux-gray-200 dark:text-lux-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
+              className="p-3 bg-white/90 dark:bg-gray-800/90 text-gray-800 dark:text-gray-200 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50"
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0 }}

@@ -1,4 +1,4 @@
-// components/Navigation.tsx - FIXED VERSION
+// components/Navigation.tsx - FIXED STABLE VERSION
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -11,7 +11,6 @@ import {
   FolderOpen, 
   MessageCircle, 
   BookOpen, 
-  Gamepad2, 
   Github, 
   Linkedin, 
   Mail, 
@@ -19,9 +18,6 @@ import {
   X,
   ExternalLink,
   Twitter,
-  FileText,
-  Calendar,
-  Briefcase,
   Sun,
   Moon
 } from 'lucide-react'
@@ -47,11 +43,10 @@ interface SocialLink {
 }
 
 const Navigation: React.FC = () => {
-  // ✅ FIXED: Proper state management
+  // ✅ FIXED: Stable state management without excessive re-renders
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [scrollProgress, setScrollProgress] = useState(0)
-  const [currentSection, setCurrentSection] = useState('home')
+  const [currentSection, setCurrentSection] = useState('hero')
   const [mounted, setMounted] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
   
@@ -59,17 +54,16 @@ const Navigation: React.FC = () => {
   const router = useRouter()
   const pathname = usePathname()
   const prefersReducedMotion = useReducedMotion()
-  const shouldReduceMotion = useReducedMotion()
   
   // Refs
   const navRef = useRef<HTMLElement>(null)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   
-  // ✅ FIXED: Stable scroll progress
+  // ✅ FIXED: Stable scroll progress with throttling
   const { scrollYProgress } = useScroll()
   const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1])
 
-  // ✅ FIXED: Robust theme initialization
+  // ✅ FIXED: Theme initialization
   useEffect(() => {
     setMounted(true)
     
@@ -81,7 +75,6 @@ const Navigation: React.FC = () => {
         
         setDarkMode(shouldUseDarkMode)
         
-        // Apply theme immediately
         if (shouldUseDarkMode) {
           document.documentElement.classList.add('dark')
           document.documentElement.style.colorScheme = 'dark'
@@ -92,29 +85,10 @@ const Navigation: React.FC = () => {
       } catch (error) {
         console.warn('Theme initialization failed:', error)
         setDarkMode(false)
-        document.documentElement.classList.remove('dark')
-        document.documentElement.style.colorScheme = 'light'
       }
     }
 
     initializeTheme()
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem('theme')) {
-        setDarkMode(e.matches)
-        if (e.matches) {
-          document.documentElement.classList.add('dark')
-          document.documentElement.style.colorScheme = 'dark'
-        } else {
-          document.documentElement.classList.remove('dark')
-          document.documentElement.style.colorScheme = 'light'
-        }
-      }
-    }
-
-    mediaQuery.addEventListener('change', handleSystemThemeChange)
-    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange)
   }, [])
 
   // ✅ FIXED: Theme toggle
@@ -137,10 +111,10 @@ const Navigation: React.FC = () => {
     }
   }, [darkMode])
 
-  // ✅ FIXED: Navigation items with proper section mapping
+  // ✅ FIXED: Navigation items
   const navigationItems: NavItem[] = useMemo(() => [
     { 
-      id: 'hero', // Changed from 'home' to 'hero' to match section IDs
+      id: 'hero',
       name: 'Home', 
       label: 'Home', 
       href: '/', 
@@ -151,7 +125,7 @@ const Navigation: React.FC = () => {
       id: 'about', 
       name: 'About', 
       label: 'About', 
-      href: '/#about', // Updated to scroll to section
+      href: '/#about',
       icon: User, 
       description: 'Learn about me' 
     },
@@ -159,31 +133,15 @@ const Navigation: React.FC = () => {
       id: 'projects', 
       name: 'Projects', 
       label: 'Projects', 
-      href: '/#projects', // Updated to scroll to section
+      href: '/#projects',
       icon: FolderOpen, 
       description: 'My work' 
-    },
-    { 
-      id: 'experience', 
-      name: 'Experience', 
-      label: 'Experience', 
-      href: '/#experience', 
-      icon: Calendar, 
-      description: 'My professional journey' 
-    },
-    { 
-      id: 'blog', 
-      name: 'Blog', 
-      label: 'Blog', 
-      href: '/blog', 
-      icon: BookOpen, 
-      description: 'Thoughts & tutorials' 
     },
     { 
       id: 'contact', 
       name: 'Contact', 
       label: 'Contact', 
-      href: '/#contact', 
+      href: '/#contact',
       icon: MessageCircle, 
       description: 'Get in touch' 
     }
@@ -220,61 +178,46 @@ const Navigation: React.FC = () => {
     }
   ], [])
 
-  // ✅ FIXED: Debounced scroll detection
+  // ✅ FIXED: Throttled scroll detection to prevent constant updates
   useEffect(() => {
-    let scrollTimeout: NodeJS.Timeout | null = null
+    let ticking = false
     
     const handleScroll = () => {
-      const scrollY = window.scrollY
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight
-      const progress = Math.min(scrollY / Math.max(maxScroll, 1), 1)
-      
-      setScrolled(scrollY > 20) // Reduced threshold
-      setScrollProgress(progress)
-      
-      // Clear any existing timeout
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout)
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrollY = window.scrollY
+          setScrolled(scrollY > 50)
+          ticking = false
+        })
+        ticking = true
       }
-      
-      // Set new timeout to detect when scrolling stops
-      scrollTimeout = setTimeout(() => {
-        // This runs when scrolling has stopped
-      }, 150)
     }
     
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout)
-      }
-    }
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // ✅ FIXED: Better section detection
+  // ✅ FIXED: Better section detection without constant updates
   useEffect(() => {
     if (pathname !== '/') {
-      // Set current section based on pathname
       if (pathname === '/blog') {
         setCurrentSection('blog')
-        return
       }
-      // Handle other paths...
       return
     }
 
-    // Only do intersection observer on home page
-    const sections = ['hero', 'about', 'projects', 'experience', 'contact']
+    // Only observe sections on home page
+    const sections = ['hero', 'about', 'projects', 'contact']
     const observerOptions = {
       threshold: 0.3,
       rootMargin: '-10% 0px -60% 0px'
     }
 
+    let currentActiveSection = 'hero'
+    
     const observer = new IntersectionObserver((entries) => {
-      // Find the section with the highest intersection ratio
       let maxRatio = 0
-      let activeSection = 'hero'
+      let activeSection = currentActiveSection
       
       entries.forEach(entry => {
         if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {
@@ -283,7 +226,8 @@ const Navigation: React.FC = () => {
         }
       })
       
-      if (maxRatio > 0) {
+      if (maxRatio > 0 && activeSection !== currentActiveSection) {
+        currentActiveSection = activeSection
         setCurrentSection(activeSection)
       }
     }, observerOptions)
@@ -308,12 +252,11 @@ const Navigation: React.FC = () => {
     setIsOpen(false)
   }, [pathname])
 
-  // ✅ FIXED: Navigation handler with proper section scrolling
+  // ✅ FIXED: Navigation handler
   const handleNavigation = useCallback((href: string, id: string) => {
     setIsOpen(false)
     
     if (href.startsWith('/#') && pathname === '/') {
-      // Scroll to section on same page
       const targetId = href.replace('/#', '')
       const element = document.getElementById(targetId)
       if (element) {
@@ -321,12 +264,10 @@ const Navigation: React.FC = () => {
           behavior: prefersReducedMotion ? 'auto' : 'smooth',
           block: 'start' 
         })
-        // Update URL without causing navigation
         window.history.replaceState(null, '', href)
         setCurrentSection(targetId)
       }
     } else {
-      // Navigate to different page
       router.push(href)
     }
   }, [router, pathname, prefersReducedMotion])
@@ -337,7 +278,6 @@ const Navigation: React.FC = () => {
       return pathname === href
     }
     
-    // On home page, check current section
     if (href.startsWith('/#')) {
       const sectionId = href.replace('/#', '')
       return currentSection === sectionId
@@ -403,8 +343,8 @@ const Navigation: React.FC = () => {
         initial={{ opacity: 0, y: isMobile ? 20 : -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ 
-          delay: shouldReduceMotion ? 0 : index * 0.1, 
-          duration: shouldReduceMotion ? 0.2 : 0.6 
+          delay: prefersReducedMotion ? 0 : index * 0.1, 
+          duration: prefersReducedMotion ? 0.2 : 0.6 
         }}
       >
         <motion.a
@@ -419,37 +359,20 @@ const Navigation: React.FC = () => {
             ${isMobile ? 'text-lg justify-start w-full' : 'text-sm'}
           `}
           whileHover={{ 
-            scale: shouldReduceMotion ? 1 : 1.05, 
-            y: shouldReduceMotion ? 0 : -2 
+            scale: prefersReducedMotion ? 1 : 1.05, 
+            y: prefersReducedMotion ? 0 : -2 
           }}
-          whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+          whileTap={{ scale: prefersReducedMotion ? 1 : 0.95 }}
         >
-          <motion.div
-            className="flex-shrink-0 pointer-events-none"
-            animate={isActive && !shouldReduceMotion ? { 
-              rotate: [0, 10, -10, 0],
-              scale: [1, 1.2, 1]
-            } : {}}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <IconComponent className="w-5 h-5" />
-          </motion.div>
+          <IconComponent className="w-5 h-5" />
           
-          <span className={`pointer-events-none ${isMobile ? 'block' : 'hidden lg:block'}`}>
+          <span className={`${isMobile ? 'block' : 'hidden lg:block'}`}>
             {item.label}
           </span>
 
-          {isMobile && item.description && (
-            <div className="text-sm text-gray-500 dark:text-gray-400 ml-auto">
-              {item.description}
-            </div>
-          )}
-
-          {item.external && <ExternalLink className="w-4 h-4 ml-auto" />}
-
           {isActive && (
             <motion.div
-              className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-600/20 to-lux-gold-600/20 border border-viva-magenta-500/30 pointer-events-none"
+              className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-600/20 to-lux-gold-600/20 border border-viva-magenta-500/30"
               layoutId="activeNavItem"
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             />
@@ -472,7 +395,7 @@ const Navigation: React.FC = () => {
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ 
-          delay: shouldReduceMotion ? 0 : 0.5 + index * 0.1, 
+          delay: prefersReducedMotion ? 0 : 0.5 + index * 0.1, 
           type: "spring", 
           stiffness: 300
         }}
@@ -488,14 +411,14 @@ const Navigation: React.FC = () => {
             bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm hover:shadow-md
           `}
           whileHover={{ 
-            y: shouldReduceMotion ? 0 : -3,
-            scale: shouldReduceMotion ? 1 : 1.1
+            y: prefersReducedMotion ? 0 : -3,
+            scale: prefersReducedMotion ? 1 : 1.1
           }}
-          whileTap={{ scale: shouldReduceMotion ? 1 : 0.9 }}
+          whileTap={{ scale: prefersReducedMotion ? 1 : 0.9 }}
           title={social.description}
           aria-label={`Visit ${social.platform} profile`}
         >
-          <IconComponent className="w-5 h-5 pointer-events-none" />
+          <IconComponent className="w-5 h-5" />
         </motion.a>
       </motion.div>
     )
@@ -521,11 +444,11 @@ const Navigation: React.FC = () => {
 
   return (
     <>
-      {/* ✅ FIXED: Properly spaced navbar */}
+      {/* ✅ FIXED: Stable navbar with proper spacing */}
       <motion.nav 
         ref={navRef}
         className={`
-          fixed top-0 left-0 right-0 z-[1000] transition-all duration-500 ease-out
+          fixed top-0 left-0 right-0 z-[1000] transition-all duration-300 ease-out
           ${scrolled 
             ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg' 
             : 'bg-transparent'
@@ -540,13 +463,13 @@ const Navigation: React.FC = () => {
         animate={{ y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        <div className="container mx-auto px-6 sm:px-8 lg:px-12 h-full"> {/* ✅ FIXED: Better padding */}
+        <div className="container mx-auto px-6 sm:px-8 lg:px-12 h-full">
           <div className="flex items-center justify-between h-full">
             
             {/* ✅ FIXED: Logo with proper spacing */}
             <Link 
               href="/" 
-              className="flex items-center gap-4 text-xl font-bold text-gray-900 dark:text-gray-50 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 transition-colors z-10 relative" // ✅ Increased gap
+              className="flex items-center gap-4 text-xl font-bold text-gray-900 dark:text-gray-50 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 transition-colors z-10 relative"
               onClick={() => {
                 if (pathname === '/') {
                   setCurrentSection('hero')
@@ -556,7 +479,7 @@ const Navigation: React.FC = () => {
             >
               <motion.div 
                 className="w-8 h-8 rounded-lg bg-gradient-to-br from-viva-magenta-500 to-lux-gold-500 flex items-center justify-center text-white font-bold text-sm shadow-lg"
-                animate={!shouldReduceMotion ? { 
+                animate={!prefersReducedMotion ? { 
                   boxShadow: [
                     "0 0 20px rgba(190, 24, 93, 0.3)",
                     "0 0 30px rgba(212, 175, 55, 0.3)",
@@ -564,8 +487,8 @@ const Navigation: React.FC = () => {
                   ]
                 } : {}}
                 transition={{ duration: 3, repeat: Infinity }}
-                whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
-                whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+                whileHover={{ scale: prefersReducedMotion ? 1 : 1.05 }}
+                whileTap={{ scale: prefersReducedMotion ? 1 : 0.95 }}
               >
                 JF
               </motion.div>
@@ -573,7 +496,7 @@ const Navigation: React.FC = () => {
             </Link>
 
             {/* ✅ FIXED: Desktop Navigation with proper spacing */}
-            <div className="hidden lg:flex items-center gap-10"> {/* ✅ Increased gap */}
+            <div className="hidden lg:flex items-center gap-10">
               <div 
                 className="flex items-center gap-2 rounded-xl p-2"
                 style={{
@@ -590,9 +513,9 @@ const Navigation: React.FC = () => {
               </div>
             </div>
 
-            {/* ✅ FIXED: Desktop Social Links & Controls with proper spacing */}
-            <div className="hidden lg:flex items-center gap-6"> {/* ✅ Increased gap */}
-              <div className="flex items-center gap-4"> {/* ✅ Increased gap */}
+            {/* ✅ FIXED: Desktop Controls with proper spacing */}
+            <div className="hidden lg:flex items-center gap-6">
+              <div className="flex items-center gap-4">
                 {socialLinks.map((social, index) => (
                   <SocialLink key={social.platform} social={social} index={index} />
                 ))}
@@ -602,15 +525,15 @@ const Navigation: React.FC = () => {
               
               <ThemeToggleComponent />
 
-              {/* ✅ Email Button with margin */}
+              {/* ✅ FIXED: Email Button with proper margin */}
               <motion.a
                 href="mailto:jafernandez94@gmail.com"
-                className="relative group p-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ml-2" // ✅ Added margin
+                className="relative group p-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ml-2"
                 whileHover={{ 
-                  scale: shouldReduceMotion ? 1 : 1.05, 
-                  y: shouldReduceMotion ? 0 : -2 
+                  scale: prefersReducedMotion ? 1 : 1.05, 
+                  y: prefersReducedMotion ? 0 : -2 
                 }}
-                whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+                whileTap={{ scale: prefersReducedMotion ? 1 : 0.95 }}
                 title="Send me an email"
                 aria-label="Contact via email"
               >
@@ -623,7 +546,7 @@ const Navigation: React.FC = () => {
             </div>
 
             {/* ✅ FIXED: Mobile controls with proper spacing */}
-            <div className="flex lg:hidden items-center gap-4"> {/* ✅ Increased gap */}
+            <div className="flex lg:hidden items-center gap-4">
               <ThemeToggleComponent />
               
               <button
@@ -642,22 +565,23 @@ const Navigation: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ FIXED: Stable scroll progress bar */}
+        {/* ✅ FIXED: Thin scroll progress bar that sits below navbar */}
         <motion.div
-          className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 origin-left z-[1001]"
+          className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 origin-left z-[999]"
           style={{ 
             scaleX,
-            boxShadow: shouldReduceMotion ? 'none' : `0 0 10px rgba(190, 24, 93, 0.6)`
+            boxShadow: prefersReducedMotion ? 'none' : `0 0 8px rgba(190, 52, 85, 0.5)`,
+            width: '100%'
           }}
         />
       </motion.nav>
 
-      {/* Mobile Menu (unchanged from your version) */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
           <>
             <motion.div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999] lg:hidden"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[998] lg:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -667,7 +591,7 @@ const Navigation: React.FC = () => {
 
             <motion.div
               ref={mobileMenuRef}
-              className="fixed top-20 right-4 left-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl z-[1000] lg:hidden overflow-hidden max-h-[80vh] overflow-y-auto"
+              className="fixed top-20 right-4 left-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl z-[999] lg:hidden overflow-hidden max-h-[80vh] overflow-y-auto"
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
@@ -696,13 +620,13 @@ const Navigation: React.FC = () => {
                     className="text-center"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: shouldReduceMotion ? 0 : 0.3 }}
+                    transition={{ delay: prefersReducedMotion ? 0 : 0.3 }}
                   >
                     <motion.a
                       href="mailto:jafernandez94@gmail.com"
                       className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl shadow-lg"
-                      whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
-                      whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+                      whileHover={{ scale: prefersReducedMotion ? 1 : 1.05 }}
+                      whileTap={{ scale: prefersReducedMotion ? 1 : 0.95 }}
                     >
                       <Mail className="w-5 h-5" />
                       <span>Send Email</span>
