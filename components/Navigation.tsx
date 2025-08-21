@@ -1,4 +1,4 @@
-// Fixed Navigation Component with proper page navigation
+// Fixed Navigation Component with proper page navigation and spacing
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -324,7 +324,7 @@ const FixedNavigation: React.FC = () => {
   })
   ThemeToggleComponent.displayName = 'ThemeToggleComponent'
 
-  // ✅ FIXED: Navigation Link Component - Removed custom click handler
+  // ✅ FIXED: Navigation Link Component with proper Next.js routing
   const NavLink = React.memo<{
     item: NavItem
     index: number
@@ -332,6 +332,19 @@ const FixedNavigation: React.FC = () => {
   }>(({ item, index, isMobile = false }) => {
     const isActive = isActivePath(item.href)
     const IconComponent = item.icon
+
+    // Handle navigation click
+    const handleClick = useCallback((e: React.MouseEvent) => {
+      e.preventDefault()
+      
+      // Close mobile menu if open
+      if (isMobile && isOpen) {
+        setIsOpen(false)
+      }
+      
+      // Navigate using Next.js router
+      router.push(item.href)
+    }, [item.href, isMobile, isOpen, router])
 
     return (
       <motion.div
@@ -343,37 +356,49 @@ const FixedNavigation: React.FC = () => {
           duration: prefersReducedMotion ? 0.2 : 0.6 
         }}
       >
-        {/* ✅ FIXED: Clean Link component without onClick interference */}
+        {/* ✅ FIXED: Proper navigation with click handler */}
         <Link
           href={item.href}
+          onClick={handleClick}
           className={`
-            relative flex items-center gap-3 px-4 py-2 rounded-xl font-medium transition-all duration-300 cursor-pointer select-none
+            relative flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all duration-300 
+            cursor-pointer select-none z-10 pointer-events-auto whitespace-nowrap text-left
             ${isActive 
               ? 'text-white bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 shadow-lg' 
               : 'text-gray-600 dark:text-gray-300 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
             }
-            ${isMobile ? 'text-lg justify-start w-full' : 'text-sm'}
+            ${isMobile ? 'text-lg justify-start w-full min-h-[3rem] gap-3 px-4 py-3 rounded-xl' : 'text-sm min-h-[2.5rem]'}
           `}
+          style={{ 
+            position: 'relative',
+            zIndex: 10,
+            pointerEvents: 'auto'
+          }}
         >
           <motion.div
-            className="flex items-center gap-3 w-full"
+            className="flex items-center gap-2 w-full relative z-10"
             whileHover={{ 
-              scale: prefersReducedMotion ? 1 : 1.05, 
-              y: prefersReducedMotion ? 0 : -2 
+              scale: prefersReducedMotion ? 1 : (isMobile ? 1.01 : 1.02), 
+              y: prefersReducedMotion ? 0 : -1 
             }}
-            whileTap={{ scale: prefersReducedMotion ? 1 : 0.95 }}
+            whileTap={{ scale: prefersReducedMotion ? 1 : 0.98 }}
+            style={{ pointerEvents: 'auto' }}
           >
-            <IconComponent className="w-5 h-5" />
+            {/* ✅ FIXED: Consistent icon sizing */}
+            <div className="flex-shrink-0 flex items-center justify-center">
+              <IconComponent className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'}`} />
+            </div>
             
-            <span className={`${isMobile ? 'block' : 'hidden lg:block'}`}>
+            <span className={`${isMobile ? 'block' : 'hidden lg:block'} flex-1 ${isMobile ? 'text-left' : ''}`}>
               {item.label}
             </span>
 
-            {isActive && (
+            {isActive && !isMobile && (
               <motion.div
-                className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-600/20 to-lux-gold-600/20 border border-viva-magenta-500/30"
+                className="absolute inset-0 rounded-lg bg-gradient-to-r from-viva-magenta-600/20 to-lux-gold-600/20 border border-viva-magenta-500/30"
                 layoutId="activeNavItem"
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                style={{ zIndex: -1 }}
               />
             )}
           </motion.div>
@@ -405,10 +430,11 @@ const FixedNavigation: React.FC = () => {
           target={social.external ? '_blank' : undefined}
           rel={social.external ? 'noopener noreferrer' : undefined}
           className={`
-            block w-11 h-11 rounded-xl border border-gray-200/50 dark:border-gray-700/50
+            block w-12 h-12 rounded-xl border border-gray-200/50 dark:border-gray-700/50
             flex items-center justify-center transition-all duration-300
             hover:bg-gray-200/50 dark:hover:bg-gray-700/50 hover:border-viva-magenta-300 dark:hover:border-viva-magenta-600 ${social.color}
             bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm hover:shadow-md
+            cursor-pointer z-10 pointer-events-auto
           `}
           whileHover={{ 
             y: prefersReducedMotion ? 0 : -3,
@@ -417,6 +443,7 @@ const FixedNavigation: React.FC = () => {
           whileTap={{ scale: prefersReducedMotion ? 1 : 0.9 }}
           title={social.description}
           aria-label={`Visit ${social.platform} profile`}
+          style={{ pointerEvents: 'auto' }}
         >
           <IconComponent className="w-5 h-5" />
         </motion.a>
@@ -443,7 +470,7 @@ const FixedNavigation: React.FC = () => {
 
   return (
     <>
-      {/* ✅ FIXED: Clean navbar structure */}
+      {/* ✅ FIXED: Clean navbar structure with proper z-index */}
       <nav 
         ref={navRef}
         className={`
@@ -457,7 +484,8 @@ const FixedNavigation: React.FC = () => {
           height: '5rem',
           minHeight: '5rem',
           maxHeight: '5rem',
-          overflow: 'visible'
+          overflow: 'visible',
+          pointerEvents: 'auto'
         }}
       >
         <div className="container mx-auto px-6 sm:px-8 lg:px-12 h-full">
@@ -466,7 +494,12 @@ const FixedNavigation: React.FC = () => {
             {/* Logo */}
             <Link 
               href="/" 
-              className="flex items-center gap-4 text-xl font-bold text-gray-900 dark:text-gray-50 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 transition-colors z-10 relative"
+              className="flex items-center gap-4 text-xl font-bold text-gray-900 dark:text-gray-50 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 transition-colors z-20 relative cursor-pointer"
+              style={{ pointerEvents: 'auto' }}
+              onClick={(e) => {
+                e.preventDefault()
+                router.push('/')
+              }}
             >
               <motion.div 
                 className="w-8 h-8 rounded-lg bg-gradient-to-br from-viva-magenta-500 to-lux-gold-500 flex items-center justify-center text-white font-bold text-sm shadow-lg"
@@ -489,13 +522,14 @@ const FixedNavigation: React.FC = () => {
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-8">
               <div 
-                className="flex items-center gap-1 rounded-xl p-2"
+                className="flex items-center gap-1 rounded-xl p-1"
                 style={{
                   background: darkMode 
                     ? 'rgba(31, 41, 55, 0.8)' 
                     : 'rgba(255, 255, 255, 0.8)',
                   backdropFilter: 'blur(16px)',
-                  border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`
+                  border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                  pointerEvents: 'auto'
                 }}
               >
                 {navigationItems.map((item, index) => (
@@ -518,7 +552,7 @@ const FixedNavigation: React.FC = () => {
 
               <motion.a
                 href="mailto:jafernandez94@gmail.com"
-                className="relative group p-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ml-2"
+                className="relative group p-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ml-2 cursor-pointer z-10"
                 whileHover={{ 
                   scale: prefersReducedMotion ? 1 : 1.05, 
                   y: prefersReducedMotion ? 0 : -2 
@@ -526,6 +560,7 @@ const FixedNavigation: React.FC = () => {
                 whileTap={{ scale: prefersReducedMotion ? 1 : 0.95 }}
                 title="Send me an email"
                 aria-label="Contact via email"
+                style={{ pointerEvents: 'auto' }}
               >
                 <Mail className="w-5 h-5 relative z-10 group-hover:scale-110 transition-transform duration-300" />
                 <motion.div
@@ -541,8 +576,9 @@ const FixedNavigation: React.FC = () => {
               
               <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="lg:hidden p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors z-20 relative"
+                className="lg:hidden p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors z-20 relative cursor-pointer"
                 aria-label="Toggle mobile menu"
+                style={{ pointerEvents: 'auto' }}
               >
                 <motion.div
                   animate={{ rotate: isOpen ? 90 : 0 }}
@@ -581,11 +617,15 @@ const FixedNavigation: React.FC = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setIsOpen(false)}
+              style={{ pointerEvents: 'auto' }}
             />
 
             <motion.div
               className="fixed right-4 left-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl z-[999] lg:hidden overflow-hidden max-h-[80vh] overflow-y-auto"
-              style={{ top: 'calc(5rem + 0.25rem)' }}
+              style={{ 
+                top: 'calc(5rem + 0.25rem)',
+                pointerEvents: 'auto'
+              }}
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
@@ -618,9 +658,10 @@ const FixedNavigation: React.FC = () => {
                   >
                     <motion.a
                       href="mailto:jafernandez94@gmail.com"
-                      className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl shadow-lg"
+                      className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white font-semibold rounded-xl shadow-lg cursor-pointer"
                       whileHover={{ scale: prefersReducedMotion ? 1 : 1.05 }}
                       whileTap={{ scale: prefersReducedMotion ? 1 : 0.95 }}
+                      style={{ pointerEvents: 'auto' }}
                     >
                       <Mail className="w-5 h-5" />
                       <span>Send Email</span>
