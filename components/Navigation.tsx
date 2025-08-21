@@ -1,22 +1,20 @@
-// components/Navigation.tsx - FIXED STABLE VERSION
+// Fixed Navigation Component - Resolves scroll twitching and progress bar issues
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { 
   Home, 
   User, 
   FolderOpen, 
   MessageCircle, 
-  BookOpen, 
   Github, 
   Linkedin, 
   Mail, 
   Menu, 
   X,
-  ExternalLink,
   Twitter,
   Sun,
   Moon
@@ -42,13 +40,14 @@ interface SocialLink {
   color: string
 }
 
-const Navigation: React.FC = () => {
-  // ✅ FIXED: Stable state management without excessive re-renders
+const FixedNavigation: React.FC = () => {
+  // ✅ FIXED: Minimal state to prevent re-renders
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [currentSection, setCurrentSection] = useState('hero')
   const [mounted, setMounted] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
+  const [scrollProgress, setScrollProgress] = useState(0)
   
   // Hooks
   const router = useRouter()
@@ -57,11 +56,74 @@ const Navigation: React.FC = () => {
   
   // Refs
   const navRef = useRef<HTMLElement>(null)
-  const mobileMenuRef = useRef<HTMLDivElement>(null)
+  const progressRef = useRef<HTMLDivElement>(null)
   
-  // ✅ FIXED: Stable scroll progress with throttling
-  const { scrollYProgress } = useScroll()
-  const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1])
+  // ✅ FIXED: Stable navigation items
+  const navigationItems: NavItem[] = useMemo(() => [
+    { 
+      id: 'hero',
+      name: 'Home', 
+      label: 'Home', 
+      href: '/', 
+      icon: Home, 
+      description: 'Welcome page' 
+    },
+    { 
+      id: 'about', 
+      name: 'About', 
+      label: 'About', 
+      href: '/#about',
+      icon: User, 
+      description: 'Learn about me' 
+    },
+    { 
+      id: 'projects', 
+      name: 'Projects', 
+      label: 'Projects', 
+      href: '/#projects',
+      icon: FolderOpen, 
+      description: 'My work' 
+    },
+    { 
+      id: 'contact', 
+      name: 'Contact', 
+      label: 'Contact', 
+      href: '/#contact',
+      icon: MessageCircle, 
+      description: 'Get in touch' 
+    }
+  ], [])
+
+  // ✅ FIXED: Stable social links
+  const socialLinks: SocialLink[] = useMemo(() => [
+    { 
+      platform: 'GitHub',
+      name: 'GitHub', 
+      href: 'https://github.com/sippinwindex', 
+      icon: Github, 
+      external: true,
+      description: 'View my code',
+      color: 'hover:text-gray-700 dark:hover:text-gray-300'
+    },
+    { 
+      platform: 'LinkedIn',
+      name: 'LinkedIn', 
+      href: 'https://www.linkedin.com/in/juan-fernandez-fullstack/', 
+      icon: Linkedin, 
+      external: true,
+      description: 'Professional profile',
+      color: 'hover:text-blue-600 dark:hover:text-blue-400'
+    },
+    { 
+      platform: 'Twitter',
+      name: 'Twitter', 
+      href: 'https://x.com/FullyStackedUp', 
+      icon: Twitter, 
+      external: true,
+      description: 'Follow me on Twitter',
+      color: 'hover:text-sky-500 dark:hover:text-sky-400'
+    }
+  ], [])
 
   // ✅ FIXED: Theme initialization
   useEffect(() => {
@@ -111,74 +173,7 @@ const Navigation: React.FC = () => {
     }
   }, [darkMode])
 
-  // ✅ FIXED: Navigation items
-  const navigationItems: NavItem[] = useMemo(() => [
-    { 
-      id: 'hero',
-      name: 'Home', 
-      label: 'Home', 
-      href: '/', 
-      icon: Home, 
-      description: 'Welcome page' 
-    },
-    { 
-      id: 'about', 
-      name: 'About', 
-      label: 'About', 
-      href: '/#about',
-      icon: User, 
-      description: 'Learn about me' 
-    },
-    { 
-      id: 'projects', 
-      name: 'Projects', 
-      label: 'Projects', 
-      href: '/#projects',
-      icon: FolderOpen, 
-      description: 'My work' 
-    },
-    { 
-      id: 'contact', 
-      name: 'Contact', 
-      label: 'Contact', 
-      href: '/#contact',
-      icon: MessageCircle, 
-      description: 'Get in touch' 
-    }
-  ], [])
-
-  // Social links
-  const socialLinks: SocialLink[] = useMemo(() => [
-    { 
-      platform: 'GitHub',
-      name: 'GitHub', 
-      href: 'https://github.com/sippinwindex', 
-      icon: Github, 
-      external: true,
-      description: 'View my code',
-      color: 'hover:text-gray-700 dark:hover:text-gray-300'
-    },
-    { 
-      platform: 'LinkedIn',
-      name: 'LinkedIn', 
-      href: 'https://www.linkedin.com/in/juan-fernandez-fullstack/', 
-      icon: Linkedin, 
-      external: true,
-      description: 'Professional profile',
-      color: 'hover:text-blue-600 dark:hover:text-blue-400'
-    },
-    { 
-      platform: 'Twitter',
-      name: 'Twitter', 
-      href: 'https://x.com/FullyStackedUp', 
-      icon: Twitter, 
-      external: true,
-      description: 'Follow me on Twitter',
-      color: 'hover:text-sky-500 dark:hover:text-sky-400'
-    }
-  ], [])
-
-  // ✅ FIXED: Throttled scroll detection to prevent constant updates
+  // ✅ FIXED: Stable scroll detection without excessive updates
   useEffect(() => {
     let ticking = false
     
@@ -186,7 +181,21 @@ const Navigation: React.FC = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
           const scrollY = window.scrollY
+          const windowHeight = window.innerHeight
+          const documentHeight = document.documentElement.scrollHeight
+          
+          // Update scroll state
           setScrolled(scrollY > 50)
+          
+          // Calculate progress (0 to 1)
+          const progress = Math.min(scrollY / (documentHeight - windowHeight), 1)
+          setScrollProgress(progress)
+          
+          // Update CSS custom property for progress bar
+          if (progressRef.current) {
+            progressRef.current.style.transform = `scaleX(${progress})`
+          }
+          
           ticking = false
         })
         ticking = true
@@ -206,7 +215,6 @@ const Navigation: React.FC = () => {
       return
     }
 
-    // Only observe sections on home page
     const sections = ['hero', 'about', 'projects', 'contact']
     const observerOptions = {
       threshold: 0.3,
@@ -252,7 +260,7 @@ const Navigation: React.FC = () => {
     setIsOpen(false)
   }, [pathname])
 
-  // ✅ FIXED: Navigation handler
+  // ✅ FIXED: Navigation handler without scroll issues
   const handleNavigation = useCallback((href: string, id: string) => {
     setIsOpen(false)
     
@@ -260,10 +268,14 @@ const Navigation: React.FC = () => {
       const targetId = href.replace('/#', '')
       const element = document.getElementById(targetId)
       if (element) {
-        element.scrollIntoView({ 
-          behavior: prefersReducedMotion ? 'auto' : 'smooth',
-          block: 'start' 
+        const navHeight = 80 // Account for navbar height
+        const offsetTop = element.offsetTop - navHeight
+        
+        window.scrollTo({
+          top: offsetTop,
+          behavior: prefersReducedMotion ? 'auto' : 'smooth'
         })
+        
         window.history.replaceState(null, '', href)
         setCurrentSection(targetId)
       }
@@ -444,8 +456,8 @@ const Navigation: React.FC = () => {
 
   return (
     <>
-      {/* ✅ FIXED: Stable navbar with proper spacing */}
-      <motion.nav 
+      {/* ✅ FIXED: Stable navbar with proper structure */}
+      <nav 
         ref={navRef}
         className={`
           fixed top-0 left-0 right-0 z-[1000] transition-all duration-300 ease-out
@@ -459,14 +471,11 @@ const Navigation: React.FC = () => {
           minHeight: '5rem',
           maxHeight: '5rem'
         }}
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
       >
         <div className="container mx-auto px-6 sm:px-8 lg:px-12 h-full">
           <div className="flex items-center justify-between h-full">
             
-            {/* ✅ FIXED: Logo with proper spacing */}
+            {/* ✅ FIXED: Logo */}
             <Link 
               href="/" 
               className="flex items-center gap-4 text-xl font-bold text-gray-900 dark:text-gray-50 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 transition-colors z-10 relative"
@@ -495,7 +504,7 @@ const Navigation: React.FC = () => {
               <span className="hidden sm:block">Juan Fernandez</span>
             </Link>
 
-            {/* ✅ FIXED: Desktop Navigation with proper spacing */}
+            {/* ✅ FIXED: Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-10">
               <div 
                 className="flex items-center gap-2 rounded-xl p-2"
@@ -513,7 +522,7 @@ const Navigation: React.FC = () => {
               </div>
             </div>
 
-            {/* ✅ FIXED: Desktop Controls with proper spacing */}
+            {/* ✅ FIXED: Desktop Controls */}
             <div className="hidden lg:flex items-center gap-6">
               <div className="flex items-center gap-4">
                 {socialLinks.map((social, index) => (
@@ -525,7 +534,6 @@ const Navigation: React.FC = () => {
               
               <ThemeToggleComponent />
 
-              {/* ✅ FIXED: Email Button with proper margin */}
               <motion.a
                 href="mailto:jafernandez94@gmail.com"
                 className="relative group p-3 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 text-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ml-2"
@@ -545,7 +553,7 @@ const Navigation: React.FC = () => {
               </motion.a>
             </div>
 
-            {/* ✅ FIXED: Mobile controls with proper spacing */}
+            {/* ✅ FIXED: Mobile controls */}
             <div className="flex lg:hidden items-center gap-4">
               <ThemeToggleComponent />
               
@@ -565,16 +573,17 @@ const Navigation: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ FIXED: Thin scroll progress bar that sits below navbar */}
-        <motion.div
-          className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 origin-left z-[999]"
+        {/* ✅ FIXED: Progress bar positioned UNDER navbar */}
+        <div
+          ref={progressRef}
+          className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 origin-left z-[999]"
           style={{ 
-            scaleX,
-            boxShadow: prefersReducedMotion ? 'none' : `0 0 8px rgba(190, 52, 85, 0.5)`,
-            width: '100%'
+            width: '100%',
+            transform: 'scaleX(0)',
+            boxShadow: prefersReducedMotion ? 'none' : `0 0 8px rgba(190, 52, 85, 0.5)`
           }}
         />
-      </motion.nav>
+      </nav>
 
       {/* Mobile Menu */}
       <AnimatePresence>
@@ -590,7 +599,6 @@ const Navigation: React.FC = () => {
             />
 
             <motion.div
-              ref={mobileMenuRef}
               className="fixed top-20 right-4 left-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl z-[999] lg:hidden overflow-hidden max-h-[80vh] overflow-y-auto"
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -642,4 +650,4 @@ const Navigation: React.FC = () => {
   )
 }
 
-export default Navigation
+export default FixedNavigation
