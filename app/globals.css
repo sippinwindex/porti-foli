@@ -1,4 +1,4 @@
-/* Enhanced globals.css - Fixed Navbar and Scroll Bar Issues */
+/* Enhanced globals.css - Clean & Optimized Version */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -31,13 +31,16 @@
   font-named-instance: 'Italic';
 }
 
-/* ✅ ENHANCED: CSS Variables with Stable Theme System */
+/* ===================================================================
+   CSS VARIABLES - ORGANIZED & CLEAN
+   =================================================================== */
+
 :root {
   /* Typography */
   --font-inter: 'Inter var', 'Inter', system-ui, -apple-system, sans-serif;
   --font-jetbrains-mono: 'JetBrains Mono', Menlo, Monaco, 'Courier New', monospace;
   
-  /* Viva Magenta Luxury Color Palette */
+  /* Brand Color Palette */
   --viva-magenta: #BE3455;
   --lux-gold: #D4AF37;
   --lux-sage: #98A869;
@@ -48,7 +51,7 @@
   --lux-offwhite: #FAFAFA;
   --lux-gray-900: #0f172a;
   
-  /* Enhanced Color Variables for RGB usage */
+  /* RGB Color Variables for alpha usage */
   --viva-magenta-rgb: 190, 52, 85;
   --lux-gold-rgb: 212, 175, 55;
   --lux-sage-rgb: 152, 168, 105;
@@ -58,7 +61,7 @@
   --lux-black-rgb: 18, 18, 18;
   --lux-offwhite-rgb: 250, 250, 250;
   
-  /* Enhanced Modern Color System */
+  /* Modern Color System */
   --primary-50: #eff6ff;
   --primary-100: #dbeafe;
   --primary-200: #bfdbfe;
@@ -72,7 +75,7 @@
   --primary-rgb: 59, 130, 246;
   --accent-rgb: 139, 92, 246;
   
-  /* ✅ ENHANCED: Theme-aware CSS Variables (Light Mode Defaults) */
+  /* Theme-aware Variables (Light Mode Defaults) */
   --theme-bg: #ffffff;
   --theme-fg: #0f172a;
   --theme-secondary: #64748b;
@@ -93,7 +96,7 @@
   --theme-destructive-foreground: #f8fafc;
   --theme-ring: #94a3b8;
   
-  /* ✅ ENHANCED: Glass Effect Variables */
+  /* Glass Effect Variables */
   --glass-bg: rgba(255, 255, 255, 0.1);
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-card-bg: rgba(255, 255, 255, 0.8);
@@ -104,7 +107,7 @@
   --glass-blur: blur(16px);
   --glass-saturation: saturate(180%);
   
-  /* Enhanced 3D and WebGL Variables */
+  /* 3D and WebGL Variables */
   --three-bg: #0f172a;
   --webgl-primary: #3b82f6;
   --webgl-secondary: #8b5cf6;
@@ -112,7 +115,7 @@
   --glow-color: rgba(59, 130, 246, 0.8);
   --depth-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   
-  /* Enhanced Layout Variables */
+  /* Layout Variables */
   --header-height: 5rem;
   --section-spacing: 5rem;
   --container-padding: 2rem;
@@ -121,7 +124,7 @@
   --border-radius-lg: 1.5rem;
   --border-radius-xl: 2rem;
   
-  /* Enhanced Shadow System */
+  /* Shadow System */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -143,7 +146,7 @@
   --active-scale: scale(0.98);
   --focus-ring: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
   
-  /* ✅ FIXED: Stable z-index hierarchy - Navbar always on top */
+  /* Z-Index Hierarchy */
   --z-backdrop: -1;
   --z-base: 0;
   --z-content: 10;
@@ -159,9 +162,8 @@
   --z-tooltip: 10000;
 }
 
-/* ✅ ENHANCED: Dark mode variables with consistent theming */
+/* Dark Mode Variables */
 .dark {
-  /* Theme-aware variables for dark mode */
   --theme-bg: #0f172a;
   --theme-fg: #f8fafc;
   --theme-secondary: #94a3b8;
@@ -196,26 +198,25 @@
   --particle-color: rgba(190, 52, 85, 0.6);
 }
 
-/* ✅ ENHANCED: Base Layer with Stable Foundation */
+/* ===================================================================
+   BASE LAYER - FOUNDATION
+   =================================================================== */
+
 @layer base {
-  /* Global Reset and Layout Foundation */
-  * {
+  /* Global Reset */
+  *,
+  *::before,
+  *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
   }
 
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
   html {
     scroll-behavior: smooth;
-    scroll-padding-top: var(--header-height);
+    scroll-padding-top: calc(var(--header-height) + 1rem);
     overflow-x: hidden;
     height: 100%;
-    /* ✅ ENHANCED: Smooth theme transitions */
     transition: color-scheme 0.3s ease;
   }
 
@@ -232,18 +233,19 @@
     position: relative;
     min-height: 100vh;
     
-    /* ✅ ENHANCED: Theme-aware background and colors */
+    /* Theme-aware background */
     background: linear-gradient(135deg, 
       var(--lux-offwhite) 0%, 
       rgba(255, 255, 255, 0.95) 100%
     );
     color: var(--lux-gray-900);
     
-    /* ✅ ENHANCED: Smooth theme transitions */
+    /* Smooth theme transitions */
     transition: background-color 0.3s var(--animation-spring), 
                 color 0.3s var(--animation-spring),
                 border-color 0.3s var(--animation-spring);
     
+    /* Body padding for fixed navbar */
     padding-top: var(--header-height);
   }
 
@@ -255,7 +257,7 @@
     color: var(--lux-offwhite);
   }
 
-  /* Enhanced Typography Hierarchy */
+  /* Typography Hierarchy */
   h1 {
     font-variation-settings: 'wght' 850;
     line-height: 1.1;
@@ -290,7 +292,7 @@
     color: var(--theme-secondary);
   }
 
-  /* Enhanced Code styling */
+  /* Code styling */
   code {
     font-family: var(--font-jetbrains-mono);
     font-size: 0.875em;
@@ -301,14 +303,14 @@
     color: var(--theme-fg);
   }
 
-  /* Enhanced link styles */
+  /* Link styles */
   a {
     color: inherit;
     text-decoration: none;
     transition: all var(--animation-normal) ease;
   }
 
-  /* Enhanced Button reset */
+  /* Button reset */
   button {
     border: none;
     background: none;
@@ -320,7 +322,7 @@
     color: var(--theme-fg);
   }
 
-  /* ✅ ENHANCED: Theme-aware scrollbar */
+  /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -346,7 +348,7 @@
     scrollbar-color: var(--viva-magenta) var(--theme-bg);
   }
 
-  /* Enhanced selection */
+  /* Selection styling */
   ::selection {
     background-color: var(--viva-magenta);
     color: white;
@@ -357,7 +359,7 @@
     color: white;
   }
 
-  /* Enhanced Focus styles */
+  /* Focus styles */
   :focus-visible {
     outline: 2px solid var(--primary-500);
     outline-offset: 2px;
@@ -371,57 +373,62 @@
   }
 }
 
-/* ✅ CRITICAL NAVBAR FIXES: Stable Navigation Components */
+/* ===================================================================
+   COMPONENTS LAYER - MAIN COMPONENTS
+   =================================================================== */
+
 @layer components {
-  /* ✅ CRITICAL FIX: Force navbar to stay stable and never disappear */
+
+  /* ===================================================================
+     CONSOLIDATED NAVBAR SECTION - CLEAN & CONFLICT-FREE
+     =================================================================== */
+
+  /* Core Navbar Structure */
   nav,
   .navbar,
-  header[role="navigation"] {
+  header[role="navigation"],
+  body > nav,
+  .navbar-root,
+  #navbar,
+  [data-navbar] {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    z-index: var(--z-navbar) !important;
-    height: 5rem !important;
-    min-height: 5rem !important;
-    max-height: 5rem !important;
     width: 100% !important;
-    box-sizing: border-box !important;
+    height: var(--header-height) !important;
+    min-height: var(--header-height) !important;
+    max-height: var(--header-height) !important;
+    z-index: var(--z-navbar) !important;
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
-    
-    /* ✅ CRITICAL: Prevent any transforms that could hide navbar */
     transform: none !important;
-    
-    /* ✅ ENHANCED: Stable rendering with theme support */
-    will-change: background-color, backdrop-filter !important;
+    transform-style: flat !important;
+    box-sizing: border-box !important;
     backface-visibility: hidden !important;
-    
-    /* ✅ ENHANCED: Theme-aware background transitions */
-    transition: background-color 0.3s ease, 
-                border-color 0.3s ease !important;
-    
-    /* ✅ CRITICAL: Override any external styles that might hide navbar */
+    will-change: background-color, border-color !important;
+    transition: background-color 0.3s ease, border-color 0.3s ease !important;
     animation: none !important;
+    overflow: visible !important;
   }
 
-  /* ✅ CRITICAL: Force navbar to always be visible - Override any inline styles */
+  /* Override inline styles that could hide navbar */
   nav[style*="display: none"],
-  nav[style*="visibility: hidden"],
+  nav[style*="visibility: hidden"], 
   nav[style*="opacity: 0"],
-  nav[style*="transform: translate"],
+  nav[style*="transform"],
   .navbar[style*="display: none"],
   .navbar[style*="visibility: hidden"],
   .navbar[style*="opacity: 0"],
-  .navbar[style*="transform: translate"] {
+  .navbar[style*="transform"] {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
     transform: none !important;
   }
 
-  /* ✅ ENHANCED: Navbar container stability with proper spacing */
+  /* Navbar Container */
   .navbar-container,
   .nav-container,
   nav > div,
@@ -439,7 +446,7 @@
     gap: 2rem !important;
   }
 
-  /* ✅ ENHANCED: Logo section with proper spacing */
+  /* Logo Section */
   .navbar-logo,
   nav a[href="/"],
   nav > div > a:first-child {
@@ -451,7 +458,7 @@
     z-index: 3 !important;
   }
 
-  /* ✅ ENHANCED: Navigation links container with proper spacing */
+  /* Navigation Links Container */
   .navbar-nav,
   .nav-links,
   nav .hidden.lg\\:flex {
@@ -464,7 +471,7 @@
     z-index: 3 !important;
   }
 
-  /* ✅ ENHANCED: Individual nav links with consistent spacing */
+  /* Individual Nav Links */
   .nav-link,
   nav a:not(:first-child),
   nav button:not(.mobile-toggle) {
@@ -477,9 +484,24 @@
     white-space: nowrap !important;
     position: relative !important;
     z-index: 3 !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    color: var(--theme-fg) !important;
   }
 
-  /* ✅ ENHANCED: Right side controls with proper spacing */
+  nav a:hover,
+  nav button:hover {
+    color: var(--viva-magenta) !important;
+  }
+
+  nav a:focus-visible,
+  nav button:focus-visible {
+    outline: 2px solid var(--viva-magenta) !important;
+    outline-offset: 2px !important;
+    border-radius: 4px !important;
+  }
+
+  /* Right Side Controls */
   .navbar-controls,
   nav > div > div:last-child {
     display: flex !important;
@@ -490,23 +512,33 @@
     z-index: 3 !important;
   }
 
-  /* ✅ ENHANCED: Social links with consistent spacing */
+  /* Social Links */
   .social-links {
     display: flex !important;
     align-items: center !important;
     gap: 0.75rem !important;
   }
 
-  /* ✅ ENHANCED: Theme toggle positioning */
+  /* Theme Toggle */
   .theme-toggle,
-  .theme-toggle-container {
+  .theme-toggle-container,
+  nav .theme-toggle {
     position: relative !important;
     z-index: var(--z-theme-toggle) !important;
     margin: 0 0.5rem !important;
-    transform: translateZ(0) !important;
   }
 
-  /* ✅ ENHANCED: Mobile menu button */
+  .theme-toggle button {
+    overflow: hidden !important;
+    position: relative !important;
+  }
+
+  .theme-toggle button > div > div:last-child {
+    max-width: calc(100% - 4px) !important;
+    max-height: calc(100% - 4px) !important;
+  }
+
+  /* Mobile Menu Button */
   .mobile-toggle,
   nav button[aria-label*="menu" i] {
     position: relative !important;
@@ -519,55 +551,7 @@
     border-radius: 0.5rem !important;
   }
 
-  /* ✅ CRITICAL: Thin scroll progress bar that sits BELOW navbar */
-  .scroll-progress,
-  nav .scroll-progress {
-    position: absolute !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    height: 4px !important;
-    z-index: var(--z-scroll-progress) !important;
-    pointer-events: none !important;
-    background: linear-gradient(135deg, var(--viva-magenta), var(--lux-gold)) !important;
-    user-select: none !important;
-    transform: translateZ(0) !important;
-    will-change: width, transform !important;
-    box-shadow: 0 0 8px rgba(var(--viva-magenta-rgb), 0.5) !important;
-    border-radius: 0 0 2px 2px !important;
-    width: 0% !important;
-    transition: width 0.1s ease !important;
-  }
-
-  /* ✅ ENHANCED: Remove duplicate progress bars */
-  nav .scroll-progress:not(:last-child) {
-    display: none !important;
-  }
-
-  /* ✅ ENHANCED: Progress bar animation that doesn't cause twitching */
-  .scroll-progress.active {
-    transform: scaleX(var(--scroll-progress, 0)) !important;
-    transform-origin: left !important;
-  }
-
-  /* ✅ ENHANCED: Theme-aware navigation links */
-  nav a,
-  nav button,
-  nav [role="button"] {
-    z-index: 3 !important;
-    pointer-events: auto !important;
-    position: relative !important;
-    cursor: pointer !important;
-    transform: translateZ(0) !important;
-    color: var(--theme-fg) !important;
-    transition: color 0.3s ease !important;
-  }
-
-  nav a:hover,
-  nav button:hover {
-    color: var(--viva-magenta) !important;
-  }
-
-  /* ✅ ENHANCED: Glass effects that work with theming */
+  /* Glass Effects for Navbar */
   nav .glass,
   nav .backdrop-blur {
     position: relative !important;
@@ -584,7 +568,50 @@
     pointer-events: auto !important;
   }
 
-  /* ✅ ENHANCED: Mobile menu with proper theming */
+  /* Scroll Progress Bar */
+  .scroll-progress,
+  nav .scroll-progress,
+  .navbar .scroll-progress {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 3px !important;
+    width: 100% !important;
+    z-index: calc(var(--z-navbar) + 1) !important;
+    transform: scaleX(0) !important;
+    transform-origin: left center !important;
+    transition: transform 0.1s ease !important;
+    background: linear-gradient(90deg, 
+      var(--viva-magenta) 0%, 
+      var(--lux-gold) 50%, 
+      var(--lux-teal) 100%
+    ) !important;
+    box-shadow: 
+      0 0 8px rgba(var(--viva-magenta-rgb), 0.4),
+      0 1px 3px rgba(0, 0, 0, 0.2) !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    will-change: transform !important;
+    contain: layout style paint !important;
+  }
+
+  /* Remove duplicate progress bars */
+  nav .scroll-progress:not(:last-of-type),
+  .navbar .scroll-progress:not(:last-of-type) {
+    display: none !important;
+  }
+
+  /* Progress bar animation states */
+  .scroll-progress[data-progress] {
+    transform: scaleX(var(--scroll-progress, 0)) !important;
+  }
+
+  .scroll-progress.animate {
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  /* Mobile Menu */
   .mobile-menu-backdrop {
     position: fixed !important;
     inset: 0 !important;
@@ -595,11 +622,11 @@
 
   .mobile-menu {
     position: fixed !important;
-    top: 3.5rem !important;
+    top: var(--header-height) !important;
     left: 1rem !important;
     right: 1rem !important;
     z-index: calc(var(--z-navbar) - 1) !important;
-    max-height: calc(100vh - 4.5rem) !important;
+    max-height: calc(100vh - var(--header-height) - 1rem) !important;
     overflow-y: auto !important;
   }
 
@@ -612,7 +639,11 @@
     color: var(--theme-fg) !important;
   }
 
-  /* ✅ ENHANCED: Buttons with consistent theming */
+  /* ===================================================================
+     OTHER COMPONENTS
+     =================================================================== */
+
+  /* Buttons */
   .btn-primary {
     display: inline-flex;
     align-items: center;
@@ -660,7 +691,7 @@
     transform: var(--hover-lift) var(--hover-scale);
   }
 
-  /* ✅ ENHANCED: Cards with consistent theming */
+  /* Cards */
   .card {
     padding: 1.5rem;
     border-radius: var(--border-radius-lg);
@@ -682,7 +713,7 @@
     border-color: rgba(var(--viva-magenta-rgb), 0.3);
   }
 
-  /* ✅ ENHANCED: Project cards and language cards with proper spacing */
+  /* Project and Language Cards */
   .project-card,
   .language-card {
     padding: 1.5rem !important;
@@ -698,7 +729,7 @@
     transition: transform 0.3s ease, box-shadow 0.3s ease !important;
   }
 
-  /* ✅ ENHANCED: Form elements with theme support */
+  /* Form Elements */
   .input {
     width: 100%;
     padding: 0.75rem 1rem;
@@ -725,7 +756,7 @@
     resize: vertical;
   }
 
-  /* ✅ ENHANCED: Tech badges with theme support */
+  /* Tech Badges */
   .tech-badge {
     display: inline-flex;
     align-items: center;
@@ -752,7 +783,7 @@
     box-shadow: 0 4px 15px rgba(var(--viva-magenta-rgb), 0.2);
   }
 
-  /* ✅ ENHANCED: Glass morphism utilities */
+  /* Glass Morphism Utilities */
   .glass {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur) var(--glass-saturation);
@@ -798,7 +829,7 @@
     );
   }
 
-  /* ✅ ENHANCED: Status indicators with theme support */
+  /* Status Indicators */
   .status-indicator {
     display: inline-flex;
     align-items: center;
@@ -838,11 +869,74 @@
     color: rgb(239, 68, 68);
     border-color: rgba(239, 68, 68, 0.3);
   }
+
+  /* 3D Card Effects */
+  .card-3d-enhanced {
+    transform-style: preserve-3d;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+
+  .card-3d-enhanced:hover {
+    transform: rotateY(5deg) rotateX(3deg) translateZ(20px);
+  }
+
+  .hero-3d-card {
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backdrop-filter: var(--glass-blur) var(--glass-saturation);
+    background: var(--glass-card-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-2xl);
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  .hero-3d-card:hover {
+    transform: rotateY(10deg) rotateX(5deg) translateZ(20px);
+    box-shadow: var(--shadow-3d), 
+                0 0 40px rgba(var(--viva-magenta-rgb), 0.2);
+  }
+
+  /* Loading Skeleton */
+  .loading-skeleton {
+    background: linear-gradient(135deg, 
+      var(--theme-muted-bg) 0%, 
+      rgba(var(--lux-gray-rgb), 0.1) 100%
+    );
+    backdrop-filter: blur(8px);
+    border-radius: inherit;
+    animation: skeleton-pulse 2s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+    min-height: 200px !important;
+    width: 100% !important;
+  }
+
+  .loading-skeleton::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+      transparent, 
+      rgba(255, 255, 255, 0.2), 
+      transparent
+    );
+    animation: skeleton-shimmer 2s linear infinite;
+  }
 }
 
-/* ✅ ENHANCED: Utilities Layer with theme support */
+/* ===================================================================
+   UTILITIES LAYER
+   =================================================================== */
+
 @layer utilities {
-  /* ✅ ENHANCED: Text utilities with theme awareness */
+  /* Text Utilities */
   .gradient-text {
     background: linear-gradient(135deg, 
       var(--viva-magenta) 0%, 
@@ -877,7 +971,7 @@
     text-shadow: 0 0 20px rgba(var(--viva-magenta-rgb), 0.8);
   }
 
-  /* ✅ ENHANCED: Layout utilities */
+  /* Layout Utilities */
   .preserve-3d {
     transform-style: preserve-3d;
   }
@@ -903,7 +997,7 @@
     will-change: transform;
   }
 
-  /* ✅ ENHANCED: Interactive utilities */
+  /* Interactive Utilities */
   .hover-lift {
     transition: transform var(--animation-normal) var(--animation-spring);
   }
@@ -929,7 +1023,7 @@
     transform: rotateY(5deg) rotateX(3deg) translateZ(20px);
   }
 
-  /* ✅ ENHANCED: Focus utilities with theme support */
+  /* Focus Utilities */
   .focus-ring {
     transition: box-shadow var(--animation-normal) ease;
   }
@@ -939,7 +1033,7 @@
     outline: none;
   }
 
-  /* ✅ ENHANCED: Theme-aware utilities */
+  /* Theme-aware Utilities */
   .theme-bg {
     background: var(--theme-bg);
   }
@@ -957,7 +1051,11 @@
   }
 }
 
-/* ✅ ENHANCED: Grid layouts with proper spacing */
+/* ===================================================================
+   LAYOUT & GRID SYSTEMS
+   =================================================================== */
+
+/* Grid Layouts */
 .grid {
   display: grid !important;
   gap: 2rem !important;
@@ -968,7 +1066,7 @@
 .grid-cols-2 { grid-template-columns: repeat(2, 1fr) !important; }
 .grid-cols-3 { grid-template-columns: repeat(3, 1fr) !important; }
 
-/* ✅ ENHANCED: Container spacing consistency */
+/* Container */
 .container {
   max-width: 1200px !important;
   margin: 0 auto !important;
@@ -977,7 +1075,7 @@
   box-sizing: border-box !important;
 }
 
-/* ✅ ENHANCED: Section spacing without transform twitching */
+/* Section Spacing */
 section {
   position: relative !important;
   padding: 2rem 0 !important;
@@ -991,11 +1089,11 @@ section {
   overflow: hidden;
 }
 
-/* ✅ ENHANCED: Hero section with proper theming */
+/* Hero Section */
 #hero,
 .hero-section {
   padding-top: 2rem !important;
-  min-height: calc(100vh - 5rem) !important;
+  min-height: calc(100vh - var(--header-height)) !important;
   position: relative !important;
   overflow: hidden !important;
   background: linear-gradient(135deg, 
@@ -1013,7 +1111,7 @@ section {
   ) !important;
 }
 
-/* ✅ ENHANCED: Code showcase theming */
+/* Code Showcase */
 #code-showcase {
   background: linear-gradient(135deg, 
     rgba(var(--lux-offwhite), 0.9) 0%, 
@@ -1030,37 +1128,10 @@ section {
   ) !important;
 }
 
-/* ✅ ENHANCED: 3D card effects with stable animations */
-.card-3d-enhanced {
-  transform-style: preserve-3d;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  backface-visibility: hidden;
-  will-change: transform;
-}
+/* ===================================================================
+   ANIMATIONS & KEYFRAMES
+   =================================================================== */
 
-.card-3d-enhanced:hover {
-  transform: rotateY(5deg) rotateX(3deg) translateZ(20px);
-}
-
-.hero-3d-card {
-  transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  backdrop-filter: var(--glass-blur) var(--glass-saturation);
-  background: var(--glass-card-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-2xl);
-  backface-visibility: hidden;
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-.hero-3d-card:hover {
-  transform: rotateY(10deg) rotateX(5deg) translateZ(20px);
-  box-shadow: var(--shadow-3d), 
-              0 0 40px rgba(var(--viva-magenta-rgb), 0.2);
-}
-
-/* ✅ ENHANCED: Keyframe Animations */
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -1104,36 +1175,6 @@ section {
   }
 }
 
-/* ✅ ENHANCED: Loading states with theme support */
-.loading-skeleton {
-  background: linear-gradient(135deg, 
-    var(--theme-muted-bg) 0%, 
-    rgba(var(--lux-gray-rgb), 0.1) 100%
-  );
-  backdrop-filter: blur(8px);
-  border-radius: inherit;
-  animation: skeleton-pulse 2s ease-in-out infinite;
-  position: relative;
-  overflow: hidden;
-  min-height: 200px !important;
-  width: 100% !important;
-}
-
-.loading-skeleton::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(255, 255, 255, 0.2), 
-    transparent
-  );
-  animation: skeleton-shimmer 2s linear infinite;
-}
-
 @keyframes skeleton-pulse {
   0%, 100% {
     opacity: 1;
@@ -1152,24 +1193,16 @@ section {
   }
 }
 
-/* ✅ ENHANCED: Responsive Design with theme support */
+/* ===================================================================
+   RESPONSIVE DESIGN
+   =================================================================== */
+
+/* Tablet Breakpoint */
 @media (max-width: 1024px) {
   :root {
     --header-height: 4rem;
   }
   
-  nav,
-  .navbar,
-  header[role="navigation"] {
-    height: 4rem !important;
-    min-height: 4rem !important;
-    max-height: 4rem !important;
-  }
-  
-  body {
-    padding-top: 4rem !important;
-  }
-
   .navbar-container,
   nav > div {
     padding: 0 1.5rem !important;
@@ -1186,11 +1219,13 @@ section {
     transform: translateY(-5px) scale(1.01);
   }
 
-  .mobile-menu {
-    top: 4rem !important;
+  .scroll-progress,
+  nav .scroll-progress {
+    height: 2px !important;
   }
 }
 
+/* Mobile Breakpoint */
 @media (max-width: 768px) {
   :root {
     --header-height: 3.5rem;
@@ -1199,16 +1234,7 @@ section {
   }
 
   body {
-    padding-top: 3.5rem;
     overflow-x: hidden;
-  }
-
-  nav,
-  .navbar,
-  header[role="navigation"] {
-    height: 3.5rem !important;
-    min-height: 3.5rem !important;
-    max-height: 3.5rem !important;
   }
 
   .navbar-container,
@@ -1241,18 +1267,21 @@ section {
     padding: 0.25rem 0.5rem;
   }
 
-  /* ✅ FIXED: Thinner scroll progress bar on mobile */
   .scroll-progress,
   nav .scroll-progress {
     height: 2px !important;
   }
 
-  .mobile-menu {
-    top: 3.5rem !important;
+  .theme-toggle {
+    margin: 0 0.25rem !important;
   }
 }
 
-/* ✅ ENHANCED: Reduced motion support */
+/* ===================================================================
+   ACCESSIBILITY & SPECIAL CASES
+   =================================================================== */
+
+/* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1285,11 +1314,11 @@ section {
   }
 
   .scroll-progress {
-    transition: width 0.1s linear !important;
+    transition: transform 0.01s linear !important;
   }
 }
 
-/* ✅ ENHANCED: High performance mode */
+/* High Performance Mode for Low-end Devices */
 @media (max-width: 480px) and (prefers-reduced-motion: reduce) {
   nav .glass {
     backdrop-filter: none !important;
@@ -1303,7 +1332,7 @@ section {
   }
 }
 
-/* ✅ ENHANCED: Print styles */
+/* Print Styles */
 @media print {
   .glass,
   .glass-card,
@@ -1328,14 +1357,24 @@ section {
     border: 1px solid var(--theme-border) !important;
   }
 
-  /* Hide scroll progress bar when printing */
   .scroll-progress,
   nav .scroll-progress {
     display: none !important;
   }
+  
+  nav,
+  .navbar {
+    position: static !important;
+    height: auto !important;
+    box-shadow: none !important;
+  }
+  
+  body {
+    padding-top: 0 !important;
+  }
 }
 
-/* ✅ ENHANCED: Safari specific fixes */
+/* Safari Specific Fixes */
 @supports (-webkit-backdrop-filter: blur(16px)) {
   .glass,
   .glass-card,
@@ -1344,30 +1383,26 @@ section {
     -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
     backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
   }
+  
+  nav .backdrop-blur-xl,
+  .navbar .backdrop-blur-xl {
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+  }
 }
 
-/* ✅ ENHANCED: Theme transition prevention during initial load */
+/* Theme Transition Prevention During Load */
 .theme-transition-disabled *,
 .theme-transition-disabled *::before,
 .theme-transition-disabled *::after {
   transition: none !important;
 }
 
-/* ✅ CRITICAL: Final navbar stability enforcement */
-body > nav,
-.navbar-root,
-#navbar,
-[data-navbar] {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  transform: none !important;
-  position: fixed !important;
-  top: 0 !important;
-  z-index: var(--z-navbar) !important;
-}
+/* ===================================================================
+   PERFORMANCE & FIXES
+   =================================================================== */
 
-/* ✅ ENHANCED: Prevent any CSS Grid/Flexbox issues */
+/* Layout Helpers */
 .main-layout {
   display: flex;
   flex-direction: column;
@@ -1379,7 +1414,6 @@ body > nav,
   padding-top: var(--header-height);
 }
 
-/* ✅ ENHANCED: Ensure proper stacking context */
 .page-container {
   position: relative;
   z-index: var(--z-base);
@@ -1390,14 +1424,14 @@ body > nav,
   z-index: var(--z-content);
 }
 
-/* ✅ ENHANCED: Prevent scroll-triggered transforms that cause twitching */
+/* Scroll Optimization */
 .scroll-triggered,
 .parallax-element {
   will-change: opacity !important;
   transform: none !important;
 }
 
-/* ✅ ENHANCED: Ensure all interactive elements are clickable */
+/* Interactive Elements */
 a,
 button,
 [role="button"],
@@ -1407,7 +1441,7 @@ button,
   z-index: 1 !important;
 }
 
-/* ✅ ENHANCED: Focus management for accessibility */
+/* Focus Management */
 .focus-trap {
   position: relative;
 }
@@ -1416,13 +1450,7 @@ button,
   z-index: calc(var(--z-modal) + 1);
 }
 
-/* ✅ ENHANCED: Smooth scrolling improvements */
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: calc(var(--header-height) + 1rem);
-}
-
-/* ✅ ENHANCED: Fix emoji squares by ensuring proper font rendering */
+/* Emoji & Icon Fixes */
 .floating-code-blocks-container .emoji,
 .code-showcase .emoji {
   font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', emoji !important;
@@ -1431,7 +1459,6 @@ html {
   text-rendering: auto !important;
 }
 
-/* ✅ ENHANCED: Force proper icon rendering */
 .lucide {
   stroke: currentColor !important;
   fill: none !important;
@@ -1440,7 +1467,7 @@ html {
   stroke-linejoin: round !important;
 }
 
-/* ✅ ENHANCED: Ensure proper particle field rendering */
+/* Particle Fields */
 .particle-field-container {
   position: absolute !important;
   inset: 0 !important;
@@ -1449,13 +1476,13 @@ html {
   opacity: 0.6 !important;
 }
 
-/* ✅ ENHANCED: Canvas and particle fields don't create black backgrounds */
+/* Canvas Fixes */
 canvas {
   background: transparent !important;
   mix-blend-mode: screen;
 }
 
-/* ✅ ENHANCED: Fix any remaining black sections */
+/* Black Background Fixes */
 div[style*="background: black"],
 div[style*="background: #000"],
 div[style*="background-color: black"],
@@ -1463,43 +1490,17 @@ div[style*="background-color: #000"] {
   background: transparent !important;
 }
 
-/* ✅ ENHANCED: Fix any main container issues */
 main > div {
   background: transparent !important;
 }
 
-/* ✅ ENHANCED: Ensure scrolling works properly */
+/* Viewport Units */
 .min-h-screen {
   min-height: 100vh !important;
   min-height: 100svh !important;
 }
 
-/* ✅ ENHANCED: Performance optimizations */
+/* Performance Optimization */
 * {
   backface-visibility: hidden !important;
-}
-
-/* ✅ CRITICAL: Force proper stacking order */
-nav * {
-  z-index: inherit !important;
-}
-
-nav a,
-nav button {
-  z-index: 3 !important;
-  pointer-events: auto !important;
-}
-
-/* ✅ CRITICAL: Ensure progress bar always renders correctly */
-.scroll-progress {
-  content: '' !important;
-  display: block !important;
-  position: absolute !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  height: 4px !important;
-  background: linear-gradient(135deg, #BE3455, #D4AF37) !important;
-  transform-origin: left !important;
-  transform: scaleX(0) !important;
-  transition: transform 0.1s ease !important;
 }

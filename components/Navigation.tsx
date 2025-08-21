@@ -153,7 +153,7 @@ const FixedNavigation: React.FC = () => {
     initializeTheme()
   }, [])
 
-  // ✅ FIXED: Theme toggle
+  // ✅ FIXED: Theme toggle with proper containment
   const toggleTheme = useCallback(() => {
     try {
       const newDarkMode = !darkMode
@@ -173,7 +173,7 @@ const FixedNavigation: React.FC = () => {
     }
   }, [darkMode])
 
-  // ✅ FIXED: Stable scroll detection without excessive updates
+  // ✅ FIXED: Stable scroll detection with progress bar update
   useEffect(() => {
     let ticking = false
     
@@ -188,10 +188,11 @@ const FixedNavigation: React.FC = () => {
           setScrolled(scrollY > 50)
           
           // Calculate progress (0 to 1)
-          const progress = Math.min(scrollY / (documentHeight - windowHeight), 1)
+          const maxScroll = documentHeight - windowHeight
+          const progress = maxScroll > 0 ? Math.min(scrollY / maxScroll, 1) : 0
           setScrollProgress(progress)
           
-          // Update CSS custom property for progress bar
+          // ✅ FIXED: Update progress bar directly without causing layout shifts
           if (progressRef.current) {
             progressRef.current.style.transform = `scaleX(${progress})`
           }
@@ -202,8 +203,16 @@ const FixedNavigation: React.FC = () => {
       }
     }
     
+    // Initial calculation
+    handleScroll()
+    
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    window.addEventListener('resize', handleScroll, { passive: true })
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleScroll)
+    }
   }, [])
 
   // ✅ FIXED: Better section detection without constant updates
@@ -298,7 +307,7 @@ const FixedNavigation: React.FC = () => {
     return currentSection === id
   }, [pathname, currentSection])
 
-  // Theme Toggle Component
+  // ✅ FIXED: Theme Toggle Component with proper circle containment
   const ThemeToggleComponent = React.memo(() => {
     if (!mounted) {
       return (
@@ -309,14 +318,33 @@ const FixedNavigation: React.FC = () => {
     return (
       <motion.button
         onClick={toggleTheme}
-        className="relative w-12 h-6 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-viva-magenta-500 focus:ring-offset-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+        className="relative w-12 h-6 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-viva-magenta-500/50 focus:ring-offset-2 bg-gray-200/80 dark:bg-gray-700/80 hover:bg-gray-300/80 dark:hover:bg-gray-600/80 border border-gray-300/50 dark:border-gray-600/50 backdrop-blur-sm overflow-hidden"
         whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.02 }}
         aria-label={`Switch to ${darkMode ? 'light' : 'dark'} mode`}
       >
+        {/* Background track */}
+        <div className="absolute inset-0 rounded-full">
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            animate={{
+              background: darkMode
+                ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)'
+                : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)'
+            }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+        
+        {/* ✅ FIXED: Toggle Circle with proper containment */}
         <motion.div
-          className="absolute top-0.5 w-5 h-5 bg-white dark:bg-gray-900 rounded-full shadow-lg flex items-center justify-center"
+          className="absolute w-5 h-5 bg-white dark:bg-gray-100 rounded-full shadow-lg flex items-center justify-center border border-gray-200 dark:border-gray-300"
+          style={{
+            top: '2px',
+            left: '2px'
+          }}
           animate={{
-            x: darkMode ? 24 : 2,
+            x: darkMode ? 24 : 0, // Adjusted to stay within bounds
           }}
           transition={{
             type: "spring",
@@ -324,12 +352,41 @@ const FixedNavigation: React.FC = () => {
             damping: 30
           }}
         >
-          {darkMode ? (
-            <Moon className="w-3 h-3 text-viva-magenta-500" />
-          ) : (
-            <Sun className="w-3 h-3 text-lux-gold-500" />
-          )}
+          <AnimatePresence mode="wait">
+            {darkMode ? (
+              <motion.div
+                key="moon"
+                initial={{ opacity: 0, rotate: -90 }}
+                animate={{ opacity: 1, rotate: 0 }}
+                exit={{ opacity: 0, rotate: 90 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Moon className="w-3 h-3 text-slate-600" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="sun"
+                initial={{ opacity: 0, rotate: -90 }}
+                animate={{ opacity: 1, rotate: 0 }}
+                exit={{ opacity: 0, rotate: 90 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Sun className="w-3 h-3 text-amber-600" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
+        
+        {/* Subtle glow effect */}
+        <motion.div
+          className="absolute inset-0 rounded-full pointer-events-none"
+          animate={{
+            boxShadow: darkMode
+              ? '0 0 15px rgba(59, 130, 246, 0.2)'
+              : '0 0 15px rgba(251, 191, 36, 0.2)'
+          }}
+          transition={{ duration: 0.3 }}
+        />
       </motion.button>
     )
   })
@@ -456,7 +513,7 @@ const FixedNavigation: React.FC = () => {
 
   return (
     <>
-      {/* ✅ FIXED: Stable navbar with proper structure */}
+      {/* ✅ FIXED: Stable navbar with proper structure and overflow visible for progress bar */}
       <nav 
         ref={navRef}
         className={`
@@ -469,7 +526,8 @@ const FixedNavigation: React.FC = () => {
         style={{ 
           height: '5rem',
           minHeight: '5rem',
-          maxHeight: '5rem'
+          maxHeight: '5rem',
+          overflow: 'visible' // ✅ CRITICAL: Allow progress bar to be visible
         }}
       >
         <div className="container mx-auto px-6 sm:px-8 lg:px-12 h-full">
@@ -573,14 +631,18 @@ const FixedNavigation: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ FIXED: Progress bar positioned UNDER navbar */}
+        {/* ✅ FIXED: Progress bar positioned UNDER navbar with proper styling */}
         <div
           ref={progressRef}
-          className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 origin-left z-[999]"
+          className="absolute bottom-0 left-0 right-0 h-1 z-[1001] pointer-events-none"
           style={{ 
             width: '100%',
+            background: 'linear-gradient(90deg, #BE3455 0%, #D4AF37 50%, #008080 100%)',
             transform: 'scaleX(0)',
-            boxShadow: prefersReducedMotion ? 'none' : `0 0 8px rgba(190, 52, 85, 0.5)`
+            transformOrigin: 'left center',
+            transition: prefersReducedMotion ? 'none' : 'transform 0.1s ease',
+            boxShadow: prefersReducedMotion ? 'none' : '0 0 8px rgba(190, 52, 85, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2)',
+            borderRadius: '0 0 2px 2px'
           }}
         />
       </nav>

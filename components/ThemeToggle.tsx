@@ -50,14 +50,15 @@ export default function ThemeToggle({
         className={`
           ${sizeClasses.container} ${variantClasses.button}
           relative rounded-full transition-all duration-300 ease-in-out
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+          focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2
           focus:ring-offset-white dark:focus:ring-offset-gray-900
-          bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600
-          border border-gray-300 dark:border-gray-600
-          transform hover:scale-105 active:scale-95
+          bg-gray-200/80 dark:bg-gray-700/80 hover:bg-gray-300/80 dark:hover:bg-gray-600/80
+          border border-gray-300/50 dark:border-gray-600/50
+          backdrop-filter backdrop-blur-sm
+          overflow-hidden
         `}
         whileTap={{ scale: 0.95 }}
-        whileHover={{ scale: 1.05 }}
+        whileHover={{ scale: 1.02 }}
         aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
         title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
       >
@@ -74,15 +75,20 @@ export default function ThemeToggle({
             transition={{ duration: 0.3 }}
           />
           
-          {/* Toggle Circle */}
+          {/* Toggle Circle - FIXED: Proper containment */}
           <motion.div
             className={`
               ${sizeClasses.circle}
-              absolute top-0.5 bg-white dark:bg-gray-900 rounded-full shadow-lg
+              absolute bg-white dark:bg-gray-100 rounded-full shadow-lg
               flex items-center justify-center
+              border border-gray-200 dark:border-gray-300
             `}
+            style={{
+              top: '2px',
+              left: '2px'
+            }}
             animate={{
-              x: isDark ? sizeClasses.circleOffset : 2,
+              x: isDark ? sizeClasses.circleOffset : 0,
             }}
             transition={{
               type: "spring",
@@ -100,7 +106,7 @@ export default function ThemeToggle({
                   exit={{ opacity: 0, rotate: 90 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Moon className={`${sizeClasses.icon} text-slate-700`} />
+                  <Moon className={`${sizeClasses.icon} text-slate-600`} />
                 </motion.div>
               ) : (
                 <motion.div
@@ -110,20 +116,20 @@ export default function ThemeToggle({
                   exit={{ opacity: 0, rotate: 90 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Sun className={`${sizeClasses.icon} text-amber-500`} />
+                  <Sun className={`${sizeClasses.icon} text-amber-600`} />
                 </motion.div>
               )}
             </AnimatePresence>
           </motion.div>
         </div>
         
-        {/* Glow effect */}
+        {/* Subtle glow effect */}
         <motion.div
-          className="absolute inset-0 rounded-full"
+          className="absolute inset-0 rounded-full pointer-events-none"
           animate={{
             boxShadow: isDark
-              ? '0 0 20px rgba(59, 130, 246, 0.3)'
-              : '0 0 20px rgba(251, 191, 36, 0.3)'
+              ? '0 0 15px rgba(59, 130, 246, 0.2)'
+              : '0 0 15px rgba(251, 191, 36, 0.2)'
           }}
           transition={{ duration: 0.3 }}
         />
@@ -144,23 +150,23 @@ export default function ThemeToggle({
   )
 }
 
-// Helper functions for responsive sizing
+// FIXED: Helper functions for responsive sizing with proper containment
 function getSizeClasses(size: 'sm' | 'md' | 'lg') {
   switch (size) {
     case 'sm':
       return {
-        container: 'w-10 h-6',
+        container: 'w-10 h-5',
         track: 'w-full h-full',
-        circle: 'w-5 h-5',
-        circleOffset: 18,
-        icon: 'w-3 h-3'
+        circle: 'w-4 h-4',
+        circleOffset: 20, // Reduced to stay within bounds
+        icon: 'w-2.5 h-2.5'
       }
     case 'lg':
       return {
         container: 'w-16 h-8',
         track: 'w-full h-full',
         circle: 'w-7 h-7',
-        circleOffset: 32,
+        circleOffset: 32, // Adjusted for larger size
         icon: 'w-4 h-4'
       }
     default: // md
@@ -168,7 +174,7 @@ function getSizeClasses(size: 'sm' | 'md' | 'lg') {
         container: 'w-12 h-6',
         track: 'w-full h-full',
         circle: 'w-5 h-5',
-        circleOffset: 22,
+        circleOffset: 24, // Properly calculated offset
         icon: 'w-3 h-3'
       }
   }
