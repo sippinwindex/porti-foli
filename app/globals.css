@@ -1491,3 +1491,93 @@ section {
    - Expensive hover effects with multiple properties
    - Complex gradient calculations
 */
+
+/* Add this to your global CSS or component styles */
+
+/* Font Loading Optimization */
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Regular.woff2') format('woff2'),
+       url('/fonts/JetBrainsMono-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap; /* This prevents invisible text during font swap */
+}
+
+/* Fallback font stack */
+.font-mono, 
+code, 
+pre {
+  font-family: 'JetBrains Mono', 'SF Mono', Monaco, 'Inconsolata', 'Roboto Mono', 
+               'Fira Code', 'Droid Sans Mono', 'Courier New', monospace;
+  font-feature-settings: 'liga' 1, 'calt' 1; /* Enable ligatures if supported */
+}
+
+/* Preload critical fonts in your HTML head */
+/*
+<link rel="preload" href="/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+*/
+
+/* Console styling to reduce visual noise */
+.console-container {
+  font-family: 'JetBrains Mono', 'SF Mono', Monaco, 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Error styling in console */
+.console-error {
+  color: #f48771;
+  background: rgba(244, 135, 113, 0.1);
+  border-left: 3px solid #f48771;
+  padding-left: 12px;
+  margin: 4px 0;
+}
+
+.console-warning {
+  color: #dbb76d;
+  background: rgba(219, 183, 109, 0.1);
+  border-left: 3px solid #dbb76d;
+  padding-left: 12px;
+  margin: 4px 0;
+}
+
+.console-info {
+  color: #6cb6ff;
+  background: rgba(108, 182, 255, 0.1);
+  border-left: 3px solid #6cb6ff;
+  padding-left: 12px;
+  margin: 4px 0;
+}
+
+/* Reduce console noise with these utility classes */
+.hide-network-errors {
+  display: none;
+}
+
+/* Performance optimization for repeated animations */
+.location-animation {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .location-animation {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .motion-reduce-safe {
+    transform: none !important;
+    animation: none !important;
+  }
+}

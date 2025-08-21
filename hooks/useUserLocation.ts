@@ -43,10 +43,10 @@ interface UseLocationOptions {
 }
 
 const CACHE_KEY = 'userLocationData'
-const CACHE_VERSION = '1.0'
+const CACHE_VERSION = '2.0' // Bumped version for cache invalidation
 const DEFAULT_CACHE_EXPIRY = 60 * 60 * 1000 // 1 hour
-const DEFAULT_RETRY_ATTEMPTS = 3
-const DEFAULT_RETRY_DELAY = 1000
+const DEFAULT_RETRY_ATTEMPTS = 2 // Reduced from 3
+const DEFAULT_RETRY_DELAY = 2000 // Increased delay
 
 export const useUserLocation = (options: UseLocationOptions = {}): LocationState & {
   refetch: () => Promise<void>
@@ -69,12 +69,27 @@ export const useUserLocation = (options: UseLocationOptions = {}): LocationState
     lastUpdated: null
   })
 
+  // Use refs to prevent memory leaks
   const retryCountRef = useRef(0)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const mountedRef = useRef(true)
+
+  // Cleanup function
+  const cleanup = useCallback(() => {
+    mountedRef.current = false
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+  }, [])
 
   const clearCache = useCallback(() => {
     if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(CACHE_KEY)
+      try {
+        localStorage.removeItem(CACHE_KEY)
+      } catch (error) {
+        console.warn('Failed to clear location cache:', error)
+      }
     }
   }, [])
 
@@ -132,7 +147,7 @@ export const useUserLocation = (options: UseLocationOptions = {}): LocationState
 
       const timeoutId = setTimeout(() => {
         reject(new Error('Geolocation timeout'))
-      }, 10000)
+      }, 8000) // Reduced timeout
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -148,14 +163,19 @@ export const useUserLocation = (options: UseLocationOptions = {}): LocationState
         },
         {
           enableHighAccuracy: false,
-          timeout: 8000,
-          maximumAge: 300000 // 5 minutes
+          timeout: 6000,
+          maximumAge: 600000 // 10 minutes - increased cache time
         }
       )
     })
   }, [])
 
   const fetchLocationWithRetry = useCallback(async (attempt = 1): Promise<LocationData> => {
+    // Check if component is still mounted
+    if (!mountedRef.current) {
+      throw new Error('Component unmounted')
+    }
+
     // Cancel previous request if still pending
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
@@ -165,14 +185,21 @@ export const useUserLocation = (options: UseLocationOptions = {}): LocationState
     const { signal } = abortControllerRef.current
 
     try {
-      // Try ipapi.co first
-      const response = await fetch('https://ipapi.co/json/', { 
+      console.log(`Fetching location data (attempt ${attempt})`)
+      
+      // Try ipapi.co with timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 5000)
+      })
+      
+      const fetchPromise = fetch('https://ipapi.co/json/', { 
         signal,
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'Portfolio-Location-Hook/1.0'
         }
       })
+      
+      const response = await Promise.race([fetchPromise, timeoutPromise]) as Response
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -184,12 +211,12 @@ export const useUserLocation = (options: UseLocationOptions = {}): LocationState
         throw new Error(data.reason || 'Location service error')
       }
       
-      return {
+      const locationData: LocationData = {
         country: data.country_name || 'Unknown',
         countryCode: data.country_code || 'XX',
         region: data.region || 'Unknown',
         city: data.city || 'Unknown',
-        timezone: data.timezone || 'UTC',
+        timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         latitude: data.latitude || 0,
         longitude: data.longitude || 0,
         isp: data.org || 'Unknown ISP',
@@ -200,39 +227,50 @@ export const useUserLocation = (options: UseLocationOptions = {}): LocationState
         postal: data.postal
       }
       
+      console.log('Location data fetched successfully:', locationData.city, locationData.country)
+      return locationData
+      
     } catch (error) {
-      if (signal.aborted) {
+      if (signal.aborted || !mountedRef.current) {
         throw new Error('Request was cancelled')
       }
 
-      // Try fallback services
+      console.warn(`Location fetch attempt ${attempt} failed:`, error)
+
+      // Try fallback services only on first attempt
       if (attempt === 1) {
         try {
-          const fallbackResponse = await fetch('https://api.ipify.org?format=json', { signal })
-          const fallbackData = await fallbackResponse.json()
+          const fallbackResponse = await fetch('https://api.ipify.org?format=json', { 
+            signal,
+            headers: { 'Accept': 'application/json' }
+          })
           
-          // Basic fallback data
-          return {
-            country: 'Unknown',
-            countryCode: 'XX',
-            region: 'Unknown',
-            city: 'Unknown',
-            timezone: 'UTC',
-            latitude: 0,
-            longitude: 0,
-            isp: 'Unknown',
-            currency: 'USD',
-            languages: ['en'],
-            ip: fallbackData.ip
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json()
+            
+            return {
+              country: 'Unknown',
+              countryCode: 'XX',
+              region: 'Unknown',
+              city: 'Unknown',
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+              latitude: 0,
+              longitude: 0,
+              isp: 'Unknown',
+              currency: 'USD',
+              languages: [navigator.language?.split('-')[0] || 'en'],
+              ip: fallbackData.ip
+            }
           }
         } catch (fallbackError) {
-          // Continue to retry logic
+          console.warn('Fallback service also failed:', fallbackError)
         }
       }
 
-      // Retry logic
-      if (attempt < retryAttempts) {
-        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt))
+      // Retry logic with exponential backoff
+      if (attempt < retryAttempts && mountedRef.current) {
+        const delay = retryDelay * Math.pow(2, attempt - 1) // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, delay))
         return fetchLocationWithRetry(attempt + 1)
       }
 
@@ -241,13 +279,15 @@ export const useUserLocation = (options: UseLocationOptions = {}): LocationState
   }, [retryAttempts, retryDelay])
 
   const fetchLocation = useCallback(async (): Promise<void> => {
+    if (!mountedRef.current) return
+
     try {
       setState(prev => ({ ...prev, loading: true, error: null }))
       retryCountRef.current = 0
 
       // Check cache first
       const cachedData = getCachedData()
-      if (cachedData) {
+      if (cachedData && mountedRef.current) {
         setState({
           data: cachedData,
           loading: false,
@@ -261,43 +301,56 @@ export const useUserLocation = (options: UseLocationOptions = {}): LocationState
       // Fetch fresh data
       const locationData = await fetchLocationWithRetry()
 
-      // Try to enhance with navigator API if available and permitted
+      if (!mountedRef.current) return
+
+      // Try to enhance with navigator API if coordinates are missing
       if (fallbackToNavigatorAPI && locationData.latitude === 0 && locationData.longitude === 0) {
         try {
           const coords = await getNavigatorLocation()
-          locationData.latitude = coords.latitude
-          locationData.longitude = coords.longitude
+          if (mountedRef.current) {
+            locationData.latitude = coords.latitude
+            locationData.longitude = coords.longitude
+          }
         } catch (navError) {
-          console.info('Navigator geolocation not available or denied:', navError)
+          console.info('Navigator geolocation not available:', navError)
         }
       }
+
+      if (!mountedRef.current) return
 
       // Cache the successful result
       setCachedData(locationData)
       
-      const now = Date.now()
       setState({
         data: locationData,
         loading: false,
         error: null,
-        lastUpdated: now
+        lastUpdated: Date.now()
       })
 
       onSuccess?.(locationData)
         
     } catch (error) {
-      console.warn('Could not fetch location data:', error)
-      
+      if (!mountedRef.current) return
+
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch location'
+      console.warn('Location fetch failed:', errorMessage)
       
-      // Fallback to generic location only if no cached data exists
+      // Use cached data if available, otherwise fallback
       const cachedData = getCachedData()
-      if (!cachedData) {
+      if (cachedData) {
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          error: errorMessage
+        }))
+      } else {
+        // Provide generic fallback
         const fallbackData: LocationData = {
           country: 'Earth',
           countryCode: 'XX',
           region: 'Internet',
-          city: 'Somewhere',
+          city: 'Digital Space',
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
           latitude: 0,
           longitude: 0,
@@ -312,12 +365,6 @@ export const useUserLocation = (options: UseLocationOptions = {}): LocationState
           error: errorMessage,
           lastUpdated: Date.now()
         })
-      } else {
-        setState(prev => ({
-          ...prev,
-          loading: false,
-          error: errorMessage
-        }))
       }
 
       onError?.(errorMessage)
@@ -333,20 +380,22 @@ export const useUserLocation = (options: UseLocationOptions = {}): LocationState
   ])
 
   const refetch = useCallback(async (): Promise<void> => {
+    if (!mountedRef.current) return
+    
     clearCache()
     await fetchLocation()
   }, [clearCache, fetchLocation])
 
+  // Main effect with proper cleanup
   useEffect(() => {
+    mountedRef.current = true
     fetchLocation()
 
     // Cleanup function
     return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
-      }
+      cleanup()
     }
-  }, [fetchLocation])
+  }, [fetchLocation, cleanup])
 
   return {
     ...state,
@@ -355,7 +404,7 @@ export const useUserLocation = (options: UseLocationOptions = {}): LocationState
   }
 }
 
-// Enhanced utility functions
+// Utility functions with better error handling
 export const getTimeGreeting = (timezone?: string, customGreetings?: {
   morning?: string
   afternoon?: string
@@ -379,7 +428,8 @@ export const getTimeGreeting = (timezone?: string, customGreetings?: {
     if (hour >= 12 && hour < 17) return greetings.afternoon
     if (hour >= 17 && hour < 22) return greetings.evening
     return greetings.night
-  } catch {
+  } catch (error) {
+    console.warn('Error getting time greeting:', error)
     const hour = new Date().getHours()
     if (hour >= 5 && hour < 12) return greetings.morning
     if (hour >= 12 && hour < 17) return greetings.afternoon
@@ -404,23 +454,24 @@ export const getCurrentTimeInTimezone = (
       timeZone: timezone,
       ...defaultOptions
     })
-  } catch {
+  } catch (error) {
+    console.warn('Error getting timezone time:', error)
     return new Date().toLocaleTimeString('en-US', defaultOptions)
   }
 }
 
 export const getCountryFlag = (countryCode: string): string => {
   try {
-    // Convert country code to flag emoji using Unicode regional indicator symbols
     const code = countryCode.toUpperCase()
     if (code.length !== 2 || !/^[A-Z]{2}$/.test(code)) return '🌍'
     
-    const offset = 127397 // Offset for regional indicator symbols
+    const offset = 127397
     return String.fromCodePoint(
       code.charCodeAt(0) + offset,
       code.charCodeAt(1) + offset
     )
-  } catch {
+  } catch (error) {
+    console.warn('Error getting country flag:', error)
     return '🌍'
   }
 }
@@ -431,15 +482,20 @@ export const getRelativeDistance = (
   lat2: number, 
   lon2: number
 ): number => {
-  const R = 6371 // Earth's radius in kilometers
-  const dLat = (lat2 - lat1) * Math.PI / 180
-  const dLon = (lon2 - lon1) * Math.PI / 180
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-  return R * c
+  try {
+    const R = 6371 // Earth's radius in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLon = (lon2 - lon1) * Math.PI / 180
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    return R * c
+  } catch (error) {
+    console.warn('Error calculating distance:', error)
+    return 0
+  }
 }
 
 export const isLocationDataStale = (lastUpdated: number | null, maxAge = DEFAULT_CACHE_EXPIRY): boolean => {
