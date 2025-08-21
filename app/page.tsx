@@ -40,8 +40,8 @@ import {
   Trophy
 } from 'lucide-react'
 
-// ✅ ADDED: Import enhanced game CSS
-import './styles/robot-fight.css'
+// ✅ CORRECT PATH - This should work
+import '../styles/robot-fight.css'
 
 // Import your custom hooks
 import usePortfolioData from '@/hooks/usePortfolioData'
