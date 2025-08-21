@@ -1,4 +1,4 @@
-/* Enhanced globals.css - Complete Fixed Version with Unified Background System */
+/* Enhanced globals.css - Complete Fixed Version with A11Y Compliance and Unified Background System */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -32,7 +32,7 @@
 }
 
 /* ===================================================================
-   CSS VARIABLES - ORGANIZED & CLEAN WITH FIXED PROGRESS BAR
+   CSS VARIABLES - ENHANCED WITH A11Y LIGHT THEME SUPPORT
    =================================================================== */
 
 :root {
@@ -80,44 +80,46 @@
   --progress-bar-height: 3px;
   --total-header-height: calc(var(--navbar-height) + var(--progress-bar-height));
   
-  /* Theme-aware Variables (Light Mode Defaults) */
-  --theme-bg: #ffffff;
-  --theme-fg: #0f172a;
-  --theme-secondary: #64748b;
-  --theme-muted: #94a3b8;
-  --theme-border: rgba(0, 0, 0, 0.1);
-  --theme-input: #f8fafc;
-  --theme-card: #ffffff;
-  --theme-popover: #ffffff;
-  --theme-primary: #0f172a;
-  --theme-primary-foreground: #f8fafc;
-  --theme-secondary-bg: #f1f5f9;
-  --theme-secondary-foreground: #0f172a;
-  --theme-muted-bg: #f1f5f9;
-  --theme-muted-foreground: #64748b;
-  --theme-accent: #f1f5f9;
-  --theme-accent-foreground: #0f172a;
-  --theme-destructive: #ef4444;
-  --theme-destructive-foreground: #f8fafc;
-  --theme-ring: #94a3b8;
+  /* ✅ ENHANCED: Light Mode Theme - High Contrast & A11y Compliant */
+  --theme-bg: #ffffff;                    /* Pure white background */
+  --theme-fg: #1a202c;                    /* Very dark text (AAA contrast) */
+  --theme-secondary: #4a5568;             /* Dark gray for secondary text (AA contrast) */
+  --theme-muted: #718096;                 /* Medium gray for muted text */
+  --theme-border: rgba(45, 55, 72, 0.15); /* Subtle but visible borders */
+  --theme-input: #f7fafc;                 /* Very light gray for inputs */
+  --theme-card: #ffffff;                  /* Pure white for cards */
+  --theme-popover: #ffffff;               /* Pure white for popovers */
+  --theme-primary: #1a202c;               /* Dark primary */
+  --theme-primary-foreground: #f8fafc;    /* Light foreground */
+  --theme-secondary-bg: #f1f5f9;          /* Light secondary background */
+  --theme-secondary-foreground: #1a202c;  /* Dark secondary foreground */
+  --theme-muted-bg: #f1f5f9;             /* Light muted background */
+  --theme-muted-foreground: #64748b;      /* Medium gray muted foreground */
+  --theme-accent: rgba(190, 52, 85, 0.05); /* Very subtle brand accent */
+  --theme-accent-foreground: #1a202c;     /* Dark accent foreground */
+  --theme-destructive: #ef4444;          /* Red for destructive actions */
+  --theme-destructive-foreground: #f8fafc; /* Light destructive foreground */
+  --theme-ring: #94a3b8;                 /* Ring color for focus states */
+  --theme-surface: #f7fafc;              /* Light surface color */
+  --theme-surface-elevated: #ffffff;      /* Elevated surface (pure white) */
   
-  /* Glass Effect Variables */
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-card-bg: rgba(255, 255, 255, 0.8);
-  --glass-3d-bg: rgba(255, 255, 255, 0.05);
-  --glass-3d-border: rgba(255, 255, 255, 0.1);
-  --glass-nav-bg: rgba(255, 255, 255, 0.8);
-  --glass-nav-border: rgba(0, 0, 0, 0.1);
-  --glass-blur: blur(16px);
+  /* ✅ ENHANCED: Glass Effect Variables for Light Mode */
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(45, 55, 72, 0.1);
+  --glass-card-bg: rgba(255, 255, 255, 0.98);
+  --glass-3d-bg: rgba(255, 255, 255, 0.9);
+  --glass-3d-border: rgba(45, 55, 72, 0.15);
+  --glass-nav-bg: rgba(255, 255, 255, 0.95);
+  --glass-nav-border: rgba(45, 55, 72, 0.1);
+  --glass-blur: blur(20px);
   --glass-saturation: saturate(180%);
   
   /* 3D and WebGL Variables */
-  --three-bg: #0f172a;
+  --three-bg: #ffffff;                   /* Light background for 3D */
   --webgl-primary: #3b82f6;
   --webgl-secondary: #8b5cf6;
-  --particle-color: rgba(59, 130, 246, 0.6);
-  --glow-color: rgba(59, 130, 246, 0.8);
+  --particle-color: rgba(190, 52, 85, 0.6); /* Enhanced for light mode */
+  --glow-color: rgba(190, 52, 85, 0.8);
   --depth-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   
   /* Layout Variables */
@@ -128,14 +130,14 @@
   --border-radius-lg: 1.5rem;
   --border-radius-xl: 2rem;
   
-  /* Shadow System */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  --shadow-3d: 0 35px 60px -12px rgba(0, 0, 0, 0.3);
+  /* ✅ ENHANCED: Shadow System - Enhanced for Light Mode */
+  --shadow-sm: 0 1px 2px 0 rgba(45, 55, 72, 0.05);
+  --shadow: 0 1px 3px 0 rgba(45, 55, 72, 0.1), 0 1px 2px 0 rgba(45, 55, 72, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(45, 55, 72, 0.1), 0 2px 4px -1px rgba(45, 55, 72, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(45, 55, 72, 0.1), 0 4px 6px -2px rgba(45, 55, 72, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(45, 55, 72, 0.1), 0 10px 10px -5px rgba(45, 55, 72, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(45, 55, 72, 0.15);
+  --shadow-3d: 0 35px 60px -12px rgba(45, 55, 72, 0.2);
   
   /* Animation Variables */
   --animation-fast: 0.15s;
@@ -148,7 +150,7 @@
   --hover-lift: translateY(-2px);
   --hover-scale: scale(1.02);
   --active-scale: scale(0.98);
-  --focus-ring: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+  --focus-ring: 0 0 0 2px rgba(var(--viva-magenta-rgb), 0.2);
   
   /* ✅ FIXED: Z-Index Hierarchy for Progress Bar */
   --z-backdrop: -1;
@@ -157,8 +159,8 @@
   --z-header: 100;
   --z-floating-elements: 950;
   --z-location-message: 998;
-  --z-progress-bar: 999;           /* ✅ FIXED: Below navbar */
-  --z-navbar: 1000;                /* ✅ FIXED: Above progress bar */
+  --z-progress-bar: 999;           /* ✅ Below navbar */
+  --z-navbar: 1000;                /* ✅ Above progress bar */
   --z-navigation: 1000;
   --z-theme-toggle: 1002;
   --z-mobile-menu-backdrop: 998;
@@ -183,12 +185,12 @@
   }
 }
 
-/* Dark Mode Variables */
+/* ✅ ENHANCED: Dark Mode Variables - Proper Contrast */
 .dark {
   --theme-bg: #0f172a;
   --theme-fg: #f8fafc;
-  --theme-secondary: #94a3b8;
-  --theme-muted: #64748b;
+  --theme-secondary: #cbd5e1;
+  --theme-muted: #94a3b8;
   --theme-border: rgba(255, 255, 255, 0.1);
   --theme-input: #1e293b;
   --theme-card: #1e293b;
@@ -199,24 +201,36 @@
   --theme-secondary-foreground: #f8fafc;
   --theme-muted-bg: #1e293b;
   --theme-muted-foreground: #94a3b8;
-  --theme-accent: #1e293b;
+  --theme-accent: rgba(190, 52, 85, 0.1);
   --theme-accent-foreground: #f8fafc;
   --theme-destructive: #ef4444;
   --theme-destructive-foreground: #f8fafc;
   --theme-ring: #334155;
+  --theme-surface: #1e293b;
+  --theme-surface-elevated: #334155;
   
   /* Glass effects for dark mode */
-  --glass-bg: rgba(0, 0, 0, 0.1);
+  --glass-bg: rgba(31, 41, 55, 0.9);
   --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-card-bg: rgba(0, 0, 0, 0.8);
+  --glass-card-bg: rgba(31, 41, 55, 0.95);
   --glass-3d-bg: rgba(0, 0, 0, 0.05);
   --glass-3d-border: rgba(255, 255, 255, 0.1);
-  --glass-nav-bg: rgba(31, 41, 55, 0.8);
+  --glass-nav-bg: rgba(31, 41, 55, 0.9);
   --glass-nav-border: rgba(255, 255, 255, 0.1);
   
   /* Dark mode specific colors */
-  --glow-color: rgba(190, 52, 85, 0.8);
+  --three-bg: #0f172a;
   --particle-color: rgba(190, 52, 85, 0.6);
+  --glow-color: rgba(190, 52, 85, 0.8);
+  
+  /* Dark mode shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --shadow-3d: 0 35px 60px -12px rgba(0, 0, 0, 0.6);
 }
 
 /* ===================================================================
@@ -239,6 +253,42 @@ section#projects,
 section#contact,
 section#game {
   background: transparent !important;
+}
+
+/* ✅ FIXED: Unified Page Background - Enhanced for both themes */
+.unified-portfolio-background {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  
+  /* Clean background for both themes */
+  background: var(--theme-bg) !important;
+}
+
+.unified-portfolio-background::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  
+  /* ✅ FIXED: Light mode - Subtle but visible brand color hints */
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(var(--viva-magenta-rgb), 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(var(--lux-gold-rgb), 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(var(--lux-teal-rgb), 0.02) 0%, transparent 60%);
+  
+  transition: all 0.5s ease;
+}
+
+.dark .unified-portfolio-background::before {
+  /* Dark mode - More visible gradients */
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(var(--viva-magenta-rgb), 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(var(--lux-gold-rgb), 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(var(--lux-teal-rgb), 0.03) 0%, transparent 60%);
 }
 
 /* ✅ ENHANCED: Better gradient text with theme support */
@@ -267,6 +317,15 @@ section#game {
   -webkit-background-clip: text;
   color: transparent;
   background-size: 200% 200%;
+}
+
+.gradient-text-3d {
+  background: linear-gradient(135deg, var(--webgl-primary), var(--webgl-secondary), var(--viva-magenta));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 8s ease-in-out infinite;
+  background-size: 200% 100%;
 }
 
 /* ✅ ENHANCED: Hero title with better animations */
@@ -305,6 +364,18 @@ section#game {
   height: 100vh;
   z-index: 1;
   pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ✅ FIXED: Light mode particle visibility */
+.particle-field-container {
+  opacity: 0.8 !important; /* More visible in light mode */
+  mix-blend-mode: multiply !important;
+}
+
+.dark .particle-field-container {
+  opacity: 0.6 !important;
+  mix-blend-mode: screen !important;
 }
 
 /* ===================================================================
@@ -323,12 +394,13 @@ section#game {
 
   html {
     scroll-behavior: smooth;
-    scroll-padding-top: var(--total-header-height); /* ✅ FIXED: Account for navbar + progress bar */
+    scroll-padding-top: var(--total-header-height); /* ✅ Account for navbar + progress bar */
     overflow-x: hidden;
     height: 100%;
     transition: color-scheme 0.3s ease;
   }
 
+  /* ✅ FIXED: Clean body with proper theme support */
   body {
     font-family: var(--font-inter);
     font-feature-settings: "rlig" 1, "calt" 1, 'case' 1, 'cpsp' 1, 'dlig' 1, 'cv01' 1, 'cv02', 'cv03' 1, 'cv04' 1;
@@ -342,12 +414,9 @@ section#game {
     position: relative;
     min-height: 100vh;
     
-    /* Theme-aware background */
-    background: linear-gradient(135deg, 
-      var(--lux-offwhite) 0%, 
-      rgba(255, 255, 255, 0.95) 100%
-    );
-    color: var(--lux-gray-900);
+    /* ✅ FIXED: Theme-aware background */
+    background: var(--theme-bg) !important;
+    color: var(--theme-fg);
     
     /* Smooth theme transitions */
     transition: background-color 0.3s var(--animation-spring), 
@@ -359,47 +428,30 @@ section#game {
     padding-top: var(--total-header-height) !important;
   }
 
-  .dark body {
-    background: linear-gradient(135deg, 
-      var(--lux-black) 0%, 
-      rgba(31, 41, 55, 0.95) 100%
-    );
-    color: var(--lux-offwhite);
-  }
-
-  /* Typography Hierarchy */
+  /* ✅ FIXED: Typography Hierarchy with High Contrast */
   h1 {
     font-variation-settings: 'wght' 850;
     line-height: 1.1;
     letter-spacing: -0.025em;
-    color: var(--lux-gray-900);
+    color: var(--theme-fg);
   }
 
   h2 {
     font-variation-settings: 'wght' 750;
     line-height: 1.2;
     letter-spacing: -0.02em;
-    color: var(--lux-gray-900);
+    color: var(--theme-fg);
   }
 
   h3, h4, h5, h6 {
     font-variation-settings: 'wght' 650;
     line-height: 1.3;
-    color: var(--lux-gray-900);
-  }
-
-  .dark h1, 
-  .dark h2, 
-  .dark h3, 
-  .dark h4, 
-  .dark h5, 
-  .dark h6 {
-    color: var(--lux-offwhite);
+    color: var(--theme-fg);
   }
 
   p {
     line-height: 1.7;
-    color: var(--theme-secondary);
+    color: var(--theme-secondary); /* Using high contrast secondary color */
   }
 
   /* Code styling */
@@ -432,7 +484,7 @@ section#game {
     color: var(--theme-fg);
   }
 
-  /* Scrollbar styling */
+  /* Enhanced scrollbar styling */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -471,7 +523,7 @@ section#game {
 
   /* Focus styles */
   :focus-visible {
-    outline: 2px solid var(--primary-500);
+    outline: 2px solid var(--viva-magenta);
     outline-offset: 2px;
     border-radius: var(--border-radius-sm);
   }
@@ -520,26 +572,16 @@ section#game {
     will-change: background-color, border-color !important;
     transition: background-color 0.3s ease, border-color 0.3s ease !important;
     animation: none !important;
-    overflow: visible !important; /* ✅ CRITICAL: Allow progress bar to show below */
+    overflow: visible !important;
     
-    /* ✅ CRITICAL: Clean bottom edge for progress bar */
+    /* Clean bottom edge for progress bar */
     border-bottom: none !important;
     box-shadow: none !important;
-  }
-
-  /* Override inline styles that could hide navbar */
-  nav[style*="display: none"],
-  nav[style*="visibility: hidden"], 
-  nav[style*="opacity: 0"],
-  nav[style*="transform"],
-  .navbar[style*="display: none"],
-  .navbar[style*="visibility: hidden"],
-  .navbar[style*="opacity: 0"],
-  .navbar[style*="transform"] {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    transform: none !important;
+    
+    /* ✅ ENHANCED: theming for both light and dark modes */
+    background: var(--glass-nav-bg) !important;
+    backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
+    border-bottom: 1px solid var(--glass-nav-border) !important;
   }
 
   /* Navbar Container */
@@ -558,31 +600,6 @@ section#game {
     box-sizing: border-box !important;
     padding: 0 2rem !important;
     gap: 2rem !important;
-  }
-
-  /* Logo Section */
-  .navbar-logo,
-  nav a[href="/"],
-  nav > div > a:first-child {
-    display: flex !important;
-    align-items: center !important;
-    gap: 1rem !important;
-    min-width: fit-content !important;
-    flex-shrink: 0 !important;
-    z-index: 3 !important;
-  }
-
-  /* Navigation Links Container */
-  .navbar-nav,
-  .nav-links,
-  nav .hidden.lg\\:flex {
-    display: flex !important;
-    align-items: center !important;
-    gap: 1.5rem !important;
-    flex: 1 !important;
-    justify-content: center !important;
-    padding: 0 1rem !important;
-    z-index: 3 !important;
   }
 
   /* Individual Nav Links */
@@ -615,236 +632,54 @@ section#game {
     border-radius: 4px !important;
   }
 
-  /* Right Side Controls */
-  .navbar-controls,
-  nav > div > div:last-child {
-    display: flex !important;
-    align-items: center !important;
-    gap: 1rem !important;
-    min-width: fit-content !important;
-    flex-shrink: 0 !important;
-    z-index: 3 !important;
-  }
-
-  /* Social Links */
-  .social-links {
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.75rem !important;
-  }
-
-  /* Theme Toggle */
-  .theme-toggle,
-  .theme-toggle-container,
-  nav .theme-toggle {
-    position: relative !important;
-    z-index: var(--z-theme-toggle) !important;
-    margin: 0 0.5rem !important;
-  }
-
-  .theme-toggle button {
-    overflow: hidden !important;
-    position: relative !important;
-  }
-
-  .theme-toggle button > div > div:last-child {
-    max-width: calc(100% - 4px) !important;
-    max-height: calc(100% - 4px) !important;
-  }
-
-  /* Mobile Menu Button */
-  .mobile-toggle,
-  nav button[aria-label*="menu" i] {
-    position: relative !important;
-    z-index: 5 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 3rem !important;
-    height: 3rem !important;
-    border-radius: 0.5rem !important;
-  }
-
-  /* Glass Effects for Navbar */
-  nav .glass,
-  nav .backdrop-blur {
-    position: relative !important;
-    z-index: 1 !important;
-    background: var(--glass-nav-bg) !important;
-    backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
-    border: 1px solid var(--glass-nav-border) !important;
-  }
-
-  nav .glass > *,
-  nav .backdrop-blur > * {
-    position: relative !important;
-    z-index: 2 !important;
-    pointer-events: auto !important;
-  }
-
   /* ===================================================================
      ✅ FIXED: PROGRESS BAR - PROPERLY POSITIONED BELOW NAVBAR
      =================================================================== */
 
-  /* ✅ FIXED: Progress bar positioned BELOW navbar, not on it */
   .scroll-progress,
   .scroll-progress-bar,
   nav .scroll-progress,
   .navbar .scroll-progress {
-    /* ✅ CRITICAL: Position below navbar */
     position: fixed !important;
     top: var(--navbar-height) !important;
     left: 0 !important;
     right: 0 !important;
     bottom: auto !important;
     
-    /* ✅ CRITICAL: Proper dimensions */
     width: 100% !important;
     height: var(--progress-bar-height) !important;
     
-    /* ✅ CRITICAL: Z-index BELOW navbar */
     z-index: var(--z-progress-bar) !important;
     
-    /* ✅ CRITICAL: Transform and animation */
     transform: scaleX(0) !important;
     transform-origin: left center !important;
     transition: transform 0.1s ease !important;
     
-    /* ✅ ENHANCED: Beautiful gradient background */
     background: linear-gradient(90deg, 
       #BE3455 0%, 
       #D4AF37 50%, 
       #008080 100%
     ) !important;
     
-    /* ✅ CRITICAL: Remove borders/shadows that create lines */
     border: none !important;
     box-shadow: none !important;
     outline: none !important;
     
-    /* ✅ CRITICAL: Non-interactive */
     pointer-events: none !important;
     user-select: none !important;
     
-    /* ✅ ENHANCED: Performance optimizations */
     will-change: transform !important;
     contain: layout style paint !important;
     backface-visibility: hidden !important;
     perspective: 1000px !important;
     
-    /* ✅ ENHANCED: Smooth corners */
     border-radius: 0 0 2px 2px !important;
-  }
-
-  /* ✅ CRITICAL: Remove duplicate progress bars */
-  .scroll-progress + .scroll-progress,
-  .scroll-progress-bar + .scroll-progress-bar,
-  nav .scroll-progress:not(:first-of-type),
-  .navbar .scroll-progress:not(:first-of-type) {
-    display: none !important;
-  }
-
-  /* ✅ CRITICAL: Remove pseudo-elements that create duplicate bars */
-  .scroll-progress::before,
-  .scroll-progress::after,
-  .scroll-progress-bar::before,
-  .scroll-progress-bar::after {
-    display: none !important;
-  }
-
-  /* ✅ ENHANCED: Animation states */
-  .scroll-progress[data-progress] {
-    transform: scaleX(var(--scroll-progress, 0)) !important;
-  }
-
-  .scroll-progress.animate {
-    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
-
-  /* ✅ ENHANCED: Helper classes */
-  .scroll-progress-container {
-    position: fixed !important;
-    top: var(--navbar-height) !important;
-    left: 0 !important;
-    right: 0 !important;
-    height: var(--progress-bar-height) !important;
-    pointer-events: none !important;
-    overflow: hidden !important;
-    background: transparent !important;
-    z-index: var(--z-progress-bar) !important;
-  }
-
-  .scroll-progress-active {
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  .scroll-progress-hidden {
-    opacity: 0 !important;
-    visibility: hidden !important;
-  }
-
-  .scroll-progress-smooth {
-    transition: transform 0.1s ease !important;
-  }
-
-  .scroll-progress-instant {
-    transition: none !important;
-  }
-
-  /* ✅ CRITICAL: Override external CSS that might interfere */
-  nav[data-scroll-progress],
-  .navbar[data-scroll-progress],
-  nav::after,
-  .navbar::after {
-    border-bottom: none !important;
-    box-shadow: none !important;
-  }
-
-  /* ✅ ENHANCED: Dark mode support */
-  .dark .scroll-progress,
-  .dark .scroll-progress-bar {
-    background: linear-gradient(90deg, 
-      #BE3455 0%, 
-      #D4AF37 50%, 
-      #008080 100%
-    ) !important;
-    box-shadow: 0 0 8px rgba(190, 52, 85, 0.4) !important;
-  }
-
-  /* Mobile Menu */
-  .mobile-menu-backdrop {
-    position: fixed !important;
-    inset: 0 !important;
-    z-index: var(--z-mobile-menu-backdrop) !important;
-    background: rgba(0, 0, 0, 0.5) !important;
-    backdrop-filter: blur(4px) !important;
-  }
-
-  .mobile-menu {
-    position: fixed !important;
-    top: calc(var(--navbar-height) + 0.25rem) !important; /* ✅ FIXED: Position below navbar */
-    left: 1rem !important;
-    right: 1rem !important;
-    z-index: var(--z-mobile-menu) !important;
-    max-height: calc(100vh - var(--navbar-height) - 1rem) !important;
-    overflow-y: auto !important;
-  }
-
-  .mobile-menu-content {
-    position: relative !important;
-    z-index: var(--z-mobile-menu) !important;
-    pointer-events: auto !important;
-    background: var(--glass-card-bg) !important;
-    border: 1px solid var(--theme-border) !important;
-    color: var(--theme-fg) !important;
   }
 
   /* ===================================================================
      ENHANCED BUTTONS - UNIFIED BACKGROUND COMPATIBLE
      =================================================================== */
 
-  /* Buttons - Enhanced with unified background compatibility */
   .btn-primary {
     display: inline-flex;
     align-items: center;
@@ -887,19 +722,13 @@ section#game {
     border-radius: var(--border-radius-lg);
     border: 2px solid var(--viva-magenta);
     color: var(--viva-magenta);
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(16px);
+    background: var(--glass-card-bg);
+    backdrop-filter: var(--glass-blur);
     transition: all var(--animation-normal) var(--animation-spring);
     transform: translateZ(0);
     cursor: pointer;
     position: relative;
     overflow: hidden;
-  }
-
-  .dark .btn-secondary {
-    background: rgba(31, 41, 55, 0.9);
-    color: var(--lux-offwhite);
-    border-color: var(--viva-magenta);
   }
 
   .btn-secondary:hover {
@@ -912,39 +741,21 @@ section#game {
     border-color: rgba(var(--viva-magenta-rgb), 0.5);
   }
 
-  .dark .btn-secondary:hover {
-    background: linear-gradient(135deg, 
-      rgba(var(--viva-magenta-rgb), 0.2), 
-      rgba(var(--lux-gold-rgb), 0.2)
-    );
-  }
-
   /* ===================================================================
      ENHANCED CARDS - UNIFIED BACKGROUND SYSTEM
      =================================================================== */
 
-  /* Cards - Enhanced for unified background system */
   .card {
     padding: 1.5rem;
     border-radius: var(--border-radius-lg);
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(20px) saturate(180%);
-    box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    background: var(--glass-card-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur) var(--glass-saturation);
+    box-shadow: var(--shadow-lg);
     transition: all var(--animation-normal) ease;
     color: var(--theme-fg);
     position: relative;
     z-index: 10;
-  }
-
-  .dark .card {
-    background: rgba(31, 41, 55, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .card-hover {
@@ -952,81 +763,68 @@ section#game {
   }
 
   .card-hover:hover {
-    box-shadow: 
-      0 20px 40px rgba(0, 0, 0, 0.15),
-      0 0 40px rgba(var(--viva-magenta-rgb), 0.1);
+    box-shadow: var(--shadow-xl);
     transform: translateY(-8px) scale(1.02);
     border-color: rgba(var(--viva-magenta-rgb), 0.3);
   }
 
-  .dark .card-hover:hover {
-    box-shadow: 
-      0 20px 40px rgba(0, 0, 0, 0.4),
-      0 0 40px rgba(var(--viva-magenta-rgb), 0.2);
-  }
-
-  /* ✅ ENHANCED: Card styles that work with unified background */
-  .portfolio-card {
-    backdrop-filter: blur(16px);
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 1rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 10;
-  }
-
-  .dark .portfolio-card {
-    background: rgba(31, 41, 55, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .portfolio-card:hover {
-    transform: scale(1.02) translateY(-4px);
-    box-shadow: 0 20px 40px rgba(var(--viva-magenta-rgb), 0.1);
-    border-color: rgba(var(--viva-magenta-rgb), 0.3);
-  }
-
-  .dark .portfolio-card:hover {
-    box-shadow: 0 20px 40px rgba(var(--viva-magenta-rgb), 0.2);
-  }
-
-  /* Project and Language Cards - Unified background compatible */
+  /* ✅ ENHANCED: Cards that work with unified background */
+  .portfolio-card,
   .project-card,
   .language-card {
-    padding: 1.5rem !important;
-    margin: 0 !important;
+    backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
+    background: var(--glass-card-bg) !important;
+    border: 1px solid var(--glass-border) !important;
     border-radius: 1rem !important;
-    background: rgba(255, 255, 255, 0.8) !important;
-    backdrop-filter: blur(16px) saturate(180%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    transform: none !important;
+    box-shadow: var(--shadow-lg) !important;
     transition: all 0.3s ease !important;
     position: relative !important;
     z-index: 10 !important;
   }
 
-  .dark .project-card,
-  .dark .language-card {
-    background: rgba(31, 41, 55, 0.8) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  }
-
+  .portfolio-card:hover,
   .project-card:hover,
   .language-card:hover {
-    transform: translateY(-4px) scale(1.02) !important;
-    box-shadow: 
-      0 20px 40px rgba(0, 0, 0, 0.15),
-      0 0 20px rgba(var(--viva-magenta-rgb), 0.1) !important;
+    transform: scale(1.02) translateY(-4px) !important;
+    box-shadow: var(--shadow-xl) !important;
     border-color: rgba(var(--viva-magenta-rgb), 0.3) !important;
   }
 
-  .dark .project-card:hover,
-  .dark .language-card:hover {
+  /* ✅ ENHANCED: Contact card styling */
+  .contact-card-enhanced {
+    background: var(--glass-card-bg) !important;
+    backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 1.5rem !important;
+    box-shadow: var(--shadow-xl) !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    padding: 2rem !important;
+  }
+
+  .contact-card-enhanced:hover {
+    transform: translateY(-8px) scale(1.02) !important;
     box-shadow: 
-      0 20px 40px rgba(0, 0, 0, 0.4),
-      0 0 20px rgba(var(--viva-magenta-rgb), 0.2) !important;
+      var(--shadow-2xl),
+      0 0 40px rgba(var(--viva-magenta-rgb), 0.15) !important;
+    border-color: rgba(var(--viva-magenta-rgb), 0.3) !important;
+  }
+
+  /* ✅ Status dot with green glow */
+  .status-dot-enhanced {
+    position: absolute !important;
+    top: 1rem !important;
+    right: 1rem !important;
+    width: 12px !important;
+    height: 12px !important;
+    background: #10b981 !important;
+    border-radius: 50% !important;
+    border: 2px solid var(--theme-bg) !important;
+    box-shadow: 
+      0 0 0 3px rgba(16, 185, 129, 0.2),
+      0 0 15px rgba(16, 185, 129, 0.6) !important;
+    animation: status-pulse-enhanced 2s ease-in-out infinite !important;
   }
 
   /* Form Elements */
@@ -1091,20 +889,10 @@ section#game {
   }
 
   .glass-card {
-    background: rgba(255, 255, 255, 0.85) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
-  }
-
-  .dark .glass-card {
-    background: rgba(31, 41, 55, 0.85) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 
-      0 8px 32px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    background: var(--glass-card-bg) !important;
+    backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--shadow-lg) !important;
   }
 
   .glass-3d {
@@ -1250,15 +1038,6 @@ section#game {
     animation: gradient-shift 4s ease-in-out infinite !important;
   }
 
-  .gradient-text-3d {
-    background: linear-gradient(135deg, var(--webgl-primary), var(--webgl-secondary), var(--viva-magenta));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: gradientShift 8s ease-in-out infinite;
-    background-size: 200% 100%;
-  }
-
   .text-shadow {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
@@ -1347,7 +1126,7 @@ section#game {
   }
 
   .theme-card {
-    background: var(--theme-card);
+    background: var(--theme-surface-elevated);
   }
 }
 
@@ -1396,61 +1175,6 @@ section {
   min-height: calc(100vh - var(--total-header-height)) !important;
   position: relative !important;
   overflow: hidden !important;
-  background: linear-gradient(135deg, 
-    rgba(15, 23, 42, 0.95) 0%, 
-    rgba(30, 41, 59, 0.9) 50%,
-    rgba(51, 65, 85, 0.85) 100%
-  ) !important;
-}
-
-.dark #hero {
-  background: linear-gradient(135deg, 
-    var(--lux-black) 0%, 
-    rgba(15, 23, 42, 0.95) 50%,
-    rgba(30, 41, 59, 0.9) 100%
-  ) !important;
-}
-
-/* Code Showcase with Particle Support */
-#code-showcase {
-  background: linear-gradient(135deg, 
-    rgba(250, 250, 250, 0.9) 0%, 
-    rgba(255, 255, 255, 0.8) 50%,
-    rgba(59, 130, 246, 0.1) 100%
-  ) !important;
-  position: relative !important;
-}
-
-.dark #code-showcase {
-  background: linear-gradient(135deg, 
-    rgba(18, 18, 18, 0.9) 0%, 
-    rgba(31, 41, 55, 0.8) 50%,
-    rgba(190, 52, 85, 0.1) 100%
-  ) !important;
-}
-
-/* Other sections with particle-friendly backgrounds */
-#about,
-#languages,
-#projects,
-#contact,
-#game {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.7) 0%, 
-    rgba(248, 250, 252, 0.8) 100%
-  ) !important;
-  position: relative !important;
-}
-
-.dark #about,
-.dark #languages,
-.dark #projects,
-.dark #contact,
-.dark #game {
-  background: linear-gradient(135deg, 
-    rgba(15, 23, 42, 0.8) 0%, 
-    rgba(30, 41, 59, 0.7) 100%
-  ) !important;
 }
 
 /* ===================================================================
@@ -1468,6 +1192,23 @@ section {
   }
   50% {
     background-position: 100% 50%;
+  }
+}
+
+@keyframes status-pulse-enhanced {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 
+      0 0 0 3px rgba(16, 185, 129, 0.2),
+      0 0 15px rgba(16, 185, 129, 0.6);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+    box-shadow: 
+      0 0 0 6px rgba(16, 185, 129, 0.1),
+      0 0 25px rgba(16, 185, 129, 0.8);
   }
 }
 
@@ -1583,7 +1324,7 @@ section {
   
   /* ✅ ENHANCED: Mobile particle field optimization */
   .particle-field-container {
-    opacity: 0.3 !important;
+    opacity: 0.4 !important;
   }
   
   .portfolio-card,
@@ -1603,7 +1344,7 @@ section {
    ACCESSIBILITY & SPECIAL CASES WITH UNIFIED BACKGROUND SUPPORT
    =================================================================== */
 
-/* ✅ ENHANCED: Reduced Motion Support with Progress Bar and Particle Fields */
+/* ✅ ENHANCED: Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1612,19 +1353,6 @@ section {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-  
-  nav,
-  .navbar,
-  .hero-3d-card,
-  .card-3d-enhanced {
-    animation: none !important;
-    transition: opacity 0.3s ease !important;
-  }
-  
-  .hero-3d-card:hover,
-  .card-3d-enhanced:hover {
-    transform: none !important;
   }
   
   .gradient-text,
@@ -1636,35 +1364,48 @@ section {
     color: var(--viva-magenta) !important;
   }
 
-  /* ✅ FIXED: Progress bar with reduced motion */
   .scroll-progress,
   .scroll-progress-bar {
     transition: transform 0.01s linear !important;
   }
   
-  /* ✅ ENHANCED: Disable particle animations */
   .particle-field-container {
     display: none !important;
   }
   
-  .aurora-glow {
+  .contact-card-enhanced:hover {
+    transform: none !important;
+  }
+  
+  .status-dot-enhanced {
     animation: none !important;
   }
 }
 
-/* ✅ ENHANCED: High contrast mode support with particle fields */
+/* ✅ ENHANCED: High contrast mode support */
 @media (prefers-contrast: high) {
+  :root {
+    --theme-fg: #000000 !important;
+    --theme-secondary: #2d3748 !important;
+    --theme-border: rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .dark {
+    --theme-fg: #ffffff !important;
+    --theme-secondary: #e2e8f0 !important;
+  }
+  
   .portfolio-card,
   .project-card,
   .language-card {
     border: 2px solid var(--theme-border) !important;
-    background: var(--theme-card) !important;
+    background: var(--theme-surface-elevated) !important;
     backdrop-filter: none !important;
   }
   
   .btn-primary {
     border: 2px solid var(--theme-border) !important;
-    background: var(--theme-card) !important;
+    background: var(--theme-surface-elevated) !important;
     color: var(--theme-fg) !important;
   }
   
@@ -1673,74 +1414,24 @@ section {
     color: var(--theme-fg) !important;
   }
   
-  /* ✅ ENHANCED: Remove particle field in high contrast mode */
   .particle-field-container {
     display: none !important;
   }
-  
-  /* Enhanced focus visibility in high contrast */
-  .btn-primary:focus,
-  .btn-secondary:focus,
-  .portfolio-card:focus,
-  .project-card:focus,
-  .language-card:focus {
-    outline: 3px solid var(--theme-fg) !important;
-    outline-offset: 2px !important;
-  }
 }
 
-/* High Performance Mode for Low-end Devices */
-@media (max-width: 480px) and (prefers-reduced-motion: reduce) {
-  nav .glass {
-    backdrop-filter: none !important;
-    background: var(--theme-card) !important;
-  }
-  
-  .hero-3d-card,
-  .card-3d-enhanced {
-    transform: none !important;
-    transform-style: auto !important;
-  }
-}
-
-/* ✅ ENHANCED: Print Styles with Unified Background Support */
+/* ✅ ENHANCED: Print Styles */
 @media print {
-  .glass,
-  .glass-card,
-  .glass-3d,
-  .glass-hero {
-    background: var(--theme-card) !important;
-    backdrop-filter: none !important;
-    border: 1px solid var(--theme-border) !important;
-  }
-  
-  .gradient-text,
-  .gradient-text-3d {
-    -webkit-text-fill-color: initial !important;
-    background: none !important;
-    color: var(--theme-fg) !important;
-  }
-  
-  .btn-primary,
-  .btn-secondary {
-    background: var(--theme-card) !important;
-    color: var(--theme-fg) !important;
-    border: 1px solid var(--theme-border) !important;
-  }
-
-  /* ✅ ENHANCED: Hide all particle and animation elements when printing */
   .particle-field-container,
-  .aurora-glow,
   .scroll-progress,
   .scroll-progress-bar,
   nav .scroll-progress {
     display: none !important;
   }
   
-  /* ✅ ENHANCED: Clean print layout */
   .portfolio-card,
   .project-card,
-  .language-card {
+  .language-card,
+  .contact-card-enhanced {
     box-shadow: none !important;
     border: 1px solid var(--theme-border) !important;
     background: white !important;
@@ -1756,27 +1447,12 @@ section {
   
   body {
     padding-top: 0 !important;
+    background: white !important;
+    color: black !important;
   }
   
   section {
     background: white !important;
-  }
-}
-
-/* ✅ ENHANCED: Safari Specific Fixes */
-@supports (-webkit-backdrop-filter: blur(16px)) {
-  .glass,
-  .glass-card,
-  .glass-3d,
-  nav .glass {
-    -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
-    backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
-  }
-  
-  nav .backdrop-blur-xl,
-  .navbar .backdrop-blur-xl {
-    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-    backdrop-filter: blur(24px) saturate(180%) !important;
   }
 }
 
@@ -1785,233 +1461,4 @@ section {
 .theme-transition-disabled *::before,
 .theme-transition-disabled *::after {
   transition: none !important;
-}
-
-/* ===================================================================
-   PERFORMANCE & FIXES WITH UNIFIED BACKGROUND OPTIMIZATIONS
-   =================================================================== */
-
-/* Layout Helpers */
-.main-layout {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.main-content {
-  flex: 1;
-  padding-top: var(--total-header-height); /* ✅ FIXED: Account for navbar + progress bar */
-}
-
-.page-container {
-  position: relative;
-  z-index: var(--z-base);
-}
-
-.content-wrapper {
-  position: relative;
-  z-index: var(--z-content);
-}
-
-/* Scroll Optimization */
-.scroll-triggered,
-.parallax-element {
-  will-change: opacity !important;
-  transform: none !important;
-}
-
-/* Interactive Elements */
-a,
-button,
-[role="button"],
-[tabindex] {
-  pointer-events: auto !important;
-  position: relative !important;
-  z-index: 1 !important;
-}
-
-/* Focus Management */
-.focus-trap {
-  position: relative;
-}
-
-.focus-trap:focus-within {
-  z-index: calc(var(--z-modal) + 1);
-}
-
-/* ✅ ENHANCED: Focus visibility for accessibility */
-.btn-primary:focus,
-.btn-secondary:focus,
-.portfolio-card:focus,
-.project-card:focus,
-.language-card:focus {
-  outline: none !important;
-  box-shadow: 0 0 0 2px var(--viva-magenta) !important;
-  border-radius: 4px !important;
-}
-
-.dark .btn-primary:focus,
-.dark .btn-secondary:focus,
-.dark .portfolio-card:focus,
-.dark .project-card:focus,
-.dark .language-card:focus {
-  box-shadow: 0 0 0 2px rgba(var(--viva-magenta-rgb), 0.8) !important;
-}
-
-/* Emoji & Icon Fixes */
-.floating-code-blocks-container .emoji,
-.code-showcase .emoji {
-  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', emoji !important;
-  font-style: normal !important;
-  font-variant: normal !important;
-  text-rendering: auto !important;
-}
-
-.lucide {
-  stroke: currentColor !important;
-  fill: none !important;
-  stroke-width: 2 !important;
-  stroke-linecap: round !important;
-  stroke-linejoin: round !important;
-}
-
-/* ✅ ENHANCED: Particle Fields for Unified Background System */
-.particle-field-container {
-  position: absolute !important;
-  inset: 0 !important;
-  pointer-events: none !important;
-  z-index: 0 !important;
-  opacity: 0.6 !important;
-  mix-blend-mode: screen !important;
-}
-
-/* Enhanced Canvas Fixes for Particle System */
-canvas {
-  background: transparent !important;
-  mix-blend-mode: screen !important;
-  pointer-events: none !important;
-}
-
-/* Unified Background System - Remove conflicting backgrounds */
-div[style*="background: black"],
-div[style*="background: #000"],
-div[style*="background-color: black"],
-div[style*="background-color: #000"] {
-  background: transparent !important;
-}
-
-main > div {
-  background: transparent !important;
-}
-
-/* Viewport Units */
-.min-h-screen {
-  min-height: 100vh !important;
-  min-height: 100svh !important;
-}
-
-/* ✅ ENHANCED: Performance Optimization for Progress Bar and Particles */
-.scroll-progress,
-.scroll-progress-bar {
-  backface-visibility: hidden !important;
-  contain: layout style paint !important;
-  will-change: transform !important;
-  perspective: 1000px !important;
-}
-
-.particle-field-container canvas {
-  will-change: transform !important;
-  contain: layout style paint !important;
-  transform: translateZ(0) !important;
-}
-
-/* ✅ ENHANCED: Mobile optimizations for unified background */
-@media (max-width: 768px) {
-  .hero-title {
-    font-size: 1.875rem !important;
-    line-height: 2.25rem !important;
-  }
-  
-  .btn-primary,
-  .btn-secondary {
-    padding: 0.5rem 1rem !important;
-    font-size: 0.875rem !important;
-  }
-  
-  /* Reduce particle field opacity on mobile for better readability */
-  .particle-field-container {
-    opacity: 0.3 !important;
-  }
-}
-
-/* ✅ ENHANCED: Utility classes for unified background system */
-.bg-transparent-section {
-  background: transparent !important;
-  backdrop-filter: none !important;
-}
-
-.glass-section {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.1) 0%, 
-    rgba(255, 255, 255, 0.05) 100%
-  ) !important;
-  backdrop-filter: blur(8px) !important;
-}
-
-.dark .glass-section {
-  background: linear-gradient(135deg, 
-    rgba(0, 0, 0, 0.1) 0%, 
-    rgba(0, 0, 0, 0.05) 100%
-  ) !important;
-}
-
-.particle-overlay {
-  position: relative !important;
-  z-index: 10 !important;
-}
-
-.particle-bg {
-  position: relative !important;
-  overflow: hidden !important;
-}
-
-.particle-bg::before {
-  content: '' !important;
-  position: absolute !important;
-  inset: 0 !important;
-  background: linear-gradient(135deg, 
-    rgba(var(--viva-magenta-rgb), 0.05) 0%,
-    rgba(var(--lux-gold-rgb), 0.05) 50%,
-    rgba(var(--lux-teal-rgb), 0.05) 100%
-  ) !important;
-  pointer-events: none !important;
-  z-index: 1 !important;
-}
-
-/* ✅ ENHANCED: Animation performance optimizations */
-@media (prefers-reduced-motion: no-preference) {
-  .smooth-hover {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
-  
-  .smooth-hover:hover {
-    transform: translateY(-2px) scale(1.02) !important;
-  }
-}
-
-/* ✅ FINAL: Ensure all elements work with particle background */
-.content-over-particles {
-  position: relative !important;
-  z-index: 10 !important;
-  background: transparent !important;
-}
-
-.text-over-particles {
-  position: relative !important;
-  z-index: 15 !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
-}
-
-.dark .text-over-particles {
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
 }

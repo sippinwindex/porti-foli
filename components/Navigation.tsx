@@ -1,4 +1,4 @@
-// Fixed Navigation Component with proper progress bar positioning and page-based navigation
+// Fixed Navigation Component with proper page navigation
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -199,7 +199,7 @@ const FixedNavigation: React.FC = () => {
     }
   }, [darkMode])
 
-  // ✅ FIXED: Scroll detection with progress bar update (no section tracking)
+  // ✅ FIXED: Scroll detection with progress bar update
   useEffect(() => {
     let ticking = false
     
@@ -241,24 +241,33 @@ const FixedNavigation: React.FC = () => {
     }
   }, [])
 
-  // ✅ REMOVED: Section detection logic - no longer needed since we use page-based navigation
-
+  // Close mobile menu when pathname changes
   useEffect(() => {
     setIsOpen(false)
   }, [pathname])
 
-  const handleNavigation = useCallback((href: string, id: string) => {
-    setIsOpen(false)
+  // ✅ FIXED: Simplified navigation handler that works with Next.js
+  const handleNavigation = useCallback((href: string) => {
+    console.log('Navigating to:', href) // Debug log
+    setIsOpen(false) // Close mobile menu
+    
+    // For external links
+    if (href.startsWith('http')) {
+      window.open(href, '_blank', 'noopener,noreferrer')
+      return
+    }
+    
+    // For internal links, use router.push
     router.push(href)
   }, [router])
 
   // ✅ FIXED: Simple path-based active detection
-  const isActivePath = useCallback((href: string, id: string) => {
+  const isActivePath = useCallback((href: string) => {
     // Exact match for all pages
     return pathname === href
   }, [pathname])
 
-  // Theme Toggle Component (same as before)
+  // Theme Toggle Component
   const ThemeToggleComponent = React.memo(() => {
     if (!mounted) {
       return (
@@ -330,19 +339,14 @@ const FixedNavigation: React.FC = () => {
   })
   ThemeToggleComponent.displayName = 'ThemeToggleComponent'
 
-  // Navigation Link Component (same as before)
+  // ✅ FIXED: Navigation Link Component - Using Next.js Link properly
   const NavLink = React.memo<{
     item: NavItem
     index: number
     isMobile?: boolean
   }>(({ item, index, isMobile = false }) => {
-    const isActive = isActivePath(item.href, item.id)
+    const isActive = isActivePath(item.href)
     const IconComponent = item.icon
-
-    const handleClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-      e.preventDefault()
-      handleNavigation(item.href, item.id)
-    }, [item.href, item.id])
 
     return (
       <motion.div
@@ -354,9 +358,10 @@ const FixedNavigation: React.FC = () => {
           duration: prefersReducedMotion ? 0.2 : 0.6 
         }}
       >
-        <motion.a
+        {/* ✅ FIXED: Use Next.js Link component for proper routing */}
+        <Link
           href={item.href}
-          onClick={handleClick}
+          onClick={() => setIsOpen(false)} // Close mobile menu
           className={`
             relative flex items-center gap-3 px-4 py-2 rounded-xl font-medium transition-all duration-300 cursor-pointer select-none
             ${isActive 
@@ -365,32 +370,36 @@ const FixedNavigation: React.FC = () => {
             }
             ${isMobile ? 'text-lg justify-start w-full' : 'text-sm'}
           `}
-          whileHover={{ 
-            scale: prefersReducedMotion ? 1 : 1.05, 
-            y: prefersReducedMotion ? 0 : -2 
-          }}
-          whileTap={{ scale: prefersReducedMotion ? 1 : 0.95 }}
         >
-          <IconComponent className="w-5 h-5" />
-          
-          <span className={`${isMobile ? 'block' : 'hidden lg:block'}`}>
-            {item.label}
-          </span>
+          <motion.div
+            className="flex items-center gap-3 w-full"
+            whileHover={{ 
+              scale: prefersReducedMotion ? 1 : 1.05, 
+              y: prefersReducedMotion ? 0 : -2 
+            }}
+            whileTap={{ scale: prefersReducedMotion ? 1 : 0.95 }}
+          >
+            <IconComponent className="w-5 h-5" />
+            
+            <span className={`${isMobile ? 'block' : 'hidden lg:block'}`}>
+              {item.label}
+            </span>
 
-          {isActive && (
-            <motion.div
-              className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-600/20 to-lux-gold-600/20 border border-viva-magenta-500/30"
-              layoutId="activeNavItem"
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            />
-          )}
-        </motion.a>
+            {isActive && (
+              <motion.div
+                className="absolute inset-0 rounded-xl bg-gradient-to-r from-viva-magenta-600/20 to-lux-gold-600/20 border border-viva-magenta-500/30"
+                layoutId="activeNavItem"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+            )}
+          </motion.div>
+        </Link>
       </motion.div>
     )
   })
   NavLink.displayName = 'NavLink'
 
-  // Social Link Component (same as before)
+  // Social Link Component
   const SocialLink = React.memo<{
     social: SocialLink
     index: number
@@ -450,7 +459,7 @@ const FixedNavigation: React.FC = () => {
 
   return (
     <>
-      {/* ✅ FIXED: Clean navbar structure without progress bar interference */}
+      {/* ✅ FIXED: Clean navbar structure */}
       <nav 
         ref={navRef}
         className={`
@@ -493,7 +502,7 @@ const FixedNavigation: React.FC = () => {
               <span className="hidden sm:block">Juan Fernandez</span>
             </Link>
 
-            {/* Desktop Navigation - ✅ UPDATED: Better spacing for more items */}
+            {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-8">
               <div 
                 className="flex items-center gap-1 rounded-xl p-2"
@@ -568,7 +577,7 @@ const FixedNavigation: React.FC = () => {
         ref={progressBarRef}
         className="fixed left-0 right-0 w-full h-1 z-[999] pointer-events-none"
         style={{
-          top: '5rem', // Position directly below navbar
+          top: '5rem',
           background: 'linear-gradient(90deg, #BE3455 0%, #D4AF37 50%, #008080 100%)',
           transform: 'scaleX(0)',
           transformOrigin: 'left center',
@@ -592,7 +601,7 @@ const FixedNavigation: React.FC = () => {
 
             <motion.div
               className="fixed right-4 left-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl z-[999] lg:hidden overflow-hidden max-h-[80vh] overflow-y-auto"
-              style={{ top: 'calc(5rem + 0.25rem)' }} // Position below navbar + progress bar
+              style={{ top: 'calc(5rem + 0.25rem)' }}
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}

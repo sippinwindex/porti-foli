@@ -37,7 +37,8 @@ import {
   Layers,
   Swords,
   Target,
-  Trophy
+  Trophy,
+  Gamepad2
 } from 'lucide-react'
 
 // ✅ CORRECT PATH - This should work
@@ -236,6 +237,7 @@ const ScrollTriggered3DSections = dynamic(
   }
 )
 
+// ✅ FIXED: Enhanced ParticleField import with new signature
 const ParticleField = dynamic(
   () => import('@/components/3D/ParticleField').catch(() => {
     console.warn('Failed to load ParticleField, using fallback')
@@ -732,64 +734,48 @@ function getIconComponent(iconName: string): React.ElementType {
   }
 }
 
-// ✅ UNIFIED BACKGROUND COMPONENT with mouse tracking and theme support
-const UnifiedPortfolioBackground = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 })
+// ✅ FIXED: Auto-detect theme hook for particle field integration
+function useThemeDetection() {
+  const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('light')
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth) * 100
-      const y = (e.clientY / window.innerHeight) * 100
-      setMousePosition({ x, y })
+    const detectTheme = () => {
+      const htmlElement = document.documentElement
+      const hasExplicitDarkClass = htmlElement.classList.contains('dark')
+      const hasExplicitLightClass = htmlElement.classList.contains('light')
+      
+      if (hasExplicitDarkClass) {
+        setCurrentTheme('dark')
+      } else if (hasExplicitLightClass) {
+        setCurrentTheme('light')
+      } else {
+        // Fallback to system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        setCurrentTheme(prefersDark ? 'dark' : 'light')
+      }
     }
-    
-    window.addEventListener('mousemove', handleMouseMove, { passive: true })
-    return () => window.removeEventListener('mousemove', handleMouseMove)
+
+    // Initial detection
+    detectTheme()
+
+    // Watch for theme changes
+    const observer = new MutationObserver(detectTheme)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    })
+
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    mediaQuery.addEventListener('change', detectTheme)
+
+    return () => {
+      observer.disconnect()
+      mediaQuery.removeEventListener('change', detectTheme)
+    }
   }, [])
 
-  return (
-    <div className="fixed inset-0 z-0 overflow-hidden">
-      {/* ✅ Theme-aware base background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-lux-offwhite via-gray-50/80 to-blue-50/30 dark:from-lux-black dark:via-gray-900/90 dark:to-gray-800/50 transition-all duration-500" />
-      
-      {/* ✅ Aurora effect with your brand colors */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: `
-            radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, 
-              rgba(190, 52, 85, 0.08) 0%, 
-              transparent 50%
-            ),
-            radial-gradient(circle at ${100 - mousePosition.x}% ${100 - mousePosition.y}%, 
-              rgba(212, 175, 55, 0.06) 0%, 
-              transparent 60%
-            ),
-            radial-gradient(circle at 50% 50%, 
-              rgba(152, 168, 105, 0.04) 0%, 
-              transparent 70%
-            )
-          `
-        }}
-      />
-      
-      {/* ✅ Enhanced gradient overlays with theme awareness */}
-      <div className="absolute inset-0 bg-gradient-to-br from-viva-magenta-500/5 via-transparent to-lux-gold-500/5 dark:from-viva-magenta-400/10 dark:to-lux-gold-400/10 transition-all duration-500" />
-      
-      {/* ✅ Subtle grid pattern with theme awareness */}
-      <div 
-        className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(190, 52, 85, 0.3) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(190, 52, 85, 0.3) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px',
-          transform: `translate(${mousePosition.x * 0.05}px, ${mousePosition.y * 0.05}px)`
-        }}
-      />
-    </div>
-  )
+  return currentTheme
 }
 
 // Enhanced Main Component
@@ -797,6 +783,9 @@ export default function HomePage() {
   // Use real data hooks with proper error handling
   const { projects, stats, loading: portfolioLoading, error: portfolioError } = usePortfolioData()
   const { repositories, user, stats: githubStats, loading: githubLoading, error: githubError } = useGitHubData()
+  
+  // ✅ FIXED: Enhanced theme detection for particle field
+  const currentTheme = useThemeDetection()
   
   // State management
   const [isLoading, setIsLoading] = useState(true)
@@ -961,6 +950,16 @@ export default function HomePage() {
   const techStack = useMemo(() => 
     ['React', 'TypeScript', 'Next.js', 'Node.js', 'Python', 'Three.js'], []
   )
+
+  // ✅ FIXED: Particle field configuration with enhanced theme support
+  const particleConfig = useMemo(() => ({
+    particleCount: isMobile ? 25 : 60,
+    colorScheme: currentTheme === 'light' ? 'light-mode' as const : 'aurora' as const,
+    animation: 'constellation' as const,
+    interactive: !shouldReduceMotion,
+    speed: 0.4,
+    className: "w-full h-full"
+  }), [currentTheme, isMobile, shouldReduceMotion])
 
   // Enhanced mobile detection
   useEffect(() => {
@@ -1152,21 +1151,14 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-screen text-lux-gray-900 dark:text-lux-offwhite overflow-x-hidden">
-      {/* ✅ UNIFIED BACKGROUND SYSTEM - SINGLE BACKGROUND FOR ENTIRE PAGE */}
-      <UnifiedPortfolioBackground />
+      {/* ✅ UNIFIED BACKGROUND SYSTEM - Uses CSS background only, NO JavaScript background components */}
+      <div className="unified-portfolio-background" />
       
-      {/* ✅ SINGLE PARTICLE FIELD across entire page */}
+      {/* ✅ FIXED: Enhanced particle field with proper theme integration */}
       {!shouldReduceMotion && (
         <Suspense fallback={null}>
-          <div className="fixed inset-0 z-[1]">
-            <ParticleField 
-              particleCount={isMobile ? 25 : 60}
-              colorScheme="aurora"
-              animation="constellation"
-              interactive={!shouldReduceMotion}
-              speed={0.4}
-              className="w-full h-full"
-            />
+          <div className="particle-field-container">
+            <ParticleField {...particleConfig} />
           </div>
         </Suspense>
       )}
@@ -1198,7 +1190,7 @@ export default function HomePage() {
       {/* Enhanced Navigation */}
       <Navigation />
 
-      <main className="relative z-10">
+      <main className="relative z-10 scroll-section">
         {/* ✅ Hero Section - NO background, uses unified system */}
         <section id="hero" className="scroll-section relative min-h-screen">
           <div className="relative z-10">
@@ -1258,7 +1250,7 @@ export default function HomePage() {
                   return (
                     <motion.div
                       key={tech}
-                      className="group relative p-6 rounded-xl backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50 hover:border-viva-magenta-400/40 dark:hover:border-viva-magenta-400/40 text-center cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-viva-magenta-500/20 dark:hover:shadow-viva-magenta-400/20"
+                      className="group relative p-6 rounded-xl glass-card text-center cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-viva-magenta-500/20 dark:hover:shadow-viva-magenta-400/20"
                       initial={{ opacity: 0, scale: 0.9, y: 20 }}
                       whileInView={{ opacity: 1, scale: 1, y: 0 }}
                       viewport={{ once: true }}
@@ -1395,7 +1387,7 @@ export default function HomePage() {
                 return (
                   <motion.div
                     key={stat.label}
-                    className="relative p-6 text-center backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50 rounded-xl hover:border-viva-magenta-400/40 dark:hover:border-viva-magenta-400/40 transition-all duration-300 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-viva-magenta-500/20 dark:hover:shadow-viva-magenta-400/20"
+                    className="relative p-6 text-center glass-card hover:border-viva-magenta-400/40 dark:hover:border-viva-magenta-400/40 transition-all duration-300 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-viva-magenta-500/20 dark:hover:shadow-viva-magenta-400/20"
                     initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.9 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
@@ -1606,13 +1598,22 @@ export default function HomePage() {
                   transition={{ delay: 0.5, duration: 0.3 }}
                 >
                   <div className="px-4 py-2 bg-black/60 backdrop-blur-sm rounded-full border border-gray-600/30">
-                    <span className="text-xs text-gray-300">🎮 Enhanced Combat</span>
+                    <span className="text-xs text-gray-300 flex items-center gap-1">
+                      <Gamepad2 className="w-3 h-3" />
+                      Enhanced Combat
+                    </span>
                   </div>
                   <div className="px-4 py-2 bg-black/60 backdrop-blur-sm rounded-full border border-gray-600/30">
-                    <span className="text-xs text-gray-300">⚡ Real-time Engine</span>
+                    <span className="text-xs text-gray-300 flex items-center gap-1">
+                      <Zap className="w-3 h-3" />
+                      Real-time Engine
+                    </span>
                   </div>
                   <div className="px-4 py-2 bg-black/60 backdrop-blur-sm rounded-full border border-gray-600/30">
-                    <span className="text-xs text-gray-300">🏆 Performance Tracked</span>
+                    <span className="text-xs text-gray-300 flex items-center gap-1">
+                      <Trophy className="w-3 h-3" />
+                      Performance Tracked
+                    </span>
                   </div>
                 </motion.div>
               </motion.div>
@@ -1686,7 +1687,7 @@ export default function HomePage() {
                     href={contact.href}
                     target={contact.external ? '_blank' : undefined}
                     rel={contact.external ? 'noopener noreferrer' : undefined}
-                    className="relative p-6 text-center group backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50 rounded-xl hover:border-viva-magenta-400/40 dark:hover:border-viva-magenta-400/40 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-viva-magenta-500/20 dark:hover:shadow-viva-magenta-400/20"
+                    className="relative p-6 text-center group glass-card hover:border-viva-magenta-400/40 dark:hover:border-viva-magenta-400/40 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-viva-magenta-500/20 dark:hover:shadow-viva-magenta-400/20"
                     initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -1867,7 +1868,7 @@ export default function HomePage() {
           {showScrollTop && (
             <motion.button
               onClick={scrollToTop}
-              className="p-3 bg-white/90 dark:bg-gray-800/90 text-gray-800 dark:text-gray-200 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50"
+              className="p-3 glass-card hover:shadow-xl transition-all duration-300 group backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50"
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0 }}

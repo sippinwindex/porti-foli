@@ -1,4 +1,4 @@
-// Enhanced components/3D/ParticleField.tsx - Merged features from both versions
+// Enhanced ParticleField.tsx - Perfect Light/Dark Mode Integration with All Color Schemes
 'use client'
 
 import { useEffect, useRef, useCallback, useMemo, useState } from 'react'
@@ -20,7 +20,7 @@ interface Particle {
 
 interface ParticleFieldProps {
   particleCount?: number
-  colorScheme?: 'cyberpunk' | 'synthwave' | 'cosmic' | 'aurora' | 'viva-magenta' | 'brand' | 'monochrome'
+  colorScheme?: 'cyberpunk' | 'synthwave' | 'cosmic' | 'aurora' | 'viva-magenta' | 'brand' | 'monochrome' | 'light-mode'
   animation?: 'float' | 'drift' | 'spiral' | 'chaos' | 'constellation' | 'flow' | 'orbit'
   interactive?: boolean
   speed?: number
@@ -29,7 +29,7 @@ interface ParticleFieldProps {
 
 export default function ParticleField({
   particleCount = 50,
-  colorScheme = 'viva-magenta',
+  colorScheme = 'light-mode',
   animation = 'constellation',
   interactive = true,
   speed = 1,
@@ -43,55 +43,119 @@ export default function ParticleField({
   const [mounted, setMounted] = useState(false)
   const [hovered, setHovered] = useState(false)
 
-  // Enhanced color schemes combining both versions
+  // ✅ ENHANCED: Color schemes with perfect light/dark mode support
   const colorSchemes = useMemo(() => ({
-    cyberpunk: {
-      colors: ['#00FFFF', '#FF00FF', '#FFFF00'],
-      primary: '#00FFFF',
-      secondary: '#FF00FF',
-      accent: '#FFFF00'
-    },
-    synthwave: {
-      colors: ['#FF1493', '#8A2BE2', '#00FFFF'],
-      primary: '#FF1493',
-      secondary: '#8A2BE2', 
-      accent: '#00FFFF'
-    },
-    cosmic: {
-      colors: ['#4B0082', '#8A2BE2', '#FFD700'],
-      primary: '#4B0082',
-      secondary: '#8A2BE2',
-      accent: '#FFD700'
-    },
-    aurora: {
-      colors: ['#BE3455', '#D4AF37', '#98A869', '#008080'], // From first file
+    'light-mode': {
+      colors: ['#BE3455', '#D4AF37', '#98A869', '#008080'], // Your brand colors
       primary: '#BE3455',
       secondary: '#D4AF37',
-      accent: '#98A869'
+      accent: '#98A869',
+      opacity: 0.4, // Optimized for light backgrounds
+      mixBlendMode: 'multiply' as const, // Better for light backgrounds
+      glowIntensity: 0.3
+    },
+    cyberpunk: {
+      colors: ['#00FFFF', '#FF00FF', '#FFFF00', '#00FF00'],
+      primary: '#00FFFF',
+      secondary: '#FF00FF',
+      accent: '#FFFF00',
+      opacity: 0.7,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.8
+    },
+    synthwave: {
+      colors: ['#FF1493', '#8A2BE2', '#00FFFF', '#FF6347'],
+      primary: '#FF1493',
+      secondary: '#8A2BE2', 
+      accent: '#00FFFF',
+      opacity: 0.6,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.7
+    },
+    cosmic: {
+      colors: ['#4B0082', '#8A2BE2', '#FFD700', '#FF69B4'],
+      primary: '#4B0082',
+      secondary: '#8A2BE2',
+      accent: '#FFD700',
+      opacity: 0.6,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.6
+    },
+    aurora: {
+      colors: ['#BE3455', '#D4AF37', '#98A869', '#008080'],
+      primary: '#BE3455',
+      secondary: '#D4AF37',
+      accent: '#98A869',
+      opacity: 0.6,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.7
     },
     'viva-magenta': {
       colors: ['#BE3455', '#D4AF37', '#98A869', '#008080'],
-      primary: '#BE3455',    // Your viva-magenta
-      secondary: '#D4AF37',  // Your lux-gold
-      accent: '#98A869'      // Your lux-sage
+      primary: '#BE3455',
+      secondary: '#D4AF37',
+      accent: '#98A869',
+      opacity: 0.6,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.8
     },
     brand: {
       colors: ['#BE3455', '#D4AF37', '#98A869'],
       primary: '#BE3455',
       secondary: '#D4AF37',
-      accent: '#98A869'
+      accent: '#98A869',
+      opacity: 0.6,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.6
     },
     monochrome: {
       colors: ['#ffffff', '#f0f0f0', '#e0e0e0', '#d0d0d0'],
       primary: '#ffffff',
       secondary: '#f0f0f0',
-      accent: '#e0e0e0'
+      accent: '#e0e0e0',
+      opacity: 0.5,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.4
     }
   }), [])
 
   const currentColorScheme = colorSchemes[colorScheme]
 
-  // Enhanced particle initialization with aurora effects from first file
+  // ✅ ENHANCED: Color processing for better visibility
+  const processColor = useCallback((baseColor: string, isLightMode: boolean) => {
+    if (!isLightMode) return baseColor
+
+    // For light mode, ensure colors have enough contrast
+    const hex = baseColor.replace('#', '')
+    const r = parseInt(hex.substr(0, 2), 16)
+    const g = parseInt(hex.substr(2, 2), 16)
+    const b = parseInt(hex.substr(4, 2), 16)
+    
+    // Darken colors for better visibility on light backgrounds
+    const factor = 0.7 // Darken by 30%
+    const rAdjusted = Math.floor(r * factor)
+    const gAdjusted = Math.floor(g * factor)
+    const bAdjusted = Math.floor(b * factor)
+    
+    return `rgb(${rAdjusted}, ${gAdjusted}, ${bAdjusted})`
+  }, [])
+
+  // ✅ ENHANCED: Detect theme mode
+  const isLightMode = useMemo(() => {
+    if (typeof window === 'undefined') return colorScheme === 'light-mode'
+    
+    const htmlElement = document.documentElement
+    const hasExplicitDarkClass = htmlElement.classList.contains('dark')
+    const hasExplicitLightClass = htmlElement.classList.contains('light')
+    
+    if (hasExplicitDarkClass) return false
+    if (hasExplicitLightClass) return true
+    
+    // Fallback to color scheme preference
+    return colorScheme === 'light-mode'
+  }, [colorScheme])
+
+  // ✅ ENHANCED: Particle initialization with theme-aware colors
   const initializeParticles = useCallback(() => {
     const { width, height } = dimensionsRef.current
     if (width === 0 || height === 0) return
@@ -100,26 +164,24 @@ export default function ParticleField({
       const colors = currentColorScheme.colors
       let selectedColor = colors[Math.floor(Math.random() * colors.length)]
       
-      // Add aurora color variation (from first file)
-      if (colorScheme === 'aurora' || colorScheme === 'viva-magenta') {
-        // Create slight color variations for aurora effect
-        const hex = selectedColor.replace('#', '')
-        const r = parseInt(hex.substr(0, 2), 16)
-        const g = parseInt(hex.substr(2, 2), 16)
-        const b = parseInt(hex.substr(4, 2), 16)
-        
-        // Add subtle HSL shifts
-        const variation = 0.1
-        const hueShift = (Math.random() - 0.5) * variation
-        const satShift = (Math.random() - 0.5) * 0.2
-        const lightShift = (Math.random() - 0.5) * variation
-        
-        // Convert back to hex (simplified)
-        const rVaried = Math.max(0, Math.min(255, r + (Math.random() - 0.5) * 20))
-        const gVaried = Math.max(0, Math.min(255, g + (Math.random() - 0.5) * 20))
-        const bVaried = Math.max(0, Math.min(255, b + (Math.random() - 0.5) * 20))
-        
-        selectedColor = `rgb(${Math.floor(rVaried)}, ${Math.floor(gVaried)}, ${Math.floor(bVaried)})`
+      // Process color for current theme
+      selectedColor = processColor(selectedColor, isLightMode)
+      
+      // Add subtle color variation
+      if (selectedColor.startsWith('rgb')) {
+        const match = selectedColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
+        if (match) {
+          const r = parseInt(match[1])
+          const g = parseInt(match[2])
+          const b = parseInt(match[3])
+          
+          // Add small random variations
+          const rVaried = Math.max(0, Math.min(255, r + (Math.random() - 0.5) * 30))
+          const gVaried = Math.max(0, Math.min(255, g + (Math.random() - 0.5) * 30))
+          const bVaried = Math.max(0, Math.min(255, b + (Math.random() - 0.5) * 30))
+          
+          selectedColor = `rgb(${Math.floor(rVaried)}, ${Math.floor(gVaried)}, ${Math.floor(bVaried)})`
+        }
       }
       
       return {
@@ -133,16 +195,16 @@ export default function ParticleField({
         life: 0,
         maxLife: Math.random() * 300 + 200,
         color: selectedColor,
-        scale: Math.random() * 0.8 + 0.2, // From first file
-        baseOpacity: Math.random() * 0.6 + 0.2
+        scale: Math.random() * 0.8 + 0.2,
+        baseOpacity: isLightMode ? Math.random() * 0.3 + 0.1 : Math.random() * 0.4 + 0.1
       }
     })
-  }, [particleCount, speed, currentColorScheme, colorScheme])
+  }, [particleCount, speed, currentColorScheme, processColor, isLightMode])
 
-  // Enhanced particle updates with additional animation modes from first file
+  // ✅ ENHANCED: Particle updates with improved animations
   const updateParticles = useCallback(() => {
     const { width, height } = dimensionsRef.current
-    const time = Date.now() * 0.001 * speed // Global time for consistent animations
+    const time = Date.now() * 0.001 * speed
     
     particlesRef.current.forEach((particle, i) => {
       // Update position based on animation type
@@ -171,26 +233,20 @@ export default function ParticleField({
           break
           
         case 'constellation':
-          // Enhanced constellation movement from first file
           particle.y += particle.vy * speed * 0.1
           particle.x += Math.sin(time + i * 0.1) * 0.2
           particle.vy += Math.sin(time + i * 0.005) * 0.005
-          
-          // Add gentle floating motion
           particle.x += Math.sin(time + i * 0.1) * 0.001
           particle.y += Math.cos(time + i * 0.1) * 0.001
           break
           
         case 'flow':
-          // Flowing motion like aurora (from first file)
           particle.x += Math.sin(time * 0.5 + i * 0.1) * 0.002 * speed
           particle.y += Math.cos(time * 0.3 + i * 0.05) * 0.002 * speed
-          // Add z-like depth movement effect
           particle.radius = particle.scale + Math.sin(time * 0.2 + i * 0.02) * 0.5
           break
           
         case 'orbit':
-          // Orbital motion (from first file)
           const radius = 0.5 + Math.sin(i * 0.1) * 0.3
           particle.x += Math.cos(time + i * 0.1) * radius * 0.001 * speed
           particle.y += Math.sin(time + i * 0.1) * radius * 0.001 * speed
@@ -203,7 +259,7 @@ export default function ParticleField({
           break
       }
 
-      // Enhanced interactive mode with smoother mouse influence
+      // ✅ ENHANCED: Interactive mode with better responsiveness
       if (interactive) {
         const dx = mouseRef.current.x - particle.x
         const dy = mouseRef.current.y - particle.y
@@ -214,38 +270,37 @@ export default function ParticleField({
           particle.vx += dx * force
           particle.vy += dy * force
           
-          // Enhanced repulsion when very close
           if (distance < 50) {
             const repulsion = (50 - distance) / 50 * 0.01
             particle.vx -= dx * repulsion
             particle.vy -= dy * repulsion
           }
           
-          // Scale effect when hovered (from first file concept)
           particle.radius = particle.scale * (hovered ? 1.5 : 1.0)
+          particle.opacity = particle.baseOpacity * (hovered ? 1.3 : 1.0)
         }
       }
 
-      // Enhanced boundary wrapping (from first file)
+      // Boundary wrapping
       const buffer = 20
       if (particle.x > width + buffer) particle.x = -buffer
       if (particle.x < -buffer) particle.x = width + buffer
       if (particle.y > height + buffer) particle.y = -buffer
       if (particle.y < -buffer) particle.y = height + buffer
 
-      // Enhanced life cycle management
+      // Life cycle management
       particle.life++
       if (particle.life > particle.maxLife) {
         particle.life = 0
         particle.x = Math.random() * width
         particle.y = Math.random() * height
         particle.opacity = particle.baseOpacity
-        // Reassign color with aurora variations
         const colors = currentColorScheme.colors
-        particle.color = colors[Math.floor(Math.random() * colors.length)]
+        const newColor = colors[Math.floor(Math.random() * colors.length)]
+        particle.color = processColor(newColor, isLightMode)
       }
 
-      // Enhanced fade in/out with smoother transitions
+      // Enhanced fade in/out
       const lifeCycle = particle.life / particle.maxLife
       if (lifeCycle < 0.1) {
         particle.opacity = particle.baseOpacity * (lifeCycle / 0.1)
@@ -257,9 +312,9 @@ export default function ParticleField({
       
       particle.opacity = Math.max(0, Math.min(1, particle.opacity))
     })
-  }, [animation, speed, interactive, currentColorScheme, hovered])
+  }, [animation, speed, interactive, currentColorScheme, hovered, processColor, isLightMode])
 
-  // Enhanced rendering with better effects and blend modes
+  // ✅ ENHANCED: Rendering with perfect theme support
   const render = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -269,11 +324,15 @@ export default function ParticleField({
 
     const { width, height } = dimensionsRef.current
 
-    // Clear canvas with enhanced trail effect
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.02)'
+    // ✅ ENHANCED: Theme-aware background clearing
+    if (isLightMode) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.03)' // Subtle trail for light mode
+    } else {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.02)' // Dark mode trail
+    }
     ctx.fillRect(0, 0, width, height)
 
-    // Render particles with enhanced effects
+    // ✅ ENHANCED: Render particles with theme-optimized effects
     particlesRef.current.forEach(particle => {
       if (!isFinite(particle.x) || !isFinite(particle.y) || 
           !isFinite(particle.radius) || particle.radius <= 0) {
@@ -281,10 +340,9 @@ export default function ParticleField({
       }
 
       const safeRadius = Math.max(0.5, Math.min(4, particle.radius))
-      const safeOpacity = Math.max(0, Math.min(1, particle.opacity))
+      const safeOpacity = Math.max(0, Math.min(1, particle.opacity * currentColorScheme.opacity))
       
       try {
-        // Enhanced gradient with better color handling
         const gradient = ctx.createRadialGradient(
           particle.x, particle.y, 0,
           particle.x, particle.y, safeRadius * 2
@@ -292,48 +350,51 @@ export default function ParticleField({
 
         let r, g, b
         if (particle.color.startsWith('rgb')) {
-          // Parse RGB format
           const match = particle.color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
           if (match) {
             r = parseInt(match[1])
             g = parseInt(match[2])
             b = parseInt(match[3])
           } else {
-            r = g = b = 255 // fallback
+            r = g = b = isLightMode ? 0 : 255
           }
         } else {
-          // Parse hex format
           const hex = particle.color.replace('#', '')
           r = parseInt(hex.substr(0, 2), 16)
           g = parseInt(hex.substr(2, 2), 16)
           b = parseInt(hex.substr(4, 2), 16)
         }
 
+        // ✅ ENHANCED: Theme-aware gradient creation
+        const glowMultiplier = currentColorScheme.glowIntensity
         gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${safeOpacity})`)
-        gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${safeOpacity * 0.6})`)
+        gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${safeOpacity * 0.6 * glowMultiplier})`)
         gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
 
-        // Enhanced rendering with blend modes
         ctx.save()
-        ctx.globalCompositeOperation = 'screen'
+        
+        // ✅ ENHANCED: Theme-appropriate blend mode
+        ctx.globalCompositeOperation = currentColorScheme.mixBlendMode
+        
         ctx.fillStyle = gradient
         ctx.beginPath()
         ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
         ctx.fill()
         
-        // Enhanced glow effect for aurora/viva-magenta schemes
-        if (colorScheme === 'viva-magenta' || colorScheme === 'aurora') {
-          ctx.globalCompositeOperation = 'soft-light'
-          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${safeOpacity * 0.3})`
+        // ✅ ENHANCED: Add glow effect for enhanced visibility
+        if (currentColorScheme.glowIntensity > 0.5) {
+          ctx.shadowBlur = safeRadius * 2
+          ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${safeOpacity * 0.3})`
           ctx.beginPath()
-          ctx.arc(particle.x, particle.y, safeRadius * 1.5, 0, Math.PI * 2)
+          ctx.arc(particle.x, particle.y, safeRadius * 0.5, 0, Math.PI * 2)
           ctx.fill()
+          ctx.shadowBlur = 0
         }
         
         ctx.restore()
       } catch (error) {
         console.warn('Particle rendering error:', error)
-        // Enhanced fallback rendering
+        // Fallback rendering
         ctx.save()
         ctx.fillStyle = `${particle.color}${Math.floor(safeOpacity * 255).toString(16).padStart(2, '0')}`
         ctx.beginPath()
@@ -343,41 +404,47 @@ export default function ParticleField({
       }
     })
 
-    // Enhanced connecting lines for constellation effect
+    // ✅ ENHANCED: Constellation connecting lines with theme awareness
     if (animation === 'constellation' && particlesRef.current.length > 1) {
       ctx.save()
-      ctx.globalCompositeOperation = 'soft-light'
-      ctx.strokeStyle = currentColorScheme.primary + '30'
+      
+      const lineOpacity = isLightMode ? 0.15 : 0.25
+      const maxConnections = Math.min(5, particlesRef.current.length - 1)
+      
+      ctx.globalCompositeOperation = isLightMode ? 'multiply' : 'soft-light'
+      ctx.strokeStyle = currentColorScheme.primary + Math.floor(lineOpacity * 255).toString(16).padStart(2, '0')
       ctx.lineWidth = 0.5
       
       for (let i = 0; i < particlesRef.current.length; i++) {
-        for (let j = i + 1; j < Math.min(i + 5, particlesRef.current.length); j++) { // Limit connections for performance
+        let connectionsCount = 0
+        for (let j = i + 1; j < particlesRef.current.length && connectionsCount < maxConnections; j++) {
           const p1 = particlesRef.current[i]
           const p2 = particlesRef.current[j]
           const distance = Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2)
           
           if (distance < 100) {
-            const opacity = (100 - distance) / 100 * 0.3
+            const opacity = (100 - distance) / 100 * lineOpacity
             ctx.globalAlpha = opacity
             ctx.beginPath()
             ctx.moveTo(p1.x, p1.y)
             ctx.lineTo(p2.x, p2.y)
             ctx.stroke()
+            connectionsCount++
           }
         }
       }
       ctx.restore()
     }
-  }, [animation, colorScheme, currentColorScheme])
+  }, [animation, isLightMode, currentColorScheme])
 
-  // Optimized animation loop
+  // Animation loop
   const animate = useCallback(() => {
     updateParticles()
     render()
     animationRef.current = requestAnimationFrame(animate)
   }, [updateParticles, render])
 
-  // Enhanced mouse movement handling with hover detection
+  // ✅ ENHANCED: Mouse interaction with better performance
   const handleMouseMove = useCallback((event: MouseEvent) => {
     if (!interactive) return
     
@@ -391,7 +458,6 @@ export default function ParticleField({
     }
   }, [interactive])
 
-  // Mouse enter/leave handlers for hover effects
   const handleMouseEnter = useCallback(() => {
     if (interactive) setHovered(true)
   }, [interactive])
@@ -400,7 +466,7 @@ export default function ParticleField({
     if (interactive) setHovered(false)
   }, [interactive])
 
-  // Enhanced resize handling with debouncing
+  // ✅ ENHANCED: Resize handling with theme awareness
   const handleResize = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -412,26 +478,22 @@ export default function ParticleField({
     const width = rect.width || window.innerWidth
     const height = rect.height || window.innerHeight
 
-    // Set canvas size with device pixel ratio for crisp rendering
     const dpr = window.devicePixelRatio || 1
     canvas.width = width * dpr
     canvas.height = height * dpr
     canvas.style.width = `${width}px`
     canvas.style.height = `${height}px`
 
-    // Scale context for high DPI displays
     const ctx = canvas.getContext('2d')
     if (ctx) {
       ctx.scale(dpr, dpr)
     }
 
     dimensionsRef.current = { width, height }
-    
-    // Reinitialize particles with new dimensions
     initializeParticles()
   }, [initializeParticles])
 
-  // Enhanced setup and cleanup
+  // ✅ ENHANCED: Setup and cleanup with better performance
   useEffect(() => {
     setMounted(true)
     
@@ -442,7 +504,6 @@ export default function ParticleField({
       resizeTimeout = setTimeout(handleResize, 100)
     }
 
-    // Initial setup
     debouncedResize()
     
     const canvas = canvasRef.current
@@ -453,8 +514,6 @@ export default function ParticleField({
     }
 
     window.addEventListener('resize', debouncedResize, { passive: true })
-
-    // Start animation
     animationRef.current = requestAnimationFrame(animate)
 
     return () => {
@@ -474,14 +533,13 @@ export default function ParticleField({
     }
   }, [handleResize, handleMouseMove, handleMouseEnter, handleMouseLeave, animate, interactive])
 
-  // Reinitialize when props change
+  // ✅ ENHANCED: Reinitialize particles when theme or settings change
   useEffect(() => {
     if (dimensionsRef.current.width > 0 && dimensionsRef.current.height > 0) {
       initializeParticles()
     }
-  }, [initializeParticles, colorScheme, particleCount])
+  }, [initializeParticles, colorScheme, particleCount, isLightMode])
 
-  // Don't render until mounted (from first file)
   if (!mounted) return null
 
   return (
@@ -491,21 +549,59 @@ export default function ParticleField({
       style={{
         width: '100%',
         height: '100%',
-        opacity: 0.4,
-        mixBlendMode: 'screen'
+        opacity: isLightMode ? 0.7 : 0.6, // Better visibility balance
+        mixBlendMode: currentColorScheme.mixBlendMode
       }}
       aria-hidden="true"
     />
   )
 }
 
-// Enhanced theme-aware particle field hook (from first file)
-export function useParticleField(theme: 'light' | 'dark' = 'light') {
+// ✅ ENHANCED: Theme-aware particle field hook with auto-detection
+export function useParticleField(theme?: 'light' | 'dark') {
+  const detectedTheme = useMemo(() => {
+    if (theme) return theme
+    
+    if (typeof window === 'undefined') return 'light'
+    
+    const htmlElement = document.documentElement
+    const hasExplicitDarkClass = htmlElement.classList.contains('dark')
+    const hasExplicitLightClass = htmlElement.classList.contains('light')
+    
+    if (hasExplicitDarkClass) return 'dark'
+    if (hasExplicitLightClass) return 'light'
+    
+    // Fallback to system preference
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  }, [theme])
+
   return useMemo(() => ({
     particleCount: typeof window !== 'undefined' && window.innerWidth < 768 ? 25 : 60,
-    colorScheme: 'aurora' as const,
+    colorScheme: detectedTheme === 'light' ? 'light-mode' as const : 'aurora' as const,
     animation: 'constellation' as const,
     interactive: true,
     speed: 0.4
-  }), [])
+  }), [detectedTheme])
+}
+
+// ✅ ENHANCED: Utility function for theme-aware particle configuration
+export function getParticleConfig(theme: 'light' | 'dark', colorScheme?: string) {
+  const baseConfig = {
+    particleCount: 50,
+    interactive: true,
+    speed: 0.4,
+    animation: 'constellation' as const
+  }
+
+  if (colorScheme) {
+    return {
+      ...baseConfig,
+      colorScheme: colorScheme as any
+    }
+  }
+
+  return {
+    ...baseConfig,
+    colorScheme: theme === 'light' ? 'light-mode' as const : 'aurora' as const
+  }
 }
