@@ -1,0 +1,642 @@
+/* ===================================================================
+   🚀 PERFORMANT ANIMATIONS SYSTEM - FIXED VERSION
+   Smart implementation of complex animations with modern optimization
+   =================================================================== */
+
+/* ===================================================================
+   1. CSS CUSTOM PROPERTIES FOR ANIMATION CONTROL
+   =================================================================== */
+
+:root {
+  /* Animation Performance Controls */
+  --animation-enabled: 1; /* Toggle animations globally */
+  --animation-quality: high; /* high | medium | low */
+  --animation-gpu-hint: translateZ(0);
+  
+  /* Performance-optimized timing functions */
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-elastic: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-sharp: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+  
+  /* Gradient Animation Variables */
+  --gradient-primary: linear-gradient(135deg, var(--viva-magenta), var(--lux-gold), var(--lux-teal));
+  --gradient-secondary: linear-gradient(225deg, var(--lux-teal), var(--lux-sage), var(--viva-magenta));
+  --gradient-size: 400% 400%;
+  
+  /* Transform Performance Variables */
+  --transform-base: translateZ(0) scale(1);
+  --transform-hover: translateZ(0) scale(1.05) translateY(-4px);
+  --transform-active: translateZ(0) scale(0.95);
+  
+  /* Filter Performance Variables */
+  --filter-blur-light: blur(2px);
+  --filter-blur-medium: blur(8px);
+  --filter-blur-heavy: blur(16px);
+}
+
+/* ===================================================================
+   2. PERFORMANCE-OPTIMIZED GRADIENT ANIMATIONS
+   =================================================================== */
+
+/* ✅ GPU-Accelerated Gradient Text with Containment */
+.gradient-text-enhanced {
+  background: var(--gradient-primary);
+  background-size: var(--gradient-size);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  
+  /* 🚀 PERFORMANCE: GPU acceleration + containment */
+  transform: var(--animation-gpu-hint);
+  will-change: background-position;
+  contain: layout style paint;
+  
+  /* Conditional animation based on user preferences */
+  animation: calc(var(--animation-enabled) * 6s) gradientFlow var(--ease-smooth) infinite;
+}
+
+/* ✅ Optimized gradient flow animation */
+@keyframes gradientFlow {
+  0%, 100% { background-position: 0% 50%; }
+  25% { background-position: 100% 25%; }
+  50% { background-position: 50% 100%; }
+  75% { background-position: 25% 75%; }
+}
+
+/* ✅ Performance-aware gradient backgrounds */
+.gradient-bg-animated {
+  position: relative;
+  background: var(--theme-bg);
+  overflow: hidden;
+  
+  /* 🚀 PERFORMANCE: Isolate animations to pseudo-element */
+  isolation: isolate;
+}
+
+.gradient-bg-animated::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: var(--gradient-primary);
+  background-size: var(--gradient-size);
+  opacity: 0.1;
+  z-index: -1;
+  
+  /* 🚀 PERFORMANCE: Optimized animation */
+  transform: var(--animation-gpu-hint);
+  will-change: background-position, transform;
+  contain: strict;
+  
+  animation: calc(var(--animation-enabled) * 20s) gradientRotate linear infinite;
+}
+
+@keyframes gradientRotate {
+  0% { 
+    background-position: 0% 0%;
+    transform: var(--animation-gpu-hint) rotate(0deg);
+  }
+  100% { 
+    background-position: 100% 100%;
+    transform: var(--animation-gpu-hint) rotate(360deg);
+  }
+}
+
+/* ===================================================================
+   3. SMART TRANSFORM ANIMATIONS WITH GPU ACCELERATION
+   =================================================================== */
+
+/* ✅ Performance-optimized hover effects */
+.hover-3d-enhanced {
+  transform: var(--transform-base);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  perspective: 1000px;
+  
+  /* 🚀 PERFORMANCE: Isolate transforms */
+  will-change: transform;
+  contain: layout style;
+  
+  transition: transform 0.3s var(--ease-elastic);
+}
+
+.hover-3d-enhanced:hover {
+  transform: var(--transform-hover) rotateX(5deg) rotateY(5deg);
+}
+
+.hover-3d-enhanced:active {
+  transform: var(--transform-active);
+  transition-duration: 0.1s;
+}
+
+/* ✅ Scroll-triggered animations with Intersection Observer optimization */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px) var(--animation-gpu-hint);
+  transition: opacity 0.6s var(--ease-smooth), 
+              transform 0.6s var(--ease-smooth);
+  
+  /* 🚀 PERFORMANCE: Prepare for animation */
+  will-change: opacity, transform;
+  contain: layout style;
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) var(--animation-gpu-hint);
+}
+
+/* ===================================================================
+   4. OPTIMIZED BACKDROP FILTER EFFECTS
+   =================================================================== */
+
+/* ✅ Smart backdrop filter with fallbacks */
+.glass-enhanced {
+  background: var(--glass-card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  
+  /* 🚀 PERFORMANCE: Conditional backdrop filter */
+  backdrop-filter: var(--filter-blur-medium) saturate(180%);
+  
+  /* 🚀 PERFORMANCE: Contain paint operations */
+  contain: layout style paint;
+  transform: var(--animation-gpu-hint);
+}
+
+/* Fallback for unsupported browsers */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-enhanced {
+    background: var(--theme-surface-elevated);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+/* ✅ Dynamic backdrop filter based on scroll position */
+.glass-dynamic {
+  background: var(--glass-card-bg);
+  border: 1px solid var(--glass-border);
+  
+  /* Start with minimal filter */
+  backdrop-filter: var(--filter-blur-light);
+  transition: backdrop-filter 0.3s ease;
+  
+  /* 🚀 PERFORMANCE: Optimize filter transitions */
+  will-change: backdrop-filter;
+  contain: layout style paint;
+}
+
+.glass-dynamic.scrolled {
+  backdrop-filter: var(--filter-blur-medium) saturate(150%);
+}
+
+/* ===================================================================
+   5. COMPLEX BOX-SHADOW ANIMATIONS WITH LAYERS
+   =================================================================== */
+
+/* ✅ Layered shadow system for better performance */
+.shadow-dynamic {
+  position: relative;
+  transform: var(--animation-gpu-hint);
+  
+  /* Base shadow - never changes */
+  box-shadow: var(--shadow-md);
+  
+  /* 🚀 PERFORMANCE: Animate pseudo-element instead of main element */
+  isolation: isolate;
+}
+
+.shadow-dynamic::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  z-index: -1;
+  
+  /* Animated shadow layer */
+  box-shadow: 
+    0 20px 40px rgba(var(--viva-magenta-rgb), 0),
+    0 0 0 rgba(var(--lux-gold-rgb), 0);
+  
+  transition: box-shadow 0.3s var(--ease-smooth);
+  
+  /* 🚀 PERFORMANCE: Isolate shadow animations */
+  will-change: box-shadow;
+  contain: strict;
+}
+
+.shadow-dynamic:hover::before {
+  box-shadow: 
+    0 20px 40px rgba(var(--viva-magenta-rgb), 0.15),
+    0 0 30px rgba(var(--lux-gold-rgb), 0.1);
+}
+
+/* ===================================================================
+   6. PERFORMANCE-AWARE COMPLEX KEYFRAMES
+   =================================================================== */
+
+/* ✅ Optimized particle float animation */
+.particle-float {
+  animation: calc(var(--animation-enabled) * 8s) particleFloat ease-in-out infinite;
+  transform: var(--animation-gpu-hint);
+  will-change: transform;
+  contain: layout style;
+}
+
+@keyframes particleFloat {
+  0%, 100% { 
+    transform: var(--animation-gpu-hint) translateY(0) rotate(0deg);
+  }
+  25% { 
+    transform: var(--animation-gpu-hint) translateY(-10px) rotate(2deg);
+  }
+  50% { 
+    transform: var(--animation-gpu-hint) translateY(-20px) rotate(0deg);
+  }
+  75% { 
+    transform: var(--animation-gpu-hint) translateY(-10px) rotate(-2deg);
+  }
+}
+
+/* ✅ Complex breathing animation with scale optimization */
+.breathing-glow {
+  position: relative;
+  transform: var(--animation-gpu-hint);
+}
+
+.breathing-glow::after {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle, rgba(var(--viva-magenta-rgb), 0.3) 0%, transparent 70%);
+  border-radius: inherit;
+  z-index: -1;
+  
+  /* 🚀 PERFORMANCE: Optimize glow animation */
+  transform: var(--animation-gpu-hint);
+  will-change: transform, opacity;
+  contain: strict;
+  
+  animation: calc(var(--animation-enabled) * 4s) breathingGlow ease-in-out infinite;
+}
+
+@keyframes breathingGlow {
+  0%, 100% { 
+    transform: var(--animation-gpu-hint) scale(1);
+    opacity: 0.3;
+  }
+  50% { 
+    transform: var(--animation-gpu-hint) scale(1.1);
+    opacity: 0.6;
+  }
+}
+
+/* ===================================================================
+   7. SMART PSEUDO-ELEMENT ANIMATIONS
+   =================================================================== */
+
+/* ✅ Shimmer effect with optimized pseudo-elements */
+.shimmer-effect {
+  position: relative;
+  overflow: hidden;
+  background: var(--theme-surface);
+  
+  /* 🚀 PERFORMANCE: Isolate shimmer animation */
+  isolation: isolate;
+}
+
+.shimmer-effect::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  
+  /* 🚀 PERFORMANCE: GPU-accelerated shimmer */
+  transform: var(--animation-gpu-hint);
+  will-change: transform;
+  contain: strict;
+  
+  animation: calc(var(--animation-enabled) * 2s) shimmerSlide linear infinite;
+}
+
+@keyframes shimmerSlide {
+  0% { transform: var(--animation-gpu-hint) translateX(-100%); }
+  100% { transform: var(--animation-gpu-hint) translateX(300%); }
+}
+
+/* ===================================================================
+   8. CONDITIONAL ANIMATION SYSTEM
+   =================================================================== */
+
+/* ✅ Animation quality levels */
+:root[data-animation-quality="low"] {
+  --animation-enabled: 0;
+  --filter-blur-light: none;
+  --filter-blur-medium: none;
+  --filter-blur-heavy: none;
+}
+
+:root[data-animation-quality="medium"] {
+  --animation-enabled: 1;
+  --filter-blur-heavy: var(--filter-blur-medium);
+}
+
+:root[data-animation-quality="high"] {
+  --animation-enabled: 1;
+  /* All filters enabled */
+}
+
+/* ✅ Device-based optimizations */
+@media (max-width: 768px) {
+  :root {
+    --animation-enabled: 0.5; /* Reduce animation intensity */
+    --filter-blur-heavy: var(--filter-blur-light);
+    --gradient-size: 200% 200%; /* Smaller gradient area */
+  }
+}
+
+/* ✅ Performance-based media queries */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --animation-enabled: 0;
+  }
+  
+  .gradient-text-enhanced,
+  .particle-float,
+  .breathing-glow::after,
+  .shimmer-effect::before {
+    animation: none !important;
+  }
+}
+
+/* ✅ Battery optimization */
+@media (prefers-reduced-data: reduce) {
+  :root {
+    --animation-enabled: 0;
+    --filter-blur-light: none;
+    --filter-blur-medium: none;
+    --filter-blur-heavy: none;
+  }
+}
+
+/* ===================================================================
+   9. INTERSECTION OBSERVER ANIMATION TRIGGERS
+   =================================================================== */
+
+/* ✅ Performance-optimized entrance animations */
+.animate-on-scroll {
+  transform: var(--animation-gpu-hint);
+  will-change: transform, opacity;
+  contain: layout style;
+}
+
+.fade-up-on-scroll {
+  opacity: 0;
+  transform: translateY(50px) var(--animation-gpu-hint);
+  transition: 
+    opacity 0.8s var(--ease-smooth),
+    transform 0.8s var(--ease-smooth);
+}
+
+.fade-up-on-scroll.animate {
+  opacity: 1;
+  transform: translateY(0) var(--animation-gpu-hint);
+}
+
+.slide-in-left {
+  opacity: 0;
+  transform: translateX(-50px) var(--animation-gpu-hint);
+  transition: 
+    opacity 0.6s var(--ease-elastic),
+    transform 0.6s var(--ease-elastic);
+}
+
+.slide-in-left.animate {
+  opacity: 1;
+  transform: translateX(0) var(--animation-gpu-hint);
+}
+
+.scale-in {
+  opacity: 0;
+  transform: scale(0.8) var(--animation-gpu-hint);
+  transition: 
+    opacity 0.5s var(--ease-bounce),
+    transform 0.5s var(--ease-bounce);
+}
+
+.scale-in.animate {
+  opacity: 1;
+  transform: scale(1) var(--animation-gpu-hint);
+}
+
+/* ===================================================================
+   10. ANIMATION CLEANUP & OPTIMIZATION
+   =================================================================== */
+
+/* ✅ Remove will-change after animations complete */
+.animation-complete {
+  will-change: auto !important;
+}
+
+/* ✅ Force GPU layer creation for complex animations */
+.force-gpu-layer {
+  transform: var(--animation-gpu-hint);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform;
+}
+
+/* ✅ Memory cleanup for one-time animations */
+.one-time-animation {
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+
+.one-time-animation.completed {
+  animation: none;
+  will-change: auto;
+}
+
+/* ===================================================================
+   11. USAGE EXAMPLES & COMBINATIONS
+   =================================================================== */
+
+/* Example: Performance-optimized card with all effects */
+.premium-card {
+  /* Glass enhanced styling */
+  background: var(--glass-card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 1rem;
+  backdrop-filter: var(--filter-blur-medium) saturate(180%);
+  contain: layout style paint;
+  transform: var(--animation-gpu-hint);
+  
+  /* 3D hover effects */
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform;
+  transition: transform 0.3s var(--ease-elastic);
+  
+  /* Shadow effects */
+  position: relative;
+  box-shadow: var(--shadow-md);
+  isolation: isolate;
+  
+  /* Scroll reveal */
+  opacity: 0;
+  transform: translateY(30px) var(--animation-gpu-hint);
+  transition: opacity 0.6s var(--ease-smooth), 
+              transform 0.6s var(--ease-smooth);
+  
+  /* Breathing glow */
+  overflow: hidden;
+  
+  /* Stagger animation delay for groups */
+  animation-delay: calc(var(--index) * 0.1s);
+}
+
+.premium-card:hover {
+  transform: var(--transform-hover) rotateX(5deg) rotateY(5deg);
+}
+
+.premium-card.is-visible {
+  opacity: 1;
+  transform: translateY(0) var(--animation-gpu-hint);
+}
+
+.premium-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  z-index: -1;
+  box-shadow: 
+    0 20px 40px rgba(var(--viva-magenta-rgb), 0),
+    0 0 0 rgba(var(--lux-gold-rgb), 0);
+  transition: box-shadow 0.3s var(--ease-smooth);
+  will-change: box-shadow;
+  contain: strict;
+}
+
+.premium-card:hover::before {
+  box-shadow: 
+    0 20px 40px rgba(var(--viva-magenta-rgb), 0.15),
+    0 0 30px rgba(var(--lux-gold-rgb), 0.1);
+}
+
+.premium-card::after {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle, rgba(var(--viva-magenta-rgb), 0.3) 0%, transparent 70%);
+  border-radius: inherit;
+  z-index: -2;
+  transform: var(--animation-gpu-hint);
+  will-change: transform, opacity;
+  contain: strict;
+  animation: calc(var(--animation-enabled) * 4s) breathingGlow ease-in-out infinite;
+}
+
+/* Example: High-performance text with multiple effects */
+.hero-text-premium {
+  /* Gradient text enhanced */
+  background: var(--gradient-primary);
+  background-size: var(--gradient-size);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transform: var(--animation-gpu-hint);
+  will-change: background-position;
+  contain: layout style paint;
+  animation: calc(var(--animation-enabled) * 6s) gradientFlow var(--ease-smooth) infinite;
+  
+  /* Shimmer effect */
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  
+  /* Scroll animation */
+  opacity: 0;
+  transform: translateY(50px) var(--animation-gpu-hint);
+  transition: 
+    opacity 0.8s var(--ease-smooth),
+    transform 0.8s var(--ease-smooth);
+}
+
+.hero-text-premium.animate {
+  opacity: 1;
+  transform: translateY(0) var(--animation-gpu-hint);
+}
+
+.hero-text-premium::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  transform: var(--animation-gpu-hint);
+  will-change: transform;
+  contain: strict;
+  animation: calc(var(--animation-enabled) * 2s) shimmerSlide linear infinite;
+}
+
+/* ===================================================================
+   12. RESPONSIVE PERFORMANCE OPTIMIZATIONS
+   =================================================================== */
+
+/* Tablet optimizations */
+@media (max-width: 1024px) {
+  .premium-card:hover {
+    transform: translateY(-4px) scale(1.02);
+  }
+  
+  .hover-3d-enhanced:hover {
+    transform: translateY(-4px) scale(1.02);
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .premium-card,
+  .hover-3d-enhanced,
+  .glass-enhanced {
+    backdrop-filter: none;
+    transform: none;
+  }
+  
+  .premium-card:hover,
+  .hover-3d-enhanced:hover {
+    transform: translateY(-2px);
+  }
+  
+  .gradient-text-enhanced,
+  .hero-text-premium {
+    background: var(--viva-magenta);
+    -webkit-text-fill-color: initial;
+    color: var(--viva-magenta);
+    animation: none;
+  }
+  
+  .breathing-glow::after,
+  .shimmer-effect::before {
+    display: none;
+  }
+}

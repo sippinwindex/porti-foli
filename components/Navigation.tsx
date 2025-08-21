@@ -246,21 +246,6 @@ const FixedNavigation: React.FC = () => {
     setIsOpen(false)
   }, [pathname])
 
-  // ✅ FIXED: Simplified navigation handler that works with Next.js
-  const handleNavigation = useCallback((href: string) => {
-    console.log('Navigating to:', href) // Debug log
-    setIsOpen(false) // Close mobile menu
-    
-    // For external links
-    if (href.startsWith('http')) {
-      window.open(href, '_blank', 'noopener,noreferrer')
-      return
-    }
-    
-    // For internal links, use router.push
-    router.push(href)
-  }, [router])
-
   // ✅ FIXED: Simple path-based active detection
   const isActivePath = useCallback((href: string) => {
     // Exact match for all pages
@@ -339,7 +324,7 @@ const FixedNavigation: React.FC = () => {
   })
   ThemeToggleComponent.displayName = 'ThemeToggleComponent'
 
-  // ✅ FIXED: Navigation Link Component - Using Next.js Link properly
+  // ✅ FIXED: Navigation Link Component - Removed custom click handler
   const NavLink = React.memo<{
     item: NavItem
     index: number
@@ -358,10 +343,9 @@ const FixedNavigation: React.FC = () => {
           duration: prefersReducedMotion ? 0.2 : 0.6 
         }}
       >
-        {/* ✅ FIXED: Use Next.js Link component for proper routing */}
+        {/* ✅ FIXED: Clean Link component without onClick interference */}
         <Link
           href={item.href}
-          onClick={() => setIsOpen(false)} // Close mobile menu
           className={`
             relative flex items-center gap-3 px-4 py-2 rounded-xl font-medium transition-all duration-300 cursor-pointer select-none
             ${isActive 

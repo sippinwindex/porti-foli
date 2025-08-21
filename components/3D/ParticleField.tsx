@@ -1,4 +1,4 @@
-// Enhanced ParticleField.tsx - Perfect Light/Dark Mode Integration with All Color Schemes
+// SSR Safe Enhanced ParticleField.tsx - Perfect Light/Dark Mode + Major Performance Improvements
 'use client'
 
 import { useEffect, useRef, useCallback, useMemo, useState } from 'react'
@@ -28,11 +28,11 @@ interface ParticleFieldProps {
 }
 
 export default function ParticleField({
-  particleCount = 50,
+  particleCount = 25,
   colorScheme = 'light-mode',
   animation = 'constellation',
   interactive = true,
-  speed = 1,
+  speed = 0.3,
   className = ''
 }: ParticleFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -40,18 +40,35 @@ export default function ParticleField({
   const particlesRef = useRef<Particle[]>([])
   const mouseRef = useRef({ x: 0, y: 0 })
   const dimensionsRef = useRef({ width: 0, height: 0 })
+  
+  // ✅ SSR SAFETY: Add mounted state
   const [mounted, setMounted] = useState(false)
   const [hovered, setHovered] = useState(false)
 
-  // ✅ ENHANCED: Color schemes with perfect light/dark mode support
+  // ✅ SSR SAFE: Detect reduced motion and mobile with mounted check
+  const prefersReducedMotion = useMemo(() => {
+    if (typeof window === 'undefined' || !mounted) return false
+    try {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    } catch (error) {
+      return false
+    }
+  }, [mounted])
+
+  const isMobile = useMemo(() => {
+    if (typeof window === 'undefined' || !mounted) return false
+    return window.innerWidth < 768
+  }, [mounted])
+
+  // Color schemes remain the same...
   const colorSchemes = useMemo(() => ({
     'light-mode': {
-      colors: ['#BE3455', '#D4AF37', '#98A869', '#008080'], // Your brand colors
+      colors: ['#BE3455', '#D4AF37', '#98A869', '#008080'],
       primary: '#BE3455',
       secondary: '#D4AF37',
       accent: '#98A869',
-      opacity: 0.4, // Optimized for light backgrounds
-      mixBlendMode: 'multiply' as const, // Better for light backgrounds
+      opacity: 0.4,
+      mixBlendMode: 'multiply' as const,
       glowIntensity: 0.3
     },
     cyberpunk: {
@@ -121,18 +138,15 @@ export default function ParticleField({
 
   const currentColorScheme = colorSchemes[colorScheme]
 
-  // ✅ ENHANCED: Color processing for better visibility
   const processColor = useCallback((baseColor: string, isLightMode: boolean) => {
     if (!isLightMode) return baseColor
 
-    // For light mode, ensure colors have enough contrast
     const hex = baseColor.replace('#', '')
     const r = parseInt(hex.substr(0, 2), 16)
     const g = parseInt(hex.substr(2, 2), 16)
     const b = parseInt(hex.substr(4, 2), 16)
     
-    // Darken colors for better visibility on light backgrounds
-    const factor = 0.7 // Darken by 30%
+    const factor = 0.7
     const rAdjusted = Math.floor(r * factor)
     const gAdjusted = Math.floor(g * factor)
     const bAdjusted = Math.floor(b * factor)
@@ -140,155 +154,153 @@ export default function ParticleField({
     return `rgb(${rAdjusted}, ${gAdjusted}, ${bAdjusted})`
   }, [])
 
-  // ✅ ENHANCED: Detect theme mode
+  // ✅ SSR SAFE: Theme detection with mounted check
   const isLightMode = useMemo(() => {
-    if (typeof window === 'undefined') return colorScheme === 'light-mode'
+    if (typeof window === 'undefined' || !mounted) return colorScheme === 'light-mode'
     
-    const htmlElement = document.documentElement
-    const hasExplicitDarkClass = htmlElement.classList.contains('dark')
-    const hasExplicitLightClass = htmlElement.classList.contains('light')
-    
-    if (hasExplicitDarkClass) return false
-    if (hasExplicitLightClass) return true
-    
-    // Fallback to color scheme preference
-    return colorScheme === 'light-mode'
-  }, [colorScheme])
+    try {
+      const htmlElement = document.documentElement
+      const hasExplicitDarkClass = htmlElement.classList.contains('dark')
+      const hasExplicitLightClass = htmlElement.classList.contains('light')
+      
+      if (hasExplicitDarkClass) return false
+      if (hasExplicitLightClass) return true
+      
+      return colorScheme === 'light-mode'
+    } catch (error) {
+      return colorScheme === 'light-mode'
+    }
+  }, [colorScheme, mounted])
 
-  // ✅ ENHANCED: Particle initialization with theme-aware colors
+  // Initialize particles safely
   const initializeParticles = useCallback(() => {
+    if (!mounted) return
+    
     const { width, height } = dimensionsRef.current
     if (width === 0 || height === 0) return
 
-    particlesRef.current = Array.from({ length: particleCount }, (_, i) => {
+    const actualCount = isMobile ? Math.min(particleCount, 15) : particleCount
+
+    if (particlesRef.current.length === actualCount) {
+      particlesRef.current.forEach(particle => {
+        const colors = currentColorScheme.colors
+        let selectedColor = colors[Math.floor(Math.random() * colors.length)]
+        particle.color = processColor(selectedColor, isLightMode)
+      })
+      return
+    }
+
+    particlesRef.current = Array.from({ length: actualCount }, (_, i) => {
       const colors = currentColorScheme.colors
       let selectedColor = colors[Math.floor(Math.random() * colors.length)]
-      
-      // Process color for current theme
       selectedColor = processColor(selectedColor, isLightMode)
-      
-      // Add subtle color variation
-      if (selectedColor.startsWith('rgb')) {
-        const match = selectedColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
-        if (match) {
-          const r = parseInt(match[1])
-          const g = parseInt(match[2])
-          const b = parseInt(match[3])
-          
-          // Add small random variations
-          const rVaried = Math.max(0, Math.min(255, r + (Math.random() - 0.5) * 30))
-          const gVaried = Math.max(0, Math.min(255, g + (Math.random() - 0.5) * 30))
-          const bVaried = Math.max(0, Math.min(255, b + (Math.random() - 0.5) * 30))
-          
-          selectedColor = `rgb(${Math.floor(rVaried)}, ${Math.floor(gVaried)}, ${Math.floor(bVaried)})`
-        }
-      }
       
       return {
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * speed * 0.5,
-        vy: (Math.random() - 0.5) * speed * 0.5,
-        radius: Math.random() * 2 + 1,
-        opacity: Math.random() * 0.6 + 0.2,
+        vx: (Math.random() - 0.5) * speed * 0.3,
+        vy: (Math.random() - 0.5) * speed * 0.3,
+        radius: Math.random() * 1.5 + 0.5,
+        opacity: Math.random() * 0.4 + 0.2,
         hue: 0,
         life: 0,
-        maxLife: Math.random() * 300 + 200,
+        maxLife: Math.random() * 200 + 100,
         color: selectedColor,
         scale: Math.random() * 0.8 + 0.2,
         baseOpacity: isLightMode ? Math.random() * 0.3 + 0.1 : Math.random() * 0.4 + 0.1
       }
     })
-  }, [particleCount, speed, currentColorScheme, processColor, isLightMode])
+  }, [particleCount, speed, currentColorScheme, processColor, isLightMode, isMobile, mounted])
 
-  // ✅ ENHANCED: Particle updates with improved animations
+  const lastTime = useRef(0)
   const updateParticles = useCallback(() => {
+    if (!mounted) return
+    
     const { width, height } = dimensionsRef.current
-    const time = Date.now() * 0.001 * speed
+    const now = performance.now()
+    
+    if (now - lastTime.current < 33) return
+    lastTime.current = now
+
+    const time = now * 0.001 * speed * 0.5
     
     particlesRef.current.forEach((particle, i) => {
-      // Update position based on animation type
       switch (animation) {
         case 'drift':
-          particle.x += particle.vx * speed
-          particle.y += particle.vy * speed
+          particle.x += particle.vx * speed * 0.5
+          particle.y += particle.vy * speed * 0.5
           break
           
         case 'spiral':
-          const centerX = width / 2
-          const centerY = height / 2
-          const angle = particle.life * 0.02
-          const distance = 50 + particle.life * 0.3
-          particle.x = centerX + Math.cos(angle) * distance
-          particle.y = centerY + Math.sin(angle) * distance
+          if (i % 3 === 0) {
+            const centerX = width / 2
+            const centerY = height / 2
+            const angle = particle.life * 0.01
+            const distance = 30 + particle.life * 0.2
+            particle.x = centerX + Math.cos(angle) * distance
+            particle.y = centerY + Math.sin(angle) * distance
+          }
           break
           
         case 'chaos':
-          particle.vx += (Math.random() - 0.5) * 0.05
-          particle.vy += (Math.random() - 0.5) * 0.05
-          particle.vx = Math.max(-2, Math.min(2, particle.vx))
-          particle.vy = Math.max(-2, Math.min(2, particle.vy))
-          particle.x += particle.vx * speed
-          particle.y += particle.vy * speed
+          particle.vx += (Math.random() - 0.5) * 0.03
+          particle.vy += (Math.random() - 0.5) * 0.03
+          particle.vx = Math.max(-1, Math.min(1, particle.vx))
+          particle.vy = Math.max(-1, Math.min(1, particle.vy))
+          particle.x += particle.vx * speed * 0.5
+          particle.y += particle.vy * speed * 0.5
           break
           
         case 'constellation':
           particle.y += particle.vy * speed * 0.1
-          particle.x += Math.sin(time + i * 0.1) * 0.2
-          particle.vy += Math.sin(time + i * 0.005) * 0.005
-          particle.x += Math.sin(time + i * 0.1) * 0.001
-          particle.y += Math.cos(time + i * 0.1) * 0.001
+          particle.x += Math.sin(time + i * 0.2) * 0.1
           break
           
         case 'flow':
-          particle.x += Math.sin(time * 0.5 + i * 0.1) * 0.002 * speed
-          particle.y += Math.cos(time * 0.3 + i * 0.05) * 0.002 * speed
-          particle.radius = particle.scale + Math.sin(time * 0.2 + i * 0.02) * 0.5
+          particle.x += Math.sin(time * 0.3 + i * 0.1) * 0.001 * speed
+          particle.y += Math.cos(time * 0.2 + i * 0.05) * 0.001 * speed
           break
           
         case 'orbit':
-          const radius = 0.5 + Math.sin(i * 0.1) * 0.3
-          particle.x += Math.cos(time + i * 0.1) * radius * 0.001 * speed
-          particle.y += Math.sin(time + i * 0.1) * radius * 0.001 * speed
+          const radius = 0.3 + Math.sin(i * 0.1) * 0.2
+          particle.x += Math.cos(time + i * 0.1) * radius * 0.0005 * speed
+          particle.y += Math.sin(time + i * 0.1) * radius * 0.0005 * speed
           break
           
         case 'float':
         default:
-          particle.y += particle.vy * speed * 0.2
-          particle.x += Math.sin(particle.life * 0.008) * 0.3
+          particle.y += particle.vy * speed * 0.1
+          particle.x += Math.sin(particle.life * 0.01) * 0.2
           break
       }
 
-      // ✅ ENHANCED: Interactive mode with better responsiveness
-      if (interactive) {
+      if (interactive && !isMobile) {
         const dx = mouseRef.current.x - particle.x
         const dy = mouseRef.current.y - particle.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
+        const distanceSquared = dx * dx + dy * dy
         
-        if (distance < 150 && distance > 0) {
-          const force = (150 - distance) / 150 * 0.005
+        if (distanceSquared < 22500 && distanceSquared > 0) {
+          const force = (22500 - distanceSquared) / 22500 * 0.003
           particle.vx += dx * force
           particle.vy += dy * force
           
-          if (distance < 50) {
-            const repulsion = (50 - distance) / 50 * 0.01
+          if (distanceSquared < 2500) {
+            const repulsion = (2500 - distanceSquared) / 2500 * 0.005
             particle.vx -= dx * repulsion
             particle.vy -= dy * repulsion
           }
           
-          particle.radius = particle.scale * (hovered ? 1.5 : 1.0)
-          particle.opacity = particle.baseOpacity * (hovered ? 1.3 : 1.0)
+          particle.radius = particle.scale * (hovered ? 1.3 : 1.0)
+          particle.opacity = particle.baseOpacity * (hovered ? 1.2 : 1.0)
         }
       }
 
-      // Boundary wrapping
       const buffer = 20
       if (particle.x > width + buffer) particle.x = -buffer
       if (particle.x < -buffer) particle.x = width + buffer
       if (particle.y > height + buffer) particle.y = -buffer
       if (particle.y < -buffer) particle.y = height + buffer
 
-      // Life cycle management
       particle.life++
       if (particle.life > particle.maxLife) {
         particle.life = 0
@@ -300,7 +312,6 @@ export default function ParticleField({
         particle.color = processColor(newColor, isLightMode)
       }
 
-      // Enhanced fade in/out
       const lifeCycle = particle.life / particle.maxLife
       if (lifeCycle < 0.1) {
         particle.opacity = particle.baseOpacity * (lifeCycle / 0.1)
@@ -312,10 +323,11 @@ export default function ParticleField({
       
       particle.opacity = Math.max(0, Math.min(1, particle.opacity))
     })
-  }, [animation, speed, interactive, currentColorScheme, hovered, processColor, isLightMode])
+  }, [animation, speed, interactive, currentColorScheme, hovered, processColor, isLightMode, isMobile, mounted])
 
-  // ✅ ENHANCED: Rendering with perfect theme support
   const render = useCallback(() => {
+    if (!mounted) return
+    
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -324,92 +336,94 @@ export default function ParticleField({
 
     const { width, height } = dimensionsRef.current
 
-    // ✅ ENHANCED: Theme-aware background clearing
     if (isLightMode) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.03)' // Subtle trail for light mode
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.02)'
     } else {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.02)' // Dark mode trail
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.02)'
     }
     ctx.fillRect(0, 0, width, height)
 
-    // ✅ ENHANCED: Render particles with theme-optimized effects
+    ctx.globalCompositeOperation = currentColorScheme.mixBlendMode
+    
     particlesRef.current.forEach(particle => {
       if (!isFinite(particle.x) || !isFinite(particle.y) || 
           !isFinite(particle.radius) || particle.radius <= 0) {
         return
       }
 
-      const safeRadius = Math.max(0.5, Math.min(4, particle.radius))
+      const safeRadius = Math.max(0.5, Math.min(3, particle.radius))
       const safeOpacity = Math.max(0, Math.min(1, particle.opacity * currentColorScheme.opacity))
       
       try {
-        const gradient = ctx.createRadialGradient(
-          particle.x, particle.y, 0,
-          particle.x, particle.y, safeRadius * 2
-        )
-
-        let r, g, b
-        if (particle.color.startsWith('rgb')) {
-          const match = particle.color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
-          if (match) {
-            r = parseInt(match[1])
-            g = parseInt(match[2])
-            b = parseInt(match[3])
+        if (isMobile || currentColorScheme.glowIntensity < 0.5) {
+          let r, g, b
+          if (particle.color.startsWith('rgb')) {
+            const match = particle.color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
+            if (match) {
+              r = parseInt(match[1])
+              g = parseInt(match[2])
+              b = parseInt(match[3])
+            } else {
+              r = g = b = isLightMode ? 0 : 255
+            }
           } else {
-            r = g = b = isLightMode ? 0 : 255
+            const hex = particle.color.replace('#', '')
+            r = parseInt(hex.substr(0, 2), 16)
+            g = parseInt(hex.substr(2, 2), 16)
+            b = parseInt(hex.substr(4, 2), 16)
           }
-        } else {
-          const hex = particle.color.replace('#', '')
-          r = parseInt(hex.substr(0, 2), 16)
-          g = parseInt(hex.substr(2, 2), 16)
-          b = parseInt(hex.substr(4, 2), 16)
-        }
 
-        // ✅ ENHANCED: Theme-aware gradient creation
-        const glowMultiplier = currentColorScheme.glowIntensity
-        gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${safeOpacity})`)
-        gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${safeOpacity * 0.6 * glowMultiplier})`)
-        gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
-
-        ctx.save()
-        
-        // ✅ ENHANCED: Theme-appropriate blend mode
-        ctx.globalCompositeOperation = currentColorScheme.mixBlendMode
-        
-        ctx.fillStyle = gradient
-        ctx.beginPath()
-        ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
-        ctx.fill()
-        
-        // ✅ ENHANCED: Add glow effect for enhanced visibility
-        if (currentColorScheme.glowIntensity > 0.5) {
-          ctx.shadowBlur = safeRadius * 2
-          ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${safeOpacity * 0.3})`
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${safeOpacity})`
           ctx.beginPath()
-          ctx.arc(particle.x, particle.y, safeRadius * 0.5, 0, Math.PI * 2)
+          ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
           ctx.fill()
-          ctx.shadowBlur = 0
+        } else {
+          const gradient = ctx.createRadialGradient(
+            particle.x, particle.y, 0,
+            particle.x, particle.y, safeRadius * 1.5
+          )
+
+          let r, g, b
+          if (particle.color.startsWith('rgb')) {
+            const match = particle.color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
+            if (match) {
+              r = parseInt(match[1])
+              g = parseInt(match[2])
+              b = parseInt(match[3])
+            } else {
+              r = g = b = isLightMode ? 0 : 255
+            }
+          } else {
+            const hex = particle.color.replace('#', '')
+            r = parseInt(hex.substr(0, 2), 16)
+            g = parseInt(hex.substr(2, 2), 16)
+            b = parseInt(hex.substr(4, 2), 16)
+          }
+
+          const glowMultiplier = currentColorScheme.glowIntensity * 0.7
+          gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${safeOpacity})`)
+          gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${safeOpacity * 0.4 * glowMultiplier})`)
+          gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
+
+          ctx.fillStyle = gradient
+          ctx.beginPath()
+          ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
+          ctx.fill()
         }
-        
-        ctx.restore()
       } catch (error) {
-        console.warn('Particle rendering error:', error)
-        // Fallback rendering
-        ctx.save()
-        ctx.fillStyle = `${particle.color}${Math.floor(safeOpacity * 255).toString(16).padStart(2, '0')}`
+        const alpha = Math.floor(safeOpacity * 255).toString(16).padStart(2, '0')
+        ctx.fillStyle = `${particle.color}${alpha}`
         ctx.beginPath()
         ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
         ctx.fill()
-        ctx.restore()
       }
     })
 
-    // ✅ ENHANCED: Constellation connecting lines with theme awareness
-    if (animation === 'constellation' && particlesRef.current.length > 1) {
+    if (animation === 'constellation' && !isMobile && particlesRef.current.length < 30) {
       ctx.save()
       
-      const lineOpacity = isLightMode ? 0.15 : 0.25
-      const maxConnections = Math.min(5, particlesRef.current.length - 1)
+      const lineOpacity = isLightMode ? 0.1 : 0.2
+      const maxConnections = 3
       
       ctx.globalCompositeOperation = isLightMode ? 'multiply' : 'soft-light'
       ctx.strokeStyle = currentColorScheme.primary + Math.floor(lineOpacity * 255).toString(16).padStart(2, '0')
@@ -420,10 +434,12 @@ export default function ParticleField({
         for (let j = i + 1; j < particlesRef.current.length && connectionsCount < maxConnections; j++) {
           const p1 = particlesRef.current[i]
           const p2 = particlesRef.current[j]
-          const distance = Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2)
+          const dx = p1.x - p2.x
+          const dy = p1.y - p2.y
+          const distance = Math.sqrt(dx * dx + dy * dy)
           
-          if (distance < 100) {
-            const opacity = (100 - distance) / 100 * lineOpacity
+          if (distance < 70) {
+            const opacity = (70 - distance) / 70 * lineOpacity
             ctx.globalAlpha = opacity
             ctx.beginPath()
             ctx.moveTo(p1.x, p1.y)
@@ -435,18 +451,23 @@ export default function ParticleField({
       }
       ctx.restore()
     }
-  }, [animation, isLightMode, currentColorScheme])
+  }, [animation, isLightMode, currentColorScheme, isMobile, mounted])
 
-  // Animation loop
   const animate = useCallback(() => {
+    if (prefersReducedMotion || !mounted) return
+    
     updateParticles()
     render()
     animationRef.current = requestAnimationFrame(animate)
-  }, [updateParticles, render])
+  }, [updateParticles, render, prefersReducedMotion, mounted])
 
-  // ✅ ENHANCED: Mouse interaction with better performance
+  const lastMouseUpdate = useRef(0)
   const handleMouseMove = useCallback((event: MouseEvent) => {
-    if (!interactive) return
+    if (!interactive || isMobile || !mounted) return
+    
+    const now = performance.now()
+    if (now - lastMouseUpdate.current < 50) return
+    lastMouseUpdate.current = now
     
     const canvas = canvasRef.current
     if (!canvas) return
@@ -456,68 +477,75 @@ export default function ParticleField({
       x: event.clientX - rect.left,
       y: event.clientY - rect.top
     }
-  }, [interactive])
+  }, [interactive, isMobile, mounted])
 
   const handleMouseEnter = useCallback(() => {
-    if (interactive) setHovered(true)
-  }, [interactive])
+    if (interactive && !isMobile && mounted) setHovered(true)
+  }, [interactive, isMobile, mounted])
 
   const handleMouseLeave = useCallback(() => {
-    if (interactive) setHovered(false)
-  }, [interactive])
+    if (interactive && !isMobile && mounted) setHovered(false)
+  }, [interactive, isMobile, mounted])
 
-  // ✅ ENHANCED: Resize handling with theme awareness
+  const resizeTimeout = useRef<NodeJS.Timeout>()
   const handleResize = useCallback(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    if (!mounted) return
+    
+    clearTimeout(resizeTimeout.current)
+    resizeTimeout.current = setTimeout(() => {
+      const canvas = canvasRef.current
+      if (!canvas) return
 
-    const container = canvas.parentElement
-    if (!container) return
+      const container = canvas.parentElement
+      if (!container) return
 
-    const rect = container.getBoundingClientRect()
-    const width = rect.width || window.innerWidth
-    const height = rect.height || window.innerHeight
+      const rect = container.getBoundingClientRect()
+      const width = rect.width || (typeof window !== 'undefined' ? window.innerWidth : 0)
+      const height = rect.height || (typeof window !== 'undefined' ? window.innerHeight : 0)
 
-    const dpr = window.devicePixelRatio || 1
-    canvas.width = width * dpr
-    canvas.height = height * dpr
-    canvas.style.width = `${width}px`
-    canvas.style.height = `${height}px`
+      const dpr = Math.min((typeof window !== 'undefined' ? window.devicePixelRatio : 1) || 1, 2)
+      canvas.width = width * dpr
+      canvas.height = height * dpr
+      canvas.style.width = `${width}px`
+      canvas.style.height = `${height}px`
 
-    const ctx = canvas.getContext('2d')
-    if (ctx) {
-      ctx.scale(dpr, dpr)
-    }
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.scale(dpr, dpr)
+      }
 
-    dimensionsRef.current = { width, height }
-    initializeParticles()
-  }, [initializeParticles])
+      dimensionsRef.current = { width, height }
+      initializeParticles()
+    }, 100)
+  }, [initializeParticles, mounted])
 
-  // ✅ ENHANCED: Setup and cleanup with better performance
+  // ✅ SSR SAFE: Setup with mounted check
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
     
-    let resizeTimeout: NodeJS.Timeout
-
-    const debouncedResize = () => {
-      clearTimeout(resizeTimeout)
-      resizeTimeout = setTimeout(handleResize, 100)
-    }
-
-    debouncedResize()
+    handleResize()
     
     const canvas = canvasRef.current
-    if (canvas && interactive) {
+    if (canvas && interactive && !isMobile) {
       canvas.addEventListener('mousemove', handleMouseMove, { passive: true })
       canvas.addEventListener('mouseenter', handleMouseEnter, { passive: true })
       canvas.addEventListener('mouseleave', handleMouseLeave, { passive: true })
     }
 
-    window.addEventListener('resize', debouncedResize, { passive: true })
-    animationRef.current = requestAnimationFrame(animate)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize, { passive: true })
+    }
+    
+    if (!prefersReducedMotion) {
+      animationRef.current = requestAnimationFrame(animate)
+    }
 
     return () => {
-      clearTimeout(resizeTimeout)
+      clearTimeout(resizeTimeout.current)
       
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
@@ -529,27 +557,33 @@ export default function ParticleField({
         canvas.removeEventListener('mouseleave', handleMouseLeave)
       }
       
-      window.removeEventListener('resize', debouncedResize)
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', handleResize)
+      }
     }
-  }, [handleResize, handleMouseMove, handleMouseEnter, handleMouseLeave, animate, interactive])
+  }, [handleResize, handleMouseMove, handleMouseEnter, handleMouseLeave, animate, interactive, isMobile, prefersReducedMotion, mounted])
 
-  // ✅ ENHANCED: Reinitialize particles when theme or settings change
   useEffect(() => {
-    if (dimensionsRef.current.width > 0 && dimensionsRef.current.height > 0) {
-      initializeParticles()
+    if (mounted && particlesRef.current.length > 0) {
+      particlesRef.current.forEach(particle => {
+        const colors = currentColorScheme.colors
+        const newColor = colors[Math.floor(Math.random() * colors.length)]
+        particle.color = processColor(newColor, isLightMode)
+      })
     }
-  }, [initializeParticles, colorScheme, particleCount, isLightMode])
+  }, [currentColorScheme, mounted, processColor, isLightMode])
 
-  if (!mounted) return null
+  // ✅ SSR SAFE: Return null during SSR and if reduced motion
+  if (!mounted || prefersReducedMotion) return null
 
   return (
     <canvas
       ref={canvasRef}
-      className={`pointer-events-${interactive ? 'auto' : 'none'} absolute inset-0 ${className}`}
+      className={`pointer-events-${interactive && !isMobile ? 'auto' : 'none'} absolute inset-0 ${className}`}
       style={{
         width: '100%',
         height: '100%',
-        opacity: isLightMode ? 0.7 : 0.6, // Better visibility balance
+        opacity: isMobile ? 0.4 : (isLightMode ? 0.6 : 0.5),
         mixBlendMode: currentColorScheme.mixBlendMode
       }}
       aria-hidden="true"
@@ -557,39 +591,52 @@ export default function ParticleField({
   )
 }
 
-// ✅ ENHANCED: Theme-aware particle field hook with auto-detection
+// ✅ SSR SAFE: Hooks with mounted checks
 export function useParticleField(theme?: 'light' | 'dark') {
+  const [mounted, setMounted] = useState(false)
+  
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const detectedTheme = useMemo(() => {
     if (theme) return theme
+    if (!mounted || typeof window === 'undefined') return 'light'
     
-    if (typeof window === 'undefined') return 'light'
-    
-    const htmlElement = document.documentElement
-    const hasExplicitDarkClass = htmlElement.classList.contains('dark')
-    const hasExplicitLightClass = htmlElement.classList.contains('light')
-    
-    if (hasExplicitDarkClass) return 'dark'
-    if (hasExplicitLightClass) return 'light'
-    
-    // Fallback to system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  }, [theme])
+    try {
+      const htmlElement = document.documentElement
+      const hasExplicitDarkClass = htmlElement.classList.contains('dark')
+      const hasExplicitLightClass = htmlElement.classList.contains('light')
+      
+      if (hasExplicitDarkClass) return 'dark'
+      if (hasExplicitLightClass) return 'light'
+      
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    } catch (error) {
+      return 'light'
+    }
+  }, [theme, mounted])
 
-  return useMemo(() => ({
-    particleCount: typeof window !== 'undefined' && window.innerWidth < 768 ? 25 : 60,
-    colorScheme: detectedTheme === 'light' ? 'light-mode' as const : 'aurora' as const,
-    animation: 'constellation' as const,
-    interactive: true,
-    speed: 0.4
-  }), [detectedTheme])
+  return useMemo(() => {
+    const isMobile = mounted && typeof window !== 'undefined' && window.innerWidth < 768
+    
+    return {
+      particleCount: isMobile ? 15 : 25,
+      colorScheme: detectedTheme === 'light' ? 'light-mode' as const : 'aurora' as const,
+      animation: 'constellation' as const,
+      interactive: !isMobile,
+      speed: 0.3
+    }
+  }, [detectedTheme, mounted])
 }
 
-// ✅ ENHANCED: Utility function for theme-aware particle configuration
 export function getParticleConfig(theme: 'light' | 'dark', colorScheme?: string) {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+  
   const baseConfig = {
-    particleCount: 50,
-    interactive: true,
-    speed: 0.4,
+    particleCount: isMobile ? 15 : 25,
+    interactive: !isMobile,
+    speed: 0.3,
     animation: 'constellation' as const
   }
 

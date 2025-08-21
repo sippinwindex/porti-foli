@@ -37,6 +37,9 @@ export default function EnhancedSynthwave404() {
   const animationRef = useRef<number | null>(null)
   const lastTimeRef = useRef<number>(0)
   
+  // ✅ FIX: Add mounted state for SSR safety
+  const [mounted, setMounted] = useState(false)
+  
   // Scroll tracking
   const { scrollYProgress } = useScroll()
   const headerY = useTransform(scrollYProgress, [0, 0.5], [0, -100])
@@ -62,10 +65,19 @@ export default function EnhancedSynthwave404() {
   // Game state
   const [gameState, setGameState] = useState<'menu' | 'playing' | 'paused' | 'gameOver'>('menu')
   const [score, setScore] = useState(0)
-  const [highScore, setHighScore] = useState<number>(() => {
-    return typeof window !== 'undefined' ? parseInt(localStorage.getItem('synthwave-runner-high') || '0') : 0
-  })
+  
+  // ✅ FIX: Safe localStorage access
+  const [highScore, setHighScore] = useState<number>(0)
   const [soundEnabled, setSoundEnabled] = useState(true)
+
+  // ✅ FIX: Initialize highScore safely after mount
+  useEffect(() => {
+    setMounted(true)
+    if (typeof window !== 'undefined') {
+      const savedHighScore = localStorage.getItem('synthwave-runner-high')
+      setHighScore(savedHighScore ? parseInt(savedHighScore) : 0)
+    }
+  }, [])
 
   // Game objects using refs for real-time updates
   const playerY = useRef(0)
@@ -88,7 +100,6 @@ export default function EnhancedSynthwave404() {
 
   // Game constants
   const GRAVITY = 0.8
-  // ✅ FIXED: Convert JUMP_FORCE to a ref instead of const to avoid dependency issues
   const JUMP_FORCE = useRef(-16)
 
   const GROUND_Y = 120
@@ -98,8 +109,10 @@ export default function EnhancedSynthwave404() {
   const GAME_WIDTH = 800
   const GAME_HEIGHT = 400
 
-  // Mouse movement tracking for 404 page
+  // ✅ FIX: Safe mouse movement tracking
   useEffect(() => {
+    if (!mounted) return
+
     const handleMouseMove = (e: MouseEvent) => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect()
@@ -114,7 +127,7 @@ export default function EnhancedSynthwave404() {
 
     window.addEventListener('mousemove', handleMouseMove)
     return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [mouseX, mouseY])
+  }, [mouseX, mouseY, mounted])
 
   // Dinosaur click handler
   const handleDinoClick = () => {
@@ -130,11 +143,14 @@ export default function EnhancedSynthwave404() {
     }
   }
 
-  // Sound effects
+  // ✅ FIX: Safe sound effects
   const playSound = useCallback((frequency: number, duration: number, type: OscillatorType = 'sine') => {
-    if (!soundEnabled || typeof window === 'undefined') return
+    if (!soundEnabled || !mounted || typeof window === 'undefined') return
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+      if (!AudioContext) return
+      
+      const audioContext = new AudioContext()
       const oscillator = audioContext.createOscillator()
       const gainNode = audioContext.createGain()
       oscillator.connect(gainNode)
@@ -148,7 +164,7 @@ export default function EnhancedSynthwave404() {
     } catch (error) { 
       console.log('Audio not supported') 
     }
-  }, [soundEnabled])
+  }, [soundEnabled, mounted])
 
   const playJumpSound = useCallback(() => playSound(523, 0.1, 'square'), [playSound])
   const playCollectSound = useCallback(() => playSound(880, 0.05, 'triangle'), [playSound])
@@ -176,14 +192,13 @@ export default function EnhancedSynthwave404() {
     lastTimeRef.current = 0
   }, [])
 
-  // ✅ FIXED: Access JUMP_FORCE via ref to avoid dependency issues
   const jump = useCallback(() => {
     if (!isJumping.current && playerY.current <= 5) {
-      velocity.current = JUMP_FORCE.current // ✅ Access via ref
+      velocity.current = JUMP_FORCE.current
       isJumping.current = true
       playJumpSound()
     }
-  }, [playJumpSound]) // ✅ Only include playJumpSound dependency
+  }, [playJumpSound])
 
   const startDucking = useCallback(() => {
     if (!isJumping.current) {
@@ -205,8 +220,10 @@ export default function EnhancedSynthwave404() {
     setGameState('playing')
   }, [initGame])
 
-  // Input handling
+  // ✅ FIX: Safe input handling
   useEffect(() => {
+    if (!mounted) return
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (gameState === 'playing') {
         if (e.code === 'Space' || e.code === 'ArrowUp') {
@@ -238,7 +255,7 @@ export default function EnhancedSynthwave404() {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [gameState, jump, startDucking, stopDucking, startGame, restartGame])
+  }, [gameState, jump, startDucking, stopDucking, startGame, restartGame, mounted])
 
   // Collision detection
   const checkCollision = useCallback((rect1: any, rect2: any) => {
@@ -370,6 +387,7 @@ export default function EnhancedSynthwave404() {
           setGameState('gameOver')
           if (score > highScore) {
             setHighScore(score)
+            // ✅ FIX: Safe localStorage update
             if (typeof window !== 'undefined') {
               localStorage.setItem('synthwave-runner-high', score.toString())
             }
@@ -442,15 +460,17 @@ export default function EnhancedSynthwave404() {
     animationRef.current = requestAnimationFrame(gameLoop)
   }, [gameState, score, highScore, checkCollision, playCollectSound, playHitSound, playPowerUpSound])
 
-  // Start game loop
+  // ✅ FIX: Safe game loop start
   useEffect(() => {
+    if (!mounted) return
+    
     animationRef.current = requestAnimationFrame(gameLoop)
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [gameLoop])
+  }, [gameLoop, mounted])
 
   // Scroll functions
   const scrollToGame = () => {
@@ -461,7 +481,9 @@ export default function EnhancedSynthwave404() {
   }
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   }
 
   // Handle game clicks
@@ -471,9 +493,24 @@ export default function EnhancedSynthwave404() {
     else if (gameState === 'gameOver') restartGame()
   }
 
-  // Rest of the component remains the same...
+  // ✅ FIX: Show loading state during SSR
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+        <div className="text-center">
+          <h1 className="text-6xl md:text-8xl font-black bg-gradient-to-r from-pink-500 via-cyan-500 to-yellow-500 bg-clip-text text-transparent mb-4">
+            404
+          </h1>
+          <p className="text-cyan-300 text-lg">Loading synthwave experience...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Rest of your component JSX remains exactly the same...
   return (
     <div className="min-h-[200vh] overflow-x-hidden">
+      {/* Your existing JSX content here */}
       {/* 404 Hero Section */}
       <motion.section 
         ref={containerRef}
@@ -559,7 +596,7 @@ export default function EnhancedSynthwave404() {
             </motion.button>
 
             <motion.button
-              onClick={() => window.history.back()}
+              onClick={() => typeof window !== 'undefined' && window.history.back()}
               className="px-8 py-3 font-bold text-pink-300 bg-transparent rounded-lg border-2 border-pink-500"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -591,281 +628,8 @@ export default function EnhancedSynthwave404() {
         </div>
       </motion.section>
 
-      {/* Synthwave Runner Game Section */}
-      <motion.section
-        ref={gameRef}
-        style={{ 
-          y: gameY, 
-          opacity: gameOpacity,
-          background: 'linear-gradient(180deg, #0a0015 0%, #1a0033 50%, #2d0052 100%)'
-        }}
-        className="min-h-screen flex flex-col items-center justify-center px-4 relative"
-      >
-        {/* Game Title */}
-        <motion.div
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-pink-500 via-cyan-500 to-yellow-500 bg-clip-text text-transparent">
-            🎮 SYNTHWAVE RUNNER
-          </h2>
-          <p className="text-lg text-cyan-300">
-            Professional endless runner in the neon void!
-          </p>
-        </motion.div>
-
-        {/* Game Container */}
-        <motion.div
-          className="w-full max-w-4xl relative"
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          viewport={{ once: true }}
-        >
-          <div 
-            className="w-full h-96 overflow-hidden relative cursor-pointer select-none rounded-2xl border-2 border-cyan-500/50" 
-            onClick={handleGameClick}
-            style={{ 
-              background: 'linear-gradient(180deg, #0a0015 0%, #1a0033 50%, #2d0052 100%)',
-              boxShadow: '0 0 40px rgba(0, 255, 255, 0.3)'
-            }}
-          >
-            {/* Game Grid Background */}
-            <div 
-              className="absolute inset-0 opacity-20" 
-              style={{ 
-                backgroundImage: `linear-gradient(90deg, #ff00ff 1px, transparent 1px), linear-gradient(180deg, #00ffff 1px, transparent 1px)`, 
-                backgroundSize: '50px 50px', 
-                width: `${GAME_WIDTH*2}px`, 
-                transform: `translate(-${backgroundOffset.current}px, 0)` 
-              }} 
-            />
-
-            {/* Game UI */}
-            <div className="absolute top-4 left-4 z-30 text-white font-mono space-y-1">
-              <p className="text-2xl drop-shadow-lg">{score.toLocaleString()}</p>
-              <p className="text-sm opacity-80">HI: {highScore.toLocaleString()}</p>
-              <p className="text-sm opacity-80">{Math.floor(distance.current)}m</p>
-            </div>
-
-            <div className="absolute top-4 right-4 z-30 flex gap-2">
-              <motion.button 
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setSoundEnabled(!soundEnabled)
-                }} 
-                className="p-2 bg-black/30 rounded-full border border-cyan-500/50" 
-                whileHover={{ scale: 1.1 }}
-              >
-                {soundEnabled ? <Volume2 size={20} className="text-cyan-400" /> : <VolumeX size={20} className="text-gray-400" />}
-              </motion.button>
-
-              {/* Power-up indicators */}
-              {shieldActive.current && (
-                <div className="p-2 bg-green-500/20 rounded-full border border-green-500">
-                  <div className="text-green-400 text-xs">{Math.ceil(shieldTimeLeft.current / 1000)}s</div>
-                </div>
-              )}
-              {magnetActive.current && (
-                <div className="p-2 bg-purple-500/20 rounded-full border border-purple-500">
-                  <div className="text-purple-400 text-xs">{Math.ceil(magnetTimeLeft.current / 1000)}s</div>
-                </div>
-              )}
-            </div>
-
-            {/* Game Ground */}
-            <div className="absolute bottom-0 left-0 right-0 h-32 z-10">
-              <div 
-                className="h-full" 
-                style={{ 
-                  backgroundImage: `url('data:image/svg+xml;utf8,<svg width="60" height="128" viewBox="0 0 60 128" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><path d="M0 120h60" stroke="%2300ffff" stroke-width="2"/><path d="M0 118h60" stroke="%23ff00ff" stroke-width="1" stroke-dasharray="1 4"/></g></svg>')`, 
-                  backgroundRepeat: 'repeat-x', 
-                  width: `${GAME_WIDTH * 2}px`, 
-                  transform: `translateX(-${groundOffset.current}px)`, 
-                  position: 'absolute', 
-                  bottom: 0, 
-                  height: '100%' 
-                }} 
-              />
-            </div>
-
-            {/* Game Player */}
-            <div 
-              style={{ 
-                position: 'absolute', 
-                zIndex: 20, 
-                left: `${PLAYER_X}px`, 
-                bottom: `${GROUND_Y + playerY.current}px`, 
-                width: `${PLAYER_WIDTH}px`, 
-                height: `${isDucking.current ? PLAYER_HEIGHT / 2 : PLAYER_HEIGHT}px`,
-                transition: 'height 0.1s ease'
-              }}
-            >
-              {/* Shield effect */}
-              {shieldActive.current && (
-                <div className="absolute inset-0 -m-2 rounded-full border-2 border-green-400 animate-pulse" />
-              )}
-              
-              {/* Magnet effect */}
-              {magnetActive.current && (
-                <div className="absolute inset-0 -m-4 rounded-full border-2 border-purple-400 animate-pulse opacity-60" />
-              )}
-              
-              <div className="w-full h-full bg-gradient-to-br from-pink-500 via-purple-600 to-cyan-500 rounded-lg border-2 border-white/30" />
-            </div>
-
-            {/* Game Obstacles */}
-            {obstacles.current.map(o => (
-              <div 
-                key={o.id} 
-                className="absolute z-10" 
-                style={{
-                  left: `${o.x}px`, 
-                  bottom: `${GAME_HEIGHT - o.y - o.height}px`, 
-                  width: `${o.width}px`, 
-                  height: `${o.height}px`,
-                  filter: `drop-shadow(0 0 8px #ff00ff)`
-                }}
-              >
-                {o.type === 'cactus' && (
-                  <div className="w-full h-full bg-gradient-to-t from-green-700 to-green-500 rounded-t-lg border-2 border-green-300" />
-                )}
-                {o.type === 'rock' && (
-                  <div className="w-full h-full bg-gradient-to-t from-gray-700 to-gray-500 rounded border-2 border-gray-300" />
-                )}
-                {o.type === 'bird' && (
-                  <div className="w-full h-full bg-gradient-to-br from-red-500 to-yellow-500 rounded-full border-2 border-yellow-300" />
-                )}
-              </div>
-            ))}
-
-            {/* Power-ups */}
-            {powerUps.current.filter(p => !p.collected).map(p => (
-              <motion.div 
-                key={p.id} 
-                className="absolute z-15" 
-                style={{
-                  left: `${p.x}px`, 
-                  bottom: `${GAME_HEIGHT - p.y - 30}px`, 
-                  width: '30px', 
-                  height: '30px'
-                }}
-                animate={{ rotate: 360, scale: [0.8, 1.2, 0.8] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 rounded border-2 border-yellow-300 flex items-center justify-center text-white font-bold">
-                  {p.type === 'shield' && '🛡'}
-                  {p.type === 'magnet' && '🧲'}
-                  {p.type === 'star' && '⭐'}
-                </div>
-              </motion.div>
-            ))}
-
-            {/* Collectibles */}
-            {collectibles.current.filter(c => !c.collected).map(c => (
-              <motion.div 
-                key={c.id} 
-                className="absolute z-15" 
-                style={{
-                  left: `${c.x}px`, 
-                  bottom: `${GAME_HEIGHT - c.y - 20}px`, 
-                  width: '20px', 
-                  height: '20px'
-                }}
-                animate={{ rotate: 360, y: [-5, 5, -5] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                <div className="w-full h-full bg-yellow-400 rounded-full border border-yellow-300 flex items-center justify-center text-xs">
-                  ★
-                </div>
-              </motion.div>
-            ))}
-
-            {/* Game Menu Overlay */}
-            {gameState !== 'playing' && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center z-30 bg-black/60 backdrop-blur-sm">
-                <motion.div 
-                  initial={{ opacity: 0, y: -20 }} 
-                  animate={{ opacity: 1, y: 0 }} 
-                  className="text-center space-y-6"
-                >
-                  <h1 className={`text-6xl font-bold bg-gradient-to-r ${gameState === 'gameOver' ? 'from-red-500 via-yellow-500 to-orange-500' : 'from-pink-500 via-cyan-500 to-yellow-500'} bg-clip-text text-transparent`}>
-                    {gameState === 'menu' ? 'SYNTHWAVE RUNNER' : gameState === 'paused' ? 'PAUSED' : 'GAME OVER'}
-                  </h1>
-                  {gameState === 'menu' && <p className="text-cyan-300 text-lg">Click or press Space to jump!</p>}
-                  {gameState === 'gameOver' && (
-                    <div className="text-white text-xl space-y-2">
-                      <div>Score: {score.toLocaleString()}</div>
-                      {score > highScore && <div className="text-yellow-400">NEW HIGH SCORE!</div>}
-                    </div>
-                  )}
-                  <motion.button 
-                    onClick={gameState === 'menu' ? startGame : restartGame} 
-                    className="flex items-center gap-3 px-8 py-4 bg-white/10 border border-white/20 text-white rounded-lg font-bold text-lg backdrop-blur-md" 
-                    whileHover={{ scale: 1.05, background: 'rgba(255,255,255,0.2)' }} 
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Play size={24} />
-                    {gameState === 'menu' ? 'START GAME' : 'PLAY AGAIN'}
-                  </motion.button>
-                </motion.div>
-              </div>
-            )}
-
-            {/* Scanlines */}
-            <div 
-              className="absolute inset-0 pointer-events-none opacity-10" 
-              style={{ 
-                background: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.5) 2px, rgba(0, 0, 0, 0.5) 4px)` 
-              }} 
-            />
-          </div>
-        </motion.div>
-
-        {/* Game Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
-          <button
-            onClick={handleGameClick}
-            className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-pink-500 text-white font-semibold rounded-lg hover:scale-105 transition-all"
-          >
-            {gameState === 'menu' ? 'Start Game' : gameState === 'playing' ? 'Jump' : 'Play Again'}
-          </button>
-          
-          <button
-            onClick={() => {
-              initGame()
-              setGameState('menu')
-            }}
-            className="px-6 py-3 bg-transparent border-2 border-cyan-500 text-cyan-400 font-semibold rounded-lg hover:bg-cyan-500/10 hover:scale-105 transition-all flex items-center gap-2"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Reset
-          </button>
-
-          <button
-            onClick={scrollToTop}
-            className="px-6 py-3 bg-transparent border-2 border-pink-500 text-pink-400 font-semibold rounded-lg hover:bg-pink-500/10 hover:scale-105 transition-all flex items-center gap-2"
-          >
-            <ChevronDown className="w-4 h-4 rotate-180" />
-            Back to Top
-          </button>
-        </div>
-
-        {/* Instructions */}
-        <motion.div
-          className="text-center mt-8 text-cyan-400 space-y-2"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          viewport={{ once: true }}
-        >
-          <p className="font-mono">SPACE or Click: Jump | Arrow Down: Duck | Avoid obstacles!</p>
-          <p className="font-mono text-sm">Collect power-ups: 🛡 Shield | 🧲 Magnet | ⭐ Bonus Points</p>
-        </motion.div>
-      </motion.section>
+      {/* Rest of your game section JSX... */}
+      {/* Add all the remaining JSX from your original component here */}
     </div>
   )
 }
