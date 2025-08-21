@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import React, { Suspense, useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { 
@@ -34,8 +34,14 @@ import {
   Terminal,
   Database,
   Settings,
-  Layers
+  Layers,
+  Swords,
+  Target,
+  Trophy
 } from 'lucide-react'
+
+// ✅ ADDED: Import enhanced game CSS
+import './styles/robot-fight.css'
 
 // Import your custom hooks
 import usePortfolioData from '@/hooks/usePortfolioData'
@@ -162,8 +168,8 @@ const Interactive3DHero = dynamic(
   }
 )
 
-// ✅ ADDED: Rock 'Em Sock 'Em Game import
-const RockEmSockEm = dynamic(
+// ✅ ENHANCED: Enhanced Rock 'Em Sock 'Em Game import with error handling
+const EnhancedRockEmSockEm = dynamic(
   () => import('@/components/RockEmSockEm').catch(() => {
     console.warn('Failed to load RockEmSockEm, using fallback')
     return { default: () => <GameSkeleton /> }
@@ -241,17 +247,97 @@ const ParticleField = dynamic(
   }
 )
 
-// ✅ ADDED: Game Skeleton Component
+// ✅ ENHANCED: Game Error Boundary Component
+class GameErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Game Error:', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-[400px] flex items-center justify-center">
+          <div className="text-center p-8 bg-red-900/20 rounded-lg border border-red-500/30">
+            <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-red-400 mb-2">Game Loading Error</h3>
+            <p className="text-gray-300 mb-4">
+              The game encountered an issue. Please refresh the page to try again.
+            </p>
+            <button
+              onClick={() => this.setState({ hasError: false })}
+              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
+// ✅ ENHANCED: Game Skeleton with better loading states
 function GameSkeleton() {
   return (
-    <div className="min-h-[400px] flex items-center justify-center">
+    <div className="min-h-[500px] flex items-center justify-center">
       <div className="text-center">
-        <div className="relative mb-6">
-          <div className="w-24 h-24 border-4 border-viva-magenta-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <div className="absolute inset-0 w-24 h-24 border-4 border-lux-gold-300 border-t-transparent rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '3s' }} />
+        <div className="relative mb-8">
+          {/* Dual spinning rings */}
+          <div className="w-32 h-32 border-4 border-viva-magenta-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="absolute inset-0 w-32 h-32 border-4 border-lux-gold-300 border-t-transparent rounded-full animate-spin mx-auto" 
+               style={{ animationDirection: 'reverse', animationDuration: '3s' }} />
+          
+          {/* Center icon */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-viva-magenta-500 to-lux-gold-500 rounded-lg flex items-center justify-center">
+              <Swords className="w-8 h-8 text-white animate-pulse" />
+            </div>
+          </div>
         </div>
-        <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">Loading Game...</p>
-        <p className="text-sm text-gray-500 dark:text-gray-500">Preparing Rock 'Em Sock 'Em</p>
+        
+        {/* Loading text with typewriter effect */}
+        <div className="space-y-3">
+          <p className="text-xl text-gray-300 mb-2 font-mono">Loading Enhanced Combat System...</p>
+          <div className="flex justify-center space-x-1">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="w-2 h-2 bg-viva-magenta-500 rounded-full animate-bounce"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              />
+            ))}
+          </div>
+          
+          {/* Feature list */}
+          <div className="mt-6 space-y-2 text-sm text-gray-400">
+            <div className="flex items-center justify-center gap-2">
+              <Zap className="w-4 h-4 text-yellow-400" />
+              <span>Real-time combat engine</span>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <Target className="w-4 h-4 text-blue-400" />
+              <span>Advanced AI opponents</span>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <Trophy className="w-4 h-4 text-green-400" />
+              <span>Performance tracking</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -646,6 +732,66 @@ function getIconComponent(iconName: string): React.ElementType {
   }
 }
 
+// ✅ UNIFIED BACKGROUND COMPONENT with mouse tracking and theme support
+const UnifiedPortfolioBackground = () => {
+  const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 })
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth) * 100
+      const y = (e.clientY / window.innerHeight) * 100
+      setMousePosition({ x, y })
+    }
+    
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
+
+  return (
+    <div className="fixed inset-0 z-0 overflow-hidden">
+      {/* ✅ Theme-aware base background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-lux-offwhite via-gray-50/80 to-blue-50/30 dark:from-lux-black dark:via-gray-900/90 dark:to-gray-800/50 transition-all duration-500" />
+      
+      {/* ✅ Aurora effect with your brand colors */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `
+            radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, 
+              rgba(190, 52, 85, 0.08) 0%, 
+              transparent 50%
+            ),
+            radial-gradient(circle at ${100 - mousePosition.x}% ${100 - mousePosition.y}%, 
+              rgba(212, 175, 55, 0.06) 0%, 
+              transparent 60%
+            ),
+            radial-gradient(circle at 50% 50%, 
+              rgba(152, 168, 105, 0.04) 0%, 
+              transparent 70%
+            )
+          `
+        }}
+      />
+      
+      {/* ✅ Enhanced gradient overlays with theme awareness */}
+      <div className="absolute inset-0 bg-gradient-to-br from-viva-magenta-500/5 via-transparent to-lux-gold-500/5 dark:from-viva-magenta-400/10 dark:to-lux-gold-400/10 transition-all duration-500" />
+      
+      {/* ✅ Subtle grid pattern with theme awareness */}
+      <div 
+        className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(190, 52, 85, 0.3) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(190, 52, 85, 0.3) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px',
+          transform: `translate(${mousePosition.x * 0.05}px, ${mousePosition.y * 0.05}px)`
+        }}
+      />
+    </div>
+  )
+}
+
 // Enhanced Main Component
 export default function HomePage() {
   // Use real data hooks with proper error handling
@@ -671,11 +817,35 @@ export default function HomePage() {
   // ✅ ADDED: Location welcome message state with smart timing
   const [showLocationMessage, setShowLocationMessage] = useState(false)
   const [hasShownLocationMessage, setHasShownLocationMessage] = useState(false)
+
+  // ✅ ADDED: Game state management
+  const [gameStats, setGameStats] = useState({
+    gamesPlayed: 0,
+    wins: 0,
+    maxCombo: 0,
+    perfectHits: 0
+  })
   
   // Refs for better performance
   const observerRef = useRef<IntersectionObserver | null>(null)
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const shouldReduceMotion = useReducedMotion()
+
+  // ✅ ADDED: Game event handlers
+  const handleGameStart = useCallback(() => {
+    console.log('🎮 Game started')
+    setGameStats(prev => ({ ...prev, gamesPlayed: prev.gamesPlayed + 1 }))
+  }, [])
+
+  const handleGameEnd = useCallback((winner: 'player' | 'npc', stats: any) => {
+    console.log('🏆 Game ended:', winner, stats)
+    setGameStats(prev => ({
+      ...prev,
+      wins: winner === 'player' ? prev.wins + 1 : prev.wins,
+      maxCombo: Math.max(prev.maxCombo, stats.maxCombo || 0),
+      perfectHits: prev.perfectHits + (stats.perfectHits || 0)
+    }))
+  }, [])
 
   // FIXED: Enhanced project click handler for 3D components
   const handleProjectClick = useCallback((clickedProject: Project) => {
@@ -981,45 +1151,25 @@ export default function HomePage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-lux-offwhite dark:bg-lux-black text-lux-gray-900 dark:text-lux-offwhite overflow-x-hidden">
-      {/* ✅ FIXED: Full-page background with proper theme support */}
-      <div className="fixed inset-0 z-0">
-        {/* Theme-aware gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-lux-offwhite via-gray-50/80 to-blue-50/30 dark:from-lux-black dark:via-gray-900/90 dark:to-gray-800/50 transition-all duration-500" />
-        
-        {/* ✅ FIXED: Particle field spanning entire viewport with theme awareness */}
-        {!shouldReduceMotion && (
-          <div className="absolute inset-0">
-            <Suspense fallback={null}>
-              <ParticleField 
-                particleCount={isMobile ? 25 : 60}
-                colorScheme="aurora"
-                animation="constellation"
-                interactive={!shouldReduceMotion}
-                speed={0.4}
-                className="w-full h-full"
-              />
-            </Suspense>
+    <div className="relative min-h-screen text-lux-gray-900 dark:text-lux-offwhite overflow-x-hidden">
+      {/* ✅ UNIFIED BACKGROUND SYSTEM - SINGLE BACKGROUND FOR ENTIRE PAGE */}
+      <UnifiedPortfolioBackground />
+      
+      {/* ✅ SINGLE PARTICLE FIELD across entire page */}
+      {!shouldReduceMotion && (
+        <Suspense fallback={null}>
+          <div className="fixed inset-0 z-[1]">
+            <ParticleField 
+              particleCount={isMobile ? 25 : 60}
+              colorScheme="aurora"
+              animation="constellation"
+              interactive={!shouldReduceMotion}
+              speed={0.4}
+              className="w-full h-full"
+            />
           </div>
-        )}
-        
-        {/* Enhanced gradient overlays with theme awareness */}
-        <div className="absolute inset-0 bg-gradient-to-br from-viva-magenta-500/5 via-transparent to-lux-gold-500/5 dark:from-viva-magenta-400/10 dark:to-lux-gold-400/10 transition-all duration-500" />
-        
-        {/* Subtle grid pattern with theme awareness */}
-        {!shouldReduceMotion && (
-          <div 
-            className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]"
-            style={{
-              backgroundImage: `
-                linear-gradient(rgba(190, 52, 85, 0.3) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(190, 52, 85, 0.3) 1px, transparent 1px)
-              `,
-              backgroundSize: '50px 50px'
-            }}
-          />
-        )}
-      </div>
+        </Suspense>
+      )}
 
       {/* Error notification for data loading issues */}
       {hasErrors && (
@@ -1049,7 +1199,7 @@ export default function HomePage() {
       <Navigation />
 
       <main className="relative z-10">
-        {/* Enhanced Hero Section */}
+        {/* ✅ Hero Section - NO background, uses unified system */}
         <section id="hero" className="scroll-section relative min-h-screen">
           <div className="relative z-10">
             <Suspense fallback={<HeroSkeleton />}>
@@ -1061,7 +1211,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Enhanced Code Showcase */}
+        {/* ✅ Code Showcase - NO background, uses unified system */}
         <section id="code-showcase" className="scroll-section relative min-h-screen">
           <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
             <div className="text-center mb-16 max-w-4xl mx-auto">
@@ -1098,7 +1248,7 @@ export default function HomePage() {
               </Suspense>
             )}
             
-            {/* ✅ FIXED: Enhanced themed fallback with consistent styling */}
+            {/* ✅ Enhanced themed fallback with consistent styling */}
             {(!sectionsInView.codeShowcase || isMobile) && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 {techStack.map((tech, index) => {
@@ -1177,8 +1327,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Enhanced About Section with correct data */}
-        <section id="about" className="scroll-section relative py-20 bg-gradient-to-br from-lux-offwhite via-viva-magenta-50/20 to-lux-gold-50/20 dark:from-lux-black dark:via-viva-magenta-900/10 dark:to-lux-gold-900/10">
+        {/* ✅ About Section - NO background, uses unified system */}
+        <section id="about" className="scroll-section relative py-20">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               className="text-center mb-16"
@@ -1209,7 +1359,7 @@ export default function HomePage() {
               </div>
             </motion.div>
 
-            {/* ✅ FIXED: Enhanced Stats Cards with consistent theming */}
+            {/* ✅ Enhanced Stats Cards with consistent theming */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
               {[
                 { 
@@ -1292,7 +1442,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Enhanced Language Visualization */}
+        {/* ✅ Language Visualization - NO background, uses unified system */}
         <section id="languages" className="scroll-section relative">
           <div className="text-center py-16">
             <motion.h2 
@@ -1327,7 +1477,7 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* FIXED: Enhanced Projects Section with click handler */}
+        {/* ✅ Projects Section - NO background, uses unified system */}
         <section id="projects" className="scroll-section relative">
           {sectionsInView.projects && (
             <Suspense fallback={<ProjectsSkeleton />}>
@@ -1340,30 +1490,37 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* ✅ NEW: Game Section - Added right before contact */}
-        <section id="game" className="scroll-section relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-lux-black to-gray-800">
-          {/* Animated background */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-viva-magenta-500/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-lux-gold-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-            <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-lux-teal-500/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
-          </div>
+        {/* ✅ Game Section - Custom dark styling but NO individual background */}
+        <section id="game" className="scroll-section relative min-h-screen flex items-center justify-center">
+          {/* Dark overlay for game section only */}
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-lux-black/90 to-gray-800/80 backdrop-blur-sm" />
+          
+          {/* Animated background elements - only render when section is visible */}
+          {sectionsInView.game && (
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute top-0 left-1/4 w-96 h-96 bg-viva-magenta-500/20 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-lux-gold-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+              <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-lux-teal-500/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
+            </div>
+          )}
 
-          {/* Grid pattern overlay */}
-          <div 
-            className="absolute inset-0 opacity-5"
-            style={{
-              backgroundImage: `
-                linear-gradient(rgba(190, 52, 85, 0.3) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(190, 52, 85, 0.3) 1px, transparent 1px)
-              `,
-              backgroundSize: '40px 40px'
-            }}
-          />
+          {/* Grid pattern overlay - only when section is visible */}
+          {sectionsInView.game && (
+            <div 
+              className="absolute inset-0 opacity-5"
+              style={{
+                backgroundImage: `
+                  linear-gradient(rgba(190, 52, 85, 0.3) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(190, 52, 85, 0.3) 1px, transparent 1px)
+                `,
+                backgroundSize: '40px 40px'
+              }}
+            />
+          )}
           
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="max-w-6xl mx-auto">
-              {/* Game Header */}
+              {/* Enhanced Game Header with stats */}
               <motion.div
                 className="text-center mb-12"
                 initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
@@ -1375,25 +1532,41 @@ export default function HomePage() {
                   Ready to <span className="gradient-text">Battle?</span>
                 </h2>
                 <p className="text-xl text-gray-300 mb-4 max-w-3xl mx-auto leading-relaxed">
-                  Take a break and challenge yourself with this retro-inspired Rock 'Em Sock 'Em robot game!
+                  Challenge yourself with this enhanced retro-inspired Rock 'Em Sock 'Em robot game!
                 </p>
-                <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400">
+                
+                {/* Game features */}
+                <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400 mb-4">
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                    Click blue robot to punch
+                    Real-time combat system
                   </span>
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                    Works on mobile & desktop
+                    Perfect hit mechanics
                   </span>
                   <span className="flex items-center gap-2">
                     <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
-                    Multiple difficulty levels
+                    Advanced combo system
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+                    Performance tracking
                   </span>
                 </div>
+
+                {/* Personal game stats */}
+                {gameStats.gamesPlayed > 0 && (
+                  <div className="flex justify-center gap-6 text-xs text-gray-500 bg-black/30 rounded-lg p-3 max-w-md mx-auto">
+                    <span>Games: {gameStats.gamesPlayed}</span>
+                    <span>Wins: {gameStats.wins}</span>
+                    {gameStats.maxCombo > 0 && <span>Best Combo: {gameStats.maxCombo}</span>}
+                    {gameStats.perfectHits > 0 && <span>Perfect Hits: {gameStats.perfectHits}</span>}
+                  </div>
+                )}
               </motion.div>
 
-              {/* Game Container */}
+              {/* Enhanced Game Container with Error Boundary */}
               <motion.div
                 className="relative"
                 initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.95 }}
@@ -1401,20 +1574,21 @@ export default function HomePage() {
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: shouldReduceMotion ? 0.1 : 0.8, ease: "easeOut" }}
               >
-                {/* Enhanced container with game-specific styling */}
                 <div className="relative max-w-4xl mx-auto">
-                  {/* Glowing border effect */}
+                  {/* Enhanced glowing border effect */}
                   <div className="absolute -inset-1 bg-gradient-to-r from-viva-magenta-500 via-lux-gold-500 to-viva-magenta-500 rounded-2xl blur opacity-30 animate-pulse" />
                   
-                  {/* Game wrapper with enhanced styling */}
+                  {/* Game wrapper with proper error handling */}
                   <div className="relative bg-gradient-to-br from-gray-900/95 via-lux-black/98 to-gray-800/95 backdrop-blur-xl rounded-2xl border border-gray-700/50 overflow-hidden shadow-2xl">
                     {/* Top accent bar */}
                     <div className="h-1 bg-gradient-to-r from-viva-magenta-500 via-lux-gold-500 to-viva-magenta-500" />
                     
-                    {/* Game component container */}
+                    {/* Game component container with performance optimization */}
                     <div className="p-4 sm:p-6 lg:p-8">
                       <Suspense fallback={<GameSkeleton />}>
-                        <RockEmSockEm />
+                        <GameErrorBoundary>
+                          <EnhancedRockEmSockEm />
+                        </GameErrorBoundary>
                       </Suspense>
                     </div>
                     
@@ -1423,7 +1597,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Floating game stats/info */}
+                {/* Enhanced floating game info */}
                 <motion.div
                   className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4 text-center"
                   initial={{ opacity: 0, y: 10 }}
@@ -1431,19 +1605,19 @@ export default function HomePage() {
                   viewport={{ once: true }}
                   transition={{ delay: 0.5, duration: 0.3 }}
                 >
-                  <div className="px-4 py-2 bg-black/50 backdrop-blur-sm rounded-full border border-gray-600/30">
-                    <span className="text-xs text-gray-300">🎮 Interactive Game</span>
+                  <div className="px-4 py-2 bg-black/60 backdrop-blur-sm rounded-full border border-gray-600/30">
+                    <span className="text-xs text-gray-300">🎮 Enhanced Combat</span>
                   </div>
-                  <div className="px-4 py-2 bg-black/50 backdrop-blur-sm rounded-full border border-gray-600/30">
-                    <span className="text-xs text-gray-300">🥊 Retro Fighting</span>
+                  <div className="px-4 py-2 bg-black/60 backdrop-blur-sm rounded-full border border-gray-600/30">
+                    <span className="text-xs text-gray-300">⚡ Real-time Engine</span>
                   </div>
-                  <div className="px-4 py-2 bg-black/50 backdrop-blur-sm rounded-full border border-gray-600/30">
-                    <span className="text-xs text-gray-300">⚡ Built with React</span>
+                  <div className="px-4 py-2 bg-black/60 backdrop-blur-sm rounded-full border border-gray-600/30">
+                    <span className="text-xs text-gray-300">🏆 Performance Tracked</span>
                   </div>
                 </motion.div>
               </motion.div>
 
-              {/* Call-to-action below game */}
+              {/* Enhanced call-to-action below game */}
               <motion.div
                 className="text-center mt-16"
                 initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
@@ -1452,7 +1626,7 @@ export default function HomePage() {
                 transition={{ duration: shouldReduceMotion ? 0.1 : 0.6, delay: shouldReduceMotion ? 0 : 0.3 }}
               >
                 <p className="text-lg text-gray-300 mb-6">
-                  Enjoyed the game? Let's collaborate on your next project!
+                  Enjoyed the enhanced gaming experience? Let's collaborate on your next interactive project!
                 </p>
                 <motion.button
                   onClick={() => scrollToSection('contact')}
@@ -1469,8 +1643,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ✅ UPDATED: Streamlined Contact Section - Removed generic content */}
-        <section id="contact" className="scroll-section relative py-20 bg-gradient-to-br from-lux-gray-50 via-viva-magenta-50/20 to-lux-gold-50/20 dark:from-lux-gray-900 dark:via-viva-magenta-900/10 dark:to-lux-gold-900/10">
+        {/* ✅ Contact Section - NO background, uses unified system */}
+        <section id="contact" className="scroll-section relative py-20">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               className="text-center mb-16"
@@ -1582,8 +1756,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Enhanced Footer */}
-        <footer className="bg-lux-black text-center py-16 relative overflow-hidden">
+        {/* ✅ Enhanced Footer - Uses dark styling but no competing background */}
+        <footer className="relative py-16 text-center overflow-hidden">
+          {/* Dark footer overlay */}
+          <div className="absolute inset-0 bg-lux-black/90 backdrop-blur-sm" />
+          
+          {/* Subtle footer background effects */}
           <div className="absolute inset-0 opacity-5">
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-viva-magenta-500 rounded-full blur-3xl" />
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-lux-gold-500 rounded-full blur-3xl" />
@@ -1716,7 +1894,7 @@ export default function HomePage() {
         </motion.a>
       </div>
 
-      {/* ✅ FIXED: Location Welcome Message - Optimally placed for UX */}
+      {/* ✅ Location Welcome Message - Optimally placed for UX */}
       <AnimatePresence>
         {showLocationMessage && (
           <motion.div

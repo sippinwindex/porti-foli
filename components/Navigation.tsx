@@ -1,4 +1,4 @@
-// Fixed Navigation Component - Resolves scroll twitching and progress bar issues
+// Fixed Navigation Component with proper progress bar positioning
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -56,7 +56,7 @@ const FixedNavigation: React.FC = () => {
   
   // Refs
   const navRef = useRef<HTMLElement>(null)
-  const progressRef = useRef<HTMLDivElement>(null)
+  const progressBarRef = useRef<HTMLDivElement>(null)
   
   // ✅ FIXED: Stable navigation items
   const navigationItems: NavItem[] = useMemo(() => [
@@ -173,7 +173,7 @@ const FixedNavigation: React.FC = () => {
     }
   }, [darkMode])
 
-  // ✅ FIXED: Stable scroll detection with progress bar update
+  // ✅ FIXED: Scroll detection with progress bar update
   useEffect(() => {
     let ticking = false
     
@@ -192,9 +192,9 @@ const FixedNavigation: React.FC = () => {
           const progress = maxScroll > 0 ? Math.min(scrollY / maxScroll, 1) : 0
           setScrollProgress(progress)
           
-          // ✅ FIXED: Update progress bar directly without causing layout shifts
-          if (progressRef.current) {
-            progressRef.current.style.transform = `scaleX(${progress})`
+          // ✅ FIXED: Update progress bar directly
+          if (progressBarRef.current) {
+            progressBarRef.current.style.transform = `scaleX(${progress})`
           }
           
           ticking = false
@@ -215,7 +215,7 @@ const FixedNavigation: React.FC = () => {
     }
   }, [])
 
-  // ✅ FIXED: Better section detection without constant updates
+  // Navigation and section detection (same as before)
   useEffect(() => {
     if (pathname !== '/') {
       if (pathname === '/blog') {
@@ -264,12 +264,10 @@ const FixedNavigation: React.FC = () => {
     }
   }, [pathname])
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsOpen(false)
   }, [pathname])
 
-  // ✅ FIXED: Navigation handler without scroll issues
   const handleNavigation = useCallback((href: string, id: string) => {
     setIsOpen(false)
     
@@ -277,7 +275,7 @@ const FixedNavigation: React.FC = () => {
       const targetId = href.replace('/#', '')
       const element = document.getElementById(targetId)
       if (element) {
-        const navHeight = 80 // Account for navbar height
+        const navHeight = 80
         const offsetTop = element.offsetTop - navHeight
         
         window.scrollTo({
@@ -293,7 +291,6 @@ const FixedNavigation: React.FC = () => {
     }
   }, [router, pathname, prefersReducedMotion])
 
-  // ✅ FIXED: Active path detection
   const isActivePath = useCallback((href: string, id: string) => {
     if (pathname !== '/') {
       return pathname === href
@@ -307,7 +304,7 @@ const FixedNavigation: React.FC = () => {
     return currentSection === id
   }, [pathname, currentSection])
 
-  // ✅ FIXED: Theme Toggle Component with proper circle containment
+  // Theme Toggle Component (same as before)
   const ThemeToggleComponent = React.memo(() => {
     if (!mounted) {
       return (
@@ -323,7 +320,6 @@ const FixedNavigation: React.FC = () => {
         whileHover={{ scale: 1.02 }}
         aria-label={`Switch to ${darkMode ? 'light' : 'dark'} mode`}
       >
-        {/* Background track */}
         <div className="absolute inset-0 rounded-full">
           <motion.div
             className="absolute inset-0 rounded-full"
@@ -336,7 +332,6 @@ const FixedNavigation: React.FC = () => {
           />
         </div>
         
-        {/* ✅ FIXED: Toggle Circle with proper containment */}
         <motion.div
           className="absolute w-5 h-5 bg-white dark:bg-gray-100 rounded-full shadow-lg flex items-center justify-center border border-gray-200 dark:border-gray-300"
           style={{
@@ -344,7 +339,7 @@ const FixedNavigation: React.FC = () => {
             left: '2px'
           }}
           animate={{
-            x: darkMode ? 24 : 0, // Adjusted to stay within bounds
+            x: darkMode ? 24 : 0,
           }}
           transition={{
             type: "spring",
@@ -376,23 +371,12 @@ const FixedNavigation: React.FC = () => {
             )}
           </AnimatePresence>
         </motion.div>
-        
-        {/* Subtle glow effect */}
-        <motion.div
-          className="absolute inset-0 rounded-full pointer-events-none"
-          animate={{
-            boxShadow: darkMode
-              ? '0 0 15px rgba(59, 130, 246, 0.2)'
-              : '0 0 15px rgba(251, 191, 36, 0.2)'
-          }}
-          transition={{ duration: 0.3 }}
-        />
       </motion.button>
     )
   })
   ThemeToggleComponent.displayName = 'ThemeToggleComponent'
 
-  // Navigation Link Component
+  // Navigation Link Component (same as before)
   const NavLink = React.memo<{
     item: NavItem
     index: number
@@ -452,7 +436,7 @@ const FixedNavigation: React.FC = () => {
   })
   NavLink.displayName = 'NavLink'
 
-  // Social Link Component
+  // Social Link Component (same as before)
   const SocialLink = React.memo<{
     social: SocialLink
     index: number
@@ -494,7 +478,6 @@ const FixedNavigation: React.FC = () => {
   })
   SocialLink.displayName = 'SocialLink'
 
-  // Loading state
   if (!mounted) {
     return (
       <nav className="fixed top-0 left-0 right-0 z-[1000] px-4 sm:px-6 lg:px-8 py-4">
@@ -513,7 +496,7 @@ const FixedNavigation: React.FC = () => {
 
   return (
     <>
-      {/* ✅ FIXED: Stable navbar with proper structure and overflow visible for progress bar */}
+      {/* ✅ FIXED: Clean navbar structure without progress bar interference */}
       <nav 
         ref={navRef}
         className={`
@@ -527,13 +510,13 @@ const FixedNavigation: React.FC = () => {
           height: '5rem',
           minHeight: '5rem',
           maxHeight: '5rem',
-          overflow: 'visible' // ✅ CRITICAL: Allow progress bar to be visible
+          overflow: 'visible'
         }}
       >
         <div className="container mx-auto px-6 sm:px-8 lg:px-12 h-full">
           <div className="flex items-center justify-between h-full">
             
-            {/* ✅ FIXED: Logo */}
+            {/* Logo */}
             <Link 
               href="/" 
               className="flex items-center gap-4 text-xl font-bold text-gray-900 dark:text-gray-50 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 transition-colors z-10 relative"
@@ -562,7 +545,7 @@ const FixedNavigation: React.FC = () => {
               <span className="hidden sm:block">Juan Fernandez</span>
             </Link>
 
-            {/* ✅ FIXED: Desktop Navigation */}
+            {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-10">
               <div 
                 className="flex items-center gap-2 rounded-xl p-2"
@@ -580,7 +563,7 @@ const FixedNavigation: React.FC = () => {
               </div>
             </div>
 
-            {/* ✅ FIXED: Desktop Controls */}
+            {/* Desktop Controls */}
             <div className="hidden lg:flex items-center gap-6">
               <div className="flex items-center gap-4">
                 {socialLinks.map((social, index) => (
@@ -611,7 +594,7 @@ const FixedNavigation: React.FC = () => {
               </motion.a>
             </div>
 
-            {/* ✅ FIXED: Mobile controls */}
+            {/* Mobile controls */}
             <div className="flex lg:hidden items-center gap-4">
               <ThemeToggleComponent />
               
@@ -630,22 +613,21 @@ const FixedNavigation: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* ✅ FIXED: Progress bar positioned UNDER navbar with proper styling */}
-        <div
-          ref={progressRef}
-          className="absolute bottom-0 left-0 right-0 h-1 z-[1001] pointer-events-none"
-          style={{ 
-            width: '100%',
-            background: 'linear-gradient(90deg, #BE3455 0%, #D4AF37 50%, #008080 100%)',
-            transform: 'scaleX(0)',
-            transformOrigin: 'left center',
-            transition: prefersReducedMotion ? 'none' : 'transform 0.1s ease',
-            boxShadow: prefersReducedMotion ? 'none' : '0 0 8px rgba(190, 52, 85, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2)',
-            borderRadius: '0 0 2px 2px'
-          }}
-        />
       </nav>
+
+      {/* ✅ FIXED: Progress bar positioned OUTSIDE and BELOW navbar */}
+      <div
+        ref={progressBarRef}
+        className="fixed left-0 right-0 w-full h-1 z-[999] pointer-events-none"
+        style={{
+          top: '5rem', // Position directly below navbar
+          background: 'linear-gradient(90deg, #BE3455 0%, #D4AF37 50%, #008080 100%)',
+          transform: 'scaleX(0)',
+          transformOrigin: 'left center',
+          transition: prefersReducedMotion ? 'none' : 'transform 0.1s ease',
+          borderRadius: '0 0 2px 2px'
+        }}
+      />
 
       {/* Mobile Menu */}
       <AnimatePresence>
@@ -661,7 +643,8 @@ const FixedNavigation: React.FC = () => {
             />
 
             <motion.div
-              className="fixed top-20 right-4 left-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl z-[999] lg:hidden overflow-hidden max-h-[80vh] overflow-y-auto"
+              className="fixed right-4 left-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-700 shadow-2xl z-[999] lg:hidden overflow-hidden max-h-[80vh] overflow-y-auto"
+              style={{ top: 'calc(5rem + 0.25rem)' }} // Position below navbar + progress bar
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}

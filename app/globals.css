@@ -1,4 +1,4 @@
-/* Enhanced globals.css - Clean & Optimized Version */
+/* Enhanced globals.css - Complete Fixed Version with Unified Background System */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -32,7 +32,7 @@
 }
 
 /* ===================================================================
-   CSS VARIABLES - ORGANIZED & CLEAN
+   CSS VARIABLES - ORGANIZED & CLEAN WITH FIXED PROGRESS BAR
    =================================================================== */
 
 :root {
@@ -75,6 +75,11 @@
   --primary-rgb: 59, 130, 246;
   --accent-rgb: 139, 92, 246;
   
+  /* ✅ FIXED: Enhanced navbar and progress bar system */
+  --navbar-height: 5rem;
+  --progress-bar-height: 3px;
+  --total-header-height: calc(var(--navbar-height) + var(--progress-bar-height));
+  
   /* Theme-aware Variables (Light Mode Defaults) */
   --theme-bg: #ffffff;
   --theme-fg: #0f172a;
@@ -116,7 +121,6 @@
   --depth-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   
   /* Layout Variables */
-  --header-height: 5rem;
   --section-spacing: 5rem;
   --container-padding: 2rem;
   --border-radius-sm: 0.5rem;
@@ -146,20 +150,37 @@
   --active-scale: scale(0.98);
   --focus-ring: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
   
-  /* Z-Index Hierarchy */
+  /* ✅ FIXED: Z-Index Hierarchy for Progress Bar */
   --z-backdrop: -1;
   --z-base: 0;
   --z-content: 10;
   --z-header: 100;
   --z-floating-elements: 950;
   --z-location-message: 998;
-  --z-scroll-progress: 999;
-  --z-navbar: 1000;
+  --z-progress-bar: 999;           /* ✅ FIXED: Below navbar */
+  --z-navbar: 1000;                /* ✅ FIXED: Above progress bar */
   --z-navigation: 1000;
   --z-theme-toggle: 1002;
+  --z-mobile-menu-backdrop: 998;
+  --z-mobile-menu: 999;
   --z-dropdown: 1050;
   --z-modal: 9999;
   --z-tooltip: 10000;
+}
+
+/* ✅ FIXED: Responsive navbar heights */
+@media (max-width: 1024px) {
+  :root {
+    --navbar-height: 4rem;
+    --progress-bar-height: 2px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --navbar-height: 3.5rem;
+    --progress-bar-height: 2px;
+  }
 }
 
 /* Dark Mode Variables */
@@ -199,7 +220,95 @@
 }
 
 /* ===================================================================
-   BASE LAYER - FOUNDATION
+   UNIFIED BACKGROUND SYSTEM - PARTICLE FIELD INTEGRATION
+   =================================================================== */
+
+/* ✅ REMOVE all individual section backgrounds for unified system */
+section {
+  position: relative !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+/* Remove any section-specific backgrounds for unified particle system */
+section#hero,
+section#code-showcase, 
+section#about,
+section#languages,
+section#projects,
+section#contact,
+section#game {
+  background: transparent !important;
+}
+
+/* ✅ ENHANCED: Better gradient text with theme support */
+.gradient-text {
+  background: linear-gradient(
+    135deg,
+    var(--viva-magenta) 0%,
+    var(--lux-gold) 50%,
+    var(--viva-magenta) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease-in-out infinite;
+}
+
+.dark .gradient-text {
+  background: linear-gradient(
+    135deg,
+    rgba(var(--viva-magenta-rgb), 0.9) 0%,
+    rgba(var(--lux-gold-rgb), 0.9) 50%,
+    rgba(var(--viva-magenta-rgb), 0.9) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-size: 200% 200%;
+}
+
+/* ✅ ENHANCED: Hero title with better animations */
+.hero-title {
+  font-weight: bold;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dark .hero-title {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ✅ ENHANCED: Scroll sections with proper z-indexing */
+.scroll-section {
+  position: relative;
+  z-index: 10;
+}
+
+/* ✅ ENHANCED: Loading animations */
+@keyframes aurora {
+  0%, 100% { opacity: 0.3; transform: rotate(0deg) scale(1); }
+  50% { opacity: 0.6; transform: rotate(180deg) scale(1.1); }
+}
+
+.aurora-glow {
+  animation: aurora 4s ease-in-out infinite;
+}
+
+/* ✅ ENHANCED: Particle field specific styles */
+.particle-field-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ===================================================================
+   BASE LAYER - FOUNDATION WITH FIXED BODY PADDING
    =================================================================== */
 
 @layer base {
@@ -214,7 +323,7 @@
 
   html {
     scroll-behavior: smooth;
-    scroll-padding-top: calc(var(--header-height) + 1rem);
+    scroll-padding-top: var(--total-header-height); /* ✅ FIXED: Account for navbar + progress bar */
     overflow-x: hidden;
     height: 100%;
     transition: color-scheme 0.3s ease;
@@ -243,10 +352,11 @@
     /* Smooth theme transitions */
     transition: background-color 0.3s var(--animation-spring), 
                 color 0.3s var(--animation-spring),
-                border-color 0.3s var(--animation-spring);
+                border-color 0.3s var(--animation-spring),
+                padding-top 0.3s ease;
     
-    /* Body padding for fixed navbar */
-    padding-top: var(--header-height);
+    /* ✅ FIXED: Body padding for fixed navbar + progress bar */
+    padding-top: var(--total-header-height) !important;
   }
 
   .dark body {
@@ -374,13 +484,13 @@
 }
 
 /* ===================================================================
-   COMPONENTS LAYER - MAIN COMPONENTS
+   COMPONENTS LAYER - MAIN COMPONENTS WITH FIXED NAVBAR
    =================================================================== */
 
 @layer components {
 
   /* ===================================================================
-     CONSOLIDATED NAVBAR SECTION - CLEAN & CONFLICT-FREE
+     ✅ FIXED: CONSOLIDATED NAVBAR SECTION - CLEAN & CONFLICT-FREE
      =================================================================== */
 
   /* Core Navbar Structure */
@@ -396,9 +506,9 @@
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
-    height: var(--header-height) !important;
-    min-height: var(--header-height) !important;
-    max-height: var(--header-height) !important;
+    height: var(--navbar-height) !important;
+    min-height: var(--navbar-height) !important;
+    max-height: var(--navbar-height) !important;
     z-index: var(--z-navbar) !important;
     display: flex !important;
     visibility: visible !important;
@@ -410,7 +520,7 @@
     will-change: background-color, border-color !important;
     transition: background-color 0.3s ease, border-color 0.3s ease !important;
     animation: none !important;
-    overflow: visible !important;
+    overflow: visible !important; /* ✅ CRITICAL: Allow progress bar to show below */
     
     /* ✅ CRITICAL: Clean bottom edge for progress bar */
     border-bottom: none !important;
@@ -573,43 +683,43 @@
   }
 
   /* ===================================================================
-     CRITICAL FIX: SCROLL PROGRESS BAR - PROPERLY POSITIONED
+     ✅ FIXED: PROGRESS BAR - PROPERLY POSITIONED BELOW NAVBAR
      =================================================================== */
 
-  /* ✅ FIXED: Progress bar at bottom edge of navbar, below content */
+  /* ✅ FIXED: Progress bar positioned BELOW navbar, not on it */
   .scroll-progress,
+  .scroll-progress-bar,
   nav .scroll-progress,
   .navbar .scroll-progress {
-    /* ✅ CRITICAL: Position at very bottom of navbar */
-    position: absolute !important;
-    bottom: 0 !important;
+    /* ✅ CRITICAL: Position below navbar */
+    position: fixed !important;
+    top: var(--navbar-height) !important;
     left: 0 !important;
     right: 0 !important;
+    bottom: auto !important;
     
     /* ✅ CRITICAL: Proper dimensions */
-    height: 3px !important;
     width: 100% !important;
+    height: var(--progress-bar-height) !important;
     
-    /* ✅ CRITICAL: Z-index BELOW navbar content (999 instead of 1001) */
-    z-index: 999 !important;
+    /* ✅ CRITICAL: Z-index BELOW navbar */
+    z-index: var(--z-progress-bar) !important;
     
-    /* ✅ CRITICAL: Initial state */
+    /* ✅ CRITICAL: Transform and animation */
     transform: scaleX(0) !important;
     transform-origin: left center !important;
-    
-    /* ✅ ENHANCED: Smooth animation */
     transition: transform 0.1s ease !important;
     
-    /* ✅ CRITICAL: Clean background - NO box-shadow that causes black lines */
+    /* ✅ ENHANCED: Beautiful gradient background */
     background: linear-gradient(90deg, 
       #BE3455 0%, 
       #D4AF37 50%, 
       #008080 100%
     ) !important;
     
-    /* ✅ CRITICAL: Remove any styling that causes black lines */
-    box-shadow: none !important;
+    /* ✅ CRITICAL: Remove borders/shadows that create lines */
     border: none !important;
+    box-shadow: none !important;
     outline: none !important;
     
     /* ✅ CRITICAL: Non-interactive */
@@ -619,39 +729,30 @@
     /* ✅ ENHANCED: Performance optimizations */
     will-change: transform !important;
     contain: layout style paint !important;
-    
-    /* ✅ CRITICAL: Ensure no margin/padding */
-    margin: 0 !important;
-    padding: 0 !important;
-    
-    /* ✅ CRITICAL: Webkit/Safari specific fixes */
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    appearance: none !important;
-    background-clip: padding-box !important;
-    
-    /* ✅ ENHANCED: Force hardware acceleration */
     backface-visibility: hidden !important;
     perspective: 1000px !important;
+    
+    /* ✅ ENHANCED: Smooth corners */
+    border-radius: 0 0 2px 2px !important;
   }
 
-  /* ✅ CRITICAL: Remove any duplicate progress bars */
-  nav .scroll-progress:not(:last-of-type),
-  .navbar .scroll-progress:not(:last-of-type),
-  nav .scroll-progress:nth-child(n+2),
-  .navbar .scroll-progress:nth-child(n+2) {
+  /* ✅ CRITICAL: Remove duplicate progress bars */
+  .scroll-progress + .scroll-progress,
+  .scroll-progress-bar + .scroll-progress-bar,
+  nav .scroll-progress:not(:first-of-type),
+  .navbar .scroll-progress:not(:first-of-type) {
     display: none !important;
   }
 
-  /* ✅ CRITICAL: Remove any pseudo-elements that create black lines */
+  /* ✅ CRITICAL: Remove pseudo-elements that create duplicate bars */
   .scroll-progress::before,
   .scroll-progress::after,
-  nav::after,
-  .navbar::after {
+  .scroll-progress-bar::before,
+  .scroll-progress-bar::after {
     display: none !important;
   }
 
-  /* ✅ ENHANCED: Progress bar animation states */
+  /* ✅ ENHANCED: Animation states */
   .scroll-progress[data-progress] {
     transform: scaleX(var(--scroll-progress, 0)) !important;
   }
@@ -660,16 +761,17 @@
     transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
 
-  /* ✅ ENHANCED: Helper classes for JavaScript integration */
+  /* ✅ ENHANCED: Helper classes */
   .scroll-progress-container {
-    position: absolute !important;
-    bottom: 0 !important;
+    position: fixed !important;
+    top: var(--navbar-height) !important;
     left: 0 !important;
     right: 0 !important;
-    height: 3px !important;
+    height: var(--progress-bar-height) !important;
     pointer-events: none !important;
     overflow: hidden !important;
     background: transparent !important;
+    z-index: var(--z-progress-bar) !important;
   }
 
   .scroll-progress-active {
@@ -682,35 +784,56 @@
     visibility: hidden !important;
   }
 
-  /* ✅ CRITICAL: Override any external CSS that might interfere */
+  .scroll-progress-smooth {
+    transition: transform 0.1s ease !important;
+  }
+
+  .scroll-progress-instant {
+    transition: none !important;
+  }
+
+  /* ✅ CRITICAL: Override external CSS that might interfere */
   nav[data-scroll-progress],
-  .navbar[data-scroll-progress] {
+  .navbar[data-scroll-progress],
+  nav::after,
+  .navbar::after {
     border-bottom: none !important;
     box-shadow: none !important;
+  }
+
+  /* ✅ ENHANCED: Dark mode support */
+  .dark .scroll-progress,
+  .dark .scroll-progress-bar {
+    background: linear-gradient(90deg, 
+      #BE3455 0%, 
+      #D4AF37 50%, 
+      #008080 100%
+    ) !important;
+    box-shadow: 0 0 8px rgba(190, 52, 85, 0.4) !important;
   }
 
   /* Mobile Menu */
   .mobile-menu-backdrop {
     position: fixed !important;
     inset: 0 !important;
-    z-index: calc(var(--z-navbar) - 2) !important;
+    z-index: var(--z-mobile-menu-backdrop) !important;
     background: rgba(0, 0, 0, 0.5) !important;
     backdrop-filter: blur(4px) !important;
   }
 
   .mobile-menu {
     position: fixed !important;
-    top: var(--header-height) !important;
+    top: calc(var(--navbar-height) + 0.25rem) !important; /* ✅ FIXED: Position below navbar */
     left: 1rem !important;
     right: 1rem !important;
-    z-index: calc(var(--z-navbar) - 1) !important;
-    max-height: calc(100vh - var(--header-height) - 1rem) !important;
+    z-index: var(--z-mobile-menu) !important;
+    max-height: calc(100vh - var(--navbar-height) - 1rem) !important;
     overflow-y: auto !important;
   }
 
   .mobile-menu-content {
     position: relative !important;
-    z-index: calc(var(--z-navbar) - 1) !important;
+    z-index: var(--z-mobile-menu) !important;
     pointer-events: auto !important;
     background: var(--glass-card-bg) !important;
     border: 1px solid var(--theme-border) !important;
@@ -718,10 +841,10 @@
   }
 
   /* ===================================================================
-     OTHER COMPONENTS
+     ENHANCED BUTTONS - UNIFIED BACKGROUND COMPATIBLE
      =================================================================== */
 
-  /* Buttons */
+  /* Buttons - Enhanced with unified background compatibility */
   .btn-primary {
     display: inline-flex;
     align-items: center;
@@ -735,13 +858,19 @@
     color: white;
     box-shadow: var(--shadow-lg);
     transform: translateZ(0);
-    border: none;
+    border: 1px solid rgba(var(--viva-magenta-rgb), 0.2);
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
   }
 
   .btn-primary:hover {
     box-shadow: var(--shadow-xl);
     transform: var(--hover-lift) var(--hover-scale);
+    background: linear-gradient(135deg, 
+      rgba(var(--viva-magenta-rgb), 0.9), 
+      rgba(var(--lux-gold-rgb), 0.9)
+    );
   }
 
   .btn-primary:active {
@@ -758,27 +887,64 @@
     border-radius: var(--border-radius-lg);
     border: 2px solid var(--viva-magenta);
     color: var(--viva-magenta);
-    background: transparent;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(16px);
     transition: all var(--animation-normal) var(--animation-spring);
     transform: translateZ(0);
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dark .btn-secondary {
+    background: rgba(31, 41, 55, 0.9);
+    color: var(--lux-offwhite);
+    border-color: var(--viva-magenta);
   }
 
   .btn-secondary:hover {
-    background: rgba(var(--viva-magenta-rgb), 0.1);
+    background: linear-gradient(135deg, 
+      rgba(var(--viva-magenta-rgb), 0.1), 
+      rgba(var(--lux-gold-rgb), 0.1)
+    );
+    backdrop-filter: blur(20px);
     transform: var(--hover-lift) var(--hover-scale);
+    border-color: rgba(var(--viva-magenta-rgb), 0.5);
   }
 
-  /* Cards */
+  .dark .btn-secondary:hover {
+    background: linear-gradient(135deg, 
+      rgba(var(--viva-magenta-rgb), 0.2), 
+      rgba(var(--lux-gold-rgb), 0.2)
+    );
+  }
+
+  /* ===================================================================
+     ENHANCED CARDS - UNIFIED BACKGROUND SYSTEM
+     =================================================================== */
+
+  /* Cards - Enhanced for unified background system */
   .card {
     padding: 1.5rem;
     border-radius: var(--border-radius-lg);
-    background: var(--glass-card-bg);
-    border: 1px solid var(--theme-border);
-    backdrop-filter: var(--glass-blur);
-    box-shadow: var(--shadow-lg);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
     transition: all var(--animation-normal) ease;
     color: var(--theme-fg);
+    position: relative;
+    z-index: 10;
+  }
+
+  .dark .card {
+    background: rgba(31, 41, 55, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .card-hover {
@@ -786,25 +952,81 @@
   }
 
   .card-hover:hover {
-    box-shadow: var(--shadow-2xl);
+    box-shadow: 
+      0 20px 40px rgba(0, 0, 0, 0.15),
+      0 0 40px rgba(var(--viva-magenta-rgb), 0.1);
     transform: translateY(-8px) scale(1.02);
     border-color: rgba(var(--viva-magenta-rgb), 0.3);
   }
 
-  /* Project and Language Cards */
+  .dark .card-hover:hover {
+    box-shadow: 
+      0 20px 40px rgba(0, 0, 0, 0.4),
+      0 0 40px rgba(var(--viva-magenta-rgb), 0.2);
+  }
+
+  /* ✅ ENHANCED: Card styles that work with unified background */
+  .portfolio-card {
+    backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 10;
+  }
+
+  .dark .portfolio-card {
+    background: rgba(31, 41, 55, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .portfolio-card:hover {
+    transform: scale(1.02) translateY(-4px);
+    box-shadow: 0 20px 40px rgba(var(--viva-magenta-rgb), 0.1);
+    border-color: rgba(var(--viva-magenta-rgb), 0.3);
+  }
+
+  .dark .portfolio-card:hover {
+    box-shadow: 0 20px 40px rgba(var(--viva-magenta-rgb), 0.2);
+  }
+
+  /* Project and Language Cards - Unified background compatible */
   .project-card,
   .language-card {
     padding: 1.5rem !important;
     margin: 0 !important;
     border-radius: 1rem !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
     transform: none !important;
-    transition: box-shadow 0.3s ease, border-color 0.3s ease !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    z-index: 10 !important;
+  }
+
+  .dark .project-card,
+  .dark .language-card {
+    background: rgba(31, 41, 55, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
   }
 
   .project-card:hover,
   .language-card:hover {
-    transform: translateY(-4px) !important;
-    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+    transform: translateY(-4px) scale(1.02) !important;
+    box-shadow: 
+      0 20px 40px rgba(0, 0, 0, 0.15),
+      0 0 20px rgba(var(--viva-magenta-rgb), 0.1) !important;
+    border-color: rgba(var(--viva-magenta-rgb), 0.3) !important;
+  }
+
+  .dark .project-card:hover,
+  .dark .language-card:hover {
+    box-shadow: 
+      0 20px 40px rgba(0, 0, 0, 0.4),
+      0 0 20px rgba(var(--viva-magenta-rgb), 0.2) !important;
   }
 
   /* Form Elements */
@@ -1130,7 +1352,7 @@
 }
 
 /* ===================================================================
-   LAYOUT & GRID SYSTEMS
+   LAYOUT & GRID SYSTEMS WITH PROPER SPACING
    =================================================================== */
 
 /* Grid Layouts */
@@ -1153,7 +1375,7 @@
   box-sizing: border-box !important;
 }
 
-/* Section Spacing */
+/* ✅ FIXED: Section spacing with proper header offset */
 section {
   position: relative !important;
   padding: 2rem 0 !important;
@@ -1167,11 +1389,11 @@ section {
   overflow: hidden;
 }
 
-/* Hero Section */
+/* ✅ ENHANCED: Section backgrounds for particle integration */
 #hero,
 .hero-section {
   padding-top: 2rem !important;
-  min-height: calc(100vh - var(--header-height)) !important;
+  min-height: calc(100vh - var(--total-header-height)) !important;
   position: relative !important;
   overflow: hidden !important;
   background: linear-gradient(135deg, 
@@ -1189,20 +1411,45 @@ section {
   ) !important;
 }
 
-/* Code Showcase */
+/* Code Showcase with Particle Support */
 #code-showcase {
   background: linear-gradient(135deg, 
-    rgba(var(--lux-offwhite), 0.9) 0%, 
+    rgba(250, 250, 250, 0.9) 0%, 
     rgba(255, 255, 255, 0.8) 50%,
     rgba(59, 130, 246, 0.1) 100%
   ) !important;
+  position: relative !important;
 }
 
 .dark #code-showcase {
   background: linear-gradient(135deg, 
-    rgba(var(--lux-black), 0.9) 0%, 
+    rgba(18, 18, 18, 0.9) 0%, 
     rgba(31, 41, 55, 0.8) 50%,
     rgba(190, 52, 85, 0.1) 100%
+  ) !important;
+}
+
+/* Other sections with particle-friendly backgrounds */
+#about,
+#languages,
+#projects,
+#contact,
+#game {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.7) 0%, 
+    rgba(248, 250, 252, 0.8) 100%
+  ) !important;
+  position: relative !important;
+}
+
+.dark #about,
+.dark #languages,
+.dark #projects,
+.dark #contact,
+.dark #game {
+  background: linear-gradient(135deg, 
+    rgba(15, 23, 42, 0.8) 0%, 
+    rgba(30, 41, 59, 0.7) 100%
   ) !important;
 }
 
@@ -1272,15 +1519,11 @@ section {
 }
 
 /* ===================================================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN WITH FIXED PROGRESS BAR
    =================================================================== */
 
 /* Tablet Breakpoint */
 @media (max-width: 1024px) {
-  :root {
-    --header-height: 4rem;
-  }
-  
   .navbar-container,
   nav > div {
     padding: 0 1.5rem !important;
@@ -1296,21 +1539,10 @@ section {
   .card-3d-enhanced:hover {
     transform: translateY(-5px) scale(1.01);
   }
-
-  .scroll-progress,
-  nav .scroll-progress {
-    height: 2px !important;
-  }
 }
 
 /* Mobile Breakpoint */
 @media (max-width: 768px) {
-  :root {
-    --header-height: 3.5rem;
-    --section-spacing: 3rem;
-    --container-padding: 1rem;
-  }
-
   body {
     overflow-x: hidden;
   }
@@ -1345,21 +1577,33 @@ section {
     padding: 0.25rem 0.5rem;
   }
 
-  .scroll-progress,
-  nav .scroll-progress {
-    height: 2px !important;
-  }
-
   .theme-toggle {
     margin: 0 0.25rem !important;
+  }
+  
+  /* ✅ ENHANCED: Mobile particle field optimization */
+  .particle-field-container {
+    opacity: 0.3 !important;
+  }
+  
+  .portfolio-card,
+  .project-card,
+  .language-card {
+    transform: none !important;
+  }
+  
+  .portfolio-card:hover,
+  .project-card:hover,
+  .language-card:hover {
+    transform: translateY(-2px) scale(1.01) !important;
   }
 }
 
 /* ===================================================================
-   ACCESSIBILITY & SPECIAL CASES
+   ACCESSIBILITY & SPECIAL CASES WITH UNIFIED BACKGROUND SUPPORT
    =================================================================== */
 
-/* Reduced Motion Support */
+/* ✅ ENHANCED: Reduced Motion Support with Progress Bar and Particle Fields */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1383,6 +1627,7 @@ section {
     transform: none !important;
   }
   
+  .gradient-text,
   .gradient-text-3d {
     animation: none !important;
     background: var(--viva-magenta) !important;
@@ -1391,8 +1636,56 @@ section {
     color: var(--viva-magenta) !important;
   }
 
-  .scroll-progress {
+  /* ✅ FIXED: Progress bar with reduced motion */
+  .scroll-progress,
+  .scroll-progress-bar {
     transition: transform 0.01s linear !important;
+  }
+  
+  /* ✅ ENHANCED: Disable particle animations */
+  .particle-field-container {
+    display: none !important;
+  }
+  
+  .aurora-glow {
+    animation: none !important;
+  }
+}
+
+/* ✅ ENHANCED: High contrast mode support with particle fields */
+@media (prefers-contrast: high) {
+  .portfolio-card,
+  .project-card,
+  .language-card {
+    border: 2px solid var(--theme-border) !important;
+    background: var(--theme-card) !important;
+    backdrop-filter: none !important;
+  }
+  
+  .btn-primary {
+    border: 2px solid var(--theme-border) !important;
+    background: var(--theme-card) !important;
+    color: var(--theme-fg) !important;
+  }
+  
+  .gradient-text {
+    background: none !important;
+    color: var(--theme-fg) !important;
+  }
+  
+  /* ✅ ENHANCED: Remove particle field in high contrast mode */
+  .particle-field-container {
+    display: none !important;
+  }
+  
+  /* Enhanced focus visibility in high contrast */
+  .btn-primary:focus,
+  .btn-secondary:focus,
+  .portfolio-card:focus,
+  .project-card:focus,
+  .language-card:focus {
+    outline: 3px solid var(--theme-fg) !important;
+    outline-offset: 2px !important;
   }
 }
 
@@ -1410,7 +1703,7 @@ section {
   }
 }
 
-/* Print Styles */
+/* ✅ ENHANCED: Print Styles with Unified Background Support */
 @media print {
   .glass,
   .glass-card,
@@ -1435,9 +1728,23 @@ section {
     border: 1px solid var(--theme-border) !important;
   }
 
+  /* ✅ ENHANCED: Hide all particle and animation elements when printing */
+  .particle-field-container,
+  .aurora-glow,
   .scroll-progress,
+  .scroll-progress-bar,
   nav .scroll-progress {
     display: none !important;
+  }
+  
+  /* ✅ ENHANCED: Clean print layout */
+  .portfolio-card,
+  .project-card,
+  .language-card {
+    box-shadow: none !important;
+    border: 1px solid var(--theme-border) !important;
+    background: white !important;
+    backdrop-filter: none !important;
   }
   
   nav,
@@ -1450,9 +1757,13 @@ section {
   body {
     padding-top: 0 !important;
   }
+  
+  section {
+    background: white !important;
+  }
 }
 
-/* Safari Specific Fixes */
+/* ✅ ENHANCED: Safari Specific Fixes */
 @supports (-webkit-backdrop-filter: blur(16px)) {
   .glass,
   .glass-card,
@@ -1477,7 +1788,7 @@ section {
 }
 
 /* ===================================================================
-   PERFORMANCE & FIXES
+   PERFORMANCE & FIXES WITH UNIFIED BACKGROUND OPTIMIZATIONS
    =================================================================== */
 
 /* Layout Helpers */
@@ -1489,7 +1800,7 @@ section {
 
 .main-content {
   flex: 1;
-  padding-top: var(--header-height);
+  padding-top: var(--total-header-height); /* ✅ FIXED: Account for navbar + progress bar */
 }
 
 .page-container {
@@ -1528,6 +1839,25 @@ button,
   z-index: calc(var(--z-modal) + 1);
 }
 
+/* ✅ ENHANCED: Focus visibility for accessibility */
+.btn-primary:focus,
+.btn-secondary:focus,
+.portfolio-card:focus,
+.project-card:focus,
+.language-card:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--viva-magenta) !important;
+  border-radius: 4px !important;
+}
+
+.dark .btn-primary:focus,
+.dark .btn-secondary:focus,
+.dark .portfolio-card:focus,
+.dark .project-card:focus,
+.dark .language-card:focus {
+  box-shadow: 0 0 0 2px rgba(var(--viva-magenta-rgb), 0.8) !important;
+}
+
 /* Emoji & Icon Fixes */
 .floating-code-blocks-container .emoji,
 .code-showcase .emoji {
@@ -1545,22 +1875,24 @@ button,
   stroke-linejoin: round !important;
 }
 
-/* Particle Fields */
+/* ✅ ENHANCED: Particle Fields for Unified Background System */
 .particle-field-container {
   position: absolute !important;
   inset: 0 !important;
   pointer-events: none !important;
   z-index: 0 !important;
   opacity: 0.6 !important;
+  mix-blend-mode: screen !important;
 }
 
-/* Canvas Fixes */
+/* Enhanced Canvas Fixes for Particle System */
 canvas {
   background: transparent !important;
-  mix-blend-mode: screen;
+  mix-blend-mode: screen !important;
+  pointer-events: none !important;
 }
 
-/* Black Background Fixes */
+/* Unified Background System - Remove conflicting backgrounds */
 div[style*="background: black"],
 div[style*="background: #000"],
 div[style*="background-color: black"],
@@ -1578,7 +1910,108 @@ main > div {
   min-height: 100svh !important;
 }
 
-/* Performance Optimization */
-* {
+/* ✅ ENHANCED: Performance Optimization for Progress Bar and Particles */
+.scroll-progress,
+.scroll-progress-bar {
   backface-visibility: hidden !important;
+  contain: layout style paint !important;
+  will-change: transform !important;
+  perspective: 1000px !important;
+}
+
+.particle-field-container canvas {
+  will-change: transform !important;
+  contain: layout style paint !important;
+  transform: translateZ(0) !important;
+}
+
+/* ✅ ENHANCED: Mobile optimizations for unified background */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 1.875rem !important;
+    line-height: 2.25rem !important;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  /* Reduce particle field opacity on mobile for better readability */
+  .particle-field-container {
+    opacity: 0.3 !important;
+  }
+}
+
+/* ✅ ENHANCED: Utility classes for unified background system */
+.bg-transparent-section {
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+.glass-section {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 100%
+  ) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.dark .glass-section {
+  background: linear-gradient(135deg, 
+    rgba(0, 0, 0, 0.1) 0%, 
+    rgba(0, 0, 0, 0.05) 100%
+  ) !important;
+}
+
+.particle-overlay {
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+.particle-bg {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.particle-bg::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: linear-gradient(135deg, 
+    rgba(var(--viva-magenta-rgb), 0.05) 0%,
+    rgba(var(--lux-gold-rgb), 0.05) 50%,
+    rgba(var(--lux-teal-rgb), 0.05) 100%
+  ) !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+/* ✅ ENHANCED: Animation performance optimizations */
+@media (prefers-reduced-motion: no-preference) {
+  .smooth-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  
+  .smooth-hover:hover {
+    transform: translateY(-2px) scale(1.02) !important;
+  }
+}
+
+/* ✅ FINAL: Ensure all elements work with particle background */
+.content-over-particles {
+  position: relative !important;
+  z-index: 10 !important;
+  background: transparent !important;
+}
+
+.text-over-particles {
+  position: relative !important;
+  z-index: 15 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .text-over-particles {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6) !important;
 }
