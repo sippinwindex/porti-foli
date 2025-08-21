@@ -1,7 +1,6 @@
-// components/Navbar.tsx - COMPLETELY FIXED VERSION
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -17,8 +16,7 @@ import {
   Briefcase, 
   Mail,
   Github,
-  Linkedin,
-  ExternalLink
+  Linkedin
 } from 'lucide-react'
 
 const navigationItems = [
@@ -26,7 +24,7 @@ const navigationItems = [
   { name: 'About', href: '/about', icon: User },
   { name: 'Projects', href: '/projects', icon: Briefcase },
   { name: 'Contact', href: '/contact', icon: Mail }
-]
+] as const
 
 const socialLinks = [
   {
@@ -39,27 +37,35 @@ const socialLinks = [
     href: 'https://linkedin.com/in/juan-fernandez-dev',
     icon: Linkedin
   }
-]
+] as const
 
-export default function Navbar() {
+export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const pathname = usePathname()
-  const { theme, resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const pathname = usePathname()
+  const { theme, setTheme } = useTheme()
 
   // Handle mounting for theme
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Handle scroll effect
+  // Handle scroll effect with optimized performance
   useEffect(() => {
+    let ticking = false
+
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20)
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 20)
+          ticking = false
+        })
+        ticking = true
+      }
     }
 
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
@@ -68,16 +74,31 @@ export default function Navbar() {
     setIsOpen(false)
   }, [pathname])
 
-  const toggleMobileMenu = () => {
-    setIsOpen(!isOpen)
-  }
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+      document.body.classList.add('mobile-menu-open')
+    } else {
+      document.body.style.overflow = 'unset'
+      document.body.classList.remove('mobile-menu-open')
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+      document.body.classList.remove('mobile-menu-open')
+    }
+  }, [isOpen])
 
-  const cycleTheme = () => {
+  const toggleMobileMenu = useCallback(() => {
+    setIsOpen(!isOpen)
+  }, [isOpen])
+
+  const cycleTheme = useCallback(() => {
     const themeOrder: Array<'light' | 'dark' | 'system'> = ['light', 'dark', 'system']
     const currentIndex = themeOrder.indexOf(theme)
     const nextIndex = (currentIndex + 1) % themeOrder.length
     setTheme(themeOrder[nextIndex])
-  }
+  }, [theme, setTheme])
 
   const getThemeIcon = () => {
     if (!mounted) return <Monitor className="w-5 h-5" />
@@ -109,47 +130,52 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Fixed Navbar */}
+      {/* Fixed Navbar with proper CSS classes matching your globals.css */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`navbar fixed top-0 left-0 right-0 w-full transition-all duration-300 ${
           scrolled
-            ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/20 dark:border-gray-700/20 shadow-lg'
+            ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/20 dark:border-gray-700/20 shadow-lg'
             : 'bg-transparent'
         }`}
+        style={{
+          height: 'var(--navbar-height)',
+          zIndex: 'var(--z-navbar)'
+        }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="nav-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+          <div className="flex justify-between items-center h-full">
             {/* Logo */}
             <motion.div
+              className="nav-logo"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <Link 
                 href="/"
-                className="flex items-center space-x-2 font-bold text-xl text-gray-900 dark:text-white"
+                className="flex items-center space-x-2 font-bold text-xl text-gray-900 dark:text-white z-10 relative"
               >
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-viva-magenta to-lux-gold rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">JF</span>
                 </div>
-                <span className="hidden sm:block">Juan Fernandez</span>
+                <span className="hidden sm:block gradient-text">Juan Fernandez</span>
               </Link>
             </motion.div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="nav-items hidden md:flex items-center space-x-8">
               {navigationItems.map((item) => {
                 const isActive = pathname === item.href
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`relative px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                    className={`nav-link relative px-3 py-2 text-sm font-medium transition-colors duration-200 ${
                       isActive
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
+                        ? 'text-viva-magenta dark:text-lux-gold'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-viva-magenta dark:hover:text-lux-gold'
                     }`}
                   >
                     <span className="relative z-10 flex items-center space-x-1">
@@ -159,7 +185,7 @@ export default function Navbar() {
                     {isActive && (
                       <motion.div
                         layoutId="navbar-indicator"
-                        className="absolute inset-0 bg-blue-100 dark:bg-blue-900/30 rounded-lg"
+                        className="absolute inset-0 bg-viva-magenta/10 dark:bg-lux-gold/10 rounded-lg"
                         initial={false}
                         transition={{ duration: 0.2 }}
                       />
@@ -170,7 +196,7 @@ export default function Navbar() {
             </div>
 
             {/* Desktop Actions */}
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="nav-actions hidden md:flex items-center space-x-4">
               {/* Social Links */}
               {socialLinks.map((link) => (
                 <motion.a
@@ -178,7 +204,7 @@ export default function Navbar() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-viva-magenta dark:hover:text-lux-gold transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative z-10"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   title={link.name}
@@ -190,7 +216,7 @@ export default function Navbar() {
               {/* Theme Toggle */}
               <motion.button
                 onClick={cycleTheme}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-viva-magenta dark:hover:text-lux-gold transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative z-10"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 title={getThemeLabel()}
@@ -201,10 +227,11 @@ export default function Navbar() {
 
             {/* Mobile Menu Button */}
             <motion.button
-              className="md:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="mobile-menu-toggle md:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-viva-magenta dark:hover:text-lux-gold transition-colors relative"
               onClick={toggleMobileMenu}
               whileTap={{ scale: 0.9 }}
               aria-label="Toggle mobile menu"
+              style={{ zIndex: 60 }}
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </motion.button>
@@ -221,7 +248,7 @@ export default function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
+              className="mobile-menu-overlay fixed inset-0 bg-black/20 backdrop-blur-sm md:hidden"
               onClick={() => setIsOpen(false)}
             />
 
@@ -231,17 +258,17 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 shadow-xl z-50 md:hidden"
+              className="mobile-menu-panel fixed top-0 right-0 h-full w-80 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-xl md:hidden"
             >
               <div className="flex flex-col h-full">
                 {/* Mobile Menu Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="menu-header flex items-center justify-between p-6 border-b border-gray-200/50 dark:border-gray-700/50">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Navigation
                   </h2>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors"
+                    className="p-2 text-gray-500 hover:text-viva-magenta dark:text-gray-400 dark:hover:text-lux-gold transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -257,8 +284,8 @@ export default function Navbar() {
                         href={item.href}
                         className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                           isActive
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            ? 'bg-viva-magenta/10 dark:bg-lux-gold/10 text-viva-magenta dark:text-lux-gold'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
                         }`}
                         onClick={() => setIsOpen(false)}
                       >
@@ -268,7 +295,7 @@ export default function Navbar() {
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="ml-auto w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full"
+                            className="ml-auto w-2 h-2 bg-viva-magenta dark:bg-lux-gold rounded-full"
                           />
                         )}
                       </Link>
@@ -277,7 +304,7 @@ export default function Navbar() {
                 </div>
 
                 {/* Mobile Actions */}
-                <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
+                <div className="px-6 py-4 border-t border-gray-200/50 dark:border-gray-700/50 space-y-4">
                   {/* Theme Toggle */}
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -285,7 +312,7 @@ export default function Navbar() {
                     </span>
                     <button
                       onClick={cycleTheme}
-                      className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg transition-colors"
+                      className="flex items-center space-x-2 px-3 py-2 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg transition-colors hover:bg-viva-magenta/10 dark:hover:bg-lux-gold/10"
                     >
                       {getThemeIcon()}
                       <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -302,7 +329,7 @@ export default function Navbar() {
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        className="p-3 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-viva-magenta dark:hover:text-lux-gold transition-colors"
                       >
                         <link.icon className="w-5 h-5" />
                       </a>
@@ -315,8 +342,8 @@ export default function Navbar() {
         )}
       </AnimatePresence>
 
-      {/* Navbar Spacer */}
-      <div className="h-16" />
+      {/* Navbar Spacer - Using CSS variable for consistency */}
+      <div style={{ height: 'var(--navbar-height)' }} />
     </>
   )
 }

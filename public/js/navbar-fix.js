@@ -1,237 +1,200 @@
-// Navbar Height Fix for Next.js App Router
+// Simplified Navbar Fix Script for Next.js App Router
 // Place this file at: /public/js/navbar-fix.js
 
 (function() {
     'use strict';
     
-    console.log('🔧 Initializing navbar fix...');
+    console.log('🔧 Initializing simplified navbar fix...');
     
-    // Configuration for different screen sizes
-    const NAVBAR_CONFIG = {
-        desktop: { height: '5rem', maxWidth: Infinity },
-        tablet: { height: '4rem', maxWidth: 1024 },
-        mobile: { height: '3.5rem', maxWidth: 768 }
-    };
+    // Simple configuration
+    const NAVBAR_HEIGHT = '4rem';
+    const NAVBAR_Z_INDEX = '50';
     
-    function getScreenType() {
-        const width = window.innerWidth;
-        if (width <= NAVBAR_CONFIG.mobile.maxWidth) return 'mobile';
-        if (width <= NAVBAR_CONFIG.tablet.maxWidth) return 'tablet';
-        return 'desktop';
-    }
+    let initialized = false;
+    let observer = null;
     
-    function fixNavbarHeight() {
-        // Find navbar using comprehensive selectors
-        const navbarSelectors = [
-            'nav',
-            '.navbar',
-            'header[role="navigation"]',
-            '[data-navbar]',
-            '.navigation',
-            '#navbar',
-            '#navigation',
-            '[class*="nav"]',
-            '[class*="header"]'
-        ];
-        
-        let navbar = null;
-        for (const selector of navbarSelectors) {
-            navbar = document.querySelector(selector);
-            if (navbar) {
-                console.log(`📍 Found navbar using: ${selector}`);
-                break;
-            }
-        }
-        
-        if (!navbar) {
-            console.warn('⚠️ No navbar found. Retrying in 1 second...');
-            setTimeout(fixNavbarHeight, 1000);
+    function ensureNavbarPosition() {
+        // Don't run if already initialized or if we're in development mode
+        if (initialized) {
             return;
         }
         
-        // Get appropriate height for current screen size
-        const screenType = getScreenType();
-        const height = NAVBAR_CONFIG[screenType].height;
-        
-        // Apply critical styles
-        const criticalStyles = {
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            right: '0',
-            width: '100%',
-            height: height,
-            minHeight: height,
-            maxHeight: height,
-            zIndex: '1000',
-            overflow: 'visible',
-            boxSizing: 'border-box'
-        };
-        
-        // Apply styles to navbar
-        Object.assign(navbar.style, criticalStyles);
-        
-        // Fix navbar container if it exists
-        const container = navbar.querySelector('.container, .container-fluid, .navbar-container, .nav-container');
-        if (container) {
-            Object.assign(container.style, {
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
-                maxWidth: '100%',
-                overflow: 'visible'
-            });
-        }
-        
-        // Fix body padding to prevent content jumping
-        document.body.style.paddingTop = height;
-        
-        // Ensure all clickable elements are accessible
-        const clickableElements = navbar.querySelectorAll('a, button, [role="button"], [tabindex], input, select, textarea');
-        clickableElements.forEach((element, index) => {
-            element.style.position = 'relative';
-            element.style.zIndex = '2';
-            element.style.pointerEvents = 'auto';
-            element.style.cursor = 'pointer';
+        try {
+            // Find the navbar using simple selector
+            const navbar = document.querySelector('nav');
             
-            // Debug clickable elements
-            if (window.location.search.includes('debug')) {
-                element.style.outline = '1px solid lime';
-                element.title = `Clickable element ${index + 1}`;
+            if (!navbar) {
+                console.log('📍 Navbar not found, will retry...');
+                return false;
             }
-        });
-        
-        // Fix mobile menu if it exists
-        fixMobileMenu(navbar);
-        
-        console.log(`✅ Navbar fixed for ${screenType} (${height})`);
-        
-        // Set CSS custom property for other components
-        document.documentElement.style.setProperty('--navbar-height', height);
-        
-        return true;
+            
+            console.log('📍 Found navbar, applying fixes...');
+            
+            // Get current computed styles
+            const currentStyle = window.getComputedStyle(navbar);
+            
+            // Only apply fixes if needed
+            if (currentStyle.position !== 'fixed' || 
+                currentStyle.top !== '0px' || 
+                currentStyle.zIndex < NAVBAR_Z_INDEX) {
+                
+                // Apply essential styles with !important to override
+                const essentialStyles = `
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    width: 100% !important;
+                    height: ${NAVBAR_HEIGHT} !important;
+                    z-index: ${NAVBAR_Z_INDEX} !important;
+                    box-sizing: border-box !important;
+                `;
+                
+                navbar.style.cssText = essentialStyles + navbar.style.cssText;
+                
+                console.log('✅ Navbar positioning fixed');
+            } else {
+                console.log('✅ Navbar already properly positioned');
+            }
+            
+            // Ensure body has proper top padding
+            const body = document.body;
+            if (!body.style.paddingTop || body.style.paddingTop === '0px') {
+                body.style.paddingTop = NAVBAR_HEIGHT;
+                console.log('✅ Body padding applied');
+            }
+            
+            // Set CSS custom property for consistency
+            document.documentElement.style.setProperty('--navbar-height', NAVBAR_HEIGHT);
+            
+            initialized = true;
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Error in navbar fix:', error);
+            return false;
+        }
     }
     
-    function fixMobileMenu(navbar) {
-        // Find mobile toggle button
-        const toggleSelectors = [
-            '.navbar-toggler',
-            '.mobile-toggle',
-            '.hamburger',
-            '[data-bs-toggle="collapse"]',
-            '[data-toggle="collapse"]',
-            '.menu-toggle',
-            '[aria-expanded]'
-        ];
-        
-        let toggleButton = null;
-        for (const selector of toggleSelectors) {
-            toggleButton = navbar.querySelector(selector);
-            if (toggleButton) break;
+    function initializeWithRetry() {
+        // Try immediate fix
+        if (ensureNavbarPosition()) {
+            return;
         }
         
-        if (!toggleButton) return;
-        
-        // Find mobile menu
-        const menuSelectors = [
-            '.navbar-collapse',
-            '.navbar-nav',
-            '.nav-menu',
-            '.mobile-menu',
-            '.collapse'
-        ];
-        
-        let mobileMenu = null;
-        for (const selector of menuSelectors) {
-            mobileMenu = navbar.querySelector(selector) || document.querySelector(selector);
-            if (mobileMenu) break;
+        // If not successful, set up observer for DOM changes
+        if (!observer) {
+            observer = new MutationObserver((mutations) => {
+                let shouldCheck = false;
+                
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                        // Check if any added nodes contain a nav element
+                        for (let node of mutation.addedNodes) {
+                            if (node.nodeType === Node.ELEMENT_NODE) {
+                                if (node.tagName === 'NAV' || node.querySelector('nav')) {
+                                    shouldCheck = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                if (shouldCheck && ensureNavbarPosition()) {
+                    observer.disconnect();
+                    observer = null;
+                }
+            });
+            
+            // Start observing
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            
+            console.log('👀 Observer set up to watch for navbar');
         }
         
-        if (!mobileMenu) return;
-        
-        // Ensure toggle button is clickable
-        toggleButton.style.position = 'relative';
-        toggleButton.style.zIndex = '3';
-        toggleButton.style.pointerEvents = 'auto';
-        
-        console.log('📱 Mobile menu components found and fixed');
+        // Also try with a simple timeout as fallback
+        setTimeout(() => {
+            if (!initialized && ensureNavbarPosition()) {
+                if (observer) {
+                    observer.disconnect();
+                    observer = null;
+                }
+            }
+        }, 1000);
     }
     
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
+    function handleRouteChange() {
+        // Reset initialization flag on route changes
+        initialized = false;
+        setTimeout(() => {
+            initializeWithRetry();
+        }, 100);
     }
     
-    // Initialize when DOM is ready
-    function initialize() {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', fixNavbarHeight);
-        } else {
-            fixNavbarHeight();
+    // Initialize based on current DOM state
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeWithRetry);
+    } else {
+        initializeWithRetry();
+    }
+    
+    // Handle Next.js route changes
+    let currentPath = window.location.pathname;
+    setInterval(() => {
+        if (window.location.pathname !== currentPath) {
+            currentPath = window.location.pathname;
+            console.log('🔄 Route changed, checking navbar...');
+            handleRouteChange();
         }
-        
-        // Handle window resize
-        window.addEventListener('resize', debounce(fixNavbarHeight, 150));
-        
-        // Handle Next.js route changes
-        let currentPath = window.location.pathname;
-        const checkRouteChange = () => {
-            if (window.location.pathname !== currentPath) {
-                currentPath = window.location.pathname;
-                console.log('🔄 Route changed, fixing navbar...');
-                setTimeout(fixNavbarHeight, 100);
-            }
-        };
-        
-        // Check for route changes every 500ms
-        setInterval(checkRouteChange, 500);
-        
-        // Listen for browser navigation
-        window.addEventListener('popstate', () => {
-            setTimeout(fixNavbarHeight, 100);
-        });
-        
-        // Listen for hash changes
-        window.addEventListener('hashchange', () => {
-            setTimeout(fixNavbarHeight, 50);
-        });
-        
-        // Final safety check after everything loads
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                fixNavbarHeight();
-                console.log('🏁 Final navbar check completed');
-            }, 500);
-        });
-    }
+    }, 1000);
     
-    // Global utilities for debugging
-    window.NavbarDebug = {
-        fix: fixNavbarHeight,
-        config: NAVBAR_CONFIG,
-        getScreenType: getScreenType,
-        findNavbar: () => {
-            const selectors = ['nav', '.navbar', 'header[role="navigation"]'];
-            for (const sel of selectors) {
-                const el = document.querySelector(sel);
-                if (el) return el;
+    // Handle browser navigation
+    window.addEventListener('popstate', handleRouteChange);
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        if (initialized) {
+            ensureNavbarPosition();
+        }
+    });
+    
+    // Final check after everything loads
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            if (!initialized) {
+                console.log('🔄 Final navbar check...');
+                initializeWithRetry();
             }
-            return null;
+        }, 500);
+    });
+    
+    // Global debug utilities
+    window.NavbarFix = {
+        status: () => ({
+            initialized,
+            navbarFound: !!document.querySelector('nav'),
+            currentHeight: document.documentElement.style.getPropertyValue('--navbar-height'),
+            bodyPadding: document.body.style.paddingTop
+        }),
+        force: () => {
+            initialized = false;
+            initializeWithRetry();
+        },
+        reset: () => {
+            initialized = false;
+            const navbar = document.querySelector('nav');
+            if (navbar) {
+                navbar.style.cssText = '';
+            }
+            document.body.style.paddingTop = '';
+            console.log('🔄 Navbar reset complete');
         }
     };
     
-    // Auto-initialize
-    initialize();
-    
-    console.log('🚀 Navbar fix script loaded and ready');
+    console.log('🚀 Simplified navbar fix script loaded');
     
 })();

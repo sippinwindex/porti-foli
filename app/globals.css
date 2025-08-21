@@ -1,4 +1,4 @@
-/* Enhanced globals.css - Complete integration with your custom themes, particles, 3D, and motion files */
+/* Enhanced globals.css - Complete integration with navbar fixes, custom themes, particles, 3D, and motion files */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -80,7 +80,7 @@
   --lux-sage-rgb: 152, 168, 105;
   --lux-teal-rgb: 0, 128, 128;
 
-  /* Layout variables */
+  /* Layout variables with navbar fixes */
   --navbar-height: 5rem;
   --progress-bar-height: 3px;
   --total-header-height: calc(var(--navbar-height) + var(--progress-bar-height));
@@ -110,7 +110,7 @@
   --animation-slow: 0.4s;
   --animation-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-  /* Z-index hierarchy */
+  /* Z-index hierarchy - Updated for navbar fixes */
   --z-base: 0;
   --z-content: 10;
   --z-navbar: 1000;
@@ -190,6 +190,155 @@
   :root {
     --navbar-height: 3.5rem;
     --progress-bar-height: 2px;
+  }
+}
+
+/* ===================================================================
+   NAVBAR POSITIONING FIXES - INTEGRATED FROM DOCUMENT 1
+   =================================================================== */
+
+/* Force proper navbar positioning */
+nav,
+.navbar,
+header nav {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: var(--navbar-height) !important;
+  z-index: var(--z-navbar) !important;
+  box-sizing: border-box !important;
+  contain: layout style paint !important;
+}
+
+/* Ensure navbar content is properly aligned */
+nav > div,
+.navbar > div {
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 1rem !important;
+}
+
+@media (min-width: 640px) {
+  nav > div,
+  .navbar > div {
+    padding: 0 1.5rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  nav > div,
+  .navbar > div {
+    padding: 0 2rem !important;
+    max-width: 1280px !important;
+  }
+}
+
+/* Fix navbar links and buttons positioning */
+nav a,
+nav button,
+.navbar a,
+.navbar button {
+  position: relative !important;
+  z-index: 2 !important;
+  pointer-events: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+}
+
+/* Fix mobile menu positioning */
+nav button[aria-label*="menu"],
+.navbar button[aria-label*="menu"],
+.mobile-menu-toggle {
+  position: relative !important;
+  z-index: 60 !important;
+  pointer-events: auto !important;
+}
+
+/* Mobile menu overlay */
+.mobile-menu-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 40 !important;
+  pointer-events: auto !important;
+}
+
+/* Mobile menu panel */
+.mobile-menu-panel {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  height: 100vh !important;
+  z-index: 50 !important;
+  pointer-events: auto !important;
+}
+
+/* Fix for your Navigation component */
+.fixed.top-0.left-0.right-0 {
+  z-index: var(--z-navbar) !important;
+  height: var(--navbar-height) !important;
+  position: fixed !important;
+}
+
+/* Fix for theme toggle and social links */
+.nav-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  z-index: 2 !important;
+  position: relative !important;
+}
+
+/* Fix for navigation items */
+.nav-items {
+  display: flex !important;
+  align-items: center !important;
+  gap: 2rem !important;
+  z-index: 2 !important;
+  position: relative !important;
+}
+
+/* Logo positioning fix */
+.nav-logo {
+  z-index: 2 !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Fix for mobile menu scroll prevention */
+body.mobile-menu-open {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+}
+
+/* Mobile navbar adjustments */
+@media (max-width: 768px) {
+  /* Adjust body padding for mobile */
+  body {
+    padding-top: 3.5rem !important;
+  }
+  
+  /* Mobile navbar adjustments */
+  nav,
+  .navbar {
+    height: 3.5rem !important;
+  }
+  
+  /* Mobile menu content spacing */
+  .mobile-menu-panel .menu-header {
+    margin-top: 3.5rem !important;
   }
 }
 
@@ -277,7 +426,7 @@ section#game {
 }
 
 /* ===================================================================
-   ENHANCED BASE STYLES
+   ENHANCED BASE STYLES WITH NAVBAR FIXES
    =================================================================== */
 
 * {
@@ -289,8 +438,8 @@ section#game {
 html {
   scroll-behavior: smooth;
   font-size: 16px;
-  scroll-padding-top: var(--total-header-height);
-  overflow-x: hidden;
+  scroll-padding-top: calc(var(--navbar-height) + 1rem) !important;
+  overflow-x: hidden !important;
   height: 100%;
 }
 
@@ -308,13 +457,27 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
-  position: relative;
-  min-height: 100vh;
+  overflow-x: hidden !important;
+  position: relative !important;
+  min-height: 100vh !important;
   will-change: background-color, color;
   
-  /* Prevent layout shifts */
-  padding-top: var(--total-header-height);
+  /* Fixed padding for navbar with responsive values */
+  padding-top: var(--navbar-height) !important;
+}
+
+/* Main content area */
+main {
+  position: relative !important;
+  z-index: 1 !important;
+  min-height: calc(100vh - var(--navbar-height)) !important;
+}
+
+/* Fix for sections that might overlap navbar */
+section {
+  position: relative !important;
+  z-index: 1 !important;
+  padding: var(--section-spacing) 0;
 }
 
 /* Enhanced typography */
@@ -392,30 +555,22 @@ code, pre {
 }
 
 /* ===================================================================
-   ENHANCED COMPONENTS
+   ENHANCED NAVBAR STYLES WITH GLASS MORPHISM
    =================================================================== */
 
-/* Enhanced Navbar */
 nav,
 .navbar {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  height: var(--navbar-height) !important;
-  z-index: var(--z-navbar) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  padding: 0 2rem !important;
-  
+  /* Glass morphism navbar styling */
   background: var(--glass-nav-bg) !important;
   backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
   border-bottom: 1px solid var(--glass-nav-border) !important;
   
+  /* Performance optimizations */
+  will-change: background-color, backdrop-filter !important;
+  backface-visibility: hidden !important;
+  transform: translateZ(0) !important;
+  
   transition: var(--theme-transition) !important;
-  will-change: background-color, border-color !important;
   contain: layout style paint !important;
 }
 
@@ -455,6 +610,10 @@ nav,
   pointer-events: none !important;
   will-change: transform !important;
 }
+
+/* ===================================================================
+   ENHANCED COMPONENTS WITH 3D EFFECTS
+   =================================================================== */
 
 /* Enhanced Cards with 3D effects */
 .card {
@@ -859,6 +1018,7 @@ nav,
 .theme-card {
   background: rgb(var(--card));
 }
+
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-out;
 }
@@ -872,6 +1032,25 @@ nav,
 }
 
 /* ===================================================================
+   FRAMER MOTION COMPATIBILITY
+   =================================================================== */
+
+/* Fix for Framer Motion navbar animations */
+nav[style*="transform"],
+.navbar[style*="transform"] {
+  transform-origin: top center !important;
+}
+
+/* Ensure transforms don't break positioning */
+nav[style*="y:"],
+.navbar[style*="y:"] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+/* ===================================================================
    LAYOUT ENHANCEMENTS
    =================================================================== */
 
@@ -881,12 +1060,6 @@ nav,
   padding: 0 var(--container-padding);
   width: 100%;
   box-sizing: border-box;
-}
-
-section {
-  position: relative;
-  padding: var(--section-spacing) 0;
-  min-height: auto;
 }
 
 .scroll-section {
@@ -907,7 +1080,7 @@ section {
 .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
 
 /* ===================================================================
-   RESPONSIVE DESIGN
+   RESPONSIVE DESIGN WITH NAVBAR FIXES
    =================================================================== */
 
 @media (max-width: 1024px) {
@@ -960,6 +1133,7 @@ section {
   .card-3d-enhanced:hover {
     transform: translateY(-5px) scale(1.01);
   }
+  
   .glass-card {
     backdrop-filter: none !important;
     background: rgba(255, 255, 255, 0.95) !important;
@@ -971,8 +1145,61 @@ section {
 }
 
 /* ===================================================================
+   FALLBACK AND SAFETY MEASURES
+   =================================================================== */
+
+/* If CSS variables aren't supported */
+@supports not (height: var(--navbar-height)) {
+  nav,
+  .navbar {
+    height: 4rem !important;
+  }
+  
+  body {
+    padding-top: 4rem !important;
+  }
+  
+  @media (max-width: 768px) {
+    nav,
+    .navbar {
+      height: 3.5rem !important;
+    }
+    
+    body {
+      padding-top: 3.5rem !important;
+    }
+  }
+}
+
+/* Prevent layout shifts */
+nav *,
+.navbar * {
+  box-sizing: border-box !important;
+}
+
+/* ===================================================================
    ACCESSIBILITY & SPECIAL CASES
    =================================================================== */
+
+/* Focus management for navbar */
+nav:focus-within,
+.navbar:focus-within {
+  z-index: calc(var(--z-navbar) + 1) !important;
+}
+
+/* Skip link positioning (if you add one) */
+.skip-link {
+  position: fixed !important;
+  top: calc(var(--navbar-height) + 0.5rem) !important;
+  left: 0.5rem !important;
+  z-index: calc(var(--z-navbar) + 10) !important;
+  transform: translateY(-200%) !important;
+  transition: transform 0.3s ease !important;
+}
+
+.skip-link:focus {
+  transform: translateY(0) !important;
+}
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
