@@ -1,288 +1,244 @@
-// components/GitHubIntegration.tsx
-'use client'
-
+// components/GitHubIntegration.tsx - FIXED: Using merged utils
 import React, { useState, useEffect } from 'react'
-import Image from 'next/image'
-import { motion } from 'framer-motion'
-import { Github, Star, GitFork, ExternalLink, Calendar } from 'lucide-react'
+import { AlertCircle, GitBranch, Star, GitFork, ExternalLink, Calendar } from 'lucide-react'
+import { toBoolean, formatDateGitHub, getLanguageColor } from '@/lib/utils'
 
-interface GitHubRepo {
+interface GitHubRepository {
   id: number
   name: string
-  description: string
+  full_name: string
+  description: string | null
   html_url: string
+  language: string | null
   stargazers_count: number
   forks_count: number
-  language: string
+  created_at: string
   updated_at: string
   topics: string[]
   homepage: string | null
+  has_pages: boolean
 }
 
-interface GitHubUser {
-  login: string
-  name: string
-  bio: string
-  public_repos: number
-  followers: number
-  following: number
-  avatar_url: string
+interface GitHubIntegrationProps {
+  username?: string
+  maxRepos?: number
+  showStats?: boolean | string  // Fixed: Allow string for query params
+  className?: string
 }
 
-export const GitHubIntegration: React.FC = () => {
-  const [repos, setRepos] = useState<GitHubRepo[]>([])
-  const [user, setUser] = useState<GitHubUser | null>(null)
+export default function GitHubIntegration({ 
+  username = 'sippinwindex', 
+  maxRepos = 6,
+  showStats = true,
+  className = ''
+}: GitHubIntegrationProps) {
+  const [repositories, setRepositories] = useState<GitHubRepository[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Convert showStats to boolean using utility function
+  const shouldShowStats = toBoolean(showStats)
 
   useEffect(() => {
-    const fetchGitHubData = async () => {
+    async function fetchRepositories() {
       try {
         setLoading(true)
         setError(null)
         
-        console.log('🔄 Fetching GitHub data from API routes...')
+        const response = await fetch(`/api/github/repositories?username=${username}&limit=${maxRepos}`)
         
-        // Fetch user data from our API route
-        const userResponse = await fetch('/api/github?type=user')
-        if (!userResponse.ok) {
-          throw new Error(`Failed to fetch user data: ${userResponse.status}`)
+        if (!response.ok) {
+          throw new Error(`Failed to fetch repositories: ${response.status}`)
         }
-        const userData = await userResponse.json()
-        setUser(userData)
-        console.log('✅ User data loaded:', userData.name)
-
-        // Fetch repositories from our API route
-        const reposResponse = await fetch('/api/github?type=featured')
-        if (!reposResponse.ok) {
-          throw new Error(`Failed to fetch repositories: ${reposResponse.status}`)
+        
+        const data = await response.json()
+        
+        if (data.success) {
+          setRepositories(data.repositories || [])
+        } else {
+          throw new Error(data.message || 'Failed to fetch repositories')
         }
-        const reposData = await reposResponse.json()
-        setRepos(reposData)
-        console.log('✅ Repositories loaded:', reposData.length)
-
       } catch (err) {
-        console.error('❌ GitHub integration error:', err)
+        console.error('GitHub integration error:', err)
         setError(err instanceof Error ? err.message : 'An error occurred')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchGitHubData()
-  }, [])
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
-
-  const getLanguageColor = (language: string) => {
-    const colors: Record<string, string> = {
-      JavaScript: '#f1e05a',
-      TypeScript: '#2b7489',
-      Python: '#3572A5',
-      Java: '#b07219',
-      'C++': '#f34b7d',
-      HTML: '#e34c26',
-      CSS: '#1572B6'
-    }
-    return colors[language] || '#858585'
-  }
+    fetchRepositories()
+  }, [username, maxRepos])
 
   if (loading) {
     return (
-      <section className="py-20 bg-muted/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-6">
-              GitHub Integration
-            </h2>
-            <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <span className="ml-3 text-muted-foreground">Loading GitHub data...</span>
-            </div>
-          </div>
+      <div className={`p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg ${className}`}>
+        <div className="flex items-center justify-center space-x-2">
+          <GitBranch className="w-5 h-5 animate-spin" />
+          <span>Loading repositories...</span>
         </div>
-      </section>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <section className="py-20 bg-muted/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-4xl font-bold mb-6">GitHub Integration</h2>
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 max-w-md mx-auto">
-              <p className="text-red-600 dark:text-red-400">
-                Failed to load GitHub data: {error}
-              </p>
-            </div>
-          </div>
+      <div className={`p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg ${className}`}>
+        <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+          <AlertCircle className="w-5 h-5" />
+          <span>Error: {error}</span>
         </div>
-      </section>
+      </div>
     )
   }
 
-  return (
-    <section className="py-20 bg-muted/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-4xl font-bold mb-6">
-            Open Source
-            <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              {' '}Contributions
-            </span>
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Check out my latest projects and contributions on GitHub
-          </p>
-        </motion.div>
+  const totalStars = repositories.reduce((sum, repo) => sum + repo.stargazers_count, 0)
+  const totalForks = repositories.reduce((sum, repo) => sum + repo.forks_count, 0)
 
-        {/* GitHub Profile Stats */}
-        {user && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex justify-center mb-12"
-          >
-            <div className="bg-card rounded-2xl p-8 shadow-lg border max-w-md w-full">
-              <div className="text-center">
-                {/* ✅ FIX: Replaced <img> with Next.js <Image /> for better LCP performance */}
-                <Image
-                  src={user.avatar_url}
-                  alt={user.name}
-                  width={80}
-                  height={80}
-                  className="w-20 h-20 rounded-full mx-auto mb-4 border-4 border-primary/20"
-                  priority={true}
-                  unoptimized={true} // GitHub avatars are already optimized and served from CDN
-                />
-                <h3 className="text-xl font-bold mb-2">
-                  {user.name || user.login}
-                </h3>
-                {user.bio && (
-                  <p className="text-muted-foreground mb-4">{user.bio}</p>
-                )}
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold text-primary">
-                      {user.public_repos}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Repos</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-primary">
-                      {user.followers}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Followers</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-primary">
-                      {user.following}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Following</div>
-                  </div>
+  return (
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg ${className}`}>
+      {shouldShowStats && (
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <GitBranch className="w-5 h-5 mr-2" />
+            GitHub Repositories
+          </h3>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {repositories.length}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Repositories</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                {totalStars}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Stars</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {totalForks}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Forks</div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="p-6">
+        <div className="grid gap-4">
+          {repositories.map((repo) => (
+            <div
+              key={repo.id}
+              className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1">
+                  <h4 className="font-semibold text-lg">
+                    <a
+                      href={repo.html_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+                    >
+                      {repo.name}
+                      <ExternalLink className="w-4 h-4 ml-1" />
+                    </a>
+                  </h4>
+                  {repo.description && (
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                      {repo.description}
+                    </p>
+                  )}
                 </div>
               </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Repository Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {repos.map((repo, index) => (
-            <motion.div
-              key={repo.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -5 }}
-              className="bg-card rounded-2xl p-6 shadow-lg border hover:shadow-xl transition-all duration-300"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="text-lg font-semibold truncate">
-                  {repo.name}
-                </h3>
-                <a
-                  href={repo.html_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              </div>
-
-              <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                {repo.description || 'No description available'}
-              </p>
-
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+              
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center space-x-4">
                   {repo.language && (
-                    <div className="flex items-center">
+                    <div className="flex items-center space-x-1">
                       <div
-                        className="w-3 h-3 rounded-full mr-2"
+                        className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: getLanguageColor(repo.language) }}
                       />
-                      {repo.language}
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {repo.language}
+                      </span>
                     </div>
                   )}
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 mr-1" />
-                    {repo.stargazers_count}
+                  
+                  <div className="flex items-center space-x-1 text-gray-600 dark:text-gray-400">
+                    <Star className="w-4 h-4" />
+                    <span>{repo.stargazers_count}</span>
                   </div>
-                  <div className="flex items-center">
-                    <GitFork className="w-4 h-4 mr-1" />
-                    {repo.forks_count}
+                  
+                  <div className="flex items-center space-x-1 text-gray-600 dark:text-gray-400">
+                    <GitFork className="w-4 h-4" />
+                    <span>{repo.forks_count}</span>
                   </div>
                 </div>
+                
+                <div className="flex items-center space-x-1 text-gray-500 dark:text-gray-500">
+                  <Calendar className="w-4 h-4" />
+                  <span>Updated {formatDateGitHub(repo.updated_at)}</span>
+                </div>
               </div>
-
-              <div className="pt-4 border-t">
-                <p className="text-xs text-muted-foreground">
-                  Updated {formatDate(repo.updated_at)}
-                </p>
-              </div>
-            </motion.div>
+              
+              {repo.topics && repo.topics.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-1">
+                  {repo.topics.slice(0, 5).map((topic) => (
+                    <span
+                      key={topic}
+                      className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full"
+                    >
+                      {topic}
+                    </span>
+                  ))}
+                  {repo.topics.length > 5 && (
+                    <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded-full">
+                      +{repo.topics.length - 5} more
+                    </span>
+                  )}
+                </div>
+              )}
+              
+              {repo.homepage && (
+                <div className="mt-2">
+                  <a
+                    href={repo.homepage}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-600 dark:text-green-400 hover:underline text-sm flex items-center"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-1" />
+                    Live Demo
+                  </a>
+                </div>
+              )}
+            </div>
           ))}
         </div>
-
-        {/* View More Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mt-12"
-        >
-          <motion.a
-            href="https://github.com/sippinwindex"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center px-8 py-4 bg-primary text-primary-foreground font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Github className="w-5 h-5 mr-2" />
-            <span>View All Repositories</span>
-            <ExternalLink className="w-4 h-4 ml-2" />
-          </motion.a>
-        </motion.div>
+        
+        {repositories.length === 0 && (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            No repositories found
+          </div>
+        )}
+        
+        {repositories.length > 0 && (
+          <div className="mt-6 text-center">
+            <a
+              href={`https://github.com/${username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors"
+            >
+              <GitBranch className="w-4 h-4 mr-2" />
+              View all repositories on GitHub
+            </a>
+          </div>
+        )}
       </div>
-    </section>
+    </div>
   )
 }
-
-export default GitHubIntegration

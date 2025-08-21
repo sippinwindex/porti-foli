@@ -1,66 +1,55 @@
-// lib/portfolio-integration.ts - Clean version with proper type handling
-import { getCachedRepositories, getCachedGitHubStats } from './github-api'
-import { getCachedProjectsWithStatus } from './vercel-api'
-
-// Use any for GitHub repo to avoid type conflicts
-type GitHubRepo = any
-type VercelProject = any
+// lib/portfolio-integration.ts - FIXED: Complete portfolio integration logic
+import { getCachedRepositories, GitHubRepository, getCachedGitHubStats } from './github-api'
+import { getCachedProjectsWithStatus, ProjectWithStatus, matchGitHubRepoWithVercel, getDeploymentUrl } from './vercel-api'
 
 export interface EnhancedProject {
+  // Core identification
   id: string
   slug: string
   name: string
+  title: string
   description: string
-  longDescription?: string
+  
+  // Classification and metadata
   category: 'fullstack' | 'frontend' | 'backend' | 'mobile' | 'data' | 'other'
   status: 'completed' | 'in-progress' | 'planning' | 'archived'
   featured: boolean
   order: number
   
-  // GitHub data
-  github?: {
+  // Technical details
+  techStack: string[]
+  topics: string[]
+  
+  // GitHub integration
+  github: {
     url: string
     stars: number
     forks: number
     language: string | null
-    languages: Record<string, number>
-    topics: string[]
     lastUpdated: string
-    readme?: string
-    repository?: GitHubRepo
+    hasPages: boolean
+    repository: GitHubRepository
   }
   
-  // Vercel data
+  // Vercel integration (optional)
   vercel?: {
-    deploymentStatus: any
-    liveUrl?: string
     isLive: boolean
+    liveUrl?: string
+    projectName?: string
+    deploymentStatus: string
     lastDeployed?: string
-    buildStatus: 'success' | 'error' | 'building' | 'pending' | 'unknown'
   }
   
-  // Custom metadata
-  metadata: {
-    customDescription?: string
-    images: string[]
-    tags: string[]
-    highlights: string[]
-    client?: string
-    teamSize?: number
-    role?: string
-    liveUrl?: string
-    demoUrl?: string
-    caseStudyUrl?: string
-    startDate?: string
-    endDate?: string
-  }
+  // URLs with priority logic
+  primaryUrl: string // Either live deployment or GitHub repo
+  deploymentUrl?: string // Live deployment if available
+  repositoryUrl: string // Always GitHub repo
   
   // Computed metrics
   deploymentScore: number
   activityScore: number
   popularityScore: number
   overallScore: number
-  techStack: string[]
   lastActivity: string
 }
 
@@ -83,123 +72,218 @@ export interface PortfolioStats {
     lastDeployment: string
     activeProjects: number
   }
+  topLanguages: Array<{
+    name: string
+    count: number
+    percentage: number
+  }>
 }
 
-// Helper function to categorize repositories
-function categorizeRepo(repo: GitHubRepo): EnhancedProject['category'] {
-  const name = (repo.name || '').toLowerCase()
-  const description = (repo.description || '').toLowerCase()
-  const topics = repo.topics || []
-  
-  // Check topics first for more accurate categorization
-  if (topics.some((topic: string) => ['react', 'vue', 'angular', 'frontend', 'ui', 'website'].includes(topic))) {
-    return 'frontend'
-  }
-  if (topics.some((topic: string) => ['api', 'backend', 'server', 'node', 'express', 'django'].includes(topic))) {
-    return 'backend'
-  }
-  if (topics.some((topic: string) => ['fullstack', 'full-stack', 'webapp', 'web-app'].includes(topic))) {
-    return 'fullstack'
-  }
-  if (topics.some((topic: string) => ['mobile', 'react-native', 'flutter', 'ios', 'android'].includes(topic))) {
+// Enhanced categorization with better logic
+function categorizeRepository(repo: GitHubRepository): EnhancedProject['category'] {
+  const { language, topics = [], description = '' } = repo
+  const content = `${description} ${topics.join(' ')}`.toLowerCase()
+
+  // Mobile development indicators
+  if (
+    language === 'Swift' ||
+    language === 'Kotlin' ||
+    language === 'Dart' ||
+    topics.some(t => ['mobile', 'ios', 'android', 'react-native', 'flutter'].includes(t.toLowerCase())) ||
+    content.includes('mobile') ||
+    content.includes('react native') ||
+    content.includes('flutter')
+  ) {
     return 'mobile'
   }
-  if (topics.some((topic: string) => ['data', 'ml', 'ai', 'analytics', 'visualization'].includes(topic))) {
+
+  // Data science and machine learning
+  if (
+    language === 'Python' && (
+      topics.some(t => ['machine-learning', 'data-science', 'ai', 'ml', 'tensorflow', 'pytorch'].includes(t.toLowerCase())) ||
+      content.includes('machine learning') ||
+      content.includes('data science') ||
+      content.includes('artificial intelligence') ||
+      content.includes('neural network')
+    )
+  ) {
     return 'data'
   }
-  
-  // Fallback to name/description analysis
-  if (name.includes('portfolio') || name.includes('website') || 
-      description.includes('website') || description.includes('frontend')) {
-    return 'frontend'
-  }
-  if (name.includes('api') || description.includes('backend') || description.includes('server')) {
+
+  // Backend development
+  if (
+    topics.some(t => ['backend', 'api', 'server', 'microservice', 'rest-api', 'graphql'].includes(t.toLowerCase())) ||
+    language === 'Go' ||
+    language === 'Rust' ||
+    (language === 'Python' && 
+     (topics.some(t => ['django', 'flask', 'fastapi'].includes(t.toLowerCase())) ||
+      content.includes('api') ||
+      content.includes('backend'))) ||
+    content.includes('rest api') ||
+    content.includes('graphql api')
+  ) {
     return 'backend'
   }
-  if (name.includes('app') && (name.includes('web') || description.includes('fullstack'))) {
+
+  // Frontend development
+  if (
+    language === 'HTML' ||
+    language === 'CSS' ||
+    topics.some(t => ['frontend', 'ui', 'css', 'html', 'sass', 'scss'].includes(t.toLowerCase())) ||
+    content.includes('frontend') ||
+    content.includes('user interface') ||
+    content.includes('ui component')
+  ) {
+    return 'frontend'
+  }
+
+  // Full-stack development (most common for portfolio projects)
+  if (
+    topics.some(t => ['fullstack', 'full-stack', 'web-app', 'webapp', 'nextjs', 'react', 'vue', 'angular'].includes(t.toLowerCase())) ||
+    (language === 'TypeScript' || language === 'JavaScript') ||
+    content.includes('full stack') ||
+    content.includes('web application') ||
+    content.includes('full-stack')
+  ) {
     return 'fullstack'
   }
-  if (name.includes('mobile') || description.includes('mobile') || description.includes('react native')) {
-    return 'mobile'
+
+  // Default to fullstack for web technologies
+  if (language === 'JavaScript' || language === 'TypeScript') {
+    return 'fullstack'
   }
-  if (name.includes('data') || description.includes('analysis') || description.includes('visualization')) {
-    return 'data'
-  }
-  
+
   return 'other'
 }
 
-// Helper function to determine if a project should be featured
-function shouldBeFeatured(repo: GitHubRepo): boolean {
-  const stars = repo.stargazers_count || 0
-  const forks = repo.forks_count || 0
-  const hasDescription = Boolean(repo.description && repo.description.length > 10)
-  const hasTopics = Boolean(repo.topics && repo.topics.length > 0)
-  const hasHomepage = Boolean(repo.homepage)
-  const recentlyUpdated = new Date(repo.updated_at) > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) // 90 days
-  
-  // Score based on various factors
+// Determine if project should be featured
+function shouldBeFeatured(repo: GitHubRepository, vercelProject?: ProjectWithStatus): boolean {
   let score = 0
-  if (stars > 0) score += Math.min(stars * 2, 10) // Max 10 points for stars
-  if (forks > 0) score += Math.min(forks * 3, 10) // Max 10 points for forks  
-  if (hasDescription) score += 5
-  if (hasTopics) score += 3
-  if (hasHomepage) score += 5
-  if (recentlyUpdated) score += 3
-  
-  return score >= 8 // Threshold for featuring
+
+  // Stars and engagement
+  score += repo.stargazers_count * 3
+  score += repo.forks_count * 2
+
+  // Quality indicators
+  if (repo.description && repo.description.length > 20) score += 10
+  if (repo.homepage) score += 15
+  if (repo.topics && repo.topics.length > 2) score += 8
+  if (repo.has_pages) score += 12
+
+  // Live deployment bonus
+  if (vercelProject?.isLive) score += 20
+
+  // Recent activity
+  const lastUpdate = new Date(repo.updated_at)
+  const daysOld = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24)
+  if (daysOld < 30) score += 15
+  else if (daysOld < 90) score += 8
+
+  // Featured keywords in name or description
+  const featuredKeywords = ['portfolio', 'project', 'app', 'platform', 'tool', 'dashboard']
+  const hasKeyword = featuredKeywords.some(keyword => 
+    repo.name.toLowerCase().includes(keyword) ||
+    repo.description?.toLowerCase().includes(keyword)
+  )
+  if (hasKeyword) score += 10
+
+  return score >= 40 // Threshold for featuring
 }
 
-function extractTechStack(language: string, topics: string[]): string[] {
+// Extract technology stack from repository
+function extractTechStack(repo: GitHubRepository): string[] {
   const techStack = new Set<string>()
   
-  // Add main language
-  if (language) {
-    const langMap: Record<string, string> = {
-      'JavaScript': 'JavaScript',
-      'TypeScript': 'TypeScript',
-      'Python': 'Python',
-      'HTML': 'HTML',
-      'CSS': 'CSS',
-      'Java': 'Java',
-      'C++': 'C++',
-      'Go': 'Go',
-      'Rust': 'Rust'
-    }
-    const displayName = langMap[language] || language
-    techStack.add(displayName)
+  // Add primary language
+  if (repo.language) {
+    techStack.add(repo.language)
   }
   
-  // Add framework/technology topics
-  const techTopics = topics.filter(topic => 
-    ['react', 'vue', 'angular', 'nextjs', 'express', 'django', 'flask', 'node', 'mongodb', 'postgresql'].includes(topic.toLowerCase())
-  )
+  // Technology mapping from topics
+  const techMap: Record<string, string> = {
+    'nextjs': 'Next.js',
+    'react': 'React',
+    'vue': 'Vue.js',
+    'angular': 'Angular',
+    'svelte': 'Svelte',
+    'nodejs': 'Node.js',
+    'express': 'Express',
+    'fastapi': 'FastAPI',
+    'django': 'Django',
+    'flask': 'Flask',
+    'mongodb': 'MongoDB',
+    'postgresql': 'PostgreSQL',
+    'mysql': 'MySQL',
+    'redis': 'Redis',
+    'docker': 'Docker',
+    'kubernetes': 'Kubernetes',
+    'aws': 'AWS',
+    'vercel': 'Vercel',
+    'netlify': 'Netlify',
+    'typescript': 'TypeScript',
+    'javascript': 'JavaScript',
+    'python': 'Python',
+    'tailwindcss': 'Tailwind CSS',
+    'css': 'CSS',
+    'html': 'HTML',
+    'sass': 'Sass',
+    'graphql': 'GraphQL',
+    'rest-api': 'REST API',
+    'prisma': 'Prisma',
+    'drizzle': 'Drizzle ORM'
+  }
   
-  techTopics.forEach(topic => {
-    const topicMap: Record<string, string> = {
-      'nextjs': 'Next.js',
-      'react': 'React',
-      'vue': 'Vue.js',
-      'angular': 'Angular',
-      'express': 'Express',
-      'django': 'Django',
-      'flask': 'Flask',
-      'node': 'Node.js',
-      'mongodb': 'MongoDB',
-      'postgresql': 'PostgreSQL'
+  // Add technologies from topics
+  repo.topics?.forEach(topic => {
+    const tech = techMap[topic.toLowerCase()]
+    if (tech) {
+      techStack.add(tech)
     }
-    const displayName = topicMap[topic.toLowerCase()] || topic
-    techStack.add(displayName)
   })
   
+  // Limit to 6 most relevant technologies
   return Array.from(techStack).slice(0, 6)
 }
 
+// Calculate various scores for ranking
+function calculateScores(repo: GitHubRepository, vercelProject?: ProjectWithStatus) {
+  // Deployment score
+  let deploymentScore = 50
+  if (repo.description) deploymentScore += 10
+  if (repo.stargazers_count > 0) deploymentScore += Math.min(repo.stargazers_count * 2, 30)
+  if (repo.topics && repo.topics.length > 0) deploymentScore += 5
+  if (vercelProject?.isLive) deploymentScore += 20
+  if (repo.homepage) deploymentScore += 10
+  deploymentScore = Math.min(deploymentScore, 100)
+
+  // Activity score
+  const lastUpdate = new Date(repo.updated_at)
+  const daysOld = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24)
+  let activityScore = Math.max(0, 100 - (daysOld / 30) * 20)
+
+  // Popularity score
+  const popularityScore = Math.min(
+    (repo.stargazers_count * 3) + (repo.forks_count * 2) + (repo.watchers_count || 0),
+    100
+  )
+
+  // Overall score (weighted average)
+  const overallScore = (deploymentScore * 0.4) + (activityScore * 0.3) + (popularityScore * 0.3)
+
+  return {
+    deploymentScore: Math.round(deploymentScore),
+    activityScore: Math.round(activityScore),
+    popularityScore: Math.round(popularityScore),
+    overallScore: Math.round(overallScore)
+  }
+}
+
+// Main function to get enhanced projects
 export async function getEnhancedProjects(): Promise<EnhancedProject[]> {
   try {
-    console.log('🔄 Fetching enhanced projects...')
+    console.log('🔄 Creating enhanced portfolio projects...')
     
-    // Get data from both sources
+    // Fetch data from both sources
     const [repositories, vercelProjects] = await Promise.allSettled([
       getCachedRepositories(),
       getCachedProjectsWithStatus()
@@ -208,110 +292,106 @@ export async function getEnhancedProjects(): Promise<EnhancedProject[]> {
     const repos = repositories.status === 'fulfilled' ? repositories.value : []
     const vercelData = vercelProjects.status === 'fulfilled' ? vercelProjects.value : []
     
-    console.log(`📊 Found ${repos.length} repositories and ${vercelData.length} Vercel projects`)
+    console.log(`📊 Processing ${repos.length} repositories with ${vercelData.length} Vercel projects`)
     
     if (repos.length === 0) {
-      console.warn('⚠️ No repositories found, returning empty array')
+      console.warn('⚠️ No repositories found')
       return []
     }
     
-    // Transform GitHub repos to EnhancedProject format
-    const enhancedProjects: EnhancedProject[] = repos
-      .filter((repo: GitHubRepo) => {
-        // Filter out non-portfolio repos
-        const skipPatterns = [/^\./, /readme/i, /profile/i, /config/i]
-        return !skipPatterns.some(pattern => pattern.test(repo.name))
-      })
-      .map((repo: GitHubRepo, index: number) => {
-        // Find matching Vercel project
-        const vercelMatch = vercelData.find((v: VercelProject) => 
-          v?.project?.name?.toLowerCase().includes(repo.name.toLowerCase()) ||
-          repo.name.toLowerCase().includes(v?.project?.name?.toLowerCase())
-        )
+    // Transform repositories to enhanced projects
+    const enhancedProjects: EnhancedProject[] = repos.map((repo, index) => {
+      // Find matching Vercel project
+      const vercelMatch = matchGitHubRepoWithVercel(repo.name, vercelData)
+      
+      // Determine URLs with priority logic
+      const deploymentUrl = getDeploymentUrl(vercelMatch, repo.homepage)
+      const primaryUrl = deploymentUrl || repo.html_url
+      const repositoryUrl = repo.html_url
+      
+      // Calculate all scores
+      const scores = calculateScores(repo, vercelMatch)
+      
+      // Determine category and features
+      const category = categorizeRepository(repo)
+      const featured = shouldBeFeatured(repo, vercelMatch)
+      const techStack = extractTechStack(repo)
+      
+      const project: EnhancedProject = {
+        // Core identification
+        id: repo.id.toString(),
+        slug: repo.name.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+        name: repo.name,
+        title: repo.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        description: repo.description || 'No description available',
         
-        const category = categorizeRepo(repo)
-        const featured = shouldBeFeatured(repo)
+        // Classification
+        category,
+        status: 'completed' as const,
+        featured,
+        order: featured ? index : index + 100,
         
-        // Calculate scores
-        const deploymentScore = vercelMatch ? 
-          ((vercelMatch as any).isLive ? 10 : 5) : 0
-        const activityScore = Math.min(
-          Math.floor((Date.now() - new Date(repo.updated_at).getTime()) / (1000 * 60 * 60 * 24 * -1)) + 10, 
-          10
-        )
-        const popularityScore = Math.min((repo.stargazers_count || 0) + (repo.forks_count || 0) * 2, 10)
-        const overallScore = (deploymentScore + activityScore + popularityScore) / 3
+        // Technical details
+        techStack,
+        topics: repo.topics || [],
         
-        const project: EnhancedProject = {
-          id: repo.id?.toString() || `repo-${index}`,
-          slug: repo.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-          name: repo.name,
-          description: repo.description || 'No description available',
-          longDescription: repo.readme || repo.description || undefined,
-          category,
-          status: 'completed' as const,
-          featured,
-          order: featured ? index : index + 100,
-          
-          github: {
-            url: repo.html_url,
-            stars: repo.stargazers_count || 0,
-            forks: repo.forks_count || 0,
-            language: repo.language,
-            languages: repo.languages || {},
-            topics: repo.topics || [],
-            lastUpdated: repo.updated_at,
-            readme: repo.readme,
-            repository: repo
-          },
-          
-          vercel: vercelMatch ? {
-            deploymentStatus: vercelMatch,
-            liveUrl: (vercelMatch as any).lastDeployment?.url,
-            isLive: (vercelMatch as any).isLive || false,
-            lastDeployed: (vercelMatch as any).lastDeployment?.createdAt,
-            buildStatus: (vercelMatch as any).lastDeployment?.state === 'READY' ? 'success' : 
-                       (vercelMatch as any).lastDeployment?.state === 'ERROR' ? 'error' : 'unknown'
-          } : undefined,
-          
-          metadata: {
-            customDescription: repo.description || undefined,
-            images: repo.homepage ? [repo.homepage] : [],
-            tags: repo.topics || [],
-            highlights: repo.description ? [repo.description] : [],
-            liveUrl: repo.homepage || (vercelMatch as any)?.lastDeployment?.url,
-            demoUrl: repo.homepage || undefined
-          },
-          
-          deploymentScore,
-          activityScore,
-          popularityScore,
-          overallScore,
-          techStack: extractTechStack(repo.language || '', repo.topics || []),
-          lastActivity: repo.updated_at
-        }
+        // GitHub integration
+        github: {
+          url: repo.html_url,
+          stars: repo.stargazers_count,
+          forks: repo.forks_count,
+          language: repo.language,
+          lastUpdated: repo.updated_at,
+          hasPages: repo.has_pages,
+          repository: repo
+        },
         
-        return project
-      })
-      .sort((a, b) => {
-        // Sort by featured first, then by overall score
-        if (a.featured && !b.featured) return -1
-        if (!a.featured && b.featured) return 1
-        return b.overallScore - a.overallScore
-      })
+        // Vercel integration (if available)
+        vercel: vercelMatch ? {
+          isLive: vercelMatch.isLive,
+          liveUrl: vercelMatch.liveUrl,
+          projectName: vercelMatch.project.name,
+          deploymentStatus: vercelMatch.status?.state || 'unknown',
+          lastDeployed: vercelMatch.status ? new Date(vercelMatch.status.created).toISOString() : undefined
+        } : undefined,
+        
+        // URLs with clear priority
+        primaryUrl,
+        deploymentUrl,
+        repositoryUrl,
+        
+        // Computed metrics
+        ...scores,
+        lastActivity: repo.updated_at
+      }
+      
+      return project
+    })
     
-    console.log(`✅ Successfully processed ${enhancedProjects.length} enhanced projects`)
+    // Sort projects: featured first, then by overall score
+    enhancedProjects.sort((a, b) => {
+      if (a.featured && !b.featured) return -1
+      if (!a.featured && b.featured) return 1
+      return b.overallScore - a.overallScore
+    })
+    
+    const liveCount = enhancedProjects.filter(p => p.vercel?.isLive).length
+    const featuredCount = enhancedProjects.filter(p => p.featured).length
+    
+    console.log(`✅ Created ${enhancedProjects.length} enhanced projects (${featuredCount} featured, ${liveCount} live)`)
+    
     return enhancedProjects
     
   } catch (error) {
-    console.error('❌ Error in getEnhancedProjects:', error)
+    console.error('❌ Error creating enhanced projects:', error)
     return []
   }
 }
 
+// Calculate portfolio statistics
 export async function getPortfolioStats(): Promise<PortfolioStats> {
   try {
-    console.log('📊 Calculating portfolio stats...')
+    console.log('📊 Calculating portfolio statistics...')
     
     const [projects, githubStats] = await Promise.allSettled([
       getEnhancedProjects(),
@@ -329,49 +409,68 @@ export async function getPortfolioStats(): Promise<PortfolioStats> {
     
     // Calculate deployment stats
     const deploymentStats = projectList.reduce((acc, project) => {
-      if (project.vercel?.isLive) acc.successful++
-      else if (project.vercel?.buildStatus === 'error') acc.failed++
-      else if (project.vercel?.buildStatus === 'building') acc.building++
-      else acc.pending++
+      if (project.vercel?.isLive) {
+        acc.successful++
+      } else if (project.vercel?.deploymentStatus === 'ERROR') {
+        acc.failed++
+      } else if (project.vercel?.deploymentStatus === 'BUILDING') {
+        acc.building++
+      } else {
+        acc.pending++
+      }
       return acc
     }, { successful: 0, failed: 0, building: 0, pending: 0 })
     
-    // Find most recent activity
+    // Language statistics with percentages
+    const languageStats = stats?.languageStats || {}
+    const totalLanguageCount = Object.values(languageStats).reduce((sum, count) => sum + count, 0)
+    const topLanguages = Object.entries(languageStats)
+      .map(([name, count]) => ({
+        name,
+        count,
+        percentage: totalLanguageCount > 0 ? Math.round((count / totalLanguageCount) * 100) : 0
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8)
+    
+    // Recent activity
     const lastCommit = projectList.reduce((latest, project) => {
-      const projectDate = new Date(project.github?.lastUpdated || 0)
-      return projectDate > new Date(latest) ? project.github?.lastUpdated || latest : latest
+      const projectDate = new Date(project.github.lastUpdated)
+      return projectDate > new Date(latest) ? project.github.lastUpdated : latest
     }, new Date(0).toISOString())
     
     const lastDeployment = projectList.reduce((latest, project) => {
-      const deployDate = new Date(project.vercel?.lastDeployed || 0)
-      return deployDate > new Date(latest) ? project.vercel?.lastDeployed || latest : latest
+      if (!project.vercel?.lastDeployed) return latest
+      const deployDate = new Date(project.vercel.lastDeployed)
+      return deployDate > new Date(latest) ? project.vercel.lastDeployed : latest
     }, new Date(0).toISOString())
     
     const portfolioStats: PortfolioStats = {
       totalProjects: projectList.length,
       featuredProjects: projectList.filter(p => p.featured).length,
       liveProjects: projectList.filter(p => p.vercel?.isLive).length,
-      totalStars: stats?.totalStars || 0,
-      totalForks: stats?.totalForks || 0,
-      languageStats: (stats as any)?.languages || {},
+      totalStars: stats?.totalStars || projectList.reduce((sum, p) => sum + p.github.stars, 0),
+      totalForks: stats?.totalForks || projectList.reduce((sum, p) => sum + p.github.forks, 0),
+      languageStats,
       categoryStats,
       deploymentStats,
       recentActivity: {
         lastCommit,
         lastDeployment,
         activeProjects: projectList.filter(p => 
-          new Date(p.github?.lastUpdated || 0) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+          new Date(p.github.lastUpdated) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
         ).length
-      }
+      },
+      topLanguages
     }
     
-    console.log('✅ Portfolio stats calculated successfully')
+    console.log('✅ Portfolio statistics calculated successfully')
     return portfolioStats
     
   } catch (error) {
     console.error('❌ Error calculating portfolio stats:', error)
     
-    // Return basic fallback stats
+    // Return fallback stats
     return {
       totalProjects: 0,
       featuredProjects: 0,
@@ -384,70 +483,46 @@ export async function getPortfolioStats(): Promise<PortfolioStats> {
       recentActivity: {
         lastCommit: new Date().toISOString(),
         lastDeployment: new Date().toISOString(),
-        activeProjects: 0,
+        activeProjects: 0
       },
+      topLanguages: []
     }
   }
 }
 
-// Export functions for use in API routes and components
+// Export main data fetching function
 export async function getPortfolioData() {
   console.log('🚀 Getting complete portfolio data...')
   
-  let projects: EnhancedProject[] = []
-  let stats: PortfolioStats
+  const [projectsResult, statsResult] = await Promise.allSettled([
+    getEnhancedProjects(),
+    getPortfolioStats()
+  ])
   
-  try {
-    // Get projects and stats
-    const [projectsResult, statsResult] = await Promise.allSettled([
-      getEnhancedProjects(),
-      getPortfolioStats()
-    ])
-    
-    projects = projectsResult.status === 'fulfilled' ? projectsResult.value : []
-    stats = statsResult.status === 'fulfilled' ? statsResult.value : {
-      totalProjects: 0,
-      featuredProjects: 0,
-      liveProjects: 0,
-      totalStars: 0,
-      totalForks: 0,
-      languageStats: {},
-      categoryStats: {},
-      deploymentStats: { successful: 0, failed: 0, building: 0, pending: 0 },
-      recentActivity: {
-        lastCommit: new Date().toISOString(),
-        lastDeployment: new Date().toISOString(),
-        activeProjects: 0,
-      },
-    }
-    
-    console.log(`✅ Portfolio data loaded: ${projects.length} projects`)
-    
-  } catch (error) {
-    console.error('❌ Error getting portfolio data:', error)
-    
-    // Use basic fallback
-    projects = []
-    stats = {
-      totalProjects: 0,
-      featuredProjects: 0,
-      liveProjects: 0,
-      totalStars: 0,
-      totalForks: 0,
-      languageStats: {},
-      categoryStats: {},
-      deploymentStats: { successful: 0, failed: 0, building: 0, pending: 0 },
-      recentActivity: {
-        lastCommit: new Date().toISOString(),
-        lastDeployment: new Date().toISOString(),
-        activeProjects: 0,
-      },
-    }
+  const projects = projectsResult.status === 'fulfilled' ? projectsResult.value : []
+  const stats = statsResult.status === 'fulfilled' ? statsResult.value : {
+    totalProjects: 0,
+    featuredProjects: 0,
+    liveProjects: 0,
+    totalStars: 0,
+    totalForks: 0,
+    languageStats: {},
+    categoryStats: {},
+    deploymentStats: { successful: 0, failed: 0, building: 0, pending: 0 },
+    recentActivity: {
+      lastCommit: new Date().toISOString(),
+      lastDeployment: new Date().toISOString(),
+      activeProjects: 0
+    },
+    topLanguages: []
   }
+  
+  console.log(`✅ Portfolio data ready: ${projects.length} projects`)
   
   return {
     projects,
     stats,
     lastUpdated: new Date().toISOString(),
+    source: 'integrated'
   }
 }

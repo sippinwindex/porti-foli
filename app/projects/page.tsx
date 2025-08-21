@@ -10,10 +10,8 @@ import {
   Users, CheckCircle, XCircle, RefreshCw
 } from 'lucide-react'
 
-// Your existing imports
-import usePortfolioData from '@/hooks/usePortfolioData'
-import { EnhancedProjectCard } from '@/components/EnhancedProjectShowcase'
-import type { PortfolioProject } from '@/types/portfolio'
+// Import utilities from our fixed files
+import { formatDate, getLanguageColor, toBoolean } from '@/lib/utils'
 import ThemeToggle from '@/components/ThemeToggle'
 
 // Lazy load heavy components
@@ -31,6 +29,101 @@ const ParticleField = dynamic(() => import('@/components/3D/ParticleField'), {
   ssr: false,
   loading: () => null
 })
+
+// Types matching our fixed API response
+interface ProjectData {
+  id: string
+  name: string
+  title: string
+  description: string
+  techStack: string[]
+  tags: string[]
+  featured: boolean
+  category: string
+  status: string
+  github: {
+    stars: number
+    forks: number
+    url: string
+    language: string | null
+    lastUpdated: string
+    topics: string[]
+  }
+  vercel?: {
+    isLive: boolean
+    liveUrl?: string
+    deploymentStatus: string
+    lastDeployed?: string
+  }
+  primaryUrl: string
+  deploymentUrl?: string
+  repositoryUrl: string
+  deploymentScore: number
+  popularityScore: number
+  activityScore: number
+  lastActivity: string
+}
+
+interface PortfolioStats {
+  totalProjects: number
+  featuredProjects: number
+  liveProjects: number
+  totalStars: number
+  totalForks: number
+  topLanguages: Array<{
+    name: string
+    count: number
+    percentage: number
+  }>
+}
+
+// Custom hook to fetch data from our fixed API
+function useProjectsData() {
+  const [projects, setProjects] = useState<ProjectData[]>([])
+  const [stats, setStats] = useState<PortfolioStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      // Fetch from our fixed projects API
+      const response = await fetch('/api/projects?includeStats=true')
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch projects: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to fetch projects')
+      }
+      
+      setProjects(data.projects || [])
+      setStats(data.stats || null)
+    } catch (err) {
+      console.error('Error fetching projects:', err)
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  return {
+    projects,
+    stats,
+    loading,
+    error,
+    refetch: fetchData
+  }
+}
 
 // Loading Skeletons
 function NavigationSkeleton() {
@@ -58,27 +151,17 @@ function FooterSkeleton() {
   )
 }
 
-function ProjectsSkeleton() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {[...Array(6)].map((_, i) => (
-        <div key={i} className="h-96 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse" />
-      ))}
-    </div>
-  )
-}
-
-// Enhanced Project Card Wrapper to match your existing component
+// Enhanced Project Card using our API data structure
 function ProjectCardWrapper({ 
   project, 
   index, 
   viewMode, 
   onCardClick 
 }: {
-  project: PortfolioProject
+  project: ProjectData
   index: number
   viewMode: 'grid' | 'list'
-  onCardClick: (project: PortfolioProject) => void
+  onCardClick: (project: ProjectData) => void
 }) {
   return (
     <motion.div
@@ -139,7 +222,7 @@ function ProjectCardWrapper({
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-1">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
-                      {project.title || project.name}
+                      {project.title}
                     </h3>
                     {project.featured && <Star className="w-4 h-4 text-yellow-500 flex-shrink-0" />}
                   </div>
@@ -163,11 +246,11 @@ function ProjectCardWrapper({
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <h3 className="font-semibold text-lg text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
-                  {project.title || project.name}
+                  {project.title}
                 </h3>
                 <div className="flex items-center space-x-2 mt-1">
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 capitalize">
-                    {project.category || 'Project'}
+                    {project.category}
                   </span>
                 </div>
               </div>
@@ -179,7 +262,7 @@ function ProjectCardWrapper({
 
             {/* Tech Stack */}
             <div className="flex flex-wrap gap-1 mb-4">
-              {(project.techStack || []).slice(0, 4).map((tech) => (
+              {project.techStack.slice(0, 4).map((tech) => (
                 <span
                   key={tech}
                   className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
@@ -187,9 +270,9 @@ function ProjectCardWrapper({
                   {tech}
                 </span>
               ))}
-              {(project.techStack || []).length > 4 && (
+              {project.techStack.length > 4 && (
                 <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-                  +{(project.techStack || []).length - 4}
+                  +{project.techStack.length - 4}
                 </span>
               )}
             </div>
@@ -199,14 +282,14 @@ function ProjectCardWrapper({
             {/* Actions */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
               <div className="flex space-x-3">
-                {(project.github?.url || project.githubUrl) && (
+                {project.github.url && (
                   <span className="inline-flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
                     <Github className="w-4 h-4" />
                     <span>Code</span>
                   </span>
                 )}
                 
-                {(project.vercel?.isLive || project.liveUrl) && (
+                {project.vercel?.isLive && (
                   <span className="inline-flex items-center space-x-1 text-sm text-green-600 dark:text-green-400">
                     <Globe className="w-4 h-4" />
                     <span>Live</span>
@@ -230,11 +313,9 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
   }
 }
 
-// Enhanced Project Stats Component with GitHub data
-function ProjectStats({ project }: { project: PortfolioProject }) {
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Recently'
-    
+// Enhanced Project Stats Component
+function ProjectStats({ project }: { project: ProjectData }) {
+  const formatDateAgo = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
     const diffTime = Math.abs(now.getTime() - date.getTime())
@@ -246,45 +327,30 @@ function ProjectStats({ project }: { project: PortfolioProject }) {
     return `${Math.ceil(diffDays / 30)} months ago`
   }
 
-  const getActivityScore = () => {
-    const stars = project.github?.stars || 0
-    const forks = project.github?.forks || 0
-    const isRecent = project.github?.lastUpdated ? 
-      new Date(project.github.lastUpdated) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) : false
-    
-    return Math.min(60 + (stars * 2) + (forks * 3) + (isRecent ? 20 : 0), 100)
-  }
-
   return (
     <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-      {project.github && (
-        <>
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 text-yellow-500" />
-            <span>{project.github.stars || 0}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <GitFork className="w-4 h-4 text-blue-500" />
-            <span>{project.github.forks || 0}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Activity className="w-4 h-4 text-green-500" />
-            <span>{getActivityScore()}/100</span>
-          </div>
-        </>
-      )}
-      {project.github?.lastUpdated && (
-        <div className="flex items-center gap-1">
-          <Clock className="w-4 h-4" />
-          <span>Updated {formatDate(project.github.lastUpdated)}</span>
-        </div>
-      )}
+      <div className="flex items-center gap-1">
+        <Star className="w-4 h-4 text-yellow-500" />
+        <span>{project.github.stars}</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <GitFork className="w-4 h-4 text-blue-500" />
+        <span>{project.github.forks}</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <Activity className="w-4 h-4 text-green-500" />
+        <span>{project.activityScore}/100</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <Clock className="w-4 h-4" />
+        <span>Updated {formatDateAgo(project.github.lastUpdated)}</span>
+      </div>
     </div>
   )
 }
 
-// Enhanced Project Status Component with deployment info
-function ProjectStatus({ project }: { project: PortfolioProject }) {
+// Enhanced Project Status Component
+function ProjectStatus({ project }: { project: ProjectData }) {
   const getStatusInfo = () => {
     // Check Vercel deployment first
     if (project.vercel?.isLive) {
@@ -298,10 +364,10 @@ function ProjectStatus({ project }: { project: PortfolioProject }) {
     }
     
     // Check general live URL
-    if (project.liveUrl) {
-      const isVercel = project.liveUrl.includes('vercel.app')
-      const isNetlify = project.liveUrl.includes('netlify.app')
-      const isGitHubPages = project.liveUrl.includes('github.io')
+    if (project.deploymentUrl) {
+      const isVercel = project.deploymentUrl.includes('vercel.app')
+      const isNetlify = project.deploymentUrl.includes('netlify.app')
+      const isGitHubPages = project.deploymentUrl.includes('github.io')
       
       let platform = 'Live'
       if (isVercel) platform = 'Vercel'
@@ -352,19 +418,9 @@ function ProjectStatus({ project }: { project: PortfolioProject }) {
     }
     
     // GitHub repository status
-    if (project.github?.url || project.githubUrl) {
-      return {
-        icon: <Github className="w-4 h-4" />,
-        text: 'Repository',
-        color: 'text-gray-500',
-        bgColor: 'bg-gray-100 dark:bg-gray-700',
-        dotColor: 'bg-gray-500'
-      }
-    }
-    
     return {
-      icon: <Code className="w-4 h-4" />,
-      text: 'Project',
+      icon: <Github className="w-4 h-4" />,
+      text: 'Repository',
       color: 'text-gray-500',
       bgColor: 'bg-gray-100 dark:bg-gray-700',
       dotColor: 'bg-gray-500'
@@ -384,26 +440,17 @@ function ProjectStatus({ project }: { project: PortfolioProject }) {
 
 // Main Project Showcase Component
 function ProjectShowcase() {
-  const { projects, stats, loading, error, refetch } = usePortfolioData()
-  const [filteredProjects, setFilteredProjects] = useState<PortfolioProject[]>([])
+  const { projects, stats, loading, error, refetch } = useProjectsData()
+  const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
   const [activeTag, setActiveTag] = useState('All')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'stars' | 'updated' | 'featured'>('featured')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
-  const [isMobile, setIsMobile] = useState(false)
   const [visibleProjects, setVisibleProjects] = useState(9)
   
   const containerRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(containerRef, { once: true })
-
-  // Check if mobile
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
 
   // Debounced search
   const debouncedSearch = useCallback(
@@ -427,16 +474,10 @@ function ProjectShowcase() {
     // Filter by tag
     if (activeTag !== 'All') {
       filtered = filtered.filter(project => {
-        const projectTags = project.tags || []
-        const techStackTags = project.techStack || []
-        const githubTopics = project.github?.topics || []
-        const projectTopics = project.topics || []
-        
         const allTags = [
-          ...projectTags,
-          ...techStackTags,
-          ...githubTopics,
-          ...projectTopics
+          ...project.tags,
+          ...project.techStack,
+          ...project.github.topics
         ].map(tag => tag.toLowerCase())
         
         return allTags.includes(activeTag.toLowerCase())
@@ -447,10 +488,10 @@ function ProjectShowcase() {
     if (searchTerm) {
       filtered = filtered.filter(project =>
         project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (project.title || project.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.techStack?.some(tech => tech.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        project.github?.language?.toLowerCase().includes(searchTerm.toLowerCase())
+        project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.techStack.some(tech => tech.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        project.github.language?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -458,46 +499,38 @@ function ProjectShowcase() {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
-          return (a.title || a.name).localeCompare(b.title || b.name)
+          return a.title.localeCompare(b.title)
         case 'stars':
-          return (b.github?.stars || 0) - (a.github?.stars || 0)
+          return b.github.stars - a.github.stars
         case 'updated':
-          const aDate = new Date(a.github?.lastUpdated || '2020-01-01').getTime()
-          const bDate = new Date(b.github?.lastUpdated || '2020-01-01').getTime()
-          return bDate - aDate
+          return new Date(b.github.lastUpdated).getTime() - new Date(a.github.lastUpdated).getTime()
         case 'featured':
         default:
           // Featured first, then live deployments, then by stars
           if (a.featured && !b.featured) return -1
           if (!a.featured && b.featured) return 1
           
-          const aLive = a.vercel?.isLive || Boolean(a.liveUrl)
-          const bLive = b.vercel?.isLive || Boolean(b.liveUrl)
+          const aLive = a.vercel?.isLive || Boolean(a.deploymentUrl)
+          const bLive = b.vercel?.isLive || Boolean(b.deploymentUrl)
           if (aLive && !bLive) return -1
           if (!aLive && bLive) return 1
           
-          return (b.github?.stars || 0) - (a.github?.stars || 0)
+          return b.github.stars - a.github.stars
       }
     })
 
     setFilteredProjects(filtered)
   }, [projects, activeTag, searchTerm, sortBy, categoryFilter])
 
-  // Get all unique tags from all project data sources
+  // Get all unique tags
   const allTags = React.useMemo(() => {
     const tagSet = new Set(['All'])
     projects.forEach(project => {
-      const projectTags = project.tags || []
-      const techStackTags = project.techStack || []
-      const githubTopics = project.github?.topics || []
-      const projectTopics = project.topics || []
-      
-      projectTags.forEach(tag => tagSet.add(tag))
-      techStackTags.forEach(tech => tagSet.add(tech))
-      githubTopics.forEach(topic => tagSet.add(topic))
-      projectTopics.forEach(topic => tagSet.add(topic))
+      project.tags.forEach(tag => tagSet.add(tag))
+      project.techStack.forEach(tech => tagSet.add(tech))
+      project.github.topics.forEach(topic => tagSet.add(topic))
     })
-    return Array.from(tagSet).slice(0, 20) // Limit to prevent overflow
+    return Array.from(tagSet).slice(0, 20)
   }, [projects])
 
   // Get unique categories
@@ -516,33 +549,22 @@ function ProjectShowcase() {
     setVisibleProjects(prev => prev + 6)
   }
 
-  // Handle card click - enhanced with better navigation logic
-  const handleCardClick = useCallback((project: PortfolioProject) => {
+  // Handle card click
+  const handleCardClick = useCallback((project: ProjectData) => {
     // Priority 1: Live deployment
-    const hasLiveDeployment = Boolean(
-      project.vercel?.isLive || 
-      project.liveUrl || 
-      project.vercel?.liveUrl
-    )
-
-    if (hasLiveDeployment) {
-      const liveUrl = project.vercel?.liveUrl || project.liveUrl
-      if (liveUrl) {
-        window.open(liveUrl, '_blank', 'noopener,noreferrer')
-        return
-      }
-    }
-
-    // Priority 2: Project details with ID
-    if (project.id) {
-      window.location.href = `/projects/${project.id}`
+    if (project.vercel?.isLive && project.vercel.liveUrl) {
+      window.open(project.vercel.liveUrl, '_blank', 'noopener,noreferrer')
       return
     }
 
-    // Priority 4: GitHub repository
-    if (project.github?.url || project.githubUrl) {
-      const githubUrl = project.github?.url || project.githubUrl
-      window.open(githubUrl, '_blank', 'noopener,noreferrer')
+    if (project.deploymentUrl) {
+      window.open(project.deploymentUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
+
+    // Priority 2: GitHub repository
+    if (project.github.url) {
+      window.open(project.github.url, '_blank', 'noopener,noreferrer')
     }
   }, [])
 
@@ -622,19 +644,19 @@ function ProjectShowcase() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {stats.totalStars || 0}
+                {stats.totalStars}
               </div>
               <div className="text-xs text-gray-500">Total Stars</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {stats.liveProjects || 0}
+                {stats.liveProjects}
               </div>
               <div className="text-xs text-gray-500">Live Projects</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {stats.totalProjects || 0}
+                {stats.totalProjects}
               </div>
               <div className="text-xs text-gray-500">Total Projects</div>
             </div>
@@ -755,7 +777,7 @@ function ProjectShowcase() {
         </div>
       </motion.div>
 
-      {/* Projects Grid/List with Enhanced Cards */}
+      {/* Projects Grid/List */}
       <motion.div
         layout
         className={`grid gap-8 ${
@@ -767,7 +789,7 @@ function ProjectShowcase() {
         <AnimatePresence mode="popLayout">
           {filteredProjects.slice(0, visibleProjects).map((project, index) => (
             <ProjectCardWrapper
-              key={project.id || project.name || index}
+              key={project.id}
               project={project}
               index={index}
               viewMode={viewMode}
@@ -843,7 +865,7 @@ function ProjectShowcase() {
   )
 }
 
-// Main page component
+// Main page component  
 export default function ProjectsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isMobile, setIsMobile] = useState(false)

@@ -1,305 +1,213 @@
-'use client'
-
-import { Metadata } from 'next'
+// app/projects/[slug]/page.tsx - FIXED: Server component with generateStaticParams
 import { notFound } from 'next/navigation'
-import Navigation from '@/components/Navigation'
-import Footer from '@/components/Footer'
-import { Github, ExternalLink, Calendar, Code, Users, Zap } from 'lucide-react'
-import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { getEnhancedProjects } from '@/lib/portfolio-integration'
+import { formatDate, getLanguageColor } from '@/lib/utils'
+import { ExternalLink, GitBranch, Star, GitFork, Calendar, Globe } from 'lucide-react'
 
-// FIX: Define a type for the project structure to ensure type safety
-interface Project {
-  id: string;
-  title: string;
-  description: string;
-  longDescription: string;
-  image: string;
-  tags: string[];
-  githubUrl: string;
-  liveUrl: string;
-  featured: boolean;
-  status: string;
-  startDate: string;
-  endDate?: string;
-  category: string;
-  challenges: string[];
-  learnings: string[];
-  metrics: { label: string; value: string }[];
-}
-
-// Mock project data - typed for consistency
-const projects: Record<string, Project> = {
-  'ecommerce-suite': {
-    id: 'ecommerce-suite',
-    title: 'E-Commerce Suite',
-    description: 'Full-stack e-commerce platform with React, Node.js, and Stripe integration.',
-    longDescription: 'A comprehensive e-commerce solution featuring user authentication, product management, shopping cart, payment processing, and admin dashboard. Built with modern technologies and best practices for scalability and performance.',
-    image: '/projects/ecommerce.jpg',
-    tags: ['React', 'Node.js', 'MongoDB', 'Stripe', 'TypeScript'],
-    githubUrl: 'https://github.com/sippinwindex/ecommerce-suite',
-    liveUrl: 'https://ecommerce-demo.vercel.app',
-    featured: true,
-    status: 'completed',
-    startDate: '2024-01-15',
-    endDate: '2024-03-20',
-    category: 'fullstack',
-    challenges: [
-      'Implementing secure payment processing with Stripe',
-      'Building a scalable product catalog system',
-      'Creating an intuitive admin dashboard'
-    ],
-    learnings: [
-      'Advanced React patterns and state management',
-      'Payment gateway integration best practices',
-      'Database optimization for e-commerce'
-    ],
-    metrics: [
-      { label: 'Page Load Time', value: '< 2s' },
-      { label: 'Test Coverage', value: '95%' },
-      { label: 'Performance Score', value: '98/100' }
-    ]
-  },
-  'portfolio-website': {
-    id: 'portfolio-website',
-    title: 'Portfolio Website',
-    description: 'Modern portfolio website built with Next.js 14, TypeScript, and Framer Motion.',
-    longDescription: 'A responsive portfolio website showcasing projects and skills with smooth animations, dark mode support, and optimized performance. Features dynamic GitHub integration and modern design patterns.',
-    image: '/projects/portfolio.jpg',
-    tags: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
-    githubUrl: 'https://github.com/sippinwindex/portfolio',
-    liveUrl: 'https://juan-fernandez.dev',
-    featured: true,
-    status: 'completed',
-    startDate: '2024-03-01',
-    category: 'web',
-    challenges: [
-      'Creating smooth animations without performance impact',
-      'Implementing dynamic theme switching',
-      'Optimizing for Core Web Vitals'
-    ],
-    learnings: [
-      'Advanced Framer Motion techniques',
-      'Next.js 14 App Router patterns',
-      'Performance optimization strategies'
-    ],
-    metrics: [
-      { label: 'Lighthouse Score', value: '100/100' },
-      { label: 'Core Web Vitals', value: 'Passed' },
-      { label: 'Accessibility', value: '100/100' }
-    ]
+// Generate static params for all projects
+export async function generateStaticParams() {
+  try {
+    const projects = await getEnhancedProjects()
+    
+    return projects.map((project) => ({
+      slug: project.slug,
+    }))
+  } catch (error) {
+    console.error('Error generating static params:', error)
+    return []
   }
 }
 
-type Props = {
-  params: { slug: string }
+// Generate metadata for each project
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  try {
+    const projects = await getEnhancedProjects()
+    const project = projects.find((p) => p.slug === params.slug)
+    
+    if (!project) {
+      return {
+        title: 'Project Not Found',
+        description: 'The requested project could not be found.',
+      }
+    }
+    
+    return {
+      title: `${project.title} | Portfolio`,
+      description: project.description,
+      openGraph: {
+        title: project.title,
+        description: project.description,
+        type: 'website',
+      },
+    }
+  } catch (error) {
+    return {
+      title: 'Project | Portfolio',
+      description: 'Project details',
+    }
+  }
 }
 
-export default function ProjectPage({ params }: Props) {
-  const [mounted, setMounted] = useState(false)
-  const project = projects[params.slug]
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!project) {
-    notFound()
-  }
-
-  // Show loading state during hydration
-  if (!mounted) {
+// Server component - no "use client" directive
+export default async function ProjectPage({ params }: { params: { slug: string } }) {
+  try {
+    const projects = await getEnhancedProjects()
+    const project = projects.find((p) => p.slug === params.slug)
+    
+    if (!project) {
+      notFound()
+    }
+    
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-900">
-        <div className="animate-pulse">
-          <div className="h-16 bg-gray-200 dark:bg-gray-800"></div>
-          <div className="pt-16 py-16">
-            <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto">
-                <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded mb-4"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4"></div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold mb-4">{project.title}</h1>
+            <p className="text-xl text-gray-600 dark:text-gray-400 mb-6">
+              {project.description}
+            </p>
+            
+            {/* Project Stats */}
+            <div className="flex flex-wrap gap-4 mb-6">
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                <Star className="w-4 h-4" />
+                <span>{project.github.stars} stars</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                <GitFork className="w-4 h-4" />
+                <span>{project.github.forks} forks</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                <Calendar className="w-4 h-4" />
+                <span>Updated {formatDate(project.github.lastUpdated)}</span>
+              </div>
+              {project.github.language && (
+                <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: getLanguageColor(project.github.language) }}
+                  />
+                  <span>{project.github.language}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-4">
+              {project.deploymentUrl && (
+                <a
+                  href={project.deploymentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Globe className="w-4 h-4 mr-2" />
+                  Live Demo
+                </a>
+              )}
+              <a
+                href={project.repositoryUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                <GitBranch className="w-4 h-4 mr-2" />
+                View Code
+              </a>
+            </div>
+          </div>
+          
+          {/* Technology Stack */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Technology Stack</h2>
+            <div className="flex flex-wrap gap-2">
+              {project.techStack.map((tech) => (
+                <span
+                  key={tech}
+                  className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-full text-sm"
+                >
+                  {tech}
+                </span>
+              ))}
+            </div>
+          </div>
+          
+          {/* Topics */}
+          {project.topics.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold mb-4">Topics</h2>
+              <div className="flex flex-wrap gap-2">
+                {project.topics.map((topic) => (
+                  <span
+                    key={topic}
+                    className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm"
+                  >
+                    {topic}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Project Details */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Project Details</h2>
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Category</h3>
+                  <p className="capitalize">{project.category}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Status</h3>
+                  <p className="capitalize">{project.status}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Featured</h3>
+                  <p>{project.featured ? 'Yes' : 'No'}</p>
+                </div>
+                {project.vercel && (
+                  <div>
+                    <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Deployment</h3>
+                    <p className={project.vercel.isLive ? 'text-green-600' : 'text-gray-500'}>
+                      {project.vercel.isLive ? 'Live' : 'Not deployed'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Scores */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Project Metrics</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-700 dark:text-blue-300 mb-2">Deployment Score</h3>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {project.deploymentScore}/100
+                </p>
+              </div>
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                <h3 className="font-semibold text-green-700 dark:text-green-300 mb-2">Activity Score</h3>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {project.activityScore}/100
+                </p>
+              </div>
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+                <h3 className="font-semibold text-purple-700 dark:text-purple-300 mb-2">Popularity Score</h3>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  {project.popularityScore}/100
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
     )
+  } catch (error) {
+    console.error('Error loading project:', error)
+    notFound()
   }
-
-  return (
-    <>
-      <Navigation />
-      <main className="pt-16">
-        {/* Hero Section */}
-        <section className="py-16 bg-gradient-to-br from-lux-offwhite to-lux-gray-100 dark:from-lux-black dark:to-lux-gray-900">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto text-center">
-              <div className="mb-6">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  project.status === 'completed' 
-                    ? 'bg-green-500/20 text-green-500' 
-                    : 'bg-yellow-500/20 text-yellow-500'
-                }`}>
-                  {project.status === 'completed' ? 'Completed' : 'In Progress'}
-                </span>
-              </div>
-              
-              <h1 className="text-4xl md:text-5xl font-bold mb-6 text-lux-gray-900 dark:text-lux-offwhite">
-                {project.title}
-              </h1>
-              <p className="text-xl text-lux-gray-600 dark:text-lux-gray-300 mb-8 max-w-2xl mx-auto">
-                {project.description}
-              </p>
-              
-              <div className="flex flex-wrap justify-center gap-4 mb-8">
-                <a
-                  href={project.githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-6 py-3 border border-lux-gray-300 dark:border-lux-gray-700 rounded-lg hover:bg-lux-gray-100 dark:hover:bg-lux-gray-800 transition-colors text-lux-gray-900 dark:text-lux-offwhite"
-                >
-                  <Github className="w-5 h-5" />
-                  View Code
-                </a>
-                <a
-                  href={project.liveUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-6 py-3 bg-viva-magenta text-lux-offwhite rounded-lg hover:bg-viva-magenta/90 transition-colors"
-                >
-                  <ExternalLink className="w-5 h-5" />
-                  Live Demo
-                </a>
-              </div>
-
-              {/* Tags */}
-              <div className="flex flex-wrap justify-center gap-2">
-                {project.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 bg-lux-gray-200 dark:bg-lux-gray-800 text-lux-gray-700 dark:text-lux-gray-300 text-sm rounded-md"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Project Details */}
-        <section className="py-16 bg-lux-offwhite dark:bg-lux-black">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto">
-              <div className="grid md:grid-cols-3 gap-8 mb-12">
-                {/* Project Info */}
-                <div className="md:col-span-2">
-                  <h2 className="text-2xl font-semibold mb-4 text-lux-gray-900 dark:text-lux-offwhite">
-                    About This Project
-                  </h2>
-                  <p className="text-lux-gray-600 dark:text-lux-gray-300 mb-6 leading-relaxed">
-                    {project.longDescription}
-                  </p>
-
-                  {project.challenges && (
-                    <div className="mb-6">
-                      <h3 className="text-lg font-semibold mb-3 text-lux-gray-900 dark:text-lux-offwhite">
-                        Key Challenges
-                      </h3>
-                      <ul className="space-y-2">
-                        {project.challenges.map((challenge, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <Zap className="w-4 h-4 text-viva-magenta mt-1 flex-shrink-0" />
-                            <span className="text-lux-gray-600 dark:text-lux-gray-300">{challenge}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {project.learnings && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3 text-lux-gray-900 dark:text-lux-offwhite">
-                        Key Learnings
-                      </h3>
-                      <ul className="space-y-2">
-                        {project.learnings.map((learning, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <Code className="w-4 h-4 text-viva-magenta mt-1 flex-shrink-0" />
-                            <span className="text-lux-gray-600 dark:text-lux-gray-300">{learning}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-
-                {/* Sidebar */}
-                <div className="space-y-6">
-                  {/* Project Stats */}
-                  <div className="bg-lux-offwhite dark:bg-lux-gray-800 border border-lux-gray-300 dark:border-lux-gray-700 rounded-lg p-6">
-                    <h3 className="font-semibold mb-4 text-lux-gray-900 dark:text-lux-offwhite">
-                      Project Details
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="w-4 h-4 text-lux-gray-500 dark:text-lux-gray-400" />
-                        <span className="text-lux-gray-600 dark:text-lux-gray-300">
-                          {new Date(project.startDate).toLocaleDateString()}
-                          {project.endDate && ` - ${new Date(project.endDate).toLocaleDateString()}`}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Users className="w-4 h-4 text-lux-gray-500 dark:text-lux-gray-400" />
-                        <span className="text-lux-gray-600 dark:text-lux-gray-300">Solo Project</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Code className="w-4 h-4 text-lux-gray-500 dark:text-lux-gray-400" />
-                        <span className="text-lux-gray-600 dark:text-lux-gray-300 capitalize">{project.category}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Metrics */}
-                  {project.metrics && (
-                    <div className="bg-lux-offwhite dark:bg-lux-gray-800 border border-lux-gray-300 dark:border-lux-gray-700 rounded-lg p-6">
-                      <h3 className="font-semibold mb-4 text-lux-gray-900 dark:text-lux-offwhite">
-                        Performance
-                      </h3>
-                      <div className="space-y-3">
-                        {project.metrics.map((metric, index) => (
-                          <div key={index} className="flex justify-between items-center">
-                            <span className="text-sm text-lux-gray-600 dark:text-lux-gray-300">{metric.label}</span>
-                            <span className="text-sm font-medium text-lux-gray-900 dark:text-lux-offwhite">{metric.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Back to Projects */}
-              <div className="text-center">
-                <Link
-                  href="/projects"
-                  className="inline-flex items-center gap-2 px-6 py-3 border border-lux-gray-300 dark:border-lux-gray-700 rounded-lg hover:bg-lux-gray-100 dark:hover:bg-lux-gray-800 transition-colors text-lux-gray-900 dark:text-lux-offwhite"
-                >
-                  ← Back to Projects
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-      <Footer />
-    </>
-  )
-}
-
-export async function generateStaticParams() {
-  return Object.keys(projects).map((slug) => ({
-    slug,
-  }))
 }
