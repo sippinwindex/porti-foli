@@ -1,26 +1,18 @@
-// components/LocationWelcomeMessage.tsx
+// Clean Location Welcome Message - No infinite loops
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { 
   MapPin, 
   Globe, 
   X, 
-  Heart, 
   Coffee,
-  Sun,
-  Mountain,
-  Waves,
-  Building2,
-  TreePine,
-  Sparkles,
   Clock,
-  Eye,
-  Palette
+  Palette,
+  Building2
 } from 'lucide-react'
 
-// Enhanced location hook with proper cleanup
 import { 
   useUserLocation, 
   getTimeGreeting, 
@@ -29,20 +21,12 @@ import {
   type LocationData 
 } from '@/hooks/useUserLocation'
 
-interface WelcomeMessage {
-  greeting: string
-  message: string
-  emoji: string
-  icon: React.ElementType
-  color: string
-}
-
 interface LocationWelcomeMessageProps {
   onClose?: () => void
 }
 
 const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose }) => {
-  // Enhanced location hook with memory leak prevention
+  // Use the minimal location hook
   const { 
     data: location, 
     loading: locationLoading, 
@@ -52,13 +36,11 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
   } = useUserLocation({
     enableCaching: true,
     cacheExpiry: 30 * 60 * 1000, // 30 minutes
-    fallbackToNavigatorAPI: true,
-    retryAttempts: 1, // Reduced retry attempts to prevent spam
     onSuccess: (data) => {
-      console.log('Location loaded:', data.city, data.country)
+      console.log('✅ Location loaded:', data.city, data.country)
     },
     onError: (error) => {
-      console.warn('Location error:', error)
+      console.warn('❌ Location error:', error)
     }
   })
   
@@ -75,7 +57,7 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
   const timeUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Cleanup function
-  const cleanupTimers = useCallback(() => {
+  const cleanupTimers = () => {
     if (visibilityTimerRef.current) {
       clearTimeout(visibilityTimerRef.current)
       visibilityTimerRef.current = null
@@ -88,15 +70,15 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
       clearInterval(timeUpdateIntervalRef.current)
       timeUpdateIntervalRef.current = null
     }
-  }, [])
+  }
 
-  // Set mounted state
+  // Mount effect
   useEffect(() => {
     setMounted(true)
     return cleanupTimers
-  }, [cleanupTimers])
+  }, [])
 
-  // Check if user has already dismissed the message today
+  // Check if already dismissed today
   useEffect(() => {
     if (!mounted) return
     
@@ -105,7 +87,6 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
       const today = new Date().toDateString()
       
       if (dismissedDate === today) {
-        console.log('Welcome message already dismissed today')
         setIsDismissed(true)
         return
       }
@@ -114,18 +95,16 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
     }
   }, [mounted])
 
-  // Show message when location data is ready - WITH PROPER CLEANUP
+  // Show message when location data is ready
   useEffect(() => {
     if (isDismissed || !mounted || locationLoading || !location) return
 
-    // Clear any existing timer
     if (visibilityTimerRef.current) {
       clearTimeout(visibilityTimerRef.current)
     }
 
-    // Show message after location is loaded
     visibilityTimerRef.current = setTimeout(() => {
-      console.log('Showing welcome message for:', location.city)
+      console.log('📍 Showing welcome message for:', location.city)
       setIsVisible(true)
     }, 1500)
     
@@ -136,7 +115,7 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
     }
   }, [isDismissed, mounted, locationLoading, location])
 
-  // Update current time - WITH PROPER CLEANUP
+  // Update current time
   useEffect(() => {
     if (!location?.timezone || !mounted) return
 
@@ -151,7 +130,6 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
 
     updateTime()
     
-    // Clear any existing interval
     if (timeUpdateIntervalRef.current) {
       clearInterval(timeUpdateIntervalRef.current)
     }
@@ -165,78 +143,30 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
     }
   }, [location?.timezone, mounted])
 
-  // Enhanced welcome message generator
-  const generateWelcomeMessage = useCallback((locationData: LocationData): WelcomeMessage => {
+  // Generate welcome message
+  const generateWelcomeMessage = (locationData: LocationData) => {
     const { country, city, region, countryCode } = locationData
     const timeGreeting = getTimeGreeting(locationData.timezone)
     const flag = getCountryFlag(countryCode)
     
-    // Country-specific messages with fallback
-    const countryMessages: Record<string, WelcomeMessage> = {
-      'US': {
-        greeting: `${timeGreeting} from ${city}!`,
-        message: `Welcome to my portfolio! It's great to connect with someone from ${region}. I hope you find my work inspiring! ${flag}`,
-        emoji: flag,
-        icon: Building2,
-        color: 'from-blue-500 via-red-500 to-blue-600'
-      },
-      'CA': {
-        greeting: `${timeGreeting} from ${city}!`,
-        message: `Hello neighbor to the north! Thanks for visiting from beautiful ${city}. I'd love to collaborate on projects across borders! ${flag}`,
-        emoji: flag,
-        icon: Mountain,
-        color: 'from-red-500 via-white to-red-600'
-      },
-      'GB': {
-        greeting: `${timeGreeting} from ${city}!`,
-        message: `Cheers from across the pond! Lovely to have a visitor from ${city}. Hope you enjoy browsing my work! ${flag}`,
-        emoji: flag,
-        icon: Building2,
-        color: 'from-blue-700 via-white to-red-600'
-      },
-      // Add more countries as needed...
-    }
-
-    // City-specific overrides
-    const cityMessages: Record<string, Partial<WelcomeMessage>> = {
-      'New York': { message: `The city that never sleeps! I love the energy and innovation of NYC. 🗽` },
-      'San Francisco': { message: `From one tech hub to another! Hope you're enjoying the Bay Area innovation scene. 🌉` },
-      'Miami': { message: `Hey neighbor! We're practically in the same backyard. Let's grab a coffee sometime! ☕` },
-      // Add more cities as needed...
-    }
-
-    // Get base message or fallback
-    let welcomeMessage = countryMessages[countryCode] || {
+    return {
       greeting: `${timeGreeting} from ${city}!`,
-      message: `Welcome to my portfolio! It's amazing to connect with someone from ${city}, ${country}. Thanks for stopping by! ${flag}`,
+      message: `Welcome to my portfolio! It's amazing to connect with someone from ${city}, ${region}. Thanks for stopping by! ${flag}`,
       emoji: flag,
-      icon: Globe,
       color: 'from-blue-500 via-purple-600 to-pink-600'
     }
+  }
 
-    // Override with city-specific message if available
-    if (cityMessages[city]) {
-      welcomeMessage = {
-        ...welcomeMessage,
-        ...cityMessages[city]
-      }
-    }
-
-    return welcomeMessage
-  }, [])
-
-  // Enhanced dismiss handler with proper cleanup
-  const handleDismiss = useCallback((e?: React.MouseEvent) => {
+  // Dismiss handler
+  const handleDismiss = (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault()
       e.stopPropagation()
     }
     
-    console.log('Dismissing welcome message')
+    console.log('📍 Dismissing welcome message')
     
-    // Clean up all timers
     cleanupTimers()
-    
     setIsVisible(false)
     
     try {
@@ -245,26 +175,22 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
       console.warn('Could not save to localStorage:', error)
     }
     
-    // Call parent onClose after animation
     setTimeout(() => {
-      if (onClose) {
-        onClose()
-      }
+      if (onClose) onClose()
       setIsDismissed(true)
     }, 300)
-  }, [onClose, cleanupTimers])
+  }
 
-  // Auto-dismiss with proper cleanup
+  // Auto-dismiss
   useEffect(() => {
     if (!isVisible || isDismissed) return
     
-    // Clear any existing auto-dismiss timer
     if (autoDismissTimerRef.current) {
       clearTimeout(autoDismissTimerRef.current)
     }
     
     autoDismissTimerRef.current = setTimeout(() => {
-      console.log('Auto-dismissing welcome message')
+      console.log('📍 Auto-dismissing welcome message')
       handleDismiss()
     }, 8000)
     
@@ -273,16 +199,13 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
         clearTimeout(autoDismissTimerRef.current)
       }
     }
-  }, [isVisible, isDismissed, handleDismiss])
+  }, [isVisible, isDismissed])
 
-  // Enhanced navigation handlers
-  const handleContactClick = useCallback((e: React.MouseEvent) => {
+  // Navigation handlers
+  const handleContactClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     
-    console.log('Contact clicked')
-    
-    // Scroll to contact section
     const contactSection = document.getElementById('contact')
     if (contactSection) {
       contactSection.scrollIntoView({ 
@@ -292,15 +215,12 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
     }
     
     handleDismiss()
-  }, [prefersReducedMotion, handleDismiss])
+  }
 
-  const handleViewWorkClick = useCallback((e: React.MouseEvent) => {
+  const handleViewWorkClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     
-    console.log('View work clicked')
-    
-    // Scroll to projects section
     const projectsSection = document.getElementById('projects')
     if (projectsSection) {
       projectsSection.scrollIntoView({ 
@@ -310,26 +230,25 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
     }
     
     handleDismiss()
-  }, [prefersReducedMotion, handleDismiss])
+  }
 
-  // Manual retry handler with debouncing
-  const handleRetryLocation = useCallback(async (e: React.MouseEvent) => {
+  const handleRetryLocation = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     
-    console.log('Retrying location fetch')
+    console.log('📍 Retrying location fetch')
     try {
       clearCache()
       await refetch()
     } catch (error) {
       console.warn('Retry failed:', error)
     }
-  }, [clearCache, refetch])
+  }
 
-  // Don't render until mounted (prevents hydration issues)
+  // Don't render until mounted
   if (!mounted) return null
   
-  // Error state with retry option
+  // Error state
   if (locationError && !location) {
     return (
       <motion.div
@@ -386,11 +305,10 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
     )
   }
   
-  // Don't render if dismissed, still loading, or no location
+  // Don't render if dismissed, loading, or no location
   if (isDismissed || locationLoading || !location) return null
 
   const welcomeMessage = generateWelcomeMessage(location)
-  const IconComponent = welcomeMessage.icon
 
   return (
     <AnimatePresence>
@@ -406,40 +324,16 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
           }}
         >
           <div className="relative overflow-hidden rounded-2xl backdrop-blur-xl border border-white/20 shadow-2xl">
-            {/* Enhanced gradient background */}
             <div className={`absolute inset-0 bg-gradient-to-br ${welcomeMessage.color}`} />
-            
-            {/* Glass overlay for readability */}
             <div className="absolute inset-0 bg-white/10 backdrop-blur-sm" />
-            
-            {/* Animated background pattern - with reduced motion support */}
-            {!prefersReducedMotion && (
-              <div className="absolute inset-0 opacity-20">
-                <motion.div 
-                  className="absolute top-2 right-4 w-16 h-16 rounded-full bg-white/20"
-                  animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                />
-                <motion.div 
-                  className="absolute bottom-4 left-6 w-12 h-12 rounded-full bg-white/15"
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.3, 0.15] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                />
-              </div>
-            )}
 
             <div className="relative z-10 p-6">
-              {/* Header with location data */}
+              {/* Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3 flex-1">
-                  <motion.div
-                    className="p-2 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg"
-                    initial={prefersReducedMotion ? {} : { rotate: 0 }}
-                    animate={prefersReducedMotion ? {} : { rotate: [0, 5, -5, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    <IconComponent className="w-5 h-5 text-white drop-shadow-sm" />
-                  </motion.div>
+                  <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg">
+                    <Building2 className="w-5 h-5 text-white drop-shadow-sm" />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-bold text-white drop-shadow-sm truncate">
                       {welcomeMessage.greeting}
@@ -457,20 +351,17 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
                   </div>
                 </div>
 
-                {/* Close button */}
-                <motion.button
+                <button
                   onClick={handleDismiss}
                   className="flex-shrink-0 p-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 text-white shadow-lg transition-all duration-200 ml-3"
-                  whileHover={prefersReducedMotion ? {} : { scale: 1.1 }}
-                  whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
                   aria-label="Close welcome message"
                   type="button"
                 >
                   <X className="w-4 h-4 drop-shadow-sm" />
-                </motion.button>
+                </button>
               </div>
 
-              {/* Message content */}
+              {/* Content */}
               <div className="space-y-4">
                 <p className="text-white/95 text-sm leading-relaxed font-medium drop-shadow-sm">
                   {welcomeMessage.message}
@@ -501,27 +392,23 @@ const LocationWelcomeMessage: React.FC<LocationWelcomeMessageProps> = ({ onClose
 
                 {/* Action buttons */}
                 <div className="flex gap-3 pt-2">
-                  <motion.button
+                  <button
                     onClick={handleViewWorkClick}
                     className="flex-1 py-2.5 px-4 bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-xl text-white text-sm font-semibold shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
-                    whileHover={prefersReducedMotion ? {} : { scale: 1.02, y: -1 }}
-                    whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
                     type="button"
                   >
                     <Palette className="w-4 h-4 flex-shrink-0" />
                     <span>View Work</span>
-                  </motion.button>
+                  </button>
                   
-                  <motion.button
+                  <button
                     onClick={handleContactClick}
                     className="flex-1 py-2.5 px-4 bg-white text-blue-600 hover:bg-gray-50 rounded-xl text-sm font-semibold shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
-                    whileHover={prefersReducedMotion ? {} : { scale: 1.02, y: -1 }}
-                    whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
                     type="button"
                   >
                     <Coffee className="w-4 h-4 flex-shrink-0" />
                     <span>Let's Connect</span>
-                  </motion.button>
+                  </button>
                 </div>
               </div>
 
