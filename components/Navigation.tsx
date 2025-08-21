@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useTheme } from '@/lib/theme-provider'
+import { useTheme } from 'next-themes'
 import { 
   Menu, 
   X, 
@@ -44,9 +44,9 @@ export default function Navigation() {
   const [scrolled, setScrolled] = useState(false)
   const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, resolvedTheme } = useTheme()
 
-  // Handle mounting for theme
+  // Handle mounting for theme to prevent hydration mismatch
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -95,7 +95,7 @@ export default function Navigation() {
 
   const cycleTheme = useCallback(() => {
     const themeOrder: Array<'light' | 'dark' | 'system'> = ['light', 'dark', 'system']
-    const currentIndex = themeOrder.indexOf(theme)
+    const currentIndex = themeOrder.indexOf(theme as typeof themeOrder[number])
     const nextIndex = (currentIndex + 1) % themeOrder.length
     setTheme(themeOrder[nextIndex])
   }, [theme, setTheme])
@@ -116,6 +116,8 @@ export default function Navigation() {
   }
 
   const getThemeLabel = () => {
+    if (!mounted) return 'Theme'
+    
     switch (theme) {
       case 'light':
         return 'Light Mode'
@@ -137,7 +139,7 @@ export default function Navigation() {
         transition={{ duration: 0.5 }}
         className={`navbar fixed top-0 left-0 right-0 w-full transition-all duration-300 ${
           scrolled
-            ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/20 dark:border-gray-700/20 shadow-lg'
+            ? 'glass-nav-bg backdrop-blur-md border-b border-gray-200/20 dark:border-gray-700/20 shadow-lg'
             : 'bg-transparent'
         }`}
         style={{
@@ -157,7 +159,7 @@ export default function Navigation() {
                 href="/"
                 className="flex items-center space-x-2 font-bold text-xl text-gray-900 dark:text-white z-10 relative"
               >
-                <div className="w-8 h-8 bg-gradient-to-r from-viva-magenta to-lux-gold rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-[var(--viva-magenta)] to-[var(--lux-gold)] rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">JF</span>
                 </div>
                 <span className="hidden sm:block gradient-text">Juan Fernandez</span>
@@ -174,8 +176,8 @@ export default function Navigation() {
                     href={item.href}
                     className={`nav-link relative px-3 py-2 text-sm font-medium transition-colors duration-200 ${
                       isActive
-                        ? 'text-viva-magenta dark:text-lux-gold'
-                        : 'text-gray-700 dark:text-gray-300 hover:text-viva-magenta dark:hover:text-lux-gold'
+                        ? 'text-[var(--viva-magenta)] dark:text-[var(--lux-gold)]'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-[var(--viva-magenta)] dark:hover:text-[var(--lux-gold)]'
                     }`}
                   >
                     <span className="relative z-10 flex items-center space-x-1">
@@ -185,7 +187,7 @@ export default function Navigation() {
                     {isActive && (
                       <motion.div
                         layoutId="navbar-indicator"
-                        className="absolute inset-0 bg-viva-magenta/10 dark:bg-lux-gold/10 rounded-lg"
+                        className="absolute inset-0 bg-[var(--viva-magenta)]/10 dark:bg-[var(--lux-gold)]/10 rounded-lg"
                         initial={false}
                         transition={{ duration: 0.2 }}
                       />
@@ -204,7 +206,7 @@ export default function Navigation() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-viva-magenta dark:hover:text-lux-gold transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative z-10"
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-[var(--viva-magenta)] dark:hover:text-[var(--lux-gold)] transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative z-10"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   title={link.name}
@@ -216,10 +218,11 @@ export default function Navigation() {
               {/* Theme Toggle */}
               <motion.button
                 onClick={cycleTheme}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:text-viva-magenta dark:hover:text-lux-gold transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative z-10"
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-[var(--viva-magenta)] dark:hover:text-[var(--lux-gold)] transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative z-10"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 title={getThemeLabel()}
+                disabled={!mounted}
               >
                 {getThemeIcon()}
               </motion.button>
@@ -227,7 +230,7 @@ export default function Navigation() {
 
             {/* Mobile Menu Button */}
             <motion.button
-              className="mobile-menu-toggle md:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-viva-magenta dark:hover:text-lux-gold transition-colors relative"
+              className="mobile-menu-toggle md:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-[var(--viva-magenta)] dark:hover:text-[var(--lux-gold)] transition-colors relative"
               onClick={toggleMobileMenu}
               whileTap={{ scale: 0.9 }}
               aria-label="Toggle mobile menu"
@@ -258,7 +261,7 @@ export default function Navigation() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-              className="mobile-menu-panel fixed top-0 right-0 h-full w-80 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-xl md:hidden"
+              className="mobile-menu-panel fixed top-0 right-0 h-full w-80 glass-card shadow-xl md:hidden"
             >
               <div className="flex flex-col h-full">
                 {/* Mobile Menu Header */}
@@ -268,7 +271,7 @@ export default function Navigation() {
                   </h2>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 text-gray-500 hover:text-viva-magenta dark:text-gray-400 dark:hover:text-lux-gold transition-colors"
+                    className="p-2 text-gray-500 hover:text-[var(--viva-magenta)] dark:text-gray-400 dark:hover:text-[var(--lux-gold)] transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -284,7 +287,7 @@ export default function Navigation() {
                         href={item.href}
                         className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                           isActive
-                            ? 'bg-viva-magenta/10 dark:bg-lux-gold/10 text-viva-magenta dark:text-lux-gold'
+                            ? 'bg-[var(--viva-magenta)]/10 dark:bg-[var(--lux-gold)]/10 text-[var(--viva-magenta)] dark:text-[var(--lux-gold)]'
                             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
                         }`}
                         onClick={() => setIsOpen(false)}
@@ -295,7 +298,7 @@ export default function Navigation() {
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="ml-auto w-2 h-2 bg-viva-magenta dark:bg-lux-gold rounded-full"
+                            className="ml-auto w-2 h-2 bg-[var(--viva-magenta)] dark:bg-[var(--lux-gold)] rounded-full"
                           />
                         )}
                       </Link>
@@ -312,11 +315,12 @@ export default function Navigation() {
                     </span>
                     <button
                       onClick={cycleTheme}
-                      className="flex items-center space-x-2 px-3 py-2 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg transition-colors hover:bg-viva-magenta/10 dark:hover:bg-lux-gold/10"
+                      disabled={!mounted}
+                      className="flex items-center space-x-2 px-3 py-2 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg transition-colors hover:bg-[var(--viva-magenta)]/10 dark:hover:bg-[var(--lux-gold)]/10 disabled:opacity-50"
                     >
                       {getThemeIcon()}
                       <span className="text-sm text-gray-700 dark:text-gray-300">
-                        {theme.charAt(0).toUpperCase() + theme.slice(1)}
+                        {mounted ? (theme ? theme.charAt(0).toUpperCase() + theme.slice(1) : 'System') : 'Loading...'}
                       </span>
                     </button>
                   </div>
@@ -329,7 +333,7 @@ export default function Navigation() {
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-3 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-viva-magenta dark:hover:text-lux-gold transition-colors"
+                        className="p-3 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-[var(--viva-magenta)] dark:hover:text-[var(--lux-gold)] transition-colors"
                       >
                         <link.icon className="w-5 h-5" />
                       </a>
@@ -341,9 +345,6 @@ export default function Navigation() {
           </>
         )}
       </AnimatePresence>
-
-      {/* Navbar Spacer - Using CSS variable for consistency */}
-      <div style={{ height: 'var(--navbar-height)' }} />
     </>
   )
 }

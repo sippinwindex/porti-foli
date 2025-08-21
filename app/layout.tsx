@@ -2,9 +2,11 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { Analytics } from '@vercel/analytics/react'
+import Navigation from '@/components/Navigation'
+import ThemeWrapper from '@/components/ThemeWrapper'
 import './globals.css'
 
-// Enhanced font loading with your theme system
+// Enhanced font loading with proper configuration
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
@@ -17,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-jetbrains-mono',
   display: 'swap',
-  preload: true,
+  preload: false, // Only preload if used immediately
   fallback: ['Menlo', 'Monaco', 'monospace'],
 })
 
@@ -60,7 +62,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: process.env.NEXT_PUBLIC_SITE_URL,
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://juanfernandez.dev',
     title: 'Juan Fernandez | Full-Stack Developer & 3D Web Specialist',
     description: 'Experienced Full-Stack Developer crafting immersive digital experiences with cutting-edge web technologies. Specializing in React, Next.js, Three.js, and modern development practices.',
     siteName: 'Juan Fernandez Portfolio',
@@ -119,12 +121,6 @@ export const metadata: Metadata = {
       { url: '/apple-touch-icon.png' },
       { url: '/apple-touch-icon-152x152.png', sizes: '152x152', type: 'image/png' },
     ],
-    other: [
-      {
-        rel: 'apple-touch-icon-precomposed',
-        url: '/apple-touch-icon-precomposed.png',
-      },
-    ],
   },
   
   manifest: '/site.webmanifest',
@@ -135,17 +131,11 @@ export const metadata: Metadata = {
   // Additional SEO enhancements
   alternates: {
     canonical: '/',
-    languages: {
-      'en-US': '/en-US',
-      'es-ES': '/es-ES',
-    },
   },
   
   // Verification for search engines
   verification: {
     google: 'your-google-verification-code',
-    yandex: 'your-yandex-verification-code',
-    yahoo: 'your-yahoo-verification-code',
     other: {
       me: ['mailto:jafernandez94@gmail.com', 'https://github.com/sippinwindex'],
     },
@@ -154,12 +144,9 @@ export const metadata: Metadata = {
   // Enhanced application info
   applicationName: 'Juan Fernandez Portfolio',
   referrer: 'origin-when-cross-origin',
-  
-  // Archive links if you have them
-  archives: ['/sitemap.xml'],
 }
 
-// FIXED: Enhanced viewport export (Next.js 14+ requirement)
+// Enhanced viewport export (Next.js 14+ requirement)
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -180,9 +167,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Preload critical resources */}
-        <link rel="preload" href="/fonts/Inter-roman.latin.var.woff2" as="font" type="font/woff2" crossOrigin="" />
-        <link rel="preload" href="/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossOrigin="" />
+        {/* Only preload critical fonts that are used immediately */}
+        <link 
+          rel="preload" 
+          href="/fonts/Inter-roman.latin.var.woff2" 
+          as="font" 
+          type="font/woff2" 
+          crossOrigin="anonymous" 
+        />
         
         {/* DNS prefetch for external resources */}
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
@@ -198,8 +190,8 @@ export default function RootLayout({
               name: 'Juan Fernandez',
               jobTitle: 'Full-Stack Developer',
               description: 'Experienced Full-Stack Developer specializing in React, Next.js, Three.js, and immersive web experiences.',
-              url: process.env.NEXT_PUBLIC_SITE_URL,
-              image: `${process.env.NEXT_PUBLIC_SITE_URL}/og-image.png`,
+              url: process.env.NEXT_PUBLIC_SITE_URL || 'https://juanfernandez.dev',
+              image: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://juanfernandez.dev'}/og-image.png`,
               sameAs: [
                 'https://github.com/sippinwindex',
                 'https://www.linkedin.com/in/juan-fernandez-fullstack/',
@@ -223,11 +215,6 @@ export default function RootLayout({
                 'Full-Stack Development',
                 'UI/UX Design',
               ],
-              worksFor: {
-                '@type': 'Organization',
-                name: '4Geeks Academy',
-                url: 'https://4geeksacademy.com',
-              },
             }),
           }}
         />
@@ -238,51 +225,35 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="system"
           enableSystem
-          disableTransitionOnChange
+          disableTransitionOnChange={false}
+          storageKey="portfolio-theme"
         >
-          <div className="relative min-h-screen bg-lux-offwhite dark:bg-lux-black text-lux-gray-900 dark:text-lux-offwhite">
+          <ThemeWrapper>
+            {/* Unified Portfolio Background */}
+            <div className="unified-portfolio-background" />
+            
             {/* Skip to main content for accessibility */}
             <a
               href="#main-content"
-              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-viva-magenta text-lux-offwhite px-4 py-2 rounded-md z-[10001]"
+              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-viva-magenta text-white px-4 py-2 rounded-md z-[10001] transition-all"
             >
               Skip to main content
             </a>
             
+            {/* Navigation */}
+            <Navigation />
+            
+            {/* Main Content */}
             <main id="main-content" className="relative z-10">
               {children}
             </main>
-          </div>
+          </ThemeWrapper>
         </ThemeProvider>
-        
-        {/* Enhanced navbar fix script */}
-        <script 
-          src="/js/navbar-fix.js"
-          async
-          defer
-        />
         
         {/* Analytics */}
         <Analytics />
-        
-        {/* Service Worker registration for PWA (optional) */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                    console.log('SW registered: ', registration);
-                  }).catch(function(registrationError) {
-                    console.log('SW registration failed: ', registrationError);
-                  });
-                });
-              }
-            `,
-          }}
-        />
       </body>
     </html>
   )
