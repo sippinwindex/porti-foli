@@ -1,4 +1,4 @@
-// Fixed Navigation Component with proper progress bar positioning and all pages
+// Fixed Navigation Component with proper progress bar positioning and page-based navigation
 'use client'
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -47,7 +47,6 @@ const FixedNavigation: React.FC = () => {
   // ✅ FIXED: Minimal state to prevent re-renders
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [currentSection, setCurrentSection] = useState('hero')
   const [mounted, setMounted] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
@@ -200,7 +199,7 @@ const FixedNavigation: React.FC = () => {
     }
   }, [darkMode])
 
-  // ✅ FIXED: Scroll detection with progress bar update
+  // ✅ FIXED: Scroll detection with progress bar update (no section tracking)
   useEffect(() => {
     let ticking = false
     
@@ -242,67 +241,7 @@ const FixedNavigation: React.FC = () => {
     }
   }, [])
 
-  // ✅ UPDATED: Navigation and section detection for all pages
-  useEffect(() => {
-    // Update current section based on pathname
-    if (pathname === '/') {
-      setCurrentSection('home')
-    } else if (pathname === '/about') {
-      setCurrentSection('about')
-    } else if (pathname === '/projects') {
-      setCurrentSection('projects')
-    } else if (pathname === '/blog') {
-      setCurrentSection('blog')
-    } else if (pathname === '/contact') {
-      setCurrentSection('contact')
-    } else if (pathname === '/dino-game') {
-      setCurrentSection('dino-game')
-    } else if (pathname === '/admin') {
-      setCurrentSection('admin')
-    }
-
-    // For homepage sections (if you still have sections on homepage)
-    if (pathname === '/') {
-      const sections = ['hero', 'about', 'projects', 'contact']
-      const observerOptions = {
-        threshold: 0.3,
-        rootMargin: '-10% 0px -60% 0px'
-      }
-
-      let currentActiveSection = 'hero'
-      
-      const observer = new IntersectionObserver((entries) => {
-        let maxRatio = 0
-        let activeSection = currentActiveSection
-        
-        entries.forEach(entry => {
-          if (entry.isIntersecting && entry.intersectionRatio > maxRatio) {
-            maxRatio = entry.intersectionRatio
-            activeSection = entry.target.id
-          }
-        })
-        
-        if (maxRatio > 0 && activeSection !== currentActiveSection) {
-          currentActiveSection = activeSection
-          setCurrentSection(activeSection)
-        }
-      }, observerOptions)
-
-      const elements: Element[] = []
-      sections.forEach(sectionId => {
-        const element = document.getElementById(sectionId)
-        if (element) {
-          observer.observe(element)
-          elements.push(element)
-        }
-      })
-
-      return () => {
-        elements.forEach(element => observer.unobserve(element))
-        observer.disconnect()
-      }
-    }
-  }, [pathname])
+  // ✅ REMOVED: Section detection logic - no longer needed since we use page-based navigation
 
   useEffect(() => {
     setIsOpen(false)
@@ -310,46 +249,14 @@ const FixedNavigation: React.FC = () => {
 
   const handleNavigation = useCallback((href: string, id: string) => {
     setIsOpen(false)
-    
-    if (href.startsWith('/#') && pathname === '/') {
-      const targetId = href.replace('/#', '')
-      const element = document.getElementById(targetId)
-      if (element) {
-        const navHeight = 80
-        const offsetTop = element.offsetTop - navHeight
-        
-        window.scrollTo({
-          top: offsetTop,
-          behavior: prefersReducedMotion ? 'auto' : 'smooth'
-        })
-        
-        window.history.replaceState(null, '', href)
-        setCurrentSection(targetId)
-      }
-    } else {
-      router.push(href)
-    }
-  }, [router, pathname, prefersReducedMotion])
+    router.push(href)
+  }, [router])
 
+  // ✅ FIXED: Simple path-based active detection
   const isActivePath = useCallback((href: string, id: string) => {
-    // Direct page matching
-    if (pathname === href) {
-      return true
-    }
-    
-    // Homepage special handling
-    if (pathname === '/' && href === '/') {
-      return currentSection === 'home' || currentSection === 'hero'
-    }
-    
-    // Section-based matching for homepage anchors
-    if (href.startsWith('/#') && pathname === '/') {
-      const sectionId = href.replace('/#', '')
-      return currentSection === sectionId
-    }
-    
-    return false
-  }, [pathname, currentSection])
+    // Exact match for all pages
+    return pathname === href
+  }, [pathname])
 
   // Theme Toggle Component (same as before)
   const ThemeToggleComponent = React.memo(() => {
@@ -567,12 +474,6 @@ const FixedNavigation: React.FC = () => {
             <Link 
               href="/" 
               className="flex items-center gap-4 text-xl font-bold text-gray-900 dark:text-gray-50 hover:text-viva-magenta-600 dark:hover:text-viva-magenta-400 transition-colors z-10 relative"
-              onClick={() => {
-                if (pathname === '/') {
-                  setCurrentSection('hero')
-                  document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' })
-                }
-              }}
             >
               <motion.div 
                 className="w-8 h-8 rounded-lg bg-gradient-to-br from-viva-magenta-500 to-lux-gold-500 flex items-center justify-center text-white font-bold text-sm shadow-lg"
