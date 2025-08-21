@@ -893,7 +893,7 @@ export default function BlogPage() {
 
   // Enhanced filtering and sorting
   const filteredAndSortedArticles = useMemo(() => {
-    let filtered = articles.filter(article => {
+    const filtered = articles.filter(article => {
       const matchesSearch = searchTerm === '' || 
         article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         article.description.toLowerCase().includes(searchTerm.toLowerCase()) ||

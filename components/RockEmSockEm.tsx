@@ -502,7 +502,7 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
       }
 
       setGameState(prevState => {
-        let newState = { ...prevState };
+        const newState = { ...prevState };
         
         // Update round time
         newState.roundTime += deltaTime;

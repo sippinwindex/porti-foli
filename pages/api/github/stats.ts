@@ -33,7 +33,13 @@ export default async function handler(
   }
 
   try {
-    const stats = await getCachedGitHubStats('sippinwindex')
+    // FIXED: Remove the username parameter
+    const stats = await getCachedGitHubStats()
+    
+    // FIXED: Add null check for stats
+    if (!stats) {
+      throw new Error('No stats data returned from GitHub API')
+    }
     
     // Ensure repositories is a number
     const formattedStats = {

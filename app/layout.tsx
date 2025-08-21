@@ -1,8 +1,7 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { Analytics } from '@vercel/analytics/react'
-import './animations/animation-manager.js';
 import './globals.css'
 
 // Enhanced font loading with your theme system
@@ -74,7 +73,7 @@ export const metadata: Metadata = {
         type: 'image/png',
       },
       {
-        url: '/og-image-square.png', // Add a square version for social media
+        url: '/og-image-square.png',
         width: 600,
         height: 600,
         alt: 'Juan Fernandez - Full-Stack Developer',
@@ -138,11 +137,11 @@ export const metadata: Metadata = {
     canonical: '/',
     languages: {
       'en-US': '/en-US',
-      'es-ES': '/es-ES', // Add if you plan to support Spanish
+      'es-ES': '/es-ES',
     },
   },
   
-  // Verification for search engines (add your actual verification codes)
+  // Verification for search engines
   verification: {
     google: 'your-google-verification-code',
     yandex: 'your-yandex-verification-code',
@@ -155,21 +154,23 @@ export const metadata: Metadata = {
   // Enhanced application info
   applicationName: 'Juan Fernandez Portfolio',
   referrer: 'origin-when-cross-origin',
-  colorScheme: 'dark light',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FAFAFA' },
-    { media: '(prefers-color-scheme: dark)', color: '#121212' },
-  ],
-  
-  // Enhanced viewport configuration
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes',
   
   // Archive links if you have them
   archives: ['/sitemap.xml'],
 }
 
-// Enhanced viewport export (recommended by Next.js 14+)
-export const viewport = 'width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes'
+// FIXED: Enhanced viewport export (Next.js 14+ requirement)
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  colorScheme: 'dark light',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FAFAFA' },
+    { media: '(prefers-color-scheme: dark)', color: '#121212' },
+  ],
+}
 
 export default function RootLayout({
   children,

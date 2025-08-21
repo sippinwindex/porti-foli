@@ -1,5 +1,5 @@
-// Enhanced Project Card Component with Proper Linking Logic
-// This fixes the linking behavior in your EnhancedProjectCard component
+// components/EnhancedProjectCard.tsx - COMPLETELY FIXED VERSION
+'use client'
 
 import { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
@@ -21,7 +21,35 @@ import {
   Activity,
   Users
 } from 'lucide-react'
-import type { PortfolioProject } from '@/types/portfolio'
+
+interface PortfolioProject {
+  id: string
+  name: string
+  title?: string
+  description: string
+  techStack: string[]
+  tags?: string[]
+  featured: boolean
+  category?: string
+  status?: string
+  startDate?: string
+  github?: {
+    stars: number
+    forks: number
+    url: string
+    topics?: string[]
+    lastUpdated?: string
+    language?: string
+  }
+  vercel?: {
+    isLive: boolean
+    liveUrl?: string
+    deploymentStatus?: string
+  }
+  githubUrl?: string
+  liveUrl?: string
+  highlights?: string[]
+}
 
 interface EnhancedProjectCardProps {
   project: PortfolioProject
@@ -33,7 +61,7 @@ interface EnhancedProjectCardProps {
 const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: EnhancedProjectCardProps) => {
   const [isHovered, setIsHovered] = useState(false)
 
-  // FIXED: Enhanced live deployment detection with priority
+  // Smart deployment detection with priority system
   const getLiveDeploymentInfo = useCallback(() => {
     // Priority 1: Vercel deployment with liveUrl
     if (project.vercel?.isLive && project.vercel.liveUrl) {
@@ -55,15 +83,20 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
       }
     }
 
-    // Priority 3: GitHub Pages (from homepage)
-    if (project.github?.url && project.githubUrl) {
-      // Check if it's a GitHub Pages URL pattern
+    // Priority 3: GitHub homepage that looks like deployment
+    if (project.github?.url && project.liveUrl) {
       const username = extractGitHubUsername(project.github.url)
       const repoName = extractRepoName(project.github.url)
-      const possibleGHPagesUrl = `https://${username}.github.io/${repoName}`
       
-      // You could add logic here to check if GitHub Pages is enabled
-      // For now, we'll assume if there's a homepage, it might be live
+      // Check for GitHub Pages pattern
+      if (project.liveUrl.includes(`${username}.github.io`)) {
+        return {
+          hasLive: true,
+          liveUrl: project.liveUrl,
+          source: 'github-pages',
+          status: 'READY'
+        }
+      }
     }
 
     return {
@@ -74,35 +107,44 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
     }
   }, [project])
 
-  // FIXED: Primary card click behavior
-  const handleCardClick = useCallback(() => {
+  // Primary card click behavior - smart routing
+  const handleCardClick = useCallback((e: React.MouseEvent) => {
+    // Don't trigger if clicking on action buttons
+    if ((e.target as Element).closest('button')) {
+      return
+    }
+
     const liveInfo = getLiveDeploymentInfo()
     
-    // If we have a live deployment, go there directly
+    // Priority 1: If we have a live deployment, go there directly
     if (liveInfo.hasLive && liveInfo.liveUrl) {
+      console.log(`🚀 Opening live deployment: ${liveInfo.liveUrl}`)
       window.open(liveInfo.liveUrl, '_blank', 'noopener,noreferrer')
       return
     }
 
-    // If no live deployment but we have onCardClick (for project details page)
+    // Priority 2: If no live deployment but we have onCardClick (for project details page)
     if (onCardClick) {
+      console.log(`📄 Opening project details: ${project.name}`)
       onCardClick(project)
       return
     }
 
-    // Fallback: Go to GitHub repository
+    // Priority 3: Fallback to GitHub repository
     if (project.github?.url || project.githubUrl) {
       const githubUrl = project.github?.url || project.githubUrl
+      console.log(`💻 Opening GitHub repository: ${githubUrl}`)
       window.open(githubUrl, '_blank', 'noopener,noreferrer')
     }
   }, [project, onCardClick, getLiveDeploymentInfo])
 
-  // FIXED: Individual button click handlers (prevent event bubbling)
+  // Individual button click handlers (prevent event bubbling)
   const handleLiveDemoClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
     const liveInfo = getLiveDeploymentInfo()
     
     if (liveInfo.liveUrl) {
+      console.log(`🚀 Live demo clicked: ${liveInfo.liveUrl}`)
       window.open(liveInfo.liveUrl, '_blank', 'noopener,noreferrer')
     }
   }, [getLiveDeploymentInfo])
@@ -111,13 +153,14 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
     e.stopPropagation()
     const githubUrl = project.github?.url || project.githubUrl
     if (githubUrl) {
+      console.log(`💻 GitHub clicked: ${githubUrl}`)
       window.open(githubUrl, '_blank', 'noopener,noreferrer')
     }
   }, [project])
 
   const handleDetailsClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
-    // Navigate to project details page
+    console.log(`📄 Details clicked: /projects/${project.id}`)
     window.location.href = `/projects/${project.id}`
   }, [project.id])
 
@@ -165,7 +208,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
       transition={{ delay: index * 0.1 }}
       className={`group relative bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 ${
         viewMode === 'list' ? 'flex items-center' : 'flex flex-col'
-      } cursor-pointer hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-600`}
+      } cursor-pointer hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-600 hover:scale-[1.02]`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleCardClick}
@@ -174,7 +217,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
         boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
       }}
     >
-      {/* FIXED: Grid View Header with Better Click Areas */}
+      {/* Grid View Header with enhanced visual feedback */}
       {viewMode === 'grid' && (
         <div className="relative h-48 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 overflow-hidden">
           {/* Animated Background Pattern */}
@@ -183,7 +226,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.2)_0%,transparent_50%)]" />
           </div>
           
-          {/* Code Icon */}
+          {/* Code Icon with rotation effect */}
           <div className="absolute inset-0 flex items-center justify-center">
             <motion.div
               animate={{ 
@@ -191,8 +234,18 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
                 scale: isHovered ? 1.1 : 1
               }}
               transition={{ duration: 0.5 }}
+              className="relative"
             >
               <Code className="w-16 h-16 text-white opacity-90" />
+              {liveInfo.hasLive && (
+                <motion.div
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Zap className="w-3 h-3 text-white" />
+                </motion.div>
+              )}
             </motion.div>
           </div>
 
@@ -232,7 +285,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
             )}
           </div>
 
-          {/* FIXED: Click-to-action overlay for live demos */}
+          {/* Smart hover overlay */}
           {liveInfo.hasLive && (
             <motion.div
               className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -242,6 +295,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
                 className="flex items-center px-6 py-3 bg-white text-gray-900 rounded-full font-semibold shadow-lg hover:bg-gray-100 transition-colors"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={handleLiveDemoClick}
               >
                 <Globe className="w-4 h-4 mr-2" />
                 Open Live Demo
@@ -259,8 +313,13 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
           <div className="flex items-center w-full space-x-6">
             {/* Project Icon */}
             <div className="flex-shrink-0">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center relative">
                 <Code className="w-8 h-8 text-white" />
+                {liveInfo.hasLive && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                    <Zap className="w-2 h-2 text-white" />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -306,7 +365,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
                   </div>
                 </div>
 
-                {/* FIXED: Action Buttons with Clear Hierarchy */}
+                {/* Action Buttons with Clear Hierarchy */}
                 <div className="flex items-center space-x-2 ml-4">
                   {/* Primary Action: Live Demo (if available) */}
                   {liveInfo.hasLive && (
@@ -349,7 +408,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
             </div>
           </div>
         ) : (
-          /* FIXED: Grid View Layout with Better Actions */
+          /* Grid View Layout with Better Actions */
           <>
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
@@ -414,7 +473,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
               Updated {formatDate(project.github?.lastUpdated || project.startDate)}
             </div>
 
-            {/* FIXED: Action Buttons with Proper Priority */}
+            {/* Action Buttons with Proper Priority */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex space-x-3">
                 {/* Show buttons based on priority */}
@@ -486,7 +545,7 @@ const EnhancedProjectCard = ({ project, index, viewMode, onCardClick }: Enhanced
   )
 }
 
-// FIXED: Helper functions
+// Helper functions
 function isValidLiveUrl(url: string): boolean {
   try {
     const parsedUrl = new URL(url)

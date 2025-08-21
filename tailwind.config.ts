@@ -1,12 +1,14 @@
-/** Enhanced Tailwind Config - Fully Integrated with Your Theme System */
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+/** Enhanced Tailwind Config - Merged Best of Both Worlds */
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/**/*.{js,ts,jsx,tsx,mdx}', // Added from proposed config
     './lib/**/*.{js,ts,jsx,tsx,mdx}',
-    './styles/**/*.css', // ✅ FIX: Corrected glob pattern - removed curly braces
+    './styles/**/*.css', // Fixed glob pattern - removed curly braces
   ],
   darkMode: 'class',
   theme: {
@@ -151,6 +153,7 @@ module.exports = {
         },
       },
       fontFamily: {
+        // Merged font families from both configs
         sans: [
           'Inter var', 
           'Inter', 
@@ -172,6 +175,10 @@ module.exports = {
           'Courier New', 
           'monospace'
         ],
+        // Additional font families from proposed config
+        'inter': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        'jetbrains': ['JetBrains Mono', 'Menlo', 'Monaco', 'monospace'],
+        'poppins': ['Poppins', 'system-ui', '-apple-system', 'sans-serif'],
       },
       fontSize: {
         '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
@@ -207,11 +214,12 @@ module.exports = {
         '5xl': '2.5rem',
       },
       animation: {
-        // Your existing animations enhanced
+        // Your existing animations enhanced + merged from proposed config
         'float': 'float 6s ease-in-out infinite',
         'float-delayed': 'float 6s ease-in-out infinite 2s',
         'float-3d': 'float3d 6s ease-in-out infinite',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'pulse-enhanced': 'pulse-enhanced 2s ease-in-out infinite', // From proposed config
         'bounce-slow': 'bounce 2s infinite',
         'fade-in': 'fadeIn 0.5s ease-in',
         'fade-in-up': 'fadeInUp 0.6s ease-out',
@@ -244,7 +252,7 @@ module.exports = {
         'enhanced-gradient-shift': 'enhancedGradientShift 4s ease-in-out infinite',
       },
       keyframes: {
-        // Your existing keyframes enhanced with new ones
+        // Your existing keyframes enhanced with additions from proposed config
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-20px)' },
@@ -306,6 +314,17 @@ module.exports = {
           },
           '50%': {
             boxShadow: '0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.4)'
+          },
+        },
+        // Additional keyframe from proposed config
+        'pulse-enhanced': {
+          '0%, 100%': { 
+            opacity: '1',
+            transform: 'scale(1)',
+          },
+          '50%': { 
+            opacity: '0.8',
+            transform: 'scale(1.1)',
           },
         },
         deploymentPulse: {
@@ -502,6 +521,7 @@ module.exports = {
   },
   plugins: [
     require('@tailwindcss/typography'),
+    require('@tailwindcss/forms'), // Added from proposed config
     // Enhanced custom plugin for glass morphism and 3D effects
     function({ addUtilities, addComponents, theme }) {
       const newUtilities = {
@@ -754,3 +774,5 @@ module.exports = {
     },
   ],
 }
+
+export default config

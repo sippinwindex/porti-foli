@@ -1,126 +1,123 @@
-// pages/api/portfolio-stats.ts - Fixed with proper types
+// pages/api/portfolio-stats.ts - FIXED
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getCachedGitHubStats } from '@/lib/github-api'
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  console.log('📊 Portfolio Stats API called')
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN
   
-  try {
-    // Default fallback stats with proper types
-    let stats = {
-      totalProjects: 25,
-      totalStars: 150,
-      liveProjects: 12,
-      totalForks: 45,
-      topLanguages: ['TypeScript', 'JavaScript', 'Python'] as string[],
-      recentActivity: {
-        activeProjects: 8,
-        lastUpdated: new Date().toISOString()
-      }
-    }
-
-    // Try to get real GitHub stats first
-    try {
-      console.log('🔄 Fetching GitHub stats...')
-      const githubStats = await getCachedGitHubStats('sippinwindex')
-      
-      // Calculate portfolio stats from GitHub data with proper type casting
-      const languageEntries = Object.entries(githubStats.languageStats || {})
-      const topLanguages = languageEntries
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 5)
-        .map(([lang]) => lang) as string[]
-
-      stats = {
-        totalProjects: typeof githubStats.repositories === 'number' 
-          ? githubStats.repositories 
-          : Array.isArray(githubStats.repositories) 
-            ? githubStats.repositories.length 
-            : 0,
-        totalStars: githubStats.totalStars || 0,
-        liveProjects: Math.floor((githubStats.totalStars || 0) / 3), // Estimate based on stars
-        totalForks: githubStats.totalForks || 0,
-        topLanguages: topLanguages.length > 0 ? topLanguages : ['TypeScript', 'JavaScript', 'Python'],
+  if (!GITHUB_TOKEN) {
+    console.error('❌ No GitHub token found')
+    // Return fallback data instead of error
+    return res.status(200).json({
+      success: true,
+      stats: {
+        totalProjects: 0,
+        featuredProjects: 0,
+        liveProjects: 0,
+        totalStars: 0,
+        totalForks: 0,
+        languageStats: {},
+        categoryStats: {},
         recentActivity: {
-          activeProjects: githubStats.recentActivity?.activeProjects || 0,
-          lastUpdated: new Date().toISOString()
+          lastCommit: new Date().toISOString(),
+          lastDeployment: new Date().toISOString(),
+          activeProjects: 0
         }
+      },
+      timestamp: new Date().toISOString()
+    })
+  }
+
+  try {
+    console.log('🔄 Fetching GitHub stats...')
+    // FIXED: Remove the username parameter
+    const githubStats = await getCachedGitHubStats()
+    
+    // FIXED: Add null check for githubStats
+    if (!githubStats) {
+      throw new Error('No GitHub stats data returned')
+    }
+    
+    // Calculate portfolio stats from GitHub data with proper type casting
+    const languageEntries = Object.entries((githubStats as any).languageStats || {})
+    const totalLanguageBytes = languageEntries.reduce((sum, [, bytes]) => sum + (bytes as number), 0)
+    
+    const languagePercentages = languageEntries.reduce((acc, [lang, bytes]) => {
+      const percentage = totalLanguageBytes > 0 ? Math.round(((bytes as number) / totalLanguageBytes) * 100) : 0
+      if (percentage > 0) {
+        acc[lang] = percentage
       }
-      
-      console.log('✅ GitHub stats integrated successfully')
-      
-    } catch (githubError) {
-      console.warn('⚠️ GitHub stats failed, trying projects API fallback...', githubError)
-      
-      // Always try projects API as fallback (using your mock data)
-      try {
-        const baseUrl = req.headers.origin || 
-                       (req.headers.host?.includes('localhost') ? 'http://localhost:3000' : `https://${req.headers.host}`)
-        
-        const projectsResponse = await fetch(`${baseUrl}/api/projects`)
-        
-        if (projectsResponse.ok) {
-          const { projects } = await projectsResponse.json()
-          console.log(`📈 Calculating stats from ${projects.length} projects`)
-          
-          // Extract tech stack and ensure it's string[]
-          const allTechStack = projects.flatMap((p: any) => p.techStack || [])
-          const uniqueTechStack = [...new Set(allTechStack)].filter((tech): tech is string => 
-            typeof tech === 'string'
-          )
-          
-          // Calculate stats from your mock projects
-          stats = {
-            totalProjects: projects.length,
-            totalStars: projects.reduce((sum: number, project: any) => 
-              sum + (project.github?.stars || 0), 0),
-            liveProjects: projects.filter((project: any) => 
-              project.vercel?.isLive || project.liveUrl).length,
-            totalForks: projects.reduce((sum: number, project: any) => 
-              sum + (project.github?.forks || 0), 0),
-            topLanguages: uniqueTechStack.slice(0, 5),
-            recentActivity: {
-              activeProjects: projects.filter((project: any) => project.featured).length,
-              lastUpdated: new Date().toISOString()
-            }
-          }
-          
-          console.log('✅ Projects API used successfully')
-        }
-      } catch (projectsError) {
-        console.warn('⚠️ Projects API failed, using default stats:', projectsError)
+      return acc
+    }, {} as Record<string, number>)
+
+    const portfolioStats = {
+      totalProjects: (githubStats as any).totalRepos || (githubStats as any).repositories || 0,
+      featuredProjects: Math.min(((githubStats as any).totalRepos || 0), 8),
+      liveProjects: Math.floor(((githubStats as any).totalRepos || 0) * 0.6),
+      totalStars: (githubStats as any).totalStars || 0,
+      totalForks: (githubStats as any).totalForks || 0,
+      languageStats: languagePercentages,
+      categoryStats: {
+        'fullstack': Math.floor(((githubStats as any).totalRepos || 0) * 0.3),
+        'frontend': Math.floor(((githubStats as any).totalRepos || 0) * 0.25),
+        'backend': Math.floor(((githubStats as any).totalRepos || 0) * 0.2),
+        'data': Math.floor(((githubStats as any).totalRepos || 0) * 0.15),
+        'mobile': Math.floor(((githubStats as any).totalRepos || 0) * 0.1)
+      },
+      recentActivity: {
+        lastCommit: (githubStats as any).recentActivity?.lastCommit || new Date().toISOString(),
+        lastDeployment: new Date().toISOString(),
+        activeProjects: Math.min(((githubStats as any).totalRepos || 0), 5)
       }
     }
     
-    console.log('✅ Portfolio stats calculated:', {
-      totalProjects: stats.totalProjects,
-      totalStars: stats.totalStars,
-      activeProjects: stats.recentActivity.activeProjects
-    })
-    
-    // Set cache headers for performance
     res.setHeader('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=3600')
     
-    return res.status(200).json(stats)
-    
+    return res.status(200).json({
+      success: true,
+      stats: portfolioStats,
+      timestamp: new Date().toISOString()
+    })
+
   } catch (error) {
     console.error('❌ Portfolio Stats API Error:', error)
     
-    // Always return some data, even if there's an error - with proper types
+    // Return fallback data instead of error
     return res.status(200).json({
-      totalProjects: 25,
-      totalStars: 150,
-      liveProjects: 12,
-      totalForks: 45,
-      topLanguages: ['TypeScript', 'JavaScript', 'Python'] as string[],
-      recentActivity: {
-        activeProjects: 8,
-        lastUpdated: new Date().toISOString()
+      success: true,
+      stats: {
+        totalProjects: 25,
+        featuredProjects: 8,
+        liveProjects: 15,
+        totalStars: 150,
+        totalForks: 45,
+        languageStats: {
+          'TypeScript': 40,
+          'JavaScript': 30,
+          'Python': 20,
+          'Other': 10
+        },
+        categoryStats: {
+          'fullstack': 8,
+          'frontend': 6,
+          'backend': 5,
+          'data': 4,
+          'mobile': 2
+        },
+        recentActivity: {
+          lastCommit: new Date().toISOString(),
+          lastDeployment: new Date().toISOString(),
+          activeProjects: 5
+        }
       },
+      timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : 'Unknown error'
     })
   }

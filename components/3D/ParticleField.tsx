@@ -184,7 +184,7 @@ export default function ParticleField({
     if (particlesRef.current.length === actualCount) {
       particlesRef.current.forEach(particle => {
         const colors = currentColorScheme.colors
-        let selectedColor = colors[Math.floor(Math.random() * colors.length)]
+        const selectedColor = colors[Math.floor(Math.random() * colors.length)]
         particle.color = processColor(selectedColor, isLightMode)
       })
       return
@@ -192,8 +192,8 @@ export default function ParticleField({
 
     particlesRef.current = Array.from({ length: actualCount }, (_, i) => {
       const colors = currentColorScheme.colors
-      let selectedColor = colors[Math.floor(Math.random() * colors.length)]
-      selectedColor = processColor(selectedColor, isLightMode)
+      const baseColor = colors[Math.floor(Math.random() * colors.length)]
+      const selectedColor = processColor(baseColor, isLightMode)
       
       return {
         x: Math.random() * width,

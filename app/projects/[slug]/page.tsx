@@ -1,10 +1,12 @@
+'use client'
+
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-// FIX: Changed to default imports
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 import { Github, ExternalLink, Calendar, Code, Users, Zap } from 'lucide-react'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 // FIX: Define a type for the project structure to ensure type safety
 interface Project {
@@ -19,7 +21,7 @@ interface Project {
   featured: boolean;
   status: string;
   startDate: string;
-  endDate?: string; // This property is now correctly marked as optional
+  endDate?: string;
   category: string;
   challenges: string[];
   learnings: string[];
@@ -93,31 +95,36 @@ type Props = {
   params: { slug: string }
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const project = projects[params.slug]
-  
-  if (!project) {
-    return {
-      title: 'Project Not Found',
-    }
-  }
-
-  return {
-    title: project.title,
-    description: project.description,
-    openGraph: {
-      title: project.title,
-      description: project.description,
-      images: [project.image],
-    },
-  }
-}
-
 export default function ProjectPage({ params }: Props) {
+  const [mounted, setMounted] = useState(false)
   const project = projects[params.slug]
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   if (!project) {
     notFound()
+  }
+
+  // Show loading state during hydration
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900">
+        <div className="animate-pulse">
+          <div className="h-16 bg-gray-200 dark:bg-gray-800"></div>
+          <div className="pt-16 py-16">
+            <div className="container mx-auto px-4">
+              <div className="max-w-4xl mx-auto">
+                <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded mb-4"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -125,7 +132,7 @@ export default function ProjectPage({ params }: Props) {
       <Navigation />
       <main className="pt-16">
         {/* Hero Section */}
-        <section className="py-16 bg-gradient-to-br from-background to-muted/20">
+        <section className="py-16 bg-gradient-to-br from-lux-offwhite to-lux-gray-100 dark:from-lux-black dark:to-lux-gray-900">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto text-center">
               <div className="mb-6">
@@ -138,8 +145,10 @@ export default function ProjectPage({ params }: Props) {
                 </span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">{project.title}</h1>
-              <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              <h1 className="text-4xl md:text-5xl font-bold mb-6 text-lux-gray-900 dark:text-lux-offwhite">
+                {project.title}
+              </h1>
+              <p className="text-xl text-lux-gray-600 dark:text-lux-gray-300 mb-8 max-w-2xl mx-auto">
                 {project.description}
               </p>
               
@@ -148,7 +157,7 @@ export default function ProjectPage({ params }: Props) {
                   href={project.githubUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-6 py-3 border border-border rounded-lg hover:bg-muted transition-colors"
+                  className="flex items-center gap-2 px-6 py-3 border border-lux-gray-300 dark:border-lux-gray-700 rounded-lg hover:bg-lux-gray-100 dark:hover:bg-lux-gray-800 transition-colors text-lux-gray-900 dark:text-lux-offwhite"
                 >
                   <Github className="w-5 h-5" />
                   View Code
@@ -157,7 +166,7 @@ export default function ProjectPage({ params }: Props) {
                   href={project.liveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                  className="flex items-center gap-2 px-6 py-3 bg-viva-magenta text-lux-offwhite rounded-lg hover:bg-viva-magenta/90 transition-colors"
                 >
                   <ExternalLink className="w-5 h-5" />
                   Live Demo
@@ -169,7 +178,7 @@ export default function ProjectPage({ params }: Props) {
                 {project.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="px-3 py-1 bg-muted text-muted-foreground text-sm rounded-md"
+                    className="px-3 py-1 bg-lux-gray-200 dark:bg-lux-gray-800 text-lux-gray-700 dark:text-lux-gray-300 text-sm rounded-md"
                   >
                     {tag}
                   </span>
@@ -180,25 +189,29 @@ export default function ProjectPage({ params }: Props) {
         </section>
 
         {/* Project Details */}
-        <section className="py-16">
+        <section className="py-16 bg-lux-offwhite dark:bg-lux-black">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
               <div className="grid md:grid-cols-3 gap-8 mb-12">
                 {/* Project Info */}
                 <div className="md:col-span-2">
-                  <h2 className="text-2xl font-semibold mb-4">About This Project</h2>
-                  <p className="text-muted-foreground mb-6 leading-relaxed">
+                  <h2 className="text-2xl font-semibold mb-4 text-lux-gray-900 dark:text-lux-offwhite">
+                    About This Project
+                  </h2>
+                  <p className="text-lux-gray-600 dark:text-lux-gray-300 mb-6 leading-relaxed">
                     {project.longDescription}
                   </p>
 
                   {project.challenges && (
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold mb-3">Key Challenges</h3>
+                      <h3 className="text-lg font-semibold mb-3 text-lux-gray-900 dark:text-lux-offwhite">
+                        Key Challenges
+                      </h3>
                       <ul className="space-y-2">
                         {project.challenges.map((challenge, index) => (
                           <li key={index} className="flex items-start gap-2">
-                            <Zap className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
-                            <span className="text-muted-foreground">{challenge}</span>
+                            <Zap className="w-4 h-4 text-viva-magenta mt-1 flex-shrink-0" />
+                            <span className="text-lux-gray-600 dark:text-lux-gray-300">{challenge}</span>
                           </li>
                         ))}
                       </ul>
@@ -207,12 +220,14 @@ export default function ProjectPage({ params }: Props) {
 
                   {project.learnings && (
                     <div>
-                      <h3 className="text-lg font-semibold mb-3">Key Learnings</h3>
+                      <h3 className="text-lg font-semibold mb-3 text-lux-gray-900 dark:text-lux-offwhite">
+                        Key Learnings
+                      </h3>
                       <ul className="space-y-2">
                         {project.learnings.map((learning, index) => (
                           <li key={index} className="flex items-start gap-2">
-                            <Code className="w-4 h-4 text-primary mt-1 flex-shrink-0" />
-                            <span className="text-muted-foreground">{learning}</span>
+                            <Code className="w-4 h-4 text-viva-magenta mt-1 flex-shrink-0" />
+                            <span className="text-lux-gray-600 dark:text-lux-gray-300">{learning}</span>
                           </li>
                         ))}
                       </ul>
@@ -223,37 +238,40 @@ export default function ProjectPage({ params }: Props) {
                 {/* Sidebar */}
                 <div className="space-y-6">
                   {/* Project Stats */}
-                  <div className="bg-card border border-border rounded-lg p-6">
-                    <h3 className="font-semibold mb-4">Project Details</h3>
+                  <div className="bg-lux-offwhite dark:bg-lux-gray-800 border border-lux-gray-300 dark:border-lux-gray-700 rounded-lg p-6">
+                    <h3 className="font-semibold mb-4 text-lux-gray-900 dark:text-lux-offwhite">
+                      Project Details
+                    </h3>
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">
+                        <Calendar className="w-4 h-4 text-lux-gray-500 dark:text-lux-gray-400" />
+                        <span className="text-lux-gray-600 dark:text-lux-gray-300">
                           {new Date(project.startDate).toLocaleDateString()}
-                          {/* This conditional check is now type-safe */}
                           {project.endDate && ` - ${new Date(project.endDate).toLocaleDateString()}`}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Solo Project</span>
+                        <Users className="w-4 h-4 text-lux-gray-500 dark:text-lux-gray-400" />
+                        <span className="text-lux-gray-600 dark:text-lux-gray-300">Solo Project</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
-                        <Code className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground capitalize">{project.category}</span>
+                        <Code className="w-4 h-4 text-lux-gray-500 dark:text-lux-gray-400" />
+                        <span className="text-lux-gray-600 dark:text-lux-gray-300 capitalize">{project.category}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Metrics */}
                   {project.metrics && (
-                    <div className="bg-card border border-border rounded-lg p-6">
-                      <h3 className="font-semibold mb-4">Performance</h3>
+                    <div className="bg-lux-offwhite dark:bg-lux-gray-800 border border-lux-gray-300 dark:border-lux-gray-700 rounded-lg p-6">
+                      <h3 className="font-semibold mb-4 text-lux-gray-900 dark:text-lux-offwhite">
+                        Performance
+                      </h3>
                       <div className="space-y-3">
                         {project.metrics.map((metric, index) => (
                           <div key={index} className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">{metric.label}</span>
-                            <span className="text-sm font-medium">{metric.value}</span>
+                            <span className="text-sm text-lux-gray-600 dark:text-lux-gray-300">{metric.label}</span>
+                            <span className="text-sm font-medium text-lux-gray-900 dark:text-lux-offwhite">{metric.value}</span>
                           </div>
                         ))}
                       </div>
@@ -266,7 +284,7 @@ export default function ProjectPage({ params }: Props) {
               <div className="text-center">
                 <Link
                   href="/projects"
-                  className="inline-flex items-center gap-2 px-6 py-3 border border-border rounded-lg hover:bg-muted transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-3 border border-lux-gray-300 dark:border-lux-gray-700 rounded-lg hover:bg-lux-gray-100 dark:hover:bg-lux-gray-800 transition-colors text-lux-gray-900 dark:text-lux-offwhite"
                 >
                   ← Back to Projects
                 </Link>
