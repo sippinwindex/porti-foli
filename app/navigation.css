@@ -1,13 +1,14 @@
-
-@import url('./styles/navbar.css');
-
 /* ===================================================================
-   FIXED NAVBAR STYLES - PROPER SPACING AND POSITIONING
+   COMPLETE NAVIGATION STYLES - EXTRACTED FROM GLOBAL
    =================================================================== */
 
-/* FIXED: Root variables for consistent navbar spacing */
+/* ===================================================================
+   NAVIGATION CSS VARIABLES
+   =================================================================== */
+
 :root {
-  --navbar-height: 4rem; /* 64px */
+  /* FIXED: Enhanced navbar variables */
+  --navbar-height: 4rem;
   --navbar-padding-x: 1rem;
   --navbar-padding-x-sm: 1.5rem;
   --navbar-padding-x-lg: 2rem;
@@ -18,6 +19,14 @@
   --navbar-bg-scrolled: rgba(0, 0, 0, 0.8);
   --navbar-border: rgba(255, 255, 255, 0.05);
   --navbar-border-scrolled: rgba(255, 255, 255, 0.1);
+  --navbar-glass-bg: rgba(0, 0, 0, 0.6);
+  --navbar-glass-bg-scrolled: rgba(0, 0, 0, 0.8);
+  --navbar-pill-bg: rgba(0, 0, 0, 0.4);
+  --navbar-pill-border: rgba(255, 255, 255, 0.1);
+  --navbar-active-bg: linear-gradient(90deg, #BE3455 0%, #D4AF37 100%);
+  --navbar-text: rgba(255, 255, 255, 0.9);
+  --navbar-text-hover: rgba(255, 255, 255, 1);
+  --navbar-text-muted: rgba(255, 255, 255, 0.7);
   
   /* Navigation pill variables */
   --nav-pill-gap: 0.25rem;
@@ -30,6 +39,53 @@
   --action-button-size: 2.25rem;
   --action-button-gap: 0.75rem;
   --action-button-border-radius: 0.5rem;
+  
+  /* Progress bar */
+  --progress-bar-height: 2px;
+  --total-header-height: calc(var(--navbar-height) + var(--progress-bar-height));
+  
+  /* Z-index hierarchy for navigation */
+  --z-navbar: 1000;
+  --z-progress-bar: 999;
+  --z-dropdown: 1050;
+  --z-modal: 9999;
+  --z-tooltip: 10000;
+}
+
+.dark {
+  /* Dark theme navbar adjustments */
+  --navbar-text: rgba(255, 255, 255, 0.9);
+  --navbar-text-hover: rgba(255, 255, 255, 1);
+  --navbar-text-muted: rgba(255, 255, 255, 0.7);
+}
+
+/* ===================================================================
+   FIXED MODERN NAVBAR STYLES - COMPLETE INTEGRATION
+   =================================================================== */
+
+/* FIXED: Modern navbar container */
+.modern-navbar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: var(--navbar-height) !important;
+  z-index: var(--z-navbar) !important;
+  background: var(--navbar-glass-bg) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border-bottom: 1px solid var(--navbar-border) !important;
+  transition: all 0.3s ease !important;
+  will-change: background-color, backdrop-filter !important;
+  contain: layout style paint !important;
+}
+
+.modern-navbar.scrolled {
+  background: var(--navbar-glass-bg-scrolled) !important;
+  backdrop-filter: blur(24px) saturate(200%) !important;
+  box-shadow: 
+    0 4px 32px rgba(0, 0, 0, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.05) inset !important;
 }
 
 /* FIXED: Navbar base positioning - force proper layout */
@@ -81,6 +137,10 @@ nav > div,
   }
 }
 
+/* ===================================================================
+   LOGO STYLES
+   =================================================================== */
+
 /* FIXED: Logo section with proper spacing */
 .navbar-logo,
 nav a[href="/"],
@@ -91,6 +151,12 @@ nav a[href="/"],
   flex-shrink: 0 !important;
   text-decoration: none !important;
   transition: all 0.2s ease !important;
+  pointer-events: auto !important;
+  z-index: 10 !important;
+}
+
+.navbar-logo:hover {
+  transform: scale(1.02) !important;
 }
 
 .logo-icon {
@@ -104,7 +170,9 @@ nav a[href="/"],
   font-weight: 700 !important;
   font-size: 0.875rem !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(190, 52, 85, 0.3) !important;
+  box-shadow: 
+    0 4px 16px rgba(190, 52, 85, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.1) inset !important;
   flex-shrink: 0 !important;
 }
 
@@ -116,23 +184,29 @@ nav a[href="/"],
   white-space: nowrap !important;
 }
 
+/* ===================================================================
+   NAVIGATION PILLS STYLES
+   =================================================================== */
+
 /* FIXED: Center navigation pills with proper container */
 .nav-pills-container {
-  display: none !important; /* Hidden by default */
+  display: flex !important;
   align-items: center !important;
-  background: rgba(0, 0, 0, 0.4) !important;
-  backdrop-filter: var(--navbar-blur) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: var(--navbar-pill-bg) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--navbar-pill-border) !important;
   border-radius: var(--nav-pill-border-radius) !important;
   padding: var(--nav-pill-padding) !important;
   gap: var(--nav-pill-gap) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.05) inset !important;
 }
 
-/* Show navigation pills on large screens */
-@media (min-width: 1024px) {
+/* Hide navigation pills on mobile/tablet by default */
+@media (max-width: 1023px) {
   .nav-pills-container {
-    display: flex !important;
+    display: none !important;
   }
 }
 
@@ -146,7 +220,7 @@ nav a[href="/"],
   border-radius: var(--nav-pill-border-radius) !important;
   font-size: 0.875rem !important;
   font-weight: 500 !important;
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: var(--navbar-text-muted) !important;
   text-decoration: none !important;
   transition: all 0.2s ease !important;
   white-space: nowrap !important;
@@ -154,18 +228,23 @@ nav a[href="/"],
   cursor: pointer !important;
   user-select: none !important;
   min-width: fit-content !important;
+  pointer-events: auto !important;
+  z-index: 10 !important;
 }
 
 .nav-pill:hover {
-  color: white !important;
+  color: var(--navbar-text-hover) !important;
   background: rgba(255, 255, 255, 0.05) !important;
 }
 
 .nav-pill.active,
-.nav-pill[data-active="true"] {
+.nav-pill[data-active="true"],
+.nav-pill .active {
   color: white !important;
-  background: linear-gradient(90deg, #BE3455 0%, #D4AF37 100%) !important;
-  box-shadow: 0 4px 16px rgba(190, 52, 85, 0.3) !important;
+  background: var(--navbar-active-bg) !important;
+  box-shadow: 
+    0 4px 16px rgba(190, 52, 85, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.1) inset !important;
 }
 
 .nav-pill svg {
@@ -174,12 +253,18 @@ nav a[href="/"],
   flex-shrink: 0 !important;
 }
 
+/* ===================================================================
+   NAVIGATION ACTIONS STYLES
+   =================================================================== */
+
 /* FIXED: Right actions section with proper spacing */
 .nav-actions {
   display: flex !important;
   align-items: center !important;
   gap: var(--action-button-gap) !important;
   flex-shrink: 0 !important;
+  z-index: 2 !important;
+  position: relative !important;
 }
 
 /* FIXED: Social links container */
@@ -208,19 +293,21 @@ nav a[href="/"],
   justify-content: center !important;
   background: rgba(255, 255, 255, 0.05) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: var(--navbar-text-muted) !important;
   text-decoration: none !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
   flex-shrink: 0 !important;
   user-select: none !important;
+  pointer-events: auto !important;
+  z-index: 10 !important;
 }
 
 .action-button:hover,
 .social-link:hover,
 .theme-toggle:hover,
 .mobile-menu-button:hover {
-  color: white !important;
+  color: var(--navbar-text-hover) !important;
   background: rgba(255, 255, 255, 0.1) !important;
   transform: scale(1.05) !important;
 }
@@ -241,22 +328,30 @@ nav a[href="/"],
   flex-shrink: 0 !important;
 }
 
+/* ===================================================================
+   CONTACT BUTTON STYLES
+   =================================================================== */
+
 /* FIXED: Contact button with proper spacing */
 .contact-button {
   display: none !important;
   align-items: center !important;
   gap: 0.5rem !important;
-  background: linear-gradient(90deg, #BE3455 0%, #D4AF37 100%) !important;
+  background: var(--navbar-active-bg) !important;
   color: white !important;
-  padding: 0.625rem 1rem !important;
+  padding: 0.625rem 1.25rem !important;
   border-radius: var(--nav-pill-border-radius) !important;
   font-size: 0.875rem !important;
   font-weight: 500 !important;
   text-decoration: none !important;
   transition: all 0.2s ease !important;
-  box-shadow: 0 4px 16px rgba(190, 52, 85, 0.3) !important;
+  box-shadow: 
+    0 4px 16px rgba(190, 52, 85, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.1) inset !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
+  pointer-events: auto !important;
+  z-index: 10 !important;
 }
 
 @media (min-width: 1024px) {
@@ -267,7 +362,9 @@ nav a[href="/"],
 
 .contact-button:hover {
   transform: translateY(-1px) !important;
-  box-shadow: 0 6px 20px rgba(190, 52, 85, 0.4) !important;
+  box-shadow: 
+    0 6px 20px rgba(190, 52, 85, 0.4),
+    0 1px 0 rgba(255, 255, 255, 0.1) inset !important;
 }
 
 .contact-button svg {
@@ -275,6 +372,10 @@ nav a[href="/"],
   height: 1rem !important;
   flex-shrink: 0 !important;
 }
+
+/* ===================================================================
+   MOBILE MENU STYLES
+   =================================================================== */
 
 /* FIXED: Mobile menu button - show only on mobile */
 .mobile-menu-button {
@@ -294,6 +395,7 @@ nav a[href="/"],
   background: rgba(0, 0, 0, 0.5) !important;
   backdrop-filter: blur(4px) !important;
   z-index: calc(var(--navbar-z-index) - 1) !important;
+  pointer-events: auto !important;
 }
 
 .mobile-menu-panel {
@@ -308,6 +410,7 @@ nav a[href="/"],
   border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
   z-index: var(--navbar-z-index) !important;
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.3) !important;
+  pointer-events: auto !important;
 }
 
 /* FIXED: Mobile menu header */
@@ -360,21 +463,21 @@ nav a[href="/"],
   padding: 0.75rem 1rem !important;
   margin-bottom: 0.5rem !important;
   border-radius: 0.75rem !important;
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: var(--navbar-text-muted) !important;
   text-decoration: none !important;
   font-weight: 500 !important;
   transition: all 0.2s ease !important;
 }
 
 .mobile-nav-item:hover {
-  color: white !important;
+  color: var(--navbar-text-hover) !important;
   background: rgba(255, 255, 255, 0.05) !important;
 }
 
 .mobile-nav-item.active,
 .mobile-nav-item[data-active="true"] {
   color: white !important;
-  background: linear-gradient(90deg, #BE3455 0%, #D4AF37 100%) !important;
+  background: var(--navbar-active-bg) !important;
   box-shadow: 0 4px 16px rgba(190, 52, 85, 0.3) !important;
 }
 
@@ -383,6 +486,10 @@ nav a[href="/"],
   height: 1.25rem !important;
   flex-shrink: 0 !important;
 }
+
+/* ===================================================================
+   MOBILE MENU FOOTER STYLES
+   =================================================================== */
 
 /* FIXED: Mobile menu footer */
 .mobile-menu-footer {
@@ -457,7 +564,7 @@ nav a[href="/"],
   align-items: center !important;
   justify-content: center !important;
   gap: 0.5rem !important;
-  background: linear-gradient(90deg, #BE3455 0%, #D4AF37 100%) !important;
+  background: var(--navbar-active-bg) !important;
   color: white !important;
   padding: 0.75rem 1rem !important;
   border-radius: 0.75rem !important;
@@ -472,6 +579,10 @@ nav a[href="/"],
   transform: translateY(-1px) !important;
 }
 
+/* ===================================================================
+   SCROLL PROGRESS BAR
+   =================================================================== */
+
 /* FIXED: Progress bar positioning */
 .scroll-progress {
   position: absolute !important;
@@ -479,10 +590,11 @@ nav a[href="/"],
   left: 0 !important;
   right: 0 !important;
   width: 100% !important;
-  height: 2px !important;
+  height: var(--progress-bar-height) !important;
   background: rgba(255, 255, 255, 0.1) !important;
   overflow: hidden !important;
-  z-index: 1 !important;
+  z-index: calc(var(--z-navbar) + 1) !important;
+  pointer-events: none !important;
 }
 
 .scroll-progress-bar {
@@ -490,33 +602,144 @@ nav a[href="/"],
   width: 0% !important;
   background: linear-gradient(90deg, #BE3455 0%, #D4AF37 50%, #008080 100%) !important;
   transition: width 0.1s ease !important;
-  box-shadow: 0 0 8px rgba(190, 52, 85, 0.4) !important;
+  box-shadow: 
+    0 0 8px rgba(190, 52, 85, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* FIXED: Body adjustments for fixed navbar */
-body {
-  padding-top: var(--navbar-height) !important;
-}
+/* ===================================================================
+   NAVIGATION POSITIONING FIXES
+   =================================================================== */
 
-body.mobile-menu-open {
-  overflow: hidden !important;
+/* Force proper navbar positioning for all possible selectors */
+nav,
+.navbar,
+header nav,
+.modern-navbar,
+.fixed-navbar {
   position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
   width: 100% !important;
+  height: var(--navbar-height) !important;
+  z-index: var(--z-navbar) !important;
+  box-sizing: border-box !important;
+  contain: layout style paint !important;
 }
 
-/* FIXED: Main content area adjustment */
-main {
+/* Ensure navbar content is properly aligned */
+nav > div,
+.navbar > div,
+.modern-navbar > div {
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 1rem !important;
+}
+
+/* Fix navbar links and buttons positioning */
+nav a,
+nav button,
+.navbar a,
+.navbar button,
+.modern-navbar a,
+.modern-navbar button {
   position: relative !important;
-  z-index: 1 !important;
-  min-height: calc(100vh - var(--navbar-height)) !important;
+  z-index: 2 !important;
+  pointer-events: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
 }
 
-/* FIXED: Section scroll offset */
-section {
-  scroll-margin-top: calc(var(--navbar-height) + 1rem) !important;
+/* Fix mobile menu positioning */
+nav button[aria-label*="menu"],
+.navbar button[aria-label*="menu"],
+.mobile-menu-toggle,
+.mobile-menu-button {
+  position: relative !important;
+  z-index: 60 !important;
+  pointer-events: auto !important;
 }
 
-/* FIXED: Responsive adjustments */
+/* Fix for your Navigation component */
+.fixed.top-0.left-0.right-0 {
+  z-index: var(--z-navbar) !important;
+  height: var(--navbar-height) !important;
+  position: fixed !important;
+}
+
+/* Fix for navigation items */
+.nav-items {
+  display: flex !important;
+  align-items: center !important;
+  gap: 2rem !important;
+  z-index: 2 !important;
+  position: relative !important;
+}
+
+/* Logo positioning fix */
+.nav-logo {
+  z-index: 2 !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* ===================================================================
+   RESPONSIVE NAVIGATION STYLES
+   =================================================================== */
+
+/* Responsive navbar heights */
+@media (max-width: 1024px) {
+  :root {
+    --navbar-height: 4rem;
+    --progress-bar-height: 2px;
+  }
+  
+  nav > div,
+  .navbar > div,
+  .modern-navbar > div {
+    padding: 0 1.5rem !important;
+  }
+  
+  .nav-pills-container {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --navbar-height: 3.5rem;
+    --progress-bar-height: 2px;
+  }
+  
+  nav > div,
+  .navbar > div,
+  .modern-navbar > div {
+    padding: 0 1rem !important;
+  }
+  
+  .navbar-logo .logo-text {
+    display: none !important;
+  }
+  
+  .social-link,
+  .theme-toggle {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+  
+  .contact-button {
+    display: none !important;
+  }
+}
+
 @media (max-width: 480px) {
   :root {
     --navbar-padding-x: 0.75rem;
@@ -542,14 +765,15 @@ section {
   }
 }
 
-@media (max-width: 768px) {
-  .nav-pills-container {
-    display: none !important;
-  }
-  
-  .contact-button {
-    display: none !important;
-  }
+/* ===================================================================
+   NAVIGATION ACCESSIBILITY & SPECIAL CASES
+   =================================================================== */
+
+/* Focus management for navbar */
+nav:focus-within,
+.navbar:focus-within,
+.modern-navbar:focus-within {
+  z-index: calc(var(--z-navbar) + 1) !important;
 }
 
 /* FIXED: Focus states for accessibility */
@@ -570,7 +794,7 @@ section {
   backface-visibility: hidden !important;
 }
 
-/* FIXED: Prevent navbar layout shift */
+/* Prevent navbar layout shift */
 nav * {
   box-sizing: border-box !important;
 }
@@ -605,4 +829,15 @@ nav * {
   .mobile-nav-item:hover {
     transform: none !important;
   }
+}
+
+/* ===================================================================
+   BODY ADJUSTMENTS FOR NAVIGATION
+   =================================================================== */
+
+/* Fix mobile menu scroll prevention */
+body.mobile-menu-open {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
 }
