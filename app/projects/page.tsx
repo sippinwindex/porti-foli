@@ -1,3 +1,4 @@
+// app/projects/page.tsx - FIXED: Load ALL repositories without limits
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react'
@@ -77,7 +78,7 @@ interface PortfolioStats {
   }>
 }
 
-// Custom hook to fetch data from our fixed API
+// FIXED: Custom hook to fetch ALL data from our API without limits
 function useProjectsData() {
   const [projects, setProjects] = useState<ProjectData[]>([])
   const [stats, setStats] = useState<PortfolioStats | null>(null)
@@ -89,7 +90,9 @@ function useProjectsData() {
       setLoading(true)
       setError(null)
       
-      // Fetch from our fixed projects API
+      console.log('🔄 Fetching ALL projects from API...')
+      
+      // FIXED: Fetch ALL projects by not passing a limit parameter
       const response = await fetch('/api/projects?includeStats=true')
       
       if (!response.ok) {
@@ -102,10 +105,13 @@ function useProjectsData() {
         throw new Error(data.message || 'Failed to fetch projects')
       }
       
+      console.log(`✅ Loaded ${data.projects?.length || 0} projects from API`)
+      console.log('📊 Debug info:', data._debug)
+      
       setProjects(data.projects || [])
       setStats(data.stats || null)
     } catch (err) {
-      console.error('Error fetching projects:', err)
+      console.error('❌ Error fetching projects:', err)
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
@@ -169,9 +175,9 @@ function ProjectCardWrapper({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ delay: index * 0.1 }}
-      className={`group relative bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 ${
+      className={`group relative glass-card border border-gray-200/50 dark:border-gray-700/50 rounded-2xl overflow-hidden transition-all duration-300 ${
         viewMode === 'list' ? 'flex items-center' : 'flex flex-col'
-      } cursor-pointer hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-600`}
+      } cursor-pointer hover-3d enhanced-glow-effect`}
       onClick={() => onCardClick(project)}
       whileHover={{ 
         y: viewMode === 'grid' ? -4 : 0,
@@ -304,15 +310,6 @@ function ProjectCardWrapper({
   )
 }
 
-// Debounce utility function
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout)
-    timeout = setTimeout(() => func(...args), wait)
-  }
-}
-
 // Enhanced Project Stats Component
 function ProjectStats({ project }: { project: ProjectData }) {
   const formatDateAgo = (dateString: string) => {
@@ -383,40 +380,6 @@ function ProjectStatus({ project }: { project: ProjectData }) {
       }
     }
     
-    // Check Vercel status
-    if (project.vercel?.deploymentStatus) {
-      switch (project.vercel.deploymentStatus) {
-        case 'BUILDING':
-        case 'building':
-          return {
-            icon: <Loader className="w-4 h-4 animate-spin" />,
-            text: 'Building',
-            color: 'text-yellow-500',
-            bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
-            dotColor: 'bg-yellow-500'
-          }
-        case 'ERROR':
-        case 'error':
-        case 'failed':
-          return {
-            icon: <XCircle className="w-4 h-4" />,
-            text: 'Build Failed',
-            color: 'text-red-500',
-            bgColor: 'bg-red-100 dark:bg-red-900/30',
-            dotColor: 'bg-red-500'
-          }
-        case 'READY':
-        case 'ready':
-          return {
-            icon: <CheckCircle className="w-4 h-4" />,
-            text: 'Ready',
-            color: 'text-blue-500',
-            bgColor: 'bg-blue-100 dark:bg-blue-900/30',
-            dotColor: 'bg-blue-500'
-          }
-      }
-    }
-    
     // GitHub repository status
     return {
       icon: <Github className="w-4 h-4" />,
@@ -431,7 +394,7 @@ function ProjectStatus({ project }: { project: ProjectData }) {
 
   return (
     <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${status.color} ${status.bgColor}`}>
-      <div className={`w-2 h-2 rounded-full ${status.dotColor} ${status.text.includes('Building') ? 'animate-pulse' : ''}`} />
+      <div className={`w-2 h-2 rounded-full ${status.dotColor}`} />
       {status.icon}
       <span>{status.text}</span>
     </div>
@@ -447,18 +410,10 @@ function ProjectShowcase() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'stars' | 'updated' | 'featured'>('featured')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
-  const [visibleProjects, setVisibleProjects] = useState(9)
+  const [visibleProjects, setVisibleProjects] = useState(12) // Start with 12, load more as needed
   
   const containerRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(containerRef, { once: true })
-
-  // Debounced search
-  const debouncedSearch = useCallback(
-    debounce((term: string) => {
-      setSearchTerm(term)
-    }, 300),
-    []
-  )
 
   // Update filtered projects when data changes
   useEffect(() => {
@@ -546,7 +501,7 @@ function ProjectShowcase() {
 
   // Load more projects
   const loadMore = () => {
-    setVisibleProjects(prev => prev + 6)
+    setVisibleProjects(prev => prev + 12)
   }
 
   // Handle card click
@@ -578,10 +533,10 @@ function ProjectShowcase() {
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           />
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-2">
-            Loading Projects
+            Loading All Projects
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Fetching projects from GitHub and deployment platforms...
+            Fetching all repositories from GitHub and deployment platforms...
           </p>
         </div>
       </div>
@@ -626,7 +581,7 @@ function ProjectShowcase() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8 p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl border border-green-200 dark:border-green-800 max-w-4xl mx-auto"
+          className="text-center mb-8 p-6 glass-card backdrop-blur-sm rounded-xl border border-green-200 dark:border-green-800 max-w-4xl mx-auto"
         >
           <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400 mb-4">
             <motion.div
@@ -636,7 +591,7 @@ function ProjectShowcase() {
               ✅
             </motion.div>
             <span className="text-sm font-medium">
-              Successfully loaded {projects.length} projects from GitHub
+              Successfully loaded ALL {projects.length} projects from GitHub
             </span>
           </div>
           
@@ -675,7 +630,7 @@ function ProjectShowcase() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 mb-12"
+        className="glass-hero backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 mb-12 glow-effect-enhanced"
       >
         {/* Search and Sort Row */}
         <div className="flex flex-col lg:flex-row gap-4 mb-6">
@@ -684,7 +639,8 @@ function ProjectShowcase() {
             <input
               type="text"
               placeholder="Search projects, technologies, or descriptions..."
-              onChange={(e) => debouncedSearch(e.target.value)}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
             />
           </div>
@@ -808,7 +764,7 @@ function ProjectShowcase() {
         >
           <motion.button
             onClick={loadMore}
-            className="flex items-center gap-2 px-8 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors font-semibold mx-auto"
+            className="flex items-center gap-2 px-8 py-4 btn-viva-enhanced font-semibold mx-auto"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -843,7 +799,7 @@ function ProjectShowcase() {
                 setCategoryFilter('all')
                 setSearchTerm('')
               }}
-              className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
+              className="px-6 py-3 btn-viva-enhanced"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -851,7 +807,7 @@ function ProjectShowcase() {
             </motion.button>
             <motion.button
               onClick={refetch}
-              className="flex items-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="flex items-center gap-2 px-6 py-3 btn-secondary glass-card hover-lift"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -902,14 +858,30 @@ export default function ProjectsPage() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          Loading Projects...
+          Loading All Projects...
         </motion.p>
       </div>
     )
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-white via-blue-50/20 to-purple-50/20 dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10 overflow-x-hidden">
+    <div className="relative min-h-screen unified-portfolio-background overflow-x-hidden">
+      {/* Enhanced Unified Background with your theme system */}
+      <div className="unified-portfolio-background">
+        <div className="particle-field-container">
+          {!isMobile && (
+            <Suspense>
+              <ParticleField 
+                colorScheme={isLoading ? 'light-mode' : 'brand'}
+                animation="constellation"
+                interactive={true}
+                speed={0.3}
+              />
+            </Suspense>
+          )}
+        </div>
+      </div>
+
       {/* Navigation */}
       <div className="fixed top-0 left-0 right-0 z-[1000]">
         <Suspense fallback={<NavigationSkeleton />}>
@@ -919,89 +891,69 @@ export default function ProjectsPage() {
 
       {/* Theme Toggle */}
       <div className="fixed top-4 right-4 z-[1001]">
-        <ThemeToggle />
+        <ThemeToggle variant="floating" size="md" />
       </div>
 
-      {/* Particle Field Background - Only on desktop */}
-      {!isMobile && (
-        <div className="fixed inset-0 z-0">
-          <ParticleField 
-            particleCount={50}
-            colorScheme="cyberpunk"
-            animation="float"
-            interactive={false}
-            speed={0.5}
-          />
-        </div>
-      )}
-
-      {/* Animated Background Elements - Only on desktop */}
-      {!isMobile && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Main Content */}
+      <main className="relative z-10 pt-24 pb-16">
+        <div className="container mx-auto px-4 max-w-7xl">
+          {/* Page Header */}
           <motion.div
-            className="absolute top-20 left-10 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl"
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.5, 0.3]
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          <motion.div
-            className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl"
-            animate={{
-              scale: [1.2, 1, 1.2],
-              opacity: [0.2, 0.4, 0.2]
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 2
-            }}
-          />
-        </div>
-      )}
-
-      <main className="relative z-10 pt-24">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="max-w-7xl mx-auto">
-            {/* Enhanced Header */}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-16"
+          >
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-16"
+              className="inline-flex items-center justify-center p-3 bg-blue-100 dark:bg-blue-900/30 rounded-2xl mb-6"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              <motion.div
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full border border-blue-200 dark:border-blue-700 mb-6"
-                animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <Github className="w-4 h-4" />
-                <span className="text-sm font-medium">Live GitHub Integration</span>
-                <Rocket className="w-4 h-4" />
-              </motion.div>
-              
-              <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                My{' '}
-                <span className="bg-gradient-to-r from-blue-600 via-purple-500 to-blue-600 bg-clip-text text-transparent">
-                  Projects
-                </span>
-              </h1>
-              <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                A comprehensive showcase of my development work, featuring live GitHub data, 
-                real-time deployment status, and interactive project exploration.
-              </p>
+              <Rocket className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             </motion.div>
             
-            <ProjectShowcase />
-          </div>
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-gray-50 mb-6">
+              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                All Projects
+              </span>
+            </h1>
+            
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed">
+              Discover my complete portfolio of projects, applications, and experiments. 
+              Each project showcases different technologies, methodologies, and creative solutions 
+              to real-world problems.
+            </p>
+            
+            {/* Quick Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-wrap items-center justify-center gap-8 mt-8 text-sm text-gray-500 dark:text-gray-400"
+            >
+              <div className="flex items-center gap-2">
+                <Code className="w-4 h-4 text-blue-500" />
+                <span>Full-Stack Development</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-green-500" />
+                <span>Live Deployments</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Github className="w-4 h-4 text-purple-500" />
+                <span>Open Source</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-orange-500" />
+                <span>Actively Maintained</span>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Project Showcase */}
+          <ProjectShowcase />
         </div>
       </main>
-      
+
       {/* Footer */}
       <Suspense fallback={<FooterSkeleton />}>
         <Footer />

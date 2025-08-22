@@ -1,4 +1,4 @@
-// lib/github-api.ts - FIXED: Complete GitHub API integration with correct types
+// lib/github-api.ts - FIXED: Complete GitHub API integration with unlimited repository fetching
 import { unstable_cache } from 'next/cache'
 
 // Types for GitHub API responses
@@ -20,12 +20,12 @@ export interface GitHubRepository {
   archived: boolean
   disabled: boolean
   fork: boolean
-  homepage: string | null  // Fixed: Added homepage property
-  watchers_count: number   // Fixed: Added watchers_count property
+  homepage: string | null
+  watchers_count: number
   has_issues: boolean
   has_projects: boolean
   has_wiki: boolean
-  has_pages: boolean       // Fixed: Added has_pages property
+  has_pages: boolean
   has_downloads: boolean
   license?: {
     key: string
@@ -97,8 +97,8 @@ function isPortfolioWorthy(repo: GitHubRepository): boolean {
   // Skip forks, archived, and disabled repos
   if (repo.fork || repo.archived || repo.disabled) return false
   
-  // Must have a description
-  if (!repo.description || repo.description.length < 10) return false
+  // Must have a description (relaxed requirement)
+  if (!repo.description || repo.description.length < 5) return false
   
   // Skip common non-portfolio repo patterns
   const skipPatterns = [
@@ -116,14 +116,16 @@ function isPortfolioWorthy(repo: GitHubRepository): boolean {
   
   if (skipPatterns.some(pattern => pattern.test(repo.name))) return false
   
-  // Boost score for repos with good indicators
-  const portfolioBoosts = repo.stargazers_count > 0 ||
-                         repo.has_pages ||
-                         Boolean(repo.homepage) ||
-                         repo.topics.length > 0 ||
-                         repo.description.toLowerCase().includes('project')
+  // Accept repos with good indicators OR recent activity
+  const hasGoodIndicators = repo.stargazers_count > 0 ||
+                           repo.has_pages ||
+                           Boolean(repo.homepage) ||
+                           repo.topics.length > 0 ||
+                           repo.description.toLowerCase().includes('project')
   
-  return portfolioBoosts
+  const isRecentlyActive = new Date(repo.updated_at) > new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000) // 6 months
+  
+  return hasGoodIndicators || isRecentlyActive
 }
 
 // Calculate repository score for sorting
@@ -152,43 +154,71 @@ function calculateRepoScore(repo: GitHubRepository): number {
   return score
 }
 
-// Fetch GitHub repositories with enhanced filtering
+// FIXED: Fetch ALL GitHub repositories with pagination
 async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
   try {
-    console.log('🔄 Fetching GitHub repositories...')
+    console.log('🔄 Fetching ALL GitHub repositories with pagination...')
     
     if (!GITHUB_TOKEN) {
       console.warn('⚠️ No GitHub token found - API will be rate limited')
     }
     
-    const response = await fetch(
-      `${GITHUB_API_BASE}/users/${GITHUB_USERNAME}/repos?type=owner&sort=updated&per_page=100`,
-      {
-        headers: getHeaders(),
-        next: { revalidate: 3600 } // Cache for 1 hour
-      }
-    )
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`GitHub API error: ${response.status} - ${errorText}`)
-    }
-
-    const repos: GitHubRepository[] = await response.json()
-    console.log(`📦 Found ${repos.length} total repositories`)
+    const allRepos: GitHubRepository[] = []
+    let page = 1
+    const perPage = 100 // Maximum allowed by GitHub API
     
-    // Filter for portfolio-worthy repos
-    const portfolioRepos = repos
+    while (true) {
+      console.log(`📄 Fetching page ${page} (${perPage} repos per page)...`)
+      
+      const response = await fetch(
+        `${GITHUB_API_BASE}/users/${GITHUB_USERNAME}/repos?type=owner&sort=updated&per_page=${perPage}&page=${page}`,
+        {
+          headers: getHeaders(),
+          next: { revalidate: 3600 } // Cache for 1 hour
+        }
+      )
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`GitHub API error on page ${page}: ${response.status} - ${errorText}`)
+      }
+
+      const repos: GitHubRepository[] = await response.json()
+      console.log(`📦 Page ${page}: Found ${repos.length} repositories`)
+      
+      if (repos.length === 0) {
+        console.log('✅ No more repositories found, pagination complete')
+        break // No more repositories
+      }
+      
+      allRepos.push(...repos)
+      page++
+      
+      // Safety check to prevent infinite loops
+      if (page > 10) {
+        console.warn('⚠️ Stopped pagination at page 10 to prevent infinite loops')
+        break
+      }
+    }
+    
+    console.log(`📊 Total repositories fetched: ${allRepos.length}`)
+    
+    // Filter for portfolio-worthy repos with more lenient criteria
+    const portfolioRepos = allRepos
       .filter(isPortfolioWorthy)
       .map(repo => ({
         ...repo,
-        // Add calculated score for sorting
         _score: calculateRepoScore(repo)
       }))
       .sort((a, b) => (b._score || 0) - (a._score || 0))
       .map(({ _score, ...repo }) => repo) // Remove score from final output
     
-    console.log(`✨ Filtered to ${portfolioRepos.length} portfolio repositories`)
+    console.log(`✨ Portfolio repositories after filtering: ${portfolioRepos.length}`)
+    
+    // Debug: Log top 5 repos by score
+    portfolioRepos.slice(0, 5).forEach((repo, index) => {
+      console.log(`${index + 1}. ${repo.name} (⭐${repo.stargazers_count}, 🔧${repo.forks_count}) - ${repo.description?.slice(0, 50)}...`)
+    })
     
     return portfolioRepos
   } catch (error) {
@@ -277,13 +307,13 @@ async function generateGitHubStats(): Promise<GitHubStats | null> {
   }
 }
 
-// Cached versions of the functions for better performance
+// FIXED: Update cached functions to use unlimited fetching
 export const getCachedRepositories = unstable_cache(
   fetchGitHubRepositories,
-  ['github-repositories'],
+  ['github-repositories-all'],
   {
     tags: ['github-repos'],
-    revalidate: 3600 // 1 hour
+    revalidate: 1800 // 30 minutes for more frequent updates
   }
 )
 
@@ -298,10 +328,10 @@ export const getCachedGitHubUser = unstable_cache(
 
 export const getCachedGitHubStats = unstable_cache(
   generateGitHubStats,
-  ['github-stats'],
+  ['github-stats-all'],
   {
     tags: ['github-stats'],
-    revalidate: 3600 // 1 hour
+    revalidate: 1800 // 30 minutes for more frequent updates
   }
 )
 

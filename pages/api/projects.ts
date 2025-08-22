@@ -1,4 +1,4 @@
-// pages/api/projects.ts - FIXED: Clean projects API without JSX
+// pages/api/projects.ts - FIXED: Complete repository loading
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getEnhancedProjects, getPortfolioStats, type EnhancedProject, type PortfolioStats } from '@/lib/portfolio-integration'
 
@@ -27,6 +27,8 @@ interface ProjectAPIResponse {
     hasVercelIntegration: boolean
     projectsSource: string
     cacheStrategy: string
+    repositoriesFound: number
+    filteredRepositories: number
   }
 }
 
@@ -128,15 +130,22 @@ export default async function handler(
   try {
     console.log('🔄 Projects API: Fetching enhanced projects...')
     
-    // Get query parameters (safely extract strings from potentially array values)
-    const limit = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit || '50'
+    // FIXED: Get query parameters with proper defaults for unlimited loading
+    const limit = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit
     const featured = Array.isArray(req.query.featured) ? req.query.featured[0] : req.query.featured || 'false'
     const category = Array.isArray(req.query.category) ? req.query.category[0] : req.query.category || 'all'
     const sort = Array.isArray(req.query.sort) ? req.query.sort[0] : req.query.sort || 'featured'
     const includeStats = Array.isArray(req.query.includeStats) ? req.query.includeStats[0] : req.query.includeStats || 'false'
 
+    // FIXED: Default to showing ALL projects (no limit) unless specifically requested
+    const limitNum = limit ? parseInt(limit as string) : 0 // 0 means no limit
+
+    console.log(`📊 Query params: limit=${limitNum || 'unlimited'}, featured=${featured}, category=${category}, sort=${sort}`)
+
     // Fetch enhanced projects from integration layer
     const allProjects = await getEnhancedProjects()
+    
+    console.log(`📦 Raw projects from integration: ${allProjects.length}`)
     
     if (allProjects.length === 0) {
       console.warn('⚠️ No projects found from integration layer')
@@ -149,21 +158,32 @@ export default async function handler(
           live: 0,
           source: 'integration-empty',
           timestamp: new Date().toISOString()
+        },
+        _debug: {
+          hasGitHubIntegration: !!process.env.GITHUB_TOKEN,
+          hasVercelIntegration: !!process.env.VERCEL_TOKEN,
+          projectsSource: 'integration-layer',
+          cacheStrategy: 'server-side-cached',
+          repositoriesFound: 0,
+          filteredRepositories: 0
         }
       })
     }
 
     // Apply filters
     let filteredProjects = [...allProjects]
+    console.log(`🔽 Starting with ${filteredProjects.length} projects`)
 
     // Filter by featured
     if (featured === 'true') {
       filteredProjects = filteredProjects.filter(project => project.featured)
+      console.log(`⭐ After featured filter: ${filteredProjects.length} projects`)
     }
 
     // Filter by category
     if (category !== 'all') {
       filteredProjects = filteredProjects.filter(project => project.category === category)
+      console.log(`📁 After category filter (${category}): ${filteredProjects.length} projects`)
     }
 
     // Apply sorting
@@ -187,10 +207,12 @@ export default async function handler(
         break
     }
 
-    // Apply limit
-    const limitNum = parseInt(limit as string)
+    console.log(`🔄 After sorting by ${sort}: ${filteredProjects.length} projects`)
+
+    // FIXED: Apply limit only if specified and greater than 0
     if (limitNum > 0 && limitNum < filteredProjects.length) {
       filteredProjects = filteredProjects.slice(0, limitNum)
+      console.log(`✂️ After limit (${limitNum}): ${filteredProjects.length} projects`)
     }
 
     // Transform to API format
@@ -234,10 +256,12 @@ export default async function handler(
       meta,
       stats,
       _debug: {
-        hasGitHubIntegration: process.env.GITHUB_TOKEN ? true : false,
-        hasVercelIntegration: process.env.VERCEL_TOKEN ? true : false,
+        hasGitHubIntegration: !!process.env.GITHUB_TOKEN,
+        hasVercelIntegration: !!process.env.VERCEL_TOKEN,
         projectsSource: 'enhanced-integration',
-        cacheStrategy: 'server-side-cached'
+        cacheStrategy: 'server-side-cached',
+        repositoriesFound: allProjects.length,
+        filteredRepositories: transformedProjects.length
       }
     })
 
