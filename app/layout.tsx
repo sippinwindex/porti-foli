@@ -19,17 +19,16 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-jetbrains-mono',
   display: 'swap',
-  preload: false, // Only preload if used immediately
+  preload: false,
   fallback: ['Menlo', 'Monaco', 'monospace'],
 })
 
-// Enhanced metadata with your complete brand identity
 export const metadata: Metadata = {
   title: {
     default: 'Juan Fernandez | Full-Stack Developer & 3D Web Specialist',
     template: '%s | Juan Fernandez'
   },
-  description: 'Experienced Full-Stack Developer specializing in React, Next.js, Three.js, and immersive web experiences. Based in Miami, FL. Available for freelance and full-time opportunities.',
+  description: 'Experienced Full-Stack Developer specializing in React, Next.js, Three.js, and immersive web experiences. Based in Miami, FL.',
   keywords: [
     'Full Stack Developer',
     'React Developer', 
@@ -44,109 +43,44 @@ export const metadata: Metadata = {
     'Python',
     'Flask',
     'PostgreSQL',
-    'UX/UI Design',
-    'Portfolio',
-    'Juan Fernandez',
-    'Full-Stack',
-    '3D Web Development',
-    'Interactive Design',
-    'Modern Web Technologies'
+    'Juan Fernandez'
   ],
   authors: [{ name: 'Juan Fernandez', url: 'https://github.com/sippinwindex' }],
   creator: 'Juan Fernandez',
-  publisher: 'Juan Fernandez',
-  category: 'Technology',
-  classification: 'Portfolio',
-  
-  // Enhanced OpenGraph with your brand
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: process.env.NEXT_PUBLIC_SITE_URL || 'https://juanfernandez.dev',
     title: 'Juan Fernandez | Full-Stack Developer & 3D Web Specialist',
-    description: 'Experienced Full-Stack Developer crafting immersive digital experiences with cutting-edge web technologies. Specializing in React, Next.js, Three.js, and modern development practices.',
+    description: 'Experienced Full-Stack Developer crafting immersive digital experiences with cutting-edge web technologies.',
     siteName: 'Juan Fernandez Portfolio',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Juan Fernandez - Full-Stack Developer Portfolio',
-        type: 'image/png',
-      },
-      {
-        url: '/og-image-square.png',
-        width: 600,
-        height: 600,
-        alt: 'Juan Fernandez - Full-Stack Developer',
-        type: 'image/png',
-      },
-    ],
   },
-  
-  // Enhanced Twitter/X metadata
   twitter: {
     card: 'summary_large_image',
     title: 'Juan Fernandez | Full-Stack Developer & 3D Web Specialist',
     description: 'Experienced Full-Stack Developer crafting immersive digital experiences with React, Next.js, Three.js, and modern web technologies.',
-    images: ['/og-image.png'],
     creator: '@FullyStackedUp',
-    site: '@FullyStackedUp',
   },
-  
-  // Enhanced robots configuration
   robots: {
     index: true,
     follow: true,
-    nocache: false,
     googleBot: {
       index: true,
       follow: true,
-      noimageindex: false,
       'max-video-preview': -1,
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
   },
-  
-  // Enhanced icons and manifest
   icons: {
-    icon: [
-      { url: '/favicon.ico' },
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-    ],
+    icon: '/favicon.ico',
     shortcut: '/favicon-16x16.png',
-    apple: [
-      { url: '/apple-touch-icon.png' },
-      { url: '/apple-touch-icon-152x152.png', sizes: '152x152', type: 'image/png' },
-    ],
+    apple: '/apple-touch-icon.png',
   },
-  
   manifest: '/site.webmanifest',
-  
-  // Enhanced metadata base
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://juanfernandez.dev'),
-  
-  // Additional SEO enhancements
-  alternates: {
-    canonical: '/',
-  },
-  
-  // Verification for search engines
-  verification: {
-    google: 'your-google-verification-code',
-    other: {
-      me: ['mailto:jafernandez94@gmail.com', 'https://github.com/sippinwindex'],
-    },
-  },
-  
-  // Enhanced application info
-  applicationName: 'Juan Fernandez Portfolio',
-  referrer: 'origin-when-cross-origin',
 }
 
-// Enhanced viewport export (Next.js 14+ requirement)
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -167,7 +101,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Only preload critical fonts that are used immediately */}
         <link 
           rel="preload" 
           href="/fonts/Inter-roman.latin.var.woff2" 
@@ -175,57 +108,16 @@ export default function RootLayout({
           type="font/woff2" 
           crossOrigin="anonymous" 
         />
-        
-        {/* DNS prefetch for external resources */}
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
         <link rel="dns-prefetch" href="//vercel.live" />
-        
-        {/* Enhanced structured data for better SEO */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'Person',
-              name: 'Juan Fernandez',
-              jobTitle: 'Full-Stack Developer',
-              description: 'Experienced Full-Stack Developer specializing in React, Next.js, Three.js, and immersive web experiences.',
-              url: process.env.NEXT_PUBLIC_SITE_URL || 'https://juanfernandez.dev',
-              image: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://juanfernandez.dev'}/og-image.png`,
-              sameAs: [
-                'https://github.com/sippinwindex',
-                'https://www.linkedin.com/in/juan-fernandez-fullstack/',
-                'https://twitter.com/FullyStackedUp',
-              ],
-              address: {
-                '@type': 'PostalAddress',
-                addressLocality: 'Miami',
-                addressRegion: 'FL',
-                addressCountry: 'US',
-              },
-              knowsAbout: [
-                'React',
-                'Next.js',
-                'TypeScript',
-                'Three.js',
-                'WebGL',
-                'Python',
-                'Flask',
-                'PostgreSQL',
-                'Full-Stack Development',
-                'UI/UX Design',
-              ],
-            }),
-          }}
-        />
       </head>
       <body 
-        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased overflow-x-hidden`}
+        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased overflow-x-hidden min-h-screen`}
         suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange={false}
           storageKey="portfolio-theme"
@@ -237,22 +129,25 @@ export default function RootLayout({
             {/* Skip to main content for accessibility */}
             <a
               href="#main-content"
-              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-viva-magenta text-white px-4 py-2 rounded-md z-[10001] transition-all"
+              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-gradient-to-r from-[#BE3455] to-[#D4AF37] text-white px-4 py-2 rounded-md z-[10001] transition-all font-medium"
             >
               Skip to main content
             </a>
             
-            {/* Navigation */}
+            {/* Modern Navigation */}
             <Navigation />
             
-            {/* Main Content */}
-            <main id="main-content" className="relative z-10">
+            {/* Main Content with proper spacing */}
+            <main 
+              id="main-content" 
+              className="relative z-10"
+              style={{ paddingTop: 'var(--navbar-height, 4rem)' }}
+            >
               {children}
             </main>
           </ThemeWrapper>
         </ThemeProvider>
         
-        {/* Analytics */}
         <Analytics />
       </body>
     </html>

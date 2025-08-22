@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
+import ScrollProgress from './ScrollProgress'
 import { 
   Menu, 
   X, 
@@ -16,14 +17,20 @@ import {
   Briefcase, 
   Mail,
   Github,
-  Linkedin
+  Linkedin,
+  BookOpen,
+  Gamepad2,
+  Settings
 } from 'lucide-react'
 
 const navigationItems = [
   { name: 'Home', href: '/', icon: Home },
   { name: 'About', href: '/about', icon: User },
   { name: 'Projects', href: '/projects', icon: Briefcase },
-  { name: 'Contact', href: '/contact', icon: Mail }
+  { name: 'Blog', href: '/blog', icon: BookOpen },
+  { name: 'Contact', href: '/contact', icon: Mail },
+  { name: 'Game', href: '/game', icon: Gamepad2 },
+  { name: 'Admin', href: '/admin', icon: Settings }
 ] as const
 
 const socialLinks = [
@@ -101,144 +108,161 @@ export default function Navigation() {
   }, [theme, setTheme])
 
   const getThemeIcon = () => {
-    if (!mounted) return <Monitor className="w-5 h-5" />
+    if (!mounted) return <Monitor className="w-4 h-4" />
     
     switch (theme) {
       case 'light':
-        return <Sun className="w-5 h-5 text-yellow-500" />
+        return <Sun className="w-4 h-4 text-yellow-500" />
       case 'dark':
-        return <Moon className="w-5 h-5 text-blue-400" />
+        return <Moon className="w-4 h-4 text-blue-400" />
       case 'system':
-        return <Monitor className="w-5 h-5 text-gray-500" />
+        return <Monitor className="w-4 h-4 text-gray-500" />
       default:
-        return <Monitor className="w-5 h-5" />
-    }
-  }
-
-  const getThemeLabel = () => {
-    if (!mounted) return 'Theme'
-    
-    switch (theme) {
-      case 'light':
-        return 'Light Mode'
-      case 'dark':
-        return 'Dark Mode'
-      case 'system':
-        return 'System Theme'
-      default:
-        return 'Theme'
+        return <Monitor className="w-4 h-4" />
     }
   }
 
   return (
     <>
-      {/* Fixed Navbar with proper CSS classes matching your globals.css */}
+      {/* Modern Navbar with Glass Effect */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
-        className={`navbar fixed top-0 left-0 right-0 w-full transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 ${
           scrolled
-            ? 'glass-nav-bg backdrop-blur-md border-b border-gray-200/20 dark:border-gray-700/20 shadow-lg'
-            : 'bg-transparent'
+            ? 'bg-black/80 backdrop-blur-xl border-b border-white/10'
+            : 'bg-black/60 backdrop-blur-md'
         }`}
         style={{
-          height: 'var(--navbar-height)',
-          zIndex: 'var(--z-navbar)'
+          height: 'var(--navbar-height, 4rem)',
+          zIndex: 'var(--z-navbar, 1000)'
         }}
       >
-        <div className="nav-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div className="max-w-7xl mx-auto px-6 h-full">
           <div className="flex justify-between items-center h-full">
             {/* Logo */}
             <motion.div
-              className="nav-logo"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex items-center space-x-2"
             >
               <Link 
                 href="/"
-                className="flex items-center space-x-2 font-bold text-xl text-gray-900 dark:text-white z-10 relative"
+                className="flex items-center space-x-2"
               >
-                <div className="w-8 h-8 bg-gradient-to-r from-[var(--viva-magenta)] to-[var(--lux-gold)] rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">JF</span>
+                <div className="w-8 h-8 bg-gradient-to-r from-[#BE3455] to-[#D4AF37] rounded-lg flex items-center justify-center font-bold text-white text-sm">
+                  JF
                 </div>
-                <span className="hidden sm:block gradient-text">Juan Fernandez</span>
+                <span className="hidden sm:block text-white font-semibold text-lg">
+                  Juan Fernandez
+                </span>
               </Link>
             </motion.div>
 
-            {/* Desktop Navigation */}
-            <div className="nav-items hidden md:flex items-center space-x-8">
+            {/* Center Navigation Pills */}
+            <div className="hidden lg:flex items-center bg-black/40 backdrop-blur-lg rounded-full px-2 py-2 border border-white/10">
               {navigationItems.map((item) => {
                 const isActive = pathname === item.href
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`nav-link relative px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                      isActive
-                        ? 'text-[var(--viva-magenta)] dark:text-[var(--lux-gold)]'
-                        : 'text-gray-700 dark:text-gray-300 hover:text-[var(--viva-magenta)] dark:hover:text-[var(--lux-gold)]'
-                    }`}
+                    className="relative"
                   >
-                    <span className="relative z-10 flex items-center space-x-1">
+                    <motion.div
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                        isActive
+                          ? 'text-white'
+                          : 'text-gray-300 hover:text-white'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
                       <item.icon className="w-4 h-4" />
-                      <span>{item.name}</span>
-                    </span>
-                    {isActive && (
-                      <motion.div
-                        layoutId="navbar-indicator"
-                        className="absolute inset-0 bg-[var(--viva-magenta)]/10 dark:bg-[var(--lux-gold)]/10 rounded-lg"
-                        initial={false}
-                        transition={{ duration: 0.2 }}
-                      />
-                    )}
+                      <span className="hidden xl:block">{item.name}</span>
+                      
+                      {/* Active Background */}
+                      {isActive && (
+                        <motion.div
+                          layoutId="navbar-active"
+                          className="absolute inset-0 bg-gradient-to-r from-[#BE3455] to-[#D4AF37] rounded-full -z-10"
+                          initial={false}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                        />
+                      )}
+                    </motion.div>
                   </Link>
                 )
               })}
             </div>
 
-            {/* Desktop Actions */}
-            <div className="nav-actions hidden md:flex items-center space-x-4">
+            {/* Right Actions */}
+            <div className="flex items-center space-x-3">
               {/* Social Links */}
-              {socialLinks.map((link) => (
-                <motion.a
-                  key={link.name}
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-[var(--viva-magenta)] dark:hover:text-[var(--lux-gold)] transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative z-10"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  title={link.name}
-                >
-                  <link.icon className="w-5 h-5" />
-                </motion.a>
-              ))}
+              <div className="hidden md:flex items-center space-x-1">
+                {socialLinks.map((link) => (
+                  <motion.a
+                    key={link.name}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    title={link.name}
+                  >
+                    <link.icon className="w-4 h-4" />
+                  </motion.a>
+                ))}
+              </div>
 
               {/* Theme Toggle */}
               <motion.button
                 onClick={cycleTheme}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:text-[var(--viva-magenta)] dark:hover:text-[var(--lux-gold)] transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative z-10"
+                className="p-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-white/10"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                title={getThemeLabel()}
                 disabled={!mounted}
               >
                 {getThemeIcon()}
               </motion.button>
-            </div>
 
-            {/* Mobile Menu Button */}
-            <motion.button
-              className="mobile-menu-toggle md:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-[var(--viva-magenta)] dark:hover:text-[var(--lux-gold)] transition-colors relative"
-              onClick={toggleMobileMenu}
-              whileTap={{ scale: 0.9 }}
-              aria-label="Toggle mobile menu"
-              style={{ zIndex: 60 }}
-            >
-              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </motion.button>
+              {/* Contact Button */}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="hidden md:block"
+              >
+                <Link
+                  href="/contact"
+                  className="flex items-center space-x-2 bg-gradient-to-r from-[#BE3455] to-[#D4AF37] text-white px-4 py-2 rounded-full text-sm font-medium hover:shadow-lg transition-all"
+                >
+                  <Mail className="w-4 h-4" />
+                  <span>Contact</span>
+                </Link>
+              </motion.div>
+
+              {/* Mobile Menu Button */}
+              <motion.button
+                className="lg:hidden p-2 text-gray-300 hover:text-white transition-colors"
+                onClick={toggleMobileMenu}
+                whileTap={{ scale: 0.9 }}
+                aria-label="Toggle mobile menu"
+              >
+                {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </motion.button>
+            </div>
           </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <ScrollProgress 
+            height="2px"
+            color="linear-gradient(90deg, #BE3455 0%, #D4AF37 50%, #008080 100%)"
+            smooth={true}
+          />
         </div>
       </motion.nav>
 
@@ -251,7 +275,7 @@ export default function Navigation() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="mobile-menu-overlay fixed inset-0 bg-black/20 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
               onClick={() => setIsOpen(false)}
             />
 
@@ -261,17 +285,17 @@ export default function Navigation() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-              className="mobile-menu-panel fixed top-0 right-0 h-full w-80 glass-card shadow-xl md:hidden"
+              className="fixed top-0 right-0 h-full w-80 bg-black/90 backdrop-blur-xl shadow-xl z-50 lg:hidden border-l border-white/10"
             >
               <div className="flex flex-col h-full">
                 {/* Mobile Menu Header */}
-                <div className="menu-header flex items-center justify-between p-6 border-b border-gray-200/50 dark:border-gray-700/50">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                  <h2 className="text-lg font-semibold text-white">
                     Navigation
                   </h2>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 text-gray-500 hover:text-[var(--viva-magenta)] dark:text-gray-400 dark:hover:text-[var(--lux-gold)] transition-colors"
+                    className="p-2 text-gray-300 hover:text-white transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -285,10 +309,10 @@ export default function Navigation() {
                       <Link
                         key={item.name}
                         href={item.href}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
                           isActive
-                            ? 'bg-[var(--viva-magenta)]/10 dark:bg-[var(--lux-gold)]/10 text-[var(--viva-magenta)] dark:text-[var(--lux-gold)]'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
+                            ? 'bg-gradient-to-r from-[#BE3455] to-[#D4AF37] text-white'
+                            : 'text-gray-300 hover:bg-white/10 hover:text-white'
                         }`}
                         onClick={() => setIsOpen(false)}
                       >
@@ -298,7 +322,7 @@ export default function Navigation() {
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="ml-auto w-2 h-2 bg-[var(--viva-magenta)] dark:bg-[var(--lux-gold)] rounded-full"
+                            className="ml-auto w-2 h-2 bg-white rounded-full"
                           />
                         )}
                       </Link>
@@ -307,19 +331,19 @@ export default function Navigation() {
                 </div>
 
                 {/* Mobile Actions */}
-                <div className="px-6 py-4 border-t border-gray-200/50 dark:border-gray-700/50 space-y-4">
+                <div className="px-6 py-4 border-t border-white/10 space-y-4">
                   {/* Theme Toggle */}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <span className="text-sm font-medium text-gray-300">
                       Theme
                     </span>
                     <button
                       onClick={cycleTheme}
                       disabled={!mounted}
-                      className="flex items-center space-x-2 px-3 py-2 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg transition-colors hover:bg-[var(--viva-magenta)]/10 dark:hover:bg-[var(--lux-gold)]/10 disabled:opacity-50"
+                      className="flex items-center space-x-2 px-3 py-2 bg-white/10 rounded-lg transition-colors hover:bg-white/20 disabled:opacity-50"
                     >
                       {getThemeIcon()}
-                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                      <span className="text-sm text-gray-300">
                         {mounted ? (theme ? theme.charAt(0).toUpperCase() + theme.slice(1) : 'System') : 'Loading...'}
                       </span>
                     </button>
@@ -333,7 +357,7 @@ export default function Navigation() {
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-3 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-[var(--viva-magenta)] dark:hover:text-[var(--lux-gold)] transition-colors"
+                        className="p-3 bg-white/10 rounded-xl text-gray-300 hover:text-white hover:bg-white/20 transition-colors"
                       >
                         <link.icon className="w-5 h-5" />
                       </a>
