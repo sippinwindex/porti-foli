@@ -12,7 +12,7 @@ interface ScrollProgressProps {
 export default function ScrollProgress({ 
   className = '',
   color = 'linear-gradient(90deg, #BE3455 0%, #D4AF37 50%, #008080 100%)',
-  height = '3px',
+  height = '2px',
   smooth = true
 }: ScrollProgressProps) {
   const [scrollProgress, setScrollProgress] = useState(0)
@@ -100,60 +100,5 @@ export default function ScrollProgress({
         }}
       />
     </div>
-  )
-}
-
-// Alternative CSS-only version for better performance
-export function ScrollProgressCSS({ 
-  className = '',
-  height = '3px'
-}: { 
-  className?: string
-  height?: string 
-}) {
-  useEffect(() => {
-    const updateProgress = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-      const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight
-      const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) : 0
-      
-      document.documentElement.style.setProperty('--scroll-progress', progress.toString())
-    }
-
-    const handleScroll = () => {
-      requestAnimationFrame(updateProgress)
-    }
-
-    updateProgress()
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    window.addEventListener('resize', updateProgress, { passive: true })
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('resize', updateProgress)
-    }
-  }, [])
-
-  return (
-    <div
-      className={`scroll-progress-css ${className}`}
-      style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: height,
-        zIndex: 1001,
-        pointerEvents: 'none',
-        userSelect: 'none',
-        background: 'linear-gradient(90deg, #BE3455 0%, #D4AF37 50%, #008080 100%)',
-        transform: 'scaleX(var(--scroll-progress, 0))',
-        transformOrigin: 'left center',
-        transition: 'transform 0.1s ease',
-        boxShadow: '0 0 8px rgba(190, 52, 85, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2)',
-        willChange: 'transform',
-        contain: 'layout style paint'
-      }}
-    />
   )
 }

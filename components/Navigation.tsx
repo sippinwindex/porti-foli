@@ -129,58 +129,50 @@ export default function Navigation() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
-        className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 ${
-          scrolled
-            ? 'bg-black/80 backdrop-blur-xl border-b border-white/10'
-            : 'bg-black/60 backdrop-blur-md'
-        }`}
-        style={{
-          height: 'var(--navbar-height, 4rem)',
-          zIndex: 'var(--z-navbar, 1000)'
-        }}
+        className={`modern-navbar ${scrolled ? 'scrolled' : ''}`}
       >
-        <div className="max-w-7xl mx-auto px-6 h-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex justify-between items-center h-full">
             {/* Logo */}
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex items-center space-x-2"
+              className="navbar-logo"
             >
               <Link 
                 href="/"
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-3"
               >
-                <div className="w-8 h-8 bg-gradient-to-r from-[#BE3455] to-[#D4AF37] rounded-lg flex items-center justify-center font-bold text-white text-sm">
+                <div className="logo-icon">
                   JF
                 </div>
-                <span className="hidden sm:block text-white font-semibold text-lg">
+                <span className="logo-text hidden sm:block">
                   Juan Fernandez
                 </span>
               </Link>
             </motion.div>
 
-            {/* Center Navigation Pills */}
-            <div className="hidden lg:flex items-center bg-black/40 backdrop-blur-lg rounded-full px-2 py-2 border border-white/10">
+            {/* Center Navigation Pills - FIXED: Show on desktop */}
+            <div className="nav-pills-container hidden lg:flex">
               {navigationItems.map((item) => {
                 const isActive = pathname === item.href
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className="relative"
+                    className="nav-pill relative"
                   >
                     <motion.div
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                        isActive
-                          ? 'text-white'
-                          : 'text-gray-300 hover:text-white'
+                      className={`flex items-center space-x-2 ${
+                        isActive ? 'active' : ''
                       }`}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <item.icon className="w-4 h-4" />
-                      <span className="hidden xl:block">{item.name}</span>
+                      <item.icon className="w-4 h-4 flex-shrink-0" />
+                      <span className="hidden xl:block whitespace-nowrap">
+                        {item.name}
+                      </span>
                       
                       {/* Active Background */}
                       {isActive && (
@@ -197,17 +189,17 @@ export default function Navigation() {
               })}
             </div>
 
-            {/* Right Actions */}
-            <div className="flex items-center space-x-3">
-              {/* Social Links */}
-              <div className="hidden md:flex items-center space-x-1">
+            {/* Right Actions - FIXED: Proper spacing */}
+            <div className="flex items-center space-x-2">
+              {/* Social Links - FIXED: Better spacing */}
+              <div className="hidden md:flex items-center space-x-2">
                 {socialLinks.map((link) => (
                   <motion.a
                     key={link.name}
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+                    className="social-link"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     title={link.name}
@@ -217,18 +209,19 @@ export default function Navigation() {
                 ))}
               </div>
 
-              {/* Theme Toggle */}
+              {/* Theme Toggle - FIXED: Proper spacing */}
               <motion.button
                 onClick={cycleTheme}
-                className="p-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-white/10"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                className="theme-toggle"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 disabled={!mounted}
+                title={`Current theme: ${theme}`}
               >
                 {getThemeIcon()}
               </motion.button>
 
-              {/* Contact Button */}
+              {/* Contact Button - FIXED: Better responsive behavior */}
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -236,37 +229,59 @@ export default function Navigation() {
               >
                 <Link
                   href="/contact"
-                  className="flex items-center space-x-2 bg-gradient-to-r from-[#BE3455] to-[#D4AF37] text-white px-4 py-2 rounded-full text-sm font-medium hover:shadow-lg transition-all"
+                  className="contact-button"
                 >
                   <Mail className="w-4 h-4" />
                   <span>Contact</span>
                 </Link>
               </motion.div>
 
-              {/* Mobile Menu Button */}
+              {/* Mobile Menu Button - FIXED: Better styling */}
               <motion.button
-                className="lg:hidden p-2 text-gray-300 hover:text-white transition-colors"
+                className="mobile-menu-button lg:hidden"
                 onClick={toggleMobileMenu}
                 whileTap={{ scale: 0.9 }}
                 aria-label="Toggle mobile menu"
+                aria-expanded={isOpen}
               >
-                {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                <AnimatePresence mode="wait" initial={false}>
+                  {isOpen ? (
+                    <motion.div
+                      key="close"
+                      initial={{ opacity: 0, rotate: -90 }}
+                      animate={{ opacity: 1, rotate: 0 }}
+                      exit={{ opacity: 0, rotate: 90 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <X className="w-5 h-5" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="menu"
+                      initial={{ opacity: 0, rotate: 90 }}
+                      animate={{ opacity: 1, rotate: 0 }}
+                      exit={{ opacity: 0, rotate: -90 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Menu className="w-5 h-5" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.button>
             </div>
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <ScrollProgress 
-            height="2px"
-            color="linear-gradient(90deg, #BE3455 0%, #D4AF37 50%, #008080 100%)"
-            smooth={true}
-          />
-        </div>
+        {/* FIXED: Progress Bar - Proper positioning */}
+        <ScrollProgress 
+          className="absolute bottom-0 left-0 right-0 z-10"
+          height="2px"
+          color="linear-gradient(90deg, #BE3455 0%, #D4AF37 50%, #008080 100%)"
+          smooth={true}
+        />
       </motion.nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - FIXED: Better animations and functionality */}
       <AnimatePresence>
         {isOpen && (
           <>
@@ -275,7 +290,7 @@ export default function Navigation() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+              className="mobile-menu-overlay"
               onClick={() => setIsOpen(false)}
             />
 
@@ -284,18 +299,18 @@ export default function Navigation() {
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-80 bg-black/90 backdrop-blur-xl shadow-xl z-50 lg:hidden border-l border-white/10"
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="mobile-menu-panel"
             >
               <div className="flex flex-col h-full">
                 {/* Mobile Menu Header */}
-                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                <div className="flex items-center justify-between p-6 border-b border-white/10" style={{ marginTop: 'var(--navbar-height)' }}>
                   <h2 className="text-lg font-semibold text-white">
                     Navigation
                   </h2>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 text-gray-300 hover:text-white transition-colors"
+                    className="p-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-white/10"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -303,29 +318,31 @@ export default function Navigation() {
 
                 {/* Mobile Navigation Items */}
                 <div className="flex-1 px-6 py-4 space-y-2">
-                  {navigationItems.map((item) => {
+                  {navigationItems.map((item, index) => {
                     const isActive = pathname === item.href
                     return (
-                      <Link
+                      <motion.div
                         key={item.name}
-                        href={item.href}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
-                          isActive
-                            ? 'bg-gradient-to-r from-[#BE3455] to-[#D4AF37] text-white'
-                            : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                        }`}
-                        onClick={() => setIsOpen(false)}
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
                       >
-                        <item.icon className="w-5 h-5" />
-                        <span className="font-medium">{item.name}</span>
-                        {isActive && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="ml-auto w-2 h-2 bg-white rounded-full"
-                          />
-                        )}
-                      </Link>
+                        <Link
+                          href={item.href}
+                          className={`mobile-nav-item ${isActive ? 'active' : ''}`}
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <item.icon className="w-5 h-5 flex-shrink-0" />
+                          <span className="font-medium">{item.name}</span>
+                          {isActive && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="ml-auto w-2 h-2 bg-white rounded-full"
+                            />
+                          )}
+                        </Link>
+                      </motion.div>
                     )
                   })}
                 </div>
@@ -352,16 +369,30 @@ export default function Navigation() {
                   {/* Social Links */}
                   <div className="flex items-center justify-center space-x-4 pt-4">
                     {socialLinks.map((link) => (
-                      <a
+                      <motion.a
                         key={link.name}
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-3 bg-white/10 rounded-xl text-gray-300 hover:text-white hover:bg-white/20 transition-colors"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                       >
                         <link.icon className="w-5 h-5" />
-                      </a>
+                      </motion.a>
                     ))}
+                  </div>
+
+                  {/* Mobile Contact Button */}
+                  <div className="pt-4">
+                    <Link
+                      href="/contact"
+                      className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-[#BE3455] to-[#D4AF37] text-white px-4 py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Mail className="w-4 h-4" />
+                      <span>Contact Me</span>
+                    </Link>
                   </div>
                 </div>
               </div>

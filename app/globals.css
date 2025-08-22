@@ -64,7 +64,7 @@
   --ring: 59 130 246;
   --radius: 0.5rem;
 
-  /* Enhanced brand colors from Document 1 */
+  /* Enhanced brand colors */
   --viva-magenta: #BE3455;
   --lux-gold: #D4AF37;
   --lux-sage: #98A869;
@@ -80,7 +80,7 @@
   --lux-sage-rgb: 152, 168, 105;
   --lux-teal-rgb: 0, 128, 128;
 
-  /* Enhanced navbar variables - Modern styles */
+  /* FIXED: Enhanced navbar variables */
   --navbar-height: 4rem;
   --navbar-glass-bg: rgba(0, 0, 0, 0.6);
   --navbar-glass-bg-scrolled: rgba(0, 0, 0, 0.8);
@@ -192,282 +192,294 @@
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-/* Responsive navbar heights */
-@media (max-width: 1024px) {
-  :root {
-    --navbar-height: 4rem;
-    --progress-bar-height: 2px;
-  }
-}
-
-@media (max-width: 768px) {
-  :root {
-    --navbar-height: 3.5rem;
-    --progress-bar-height: 2px;
-  }
-}
-
 /* ===================================================================
-   MODERN NAVBAR STYLES - MATCHING SCREENSHOT
+   FIXED MODERN NAVBAR STYLES - COMPLETE INTEGRATION
    =================================================================== */
 
-/* Modern navbar container */
+/* FIXED: Modern navbar container */
 .modern-navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  height: var(--navbar-height);
-  z-index: 1000;
-  background: var(--navbar-glass-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid var(--navbar-border);
-  transition: all 0.3s ease;
-  will-change: background-color, backdrop-filter;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: var(--navbar-height) !important;
+  z-index: var(--z-navbar) !important;
+  background: var(--navbar-glass-bg) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border-bottom: 1px solid var(--navbar-border) !important;
+  transition: all 0.3s ease !important;
+  will-change: background-color, backdrop-filter !important;
+  contain: layout style paint !important;
 }
 
 .modern-navbar.scrolled {
-  background: var(--navbar-glass-bg-scrolled);
-  backdrop-filter: blur(24px) saturate(200%);
+  background: var(--navbar-glass-bg-scrolled) !important;
+  backdrop-filter: blur(24px) saturate(200%) !important;
   box-shadow: 
     0 4px 32px rgba(0, 0, 0, 0.2),
-    0 1px 0 rgba(255, 255, 255, 0.05) inset;
+    0 1px 0 rgba(255, 255, 255, 0.05) inset !important;
 }
 
-/* Navigation pills container */
+/* FIXED: Navigation pills container - proper display */
 .nav-pills-container {
-  display: flex;
-  align-items: center;
-  background: var(--navbar-pill-bg);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--navbar-pill-border);
-  border-radius: 9999px;
-  padding: 0.5rem;
+  display: flex !important;
+  align-items: center !important;
+  background: var(--navbar-pill-bg) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--navbar-pill-border) !important;
+  border-radius: 9999px !important;
+  padding: 0.375rem !important;
+  gap: 0.25rem !important;
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.12),
-    0 1px 0 rgba(255, 255, 255, 0.05) inset;
+    0 1px 0 rgba(255, 255, 255, 0.05) inset !important;
 }
 
-/* Individual navigation pills */
+/* FIXED: Individual navigation pills */
 .nav-pill {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--navbar-text-muted);
-  text-decoration: none;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  overflow: hidden;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 0.625rem 0.875rem !important;
+  border-radius: 9999px !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: var(--navbar-text-muted) !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+  min-width: fit-content !important;
+  pointer-events: auto !important;
+  z-index: 10 !important;
+  user-select: none !important;
 }
 
 .nav-pill:hover {
-  color: var(--navbar-text-hover);
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--navbar-text-hover) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 
-.nav-pill.active {
-  color: white;
-  background: var(--navbar-active-bg);
+.nav-pill.active,
+.nav-pill .active {
+  color: white !important;
+  background: var(--navbar-active-bg) !important;
   box-shadow: 
     0 4px 16px rgba(190, 52, 85, 0.3),
-    0 1px 0 rgba(255, 255, 255, 0.1) inset;
+    0 1px 0 rgba(255, 255, 255, 0.1) inset !important;
 }
 
-/* Navigation pill icons */
+/* FIXED: Navigation pill icons */
 .nav-pill svg {
-  width: 1rem;
-  height: 1rem;
-  flex-shrink: 0;
+  width: 1rem !important;
+  height: 1rem !important;
+  flex-shrink: 0 !important;
 }
 
-/* Contact button styling */
+/* FIXED: Contact button styling */
 .contact-button {
-  background: var(--navbar-active-bg);
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s ease;
+  background: var(--navbar-active-bg) !important;
+  color: white !important;
+  padding: 0.625rem 1.25rem !important;
+  border-radius: 9999px !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  transition: all 0.2s ease !important;
   box-shadow: 
     0 4px 16px rgba(190, 52, 85, 0.3),
-    0 1px 0 rgba(255, 255, 255, 0.1) inset;
+    0 1px 0 rgba(255, 255, 255, 0.1) inset !important;
+  white-space: nowrap !important;
+  pointer-events: auto !important;
+  z-index: 10 !important;
 }
 
 .contact-button:hover {
-  transform: translateY(-1px);
+  transform: translateY(-1px) !important;
   box-shadow: 
     0 6px 20px rgba(190, 52, 85, 0.4),
-    0 1px 0 rgba(255, 255, 255, 0.1) inset;
+    0 1px 0 rgba(255, 255, 255, 0.1) inset !important;
 }
 
-/* Social links styling */
+/* FIXED: Social links styling */
 .social-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.5rem;
-  color: var(--navbar-text-muted);
-  transition: all 0.2s ease;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  border-radius: 0.5rem !important;
+  color: var(--navbar-text-muted) !important;
+  transition: all 0.2s ease !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  text-decoration: none !important;
+  pointer-events: auto !important;
+  z-index: 10 !important;
+  user-select: none !important;
 }
 
 .social-link:hover {
-  color: var(--navbar-text-hover);
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
+  color: var(--navbar-text-hover) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: translateY(-1px) !important;
 }
 
-/* Theme toggle styling */
+/* FIXED: Theme toggle styling */
 .theme-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.5rem;
-  color: var(--navbar-text-muted);
-  transition: all 0.2s ease;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  cursor: pointer;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  border-radius: 0.5rem !important;
+  color: var(--navbar-text-muted) !important;
+  transition: all 0.2s ease !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  z-index: 10 !important;
+  user-select: none !important;
 }
 
 .theme-toggle:hover {
-  color: var(--navbar-text-hover);
-  background: rgba(255, 255, 255, 0.1);
-  transform: scale(1.05);
+  color: var(--navbar-text-hover) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: scale(1.05) !important;
 }
 
 .theme-toggle:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
 }
 
-/* Mobile menu button */
+/* FIXED: Mobile menu button */
 .mobile-menu-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.5rem;
-  color: var(--navbar-text-muted);
-  transition: all 0.2s ease;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  cursor: pointer;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  border-radius: 0.5rem !important;
+  color: var(--navbar-text-muted) !important;
+  transition: all 0.2s ease !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  z-index: 10 !important;
+  user-select: none !important;
 }
 
 .mobile-menu-button:hover {
-  color: var(--navbar-text-hover);
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--navbar-text-hover) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Logo styling */
+/* FIXED: Logo styling */
 .navbar-logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  text-decoration: none;
-  transition: all 0.2s ease;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+  pointer-events: auto !important;
+  z-index: 10 !important;
 }
 
 .navbar-logo:hover {
-  transform: scale(1.02);
+  transform: scale(1.02) !important;
 }
 
 .logo-icon {
-  width: 2rem;
-  height: 2rem;
-  background: linear-gradient(135deg, #BE3455 0%, #D4AF37 100%);
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.875rem;
-  color: white;
+  width: 2rem !important;
+  height: 2rem !important;
+  background: linear-gradient(135deg, #BE3455 0%, #D4AF37 100%) !important;
+  border-radius: 0.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  color: white !important;
   box-shadow: 
     0 4px 16px rgba(190, 52, 85, 0.2),
-    0 1px 0 rgba(255, 255, 255, 0.1) inset;
+    0 1px 0 rgba(255, 255, 255, 0.1) inset !important;
 }
 
 .logo-text {
-  color: white;
-  font-weight: 600;
-  font-size: 1.125rem;
-  letter-spacing: -0.025em;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 1.125rem !important;
+  letter-spacing: -0.025em !important;
 }
 
-/* Mobile menu styles */
+/* FIXED: Mobile menu styles */
 .mobile-menu-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: 999;
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+  z-index: 999 !important;
+  pointer-events: auto !important;
 }
 
 .mobile-menu-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 100vh;
-  width: 20rem;
-  background: rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(24px);
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 1000;
-  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.3);
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  height: 100vh !important;
+  width: 20rem !important;
+  background: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(24px) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+  z-index: 1000 !important;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.3) !important;
+  pointer-events: auto !important;
 }
 
-/* Mobile navigation items */
+/* FIXED: Mobile navigation items */
 .mobile-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  margin: 0.25rem;
-  border-radius: 0.75rem;
-  color: var(--navbar-text-muted);
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  padding: 0.75rem 1rem !important;
+  margin: 0.25rem !important;
+  border-radius: 0.75rem !important;
+  color: var(--navbar-text-muted) !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
 }
 
 .mobile-nav-item:hover {
-  color: var(--navbar-text-hover);
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--navbar-text-hover) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 
 .mobile-nav-item.active {
-  color: white;
-  background: var(--navbar-active-bg);
-  box-shadow: 0 4px 16px rgba(190, 52, 85, 0.3);
+  color: white !important;
+  background: var(--navbar-active-bg) !important;
+  box-shadow: 0 4px 16px rgba(190, 52, 85, 0.3) !important;
 }
 
 /* ===================================================================
-   NAVBAR POSITIONING FIXES - INTEGRATED FROM DOCUMENT 1
+   NAVBAR POSITIONING FIXES - ABSOLUTE POSITIONING CONTROL
    =================================================================== */
 
-/* Force proper navbar positioning */
+/* Force proper navbar positioning for all possible selectors */
 nav,
 .navbar,
-header nav {
+header nav,
+.modern-navbar,
+.fixed-navbar {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -481,7 +493,8 @@ header nav {
 
 /* Ensure navbar content is properly aligned */
 nav > div,
-.navbar > div {
+.navbar > div,
+.modern-navbar > div {
   height: 100% !important;
   display: flex !important;
   align-items: center !important;
@@ -492,30 +505,13 @@ nav > div,
   padding: 0 1rem !important;
 }
 
-@media (min-width: 640px) {
-  nav > div,
-  .navbar > div {
-    padding: 0 1.5rem !important;
-  }
-}
-
-@media (min-width: 1024px) {
-  nav > div,
-  .navbar > div {
-    padding: 0 2rem !important;
-    max-width: 1280px !important;
-  }
-  
-  .nav-pills-container {
-    display: flex;
-  }
-}
-
 /* Fix navbar links and buttons positioning */
 nav a,
 nav button,
 .navbar a,
-.navbar button {
+.navbar button,
+.modern-navbar a,
+.modern-navbar button {
   position: relative !important;
   z-index: 2 !important;
   pointer-events: auto !important;
@@ -527,30 +523,10 @@ nav button,
 /* Fix mobile menu positioning */
 nav button[aria-label*="menu"],
 .navbar button[aria-label*="menu"],
-.mobile-menu-toggle {
+.mobile-menu-toggle,
+.mobile-menu-button {
   position: relative !important;
   z-index: 60 !important;
-  pointer-events: auto !important;
-}
-
-/* Mobile menu overlay */
-.mobile-menu-overlay {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  z-index: 40 !important;
-  pointer-events: auto !important;
-}
-
-/* Mobile menu panel */
-.mobile-menu-panel {
-  position: fixed !important;
-  top: 0 !important;
-  right: 0 !important;
-  height: 100vh !important;
-  z-index: 50 !important;
   pointer-events: auto !important;
 }
 
@@ -598,35 +574,77 @@ body.mobile-menu-open {
    ENHANCED PROGRESS BAR
    =================================================================== */
 
-/* Scroll progress bar */
+/* FIXED: Scroll progress bar */
 .scroll-progress {
-  position: fixed !important;
-  top: var(--navbar-height) !important;
+  position: absolute !important;
+  bottom: 0 !important;
   left: 0 !important;
   right: 0 !important;
   width: 100% !important;
   height: var(--progress-bar-height) !important;
-  z-index: var(--z-progress-bar) !important;
-  transform: scaleX(0) !important;
-  transform-origin: left center !important;
-  transition: transform 0.1s ease !important;
-  background: linear-gradient(90deg, 
-    var(--viva-magenta) 0%, 
-    var(--lux-gold) 50%, 
-    var(--lux-teal) 100%
-  ) !important;
-  border-radius: 0 0 2px 2px !important;
+  z-index: calc(var(--z-navbar) + 1) !important;
   pointer-events: none !important;
-  will-change: transform !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  overflow: hidden !important;
 }
 
 .scroll-progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #BE3455 0%, #D4AF37 50%, #008080 100%);
-  transform-origin: left center;
+  height: 100% !important;
+  width: 0% !important;
+  background: linear-gradient(90deg, #BE3455 0%, #D4AF37 50%, #008080 100%) !important;
+  transition: width 0.1s ease !important;
   box-shadow: 
     0 0 8px rgba(190, 52, 85, 0.4),
-    0 1px 3px rgba(0, 0, 0, 0.2);
+    0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ===================================================================
+   RESPONSIVE DESIGN WITH NAVBAR FIXES
+   =================================================================== */
+
+/* Responsive navbar heights */
+@media (max-width: 1024px) {
+  :root {
+    --navbar-height: 4rem;
+    --progress-bar-height: 2px;
+  }
+  
+  nav > div,
+  .navbar > div,
+  .modern-navbar > div {
+    padding: 0 1.5rem !important;
+  }
+  
+  .nav-pills-container {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --navbar-height: 3.5rem;
+    --progress-bar-height: 2px;
+  }
+  
+  nav > div,
+  .navbar > div,
+  .modern-navbar > div {
+    padding: 0 1rem !important;
+  }
+  
+  .navbar-logo .logo-text {
+    display: none !important;
+  }
+  
+  .social-link,
+  .theme-toggle {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+  
+  .contact-button {
+    display: none !important;
+  }
 }
 
 /* ===================================================================
@@ -842,41 +860,6 @@ code, pre {
 }
 
 /* ===================================================================
-   ENHANCED NAVBAR STYLES WITH GLASS MORPHISM
-   =================================================================== */
-
-nav,
-.navbar {
-  /* Glass morphism navbar styling */
-  background: var(--glass-nav-bg) !important;
-  backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
-  border-bottom: 1px solid var(--glass-nav-border) !important;
-  
-  /* Performance optimizations */
-  will-change: background-color, backdrop-filter !important;
-  backface-visibility: hidden !important;
-  transform: translateZ(0) !important;
-  
-  transition: var(--theme-transition) !important;
-  contain: layout style paint !important;
-}
-
-.nav-link {
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.5rem !important;
-  padding: 0.75rem 1rem !important;
-  border-radius: 0.75rem !important;
-  transition: all var(--animation-normal) ease !important;
-  color: rgb(var(--foreground)) !important;
-  text-decoration: none !important;
-}
-
-.nav-link:hover {
-  color: var(--viva-magenta) !important;
-}
-
-/* ===================================================================
    ENHANCED COMPONENTS WITH 3D EFFECTS
    =================================================================== */
 
@@ -920,72 +903,6 @@ nav,
   transform: scale(1.02) translateY(-4px) !important;
   box-shadow: var(--shadow-xl) !important;
   border-color: rgba(var(--viva-magenta-rgb), 0.3) !important;
-}
-
-.contact-card-enhanced {
-  background: var(--glass-card-bg) !important;
-  backdrop-filter: var(--glass-blur) var(--glass-saturation) !important;
-  border: 1px solid var(--glass-border) !important;
-  border-radius: 1.5rem !important;
-  box-shadow: var(--shadow-xl) !important;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-  position: relative !important;
-  overflow: hidden !important;
-  padding: 2rem !important;
-  contain: layout style paint !important;
-}
-
-.contact-card-enhanced:hover {
-  transform: translateY(-8px) scale(1.02) !important;
-  box-shadow: 
-    var(--shadow-2xl),
-    0 0 40px rgba(var(--viva-magenta-rgb), 0.15) !important;
-  border-color: rgba(var(--viva-magenta-rgb), 0.3) !important;
-}
-
-.status-dot-enhanced {
-  position: absolute !important;
-  top: 1rem !important;
-  right: 1rem !important;
-  width: 12px !important;
-  height: 12px !important;
-  background: #10b981 !important;
-  border-radius: 50% !important;
-  border: 2px solid rgb(var(--background)) !important;
-  box-shadow: 
-    0 0 0 3px rgba(16, 185, 129, 0.2),
-    0 0 15px rgba(16, 185, 129, 0.6) !important;
-  animation: status-pulse-enhanced 2s ease-in-out infinite !important;
-}
-
-/* 3D Card Effects */
-.card-3d-enhanced {
-  transform-style: preserve-3d;
-  transition: transform var(--animation-normal) cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  backface-visibility: hidden;
-  will-change: transform;
-}
-
-.card-3d-enhanced:hover {
-  transform: rotateY(5deg) rotateX(3deg) translateZ(20px);
-}
-
-.hero-3d-card {
-  transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  backdrop-filter: var(--glass-blur) var(--glass-saturation);
-  background: var(--glass-card-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-2xl);
-  backface-visibility: hidden;
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-.hero-3d-card:hover {
-  transform: rotateY(10deg) rotateX(5deg) translateZ(20px);
-  box-shadow: var(--depth-shadow), 
-              0 0 40px rgba(var(--viva-magenta-rgb), 0.2);
 }
 
 /* Enhanced glass morphism */
@@ -1056,28 +973,6 @@ nav,
   animation: gradient-shift 4s ease-in-out infinite;
 }
 
-.gradient-text-3d {
-  background: linear-gradient(135deg, var(--webgl-primary), var(--webgl-secondary), var(--viva-magenta));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradientShift 8s ease-in-out infinite;
-  background-size: 200% 100%;
-}
-
-/* Hero title with enhanced styling */
-.hero-title {
-  font-weight: bold;
-  letter-spacing: -0.025em;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  font-feature-settings: normal;
-  font-variation-settings: normal;
-}
-
-.dark .hero-title {
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
 /* Tech Badges */
 .tech-badge {
   display: inline-flex;
@@ -1137,32 +1032,6 @@ nav,
   50% { background-position: 100% 50%; }
 }
 
-@keyframes gradientShift {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-@keyframes status-pulse-enhanced {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-    box-shadow: 
-      0 0 0 3px rgba(16, 185, 129, 0.2),
-      0 0 15px rgba(16, 185, 129, 0.6);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.1);
-    box-shadow: 
-      0 0 0 6px rgba(16, 185, 129, 0.1),
-      0 0 25px rgba(16, 185, 129, 0.8);
-  }
-}
-
 @keyframes status-pulse {
   0%, 100% {
     opacity: 1;
@@ -1205,121 +1074,6 @@ nav,
   }
 }
 
-/* Enhanced utility classes with 3D support */
-.preserve-3d {
-  transform-style: preserve-3d;
-}
-
-.perspective-1000 {
-  perspective: 1000px;
-}
-
-.perspective-1500 {
-  perspective: 1500px;
-}
-
-.perspective-2000 {
-  perspective: 2000px;
-}
-
-.backface-hidden {
-  backface-visibility: hidden;
-}
-
-.transform-gpu {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-/* Interactive Utilities */
-.hover-lift {
-  transition: transform var(--animation-normal) var(--animation-spring);
-}
-
-.hover-lift:hover {
-  transform: var(--hover-lift);
-}
-
-.hover-scale {
-  transition: transform var(--animation-normal) var(--animation-spring);
-}
-
-.hover-scale:hover {
-  transform: var(--hover-scale);
-}
-
-.hover-3d {
-  transition: transform var(--animation-slow) var(--animation-spring);
-  transform-style: preserve-3d;
-}
-
-.hover-3d:hover {
-  transform: rotateY(5deg) rotateX(3deg) translateZ(20px);
-}
-
-/* Focus Utilities */
-.focus-ring {
-  transition: box-shadow var(--animation-normal) ease;
-}
-
-.focus-ring:focus-visible {
-  box-shadow: var(--focus-ring);
-  outline: none;
-}
-
-/* Theme-aware Utilities */
-.theme-bg {
-  background: rgb(var(--background));
-}
-
-.theme-fg {
-  color: rgb(var(--foreground));
-}
-
-.theme-border {
-  border-color: rgb(var(--border));
-}
-
-.theme-card {
-  background: rgb(var(--card));
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-out;
-}
-
-.animate-slideIn {
-  animation: slideIn 0.5s ease-out;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* ===================================================================
-   FRAMER MOTION COMPATIBILITY
-   =================================================================== */
-
-/* Fix for Framer Motion navbar animations */
-nav[style*="transform"],
-.navbar[style*="transform"] {
-  transform-origin: top center !important;
-}
-
-/* Ensure transforms don't break positioning */
-nav[style*="y:"],
-.navbar[style*="y:"] {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-}
-
-/* Animation for layout ID transitions */
-[data-layout-id] {
-  transition: all 0.3s ease;
-}
-
 /* ===================================================================
    LAYOUT ENHANCEMENTS
    =================================================================== */
@@ -1349,131 +1103,42 @@ nav[style*="y:"],
 .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
 .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
 
-/* ===================================================================
-   RESPONSIVE DESIGN WITH NAVBAR FIXES
-   =================================================================== */
-
-@media (max-width: 1024px) {
-  nav {
-    padding: 0 1.5rem !important;
-  }
-  
-  .container {
-    padding: 0 1.5rem;
-  }
-  
-  .nav-pills-container {
-    display: none;
-  }
+/* Enhanced utility classes */
+.hover-lift {
+  transition: transform var(--animation-normal) var(--animation-spring);
 }
 
-@media (max-width: 768px) {
-  h1 {
-    font-size: 2.5rem;
-  }
-  
-  h2 {
-    font-size: 2rem;
-  }
-  
-  nav {
-    padding: 0 1rem !important;
-  }
-  
-  .container {
-    padding: 0 1rem;
-  }
-  
-  .card {
-    padding: 1rem;
-  }
-  
-  .grid {
-    gap: 1.5rem;
-  }
-  
-  .tech-badge {
-    font-size: 0.6875rem;
-    padding: 0.25rem 0.5rem;
-  }
-  
-  /* Mobile particle field optimization */
-  .particle-field-container {
-    opacity: 0.4 !important;
-  }
-  
-  /* Disable 3D effects on mobile for performance */
-  .hero-3d-card:hover,
-  .card-3d-enhanced:hover {
-    transform: translateY(-5px) scale(1.01);
-  }
-  
-  .glass-card {
-    backdrop-filter: none !important;
-    background: rgba(255, 255, 255, 0.95) !important;
-  }
-  
-  .dark .glass-card {
-    background: rgba(31, 41, 55, 0.95) !important;
-  }
-  
-  /* Mobile navbar adjustments */
-  body {
-    padding-top: 3.5rem !important;
-  }
-  
-  /* Mobile navbar adjustments */
-  nav,
-  .navbar {
-    height: 3.5rem !important;
-  }
-  
-  /* Mobile menu content spacing */
-  .mobile-menu-panel .menu-header {
-    margin-top: 3.5rem !important;
-  }
-  
-  .navbar-logo .logo-text {
-    display: none;
-  }
-  
-  .social-link,
-  .theme-toggle {
-    display: none;
-  }
+.hover-lift:hover {
+  transform: var(--hover-lift);
 }
 
-/* ===================================================================
-   FALLBACK AND SAFETY MEASURES
-   =================================================================== */
-
-/* If CSS variables aren't supported */
-@supports not (height: var(--navbar-height)) {
-  nav,
-  .navbar {
-    height: 4rem !important;
-  }
-  
-  body {
-    padding-top: 4rem !important;
-  }
-  
-  @media (max-width: 768px) {
-    nav,
-    .navbar {
-      height: 3.5rem !important;
-    }
-    
-    body {
-      padding-top: 3.5rem !important;
-    }
-  }
+.hover-scale {
+  transition: transform var(--animation-normal) var(--animation-spring);
 }
 
-/* Prevent layout shifts */
-nav *,
-.navbar * {
-  box-sizing: border-box !important;
+.hover-scale:hover {
+  transform: var(--hover-scale);
+}
+
+.focus-ring {
+  transition: box-shadow var(--animation-normal) ease;
+}
+
+.focus-ring:focus-visible {
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.5s ease-out;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
 
 /* ===================================================================
@@ -1482,22 +1147,9 @@ nav *,
 
 /* Focus management for navbar */
 nav:focus-within,
-.navbar:focus-within {
+.navbar:focus-within,
+.modern-navbar:focus-within {
   z-index: calc(var(--z-navbar) + 1) !important;
-}
-
-/* Skip link positioning (if you add one) */
-.skip-link {
-  position: fixed !important;
-  top: calc(var(--navbar-height) + 0.5rem) !important;
-  left: 0.5rem !important;
-  z-index: calc(var(--z-navbar) + 10) !important;
-  transform: translateY(-200%) !important;
-  transition: transform 0.3s ease !important;
-}
-
-.skip-link:focus {
-  transform: translateY(0) !important;
 }
 
 /* Reduced motion support */
@@ -1521,16 +1173,8 @@ nav:focus-within,
     display: none !important;
   }
   
-  .contact-card-enhanced:hover {
-    transform: none !important;
-  }
-  
-  .status-dot-enhanced {
-    animation: none !important;
-  }
-  
-  .scroll-progress {
-    transition: transform 0.01s linear !important;
+  .scroll-progress-bar {
+    transition: width 0.01s linear !important;
   }
 }
 
@@ -1556,7 +1200,9 @@ nav:focus-within,
 @media print {
   .scroll-progress,
   .particle-field-container,
-  nav {
+  nav,
+  .navbar,
+  .modern-navbar {
     display: none !important;
   }
   
