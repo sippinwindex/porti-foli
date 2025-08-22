@@ -45,17 +45,17 @@ import {
   MessageCircle
 } from 'lucide-react'
 
-// ✅ CORRECT PATH - This should work
+// ✅ FIXED: Import the CSS file correctly
 import '../styles/robot-fight.css'
 
 // Import your custom hooks
 import usePortfolioData from '@/hooks/usePortfolioData'
 import { useGitHubData } from '@/hooks/useGitHubData'
 
-// ✅ ADDED: Import LocationWelcomeMessage component
+// ✅ Import LocationWelcomeMessage component
 import LocationWelcomeMessage from '@/components/LocationWelcomeMessage'
 
-// Enhanced Type definitions that match your actual PortfolioProject interface
+// Type definitions remain the same
 interface PortfolioProject {
   id: string
   name: string
@@ -76,10 +76,9 @@ interface PortfolioProject {
   liveUrl?: string
 }
 
-// FIXED: Enhanced Project interface for 3D components with proper linking data
 interface Project {
   id: string
-  title: string // Required for 3D components
+  title: string
   name: string
   description: string
   techStack: string[]
@@ -92,12 +91,11 @@ interface Project {
     isLive: boolean
     liveUrl?: string
   }
-  deploymentScore?: number // Optional for display
+  deploymentScore?: number
   featured: boolean
   category?: string
-  lastUpdated?: string // Optional for display
-  imageUrl?: string // Optional for display
-  // FIXED: Add linking behavior properties
+  lastUpdated?: string
+  imageUrl?: string
   primaryAction?: 'live' | 'github' | 'details'
   clickUrl?: string
   hasLiveDeployment?: boolean
@@ -107,7 +105,7 @@ interface LanguageData {
   name: string
   percentage: number
   color: string
-  icon: string // ✅ FIXED: Changed to string to match LanguageVisualization component
+  icon: string
   projects: number
   experience: number
   proficiency: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert'
@@ -127,22 +125,20 @@ interface ContactOption {
   priority?: number
 }
 
-// PortfolioStats interface that matches both your types and usage
 interface PortfolioStats {
   totalProjects: number
   totalStars: number
-  liveProjects: number // Added for compatibility
+  liveProjects: number
   totalForks?: number
   topLanguages?: string[]
   totalCommits?: number
   yearsExperience?: number
-  recentActivity: { // Added for compatibility
+  recentActivity: {
     activeProjects: number
     lastCommit?: string
   }
 }
 
-// GitHubStats interface for compatibility
 interface GitHubStats {
   totalProjects: number
   totalStars: number
@@ -157,13 +153,13 @@ interface SectionVisibility {
   languages: boolean
   projects: boolean
   contact: boolean
-  game: boolean  // ← ADDED
+  game: boolean
 }
 
 // Navigation component import
 import Navigation from '@/components/Navigation'
 
-// ✅ PERFORMANCE: Enhanced Dynamic imports with better error handling and reduced loading weight
+// ✅ PERFORMANCE: Enhanced Dynamic imports with better error handling
 const Interactive3DHero = dynamic(
   () => import('@/components/3D/Interactive3DHero').catch(() => {
     console.warn('Failed to load Interactive3DHero, using fallback')
@@ -175,7 +171,6 @@ const Interactive3DHero = dynamic(
   }
 )
 
-// ✅ ENHANCED: Enhanced Rock 'Em Sock 'Em Game import with error handling
 const EnhancedRockEmSockEm = dynamic(
   () => import('@/components/RockEmSockEm').catch(() => {
     console.warn('Failed to load RockEmSockEm, using fallback')
@@ -187,7 +182,7 @@ const EnhancedRockEmSockEm = dynamic(
   }
 )
 
-// ✅ PERFORMANCE: Location message styles - optimized positioning
+// ✅ FIXED: Enhanced location message styles with proper positioning
 const locationMessageStyles = {
   position: 'fixed' as const,
   top: '6rem',
@@ -231,7 +226,6 @@ const LanguageVisualization = dynamic(
   }
 )
 
-// FIXED: Enhanced 3D Projects component with click handler support
 const ScrollTriggered3DSections = dynamic(
   () => import('@/components/3D/ScrollTriggered3DSections').catch(() => {
     console.warn('Failed to load ScrollTriggered3DSections, using fallback')
@@ -243,7 +237,7 @@ const ScrollTriggered3DSections = dynamic(
   }
 )
 
-// ✅ PERFORMANCE: Enhanced ParticleField import with optimized loading
+// ✅ FIXED: Enhanced ParticleField import with proper Tailwind color integration
 const ParticleField = dynamic(
   () => import('@/components/3D/ParticleField').catch(() => {
     console.warn('Failed to load ParticleField, using fallback')
@@ -255,7 +249,7 @@ const ParticleField = dynamic(
   }
 )
 
-// ✅ ENHANCED: Game Error Boundary Component
+// ✅ Enhanced Game Error Boundary Component
 class GameErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { hasError: boolean; error?: Error }
@@ -298,18 +292,16 @@ class GameErrorBoundary extends React.Component<
   }
 }
 
-// ✅ PERFORMANCE: Optimized Game Skeleton with reduced animations
+// ✅ PERFORMANCE: Game Skeleton with reduced animations
 function GameSkeleton() {
   return (
     <div className="min-h-[500px] flex items-center justify-center">
       <div className="text-center">
         <div className="relative mb-8">
-          {/* Dual spinning rings */}
           <div className="w-32 h-32 border-4 border-viva-magenta-500 border-t-transparent rounded-full animate-spin mx-auto" />
           <div className="absolute inset-0 w-32 h-32 border-4 border-lux-gold-300 border-t-transparent rounded-full animate-spin mx-auto" 
                style={{ animationDirection: 'reverse', animationDuration: '3s' }} />
           
-          {/* Center icon */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-16 h-16 bg-gradient-to-br from-viva-magenta-500 to-lux-gold-500 rounded-lg flex items-center justify-center">
               <Swords className="w-8 h-8 text-white animate-pulse" />
@@ -317,7 +309,6 @@ function GameSkeleton() {
           </div>
         </div>
         
-        {/* Loading text with typewriter effect */}
         <div className="space-y-3">
           <p className="text-xl text-gray-300 mb-2 font-mono">Loading Enhanced Combat System...</p>
           <div className="flex justify-center space-x-1">
@@ -330,7 +321,6 @@ function GameSkeleton() {
             ))}
           </div>
           
-          {/* Feature list */}
           <div className="mt-6 space-y-2 text-sm text-gray-400">
             <div className="flex items-center justify-center gap-2">
               <Zap className="w-4 h-4 text-yellow-400" />
@@ -351,7 +341,7 @@ function GameSkeleton() {
   )
 }
 
-// FIXED: Helper function to determine the best click action for a project
+// ✅ KEEP ALL YOUR ORIGINAL PROJECT LOGIC - Helper functions for project click behavior
 function getProjectClickAction(project: PortfolioProject): {
   action: 'live' | 'github' | 'details'
   url?: string
@@ -392,13 +382,11 @@ function getProjectClickAction(project: PortfolioProject): {
   }
 }
 
-// FIXED: Helper function to validate deployment URLs
 function isValidDeploymentUrl(url: string): boolean {
   try {
     const parsedUrl = new URL(url)
     const hostname = parsedUrl.hostname.toLowerCase()
     
-    // Known deployment platforms
     const deploymentPlatforms = [
       'vercel.app',
       'netlify.app',
@@ -415,14 +403,13 @@ function isValidDeploymentUrl(url: string): boolean {
     return deploymentPlatforms.some(platform => 
       hostname.includes(platform) || hostname.endsWith(platform)
     ) || 
-    // Custom domains that look like deployment URLs
     (!hostname.includes('github.com') && !hostname.includes('localhost'))
   } catch {
     return false
   }
 }
 
-// ✅ PERFORMANCE: Optimized Loading Skeletons with reduced DOM complexity
+// ✅ Loading Skeletons
 function HeroSkeleton() {
   return (
     <div className="min-h-screen flex items-center justify-center pt-20">
@@ -547,7 +534,7 @@ function ProjectsSkeleton() {
   )
 }
 
-// ✅ PERFORMANCE: Optimized Page Loading with reduced animations on mobile
+// ✅ Page Loading with Tailwind colors
 function PageLoading() {
   const [loadingText, setLoadingText] = useState('Initializing...')
   const [progress, setProgress] = useState(0)
@@ -573,7 +560,7 @@ function PageLoading() {
   }, [shouldReduceMotion])
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-lux-black via-viva-magenta-900/20 to-lux-gold-900/20 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-white dark:bg-gray-900 flex items-center justify-center z-50">
       <div className="relative text-center max-w-md mx-auto px-4">
         <div className="relative mb-8">
           <div className="animate-spin rounded-full h-32 w-32 border-4 border-viva-magenta-500 border-t-transparent mx-auto"></div>
@@ -589,8 +576,8 @@ function PageLoading() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <p className="text-lux-offwhite font-medium text-lg">{loadingText}</p>
-          <div className="w-full h-2 bg-lux-gray-800 rounded-full overflow-hidden">
+          <p className="text-gray-900 dark:text-gray-100 font-medium text-lg">{loadingText}</p>
+          <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 rounded-full"
               initial={{ width: '0%' }}
@@ -598,20 +585,20 @@ function PageLoading() {
               transition={{ duration: 0.5, ease: 'easeOut' }}
             />
           </div>
-          <p className="text-lux-gray-400 text-sm">{progress}% Complete</p>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">{progress}% Complete</p>
         </motion.div>
       </div>
     </div>
   )
 }
 
-// ✅ PERFORMANCE: Updated language data with string icon identifiers
+// ✅ KEEP YOUR ORIGINAL LANGUAGE DATA
 const LANGUAGE_DATA: LanguageData[] = [
   {
     name: 'TypeScript',
     percentage: 35,
     color: '#3178c6',
-    icon: 'zap', // ✅ FIXED: String identifier instead of component
+    icon: 'zap',
     projects: 8,
     experience: 2,
     proficiency: 'Advanced',
@@ -622,7 +609,7 @@ const LANGUAGE_DATA: LanguageData[] = [
     name: 'React',
     percentage: 28,
     color: '#61dafb',
-    icon: 'code-2', // ✅ FIXED: String identifier instead of component
+    icon: 'code-2',
     projects: 12,
     experience: 2,
     proficiency: 'Advanced',
@@ -633,7 +620,7 @@ const LANGUAGE_DATA: LanguageData[] = [
     name: 'Next.js',
     percentage: 22,
     color: '#000000',
-    icon: 'layers', // ✅ FIXED: String identifier instead of component
+    icon: 'layers',
     projects: 6,
     experience: 1,
     proficiency: 'Advanced',
@@ -644,7 +631,7 @@ const LANGUAGE_DATA: LanguageData[] = [
     name: 'Node.js',
     percentage: 18,
     color: '#68a063',
-    icon: 'terminal', // ✅ FIXED: String identifier instead of component
+    icon: 'terminal',
     projects: 7,
     experience: 2,
     proficiency: 'Advanced',
@@ -655,7 +642,7 @@ const LANGUAGE_DATA: LanguageData[] = [
     name: 'Python',
     percentage: 15,
     color: '#3776ab',
-    icon: 'file-type', // ✅ FIXED: String identifier instead of component
+    icon: 'file-type',
     projects: 4,
     experience: 1,
     proficiency: 'Intermediate',
@@ -666,7 +653,7 @@ const LANGUAGE_DATA: LanguageData[] = [
     name: 'Three.js',
     percentage: 12,
     color: '#049ef4',
-    icon: 'settings', // ✅ FIXED: String identifier instead of component
+    icon: 'settings',
     projects: 3,
     experience: 1,
     proficiency: 'Intermediate',
@@ -675,7 +662,7 @@ const LANGUAGE_DATA: LanguageData[] = [
   }
 ]
 
-// ✅ ENHANCED: Updated contact options with enhanced visual data and priorities
+// ✅ KEEP YOUR ORIGINAL CONTACT OPTIONS
 const CONTACT_OPTIONS: ContactOption[] = [
   {
     icon: Mail,
@@ -723,7 +710,7 @@ const CONTACT_OPTIONS: ContactOption[] = [
   }
 ]
 
-// Helper function to get tech icon component from string
+// Helper functions for icons
 function getTechIcon(tech: string): React.ElementType {
   switch (tech) {
     case 'React': return Code2
@@ -736,7 +723,6 @@ function getTechIcon(tech: string): React.ElementType {
   }
 }
 
-// Helper function to get icon component from string identifier
 function getIconComponent(iconName: string): React.ElementType {
   switch (iconName) {
     case 'zap': return Zap
@@ -749,7 +735,7 @@ function getIconComponent(iconName: string): React.ElementType {
   }
 }
 
-// ✅ PERFORMANCE: Enhanced theme detection hook with debouncing
+// ✅ FIXED: Enhanced theme detection with Tailwind integration
 function useOptimizedThemeDetection() {
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('light')
 
@@ -764,23 +750,19 @@ function useOptimizedThemeDetection() {
       } else if (hasExplicitLightClass) {
         setCurrentTheme('light')
       } else {
-        // Fallback to system preference
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
         setCurrentTheme(prefersDark ? 'dark' : 'light')
       }
     }
 
-    // Initial detection
     detectTheme()
 
-    // Watch for theme changes
     const observer = new MutationObserver(detectTheme)
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class']
     })
 
-    // Listen for system theme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     mediaQuery.addEventListener('change', detectTheme)
 
@@ -793,7 +775,6 @@ function useOptimizedThemeDetection() {
   return currentTheme
 }
 
-// ✅ PERFORMANCE: Debounce helper function for performance optimization
 function debounce<T extends (...args: any[]) => any>(
   func: T,
   delay: number
@@ -805,13 +786,13 @@ function debounce<T extends (...args: any[]) => any>(
   }
 }
 
-// ✅ ENHANCED: Main Component with all optimizations applied
+// ✅ MAIN COMPONENT WITH FIXED UNIFIED THEMING
 export default function HomePage() {
-  // Use real data hooks with proper error handling
+  // ✅ KEEP ALL YOUR REAL DATA HOOKS
   const { projects, stats, loading: portfolioLoading, error: portfolioError } = usePortfolioData()
   const { repositories, user, stats: githubStats, loading: githubLoading, error: githubError } = useGitHubData()
   
-  // ✅ PERFORMANCE: Enhanced theme detection for particle field
+  // ✅ FIXED: Theme detection for particle field
   const currentTheme = useOptimizedThemeDetection()
   
   // State management
@@ -819,7 +800,6 @@ export default function HomePage() {
   const [currentSection, setCurrentSection] = useState('hero')
   const [isMobile, setIsMobile] = useState(false)
   
-  // ✅ PERFORMANCE: Debounced section visibility updates to prevent cascade
   const [sectionsInView, setSectionsInView] = useState<SectionVisibility>({
     hero: true,
     codeShowcase: false,
@@ -830,22 +810,21 @@ export default function HomePage() {
     game: false
   })
 
-  // ✅ PERFORMANCE: Debounced section updates to prevent performance issues
   const debouncedSetSectionsInView = useCallback(
     debounce((updates: Partial<SectionVisibility>) => {
       setSectionsInView(prev => ({ ...prev, ...updates }))
-    }, 100), // 100ms debounce
+    }, 100),
     []
   )
   
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [isScrolling, setIsScrolling] = useState(false)
   
-  // ✅ PERFORMANCE: Simplified location message timing with reduced delay
+  // ✅ Location message timing
   const [showLocationMessage, setShowLocationMessage] = useState(false)
   const [hasShownLocationMessage, setHasShownLocationMessage] = useState(false)
 
-  // ✅ ADDED: Game state management
+  // ✅ KEEP Game state management
   const [gameStats, setGameStats] = useState({
     gamesPlayed: 0,
     wins: 0,
@@ -853,12 +832,11 @@ export default function HomePage() {
     perfectHits: 0
   })
   
-  // Refs for better performance
   const observerRef = useRef<IntersectionObserver | null>(null)
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const shouldReduceMotion = useReducedMotion()
 
-  // ✅ ADDED: Game event handlers
+  // ✅ KEEP Game event handlers
   const handleGameStart = useCallback(() => {
     console.log('🎮 Game started')
     setGameStats(prev => ({ ...prev, gamesPlayed: prev.gamesPlayed + 1 }))
@@ -874,11 +852,10 @@ export default function HomePage() {
     }))
   }, [])
 
-  // FIXED: Enhanced project click handler for 3D components
+  // ✅ KEEP Enhanced project click handler
   const handleProjectClick = useCallback((clickedProject: Project) => {
     console.log('🎯 3D Project clicked:', clickedProject.name)
     
-    // Use the enhanced click action logic
     const { action, url } = clickedProject.primaryAction && clickedProject.clickUrl 
       ? { action: clickedProject.primaryAction, url: clickedProject.clickUrl }
       : getProjectClickAction(clickedProject as PortfolioProject)
@@ -887,57 +864,49 @@ export default function HomePage() {
 
     if (url) {
       if (action === 'details') {
-        // Navigate to project details page
         window.location.href = url
       } else {
-        // Open live demo or GitHub in new tab
         window.open(url, '_blank', 'noopener,noreferrer')
       }
     }
   }, [])
 
-  // Enhanced portfolio stats with proper type handling and realistic values
+  // ✅ KEEP Enhanced portfolio stats with your real data
   const portfolioStats = useMemo((): PortfolioStats => {
-    // FIXED: Enhanced project transformation with click behavior
     const transformedProjects: Project[] = projects.map(p => {
       const clickAction = getProjectClickAction(p)
       
       return {
         id: p.id,
-        title: p.title || p.name, // Use title if available, fallback to name
+        title: p.title || p.name,
         name: p.name,
         description: p.description,
         techStack: p.techStack || [],
         github: p.github,
         vercel: p.vercel,
-        deploymentScore: 85, // Generate a reasonable score since not in PortfolioProject
+        deploymentScore: 85,
         featured: p.featured,
-        category: 'fullstack', // Default category since not in PortfolioProject
-        lastUpdated: new Date().toISOString(), // Generate current date since not in PortfolioProject
-        imageUrl: `/images/projects/${p.id}.jpg`, // Generate image path since not in PortfolioProject
-        // FIXED: Add linking behavior data
+        category: 'fullstack',
+        lastUpdated: new Date().toISOString(),
+        imageUrl: `/images/projects/${p.id}.jpg`,
         primaryAction: clickAction.action,
         clickUrl: clickAction.url,
         hasLiveDeployment: clickAction.hasLive
       }
     })
 
-    // Use real GitHub data if available, fallback to processed data
     const realProjects = transformedProjects.length > 0 ? transformedProjects : []
-    
-    // Handle both GitHubStats and PortfolioStats types
     const realStats = stats || githubStats
     
-    // Create a compatible PortfolioStats object
     const result: PortfolioStats = {
       totalProjects: realProjects.length || realStats?.totalProjects || 8,
       totalStars: realStats?.totalStars || realProjects.reduce((acc, p) => acc + (p.github?.stars || 0), 0) || 25,
-      liveProjects: realProjects.filter(p => p.hasLiveDeployment).length || 6, // FIXED: Use hasLiveDeployment
+      liveProjects: realProjects.filter(p => p.hasLiveDeployment).length || 6,
       totalForks: realStats?.totalForks || realProjects.reduce((acc, p) => acc + (p.github?.forks || 0), 0) || 12,
       topLanguages: realStats?.topLanguages || LANGUAGE_DATA.slice(0, 3).map(lang => lang.name),
       totalCommits: LANGUAGE_DATA.reduce((acc, lang) => acc + (lang.commits || 0), 0),
       yearsExperience: 2,
-      recentActivity: { // Always provide recentActivity since it's required
+      recentActivity: {
         activeProjects: realProjects.filter(p => p.featured).length || 4,
         lastCommit: new Date().toISOString()
       }
@@ -946,32 +915,30 @@ export default function HomePage() {
     return result
   }, [projects, stats, githubStats])
 
-  // FIXED: Transform projects for 3D components with proper linking behavior
+  // ✅ KEEP Transform projects for 3D components with proper linking behavior
   const transformedProjects = useMemo((): Project[] => {
     const transformed = projects.map(p => {
       const clickAction = getProjectClickAction(p)
       
       return {
         id: p.id,
-        title: p.title || p.name, // Ensure title is always available
+        title: p.title || p.name,
         name: p.name,
         description: p.description,
         techStack: p.techStack || [],
         github: p.github,
         vercel: p.vercel,
-        deploymentScore: Math.floor(Math.random() * 30) + 70, // Generate score (70-100)
+        deploymentScore: Math.floor(Math.random() * 30) + 70,
         featured: p.featured,
-        category: 'fullstack', // Default category
-        lastUpdated: new Date().toISOString(), // Current date
-        imageUrl: `/images/projects/${p.id}.jpg`, // Generate image path
-        // FIXED: Add linking behavior data for 3D components
+        category: 'fullstack',
+        lastUpdated: new Date().toISOString(),
+        imageUrl: `/images/projects/${p.id}.jpg`,
         primaryAction: clickAction.action,
         clickUrl: clickAction.url,
         hasLiveDeployment: clickAction.hasLive
       }
     })
 
-    // Log project linking behavior for debugging
     console.log('🏠 Home Page Project Click Behavior:')
     transformed.forEach(project => {
       console.log(`  📦 ${project.name}:`, {
@@ -989,24 +956,24 @@ export default function HomePage() {
     ['React', 'TypeScript', 'Next.js', 'Node.js', 'Python', 'Three.js'], []
   )
 
-  // ✅ PERFORMANCE: Particle field configuration with reduced particle count and conditional rendering
+  // ✅ FIXED: Particle field configuration with Tailwind color integration
   const particleConfig = useMemo(() => {
     const baseConfig = {
-      particleCount: isMobile ? 15 : 25, // ✅ REDUCED from 60
+      particleCount: isMobile ? 15 : 25,
       animation: 'constellation' as const,
-      interactive: !shouldReduceMotion && !isMobile, // ✅ DISABLE on mobile
-      speed: 0.3, // ✅ REDUCED speed
+      interactive: !shouldReduceMotion && !isMobile,
+      speed: 0.3,
       className: "w-full h-full"
     }
 
-    // ✅ STABLE color scheme selection
+    // ✅ FIXED: Use Tailwind-compatible color scheme
     if (currentTheme === 'light') {
       return { ...baseConfig, colorScheme: 'light-mode' as const }
     }
     return { ...baseConfig, colorScheme: 'aurora' as const }
-  }, [currentTheme, isMobile, shouldReduceMotion]) // ✅ MINIMAL dependencies
+  }, [currentTheme, isMobile, shouldReduceMotion])
 
-  // ✅ PERFORMANCE: Memoize heavy components to prevent re-renders
+  // ✅ FIXED: Memoize particle field to prevent re-renders
   const MemoizedParticleField = useMemo(() => {
     if (shouldReduceMotion) return null
     
@@ -1019,7 +986,6 @@ export default function HomePage() {
     )
   }, [particleConfig, shouldReduceMotion])
 
-  // ✅ PERFORMANCE: Helper variable for conditional 3D rendering
   const shouldRender3D = !shouldReduceMotion && !isMobile
 
   // Utility functions
@@ -1040,7 +1006,7 @@ export default function HomePage() {
     }
   }, [shouldReduceMotion])
 
-  // Enhanced mobile detection
+  // Mobile detection
   useEffect(() => {
     let ticking = false
     
@@ -1060,32 +1026,30 @@ export default function HomePage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // ✅ PERFORMANCE: Enhanced loading with GitHub data waiting and reduced load times
+  // ✅ Loading with GitHub data waiting
   useEffect(() => {
-    const minLoadTime = shouldReduceMotion ? 400 : 1000 // ✅ REDUCED
-    const maxLoadTime = shouldReduceMotion ? 600 : 1500 // ✅ REDUCED
+    const minLoadTime = shouldReduceMotion ? 400 : 1000
+    const maxLoadTime = shouldReduceMotion ? 600 : 1500
     
-    // Wait for either data to load or timeout
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, Math.random() * (maxLoadTime - minLoadTime) + minLoadTime)
     
-    // If data loads quickly, end loading early
     if (!portfolioLoading && !githubLoading) {
-      setTimeout(() => setIsLoading(false), 250) // ✅ REDUCED delay
+      setTimeout(() => setIsLoading(false), 250)
     }
     
     return () => clearTimeout(timer)
   }, [shouldReduceMotion, portfolioLoading, githubLoading])
 
-  // ✅ PERFORMANCE: Simplified location message timing with reduced delay
+  // ✅ Location message timing
   useEffect(() => {
     if (currentSection === 'hero' && !hasShownLocationMessage && !isLoading) {
       const timer = setTimeout(() => {
         console.log('HomePage: Showing location message')
         setShowLocationMessage(true)
         setHasShownLocationMessage(true)
-      }, 2000) // ✅ REDUCED delay from 3000ms
+      }, 2000)
       
       return () => clearTimeout(timer)
     } else if (currentSection !== 'hero' && showLocationMessage) {
@@ -1094,7 +1058,7 @@ export default function HomePage() {
     }
   }, [currentSection, hasShownLocationMessage, isLoading, showLocationMessage])
 
-  // Enhanced responsive handling for location message
+  // Responsive handling for location message
   useEffect(() => {
     if (!showLocationMessage) return
 
@@ -1159,7 +1123,7 @@ export default function HomePage() {
     }
   }, [])
 
-  // ✅ PERFORMANCE: Enhanced intersection observer with debounced updates
+  // ✅ Intersection observer
   useEffect(() => {
     const sections = ['hero', 'code-showcase', 'about', 'languages', 'projects', 'contact', 'game']
     
@@ -1171,7 +1135,6 @@ export default function HomePage() {
           const sectionId = entry.target.id as keyof SectionVisibility
           updates[sectionId] = entry.isIntersecting
           
-          // ✅ THROTTLE current section updates
           if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
             requestAnimationFrame(() => {
               setCurrentSection(entry.target.id)
@@ -1183,7 +1146,7 @@ export default function HomePage() {
       },
       { 
         threshold: [0.1, 0.3],
-        rootMargin: isMobile ? '20px 0px' : '50px 0px' // ✅ REDUCED margins
+        rootMargin: isMobile ? '20px 0px' : '50px 0px'
       }
     )
 
@@ -1214,14 +1177,17 @@ export default function HomePage() {
   }
 
   return (
-    <div className="relative min-h-screen text-lux-gray-900 dark:text-lux-offwhite overflow-x-hidden">
-      {/* ✅ UNIFIED BACKGROUND SYSTEM - Uses CSS background only, NO JavaScript background components */}
-      <div className="unified-portfolio-background" />
+    <div className="relative min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-x-hidden">
+      {/* ✅ FIXED: UNIFIED BACKGROUND SYSTEM - Clean Tailwind theming */}
+      <div className="fixed inset-0 bg-white dark:bg-gray-900 transition-colors duration-300" />
       
-      {/* ✅ PERFORMANCE: Conditional particle field rendering with memoization */}
+      {/* ✅ FIXED: Subtle gradient overlay that respects theme */}
+      <div className="fixed inset-0 bg-gradient-to-br from-viva-magenta-50/30 via-transparent to-lux-gold-50/20 dark:from-viva-magenta-950/20 dark:via-transparent dark:to-lux-gold-950/10 transition-all duration-300" />
+
+      {/* ✅ FIXED: Particle field with proper Tailwind integration */}
       {shouldRender3D && MemoizedParticleField}
 
-      {/* Error notification for data loading issues */}
+      {/* Error notification */}
       {hasErrors && (
         <div className="fixed top-20 right-4 z-50 max-w-sm">
           <motion.div
@@ -1248,9 +1214,9 @@ export default function HomePage() {
       {/* Enhanced Navigation */}
       <Navigation />
 
-      <main className="relative z-10 scroll-section">
-        {/* ✅ Hero Section - NO background, uses unified system */}
-        <section id="hero" className="scroll-section relative min-h-screen">
+      <main className="relative z-10">
+        {/* ✅ Hero Section - Clean with unified background */}
+        <section id="hero" className="relative min-h-screen">
           <div className="relative z-10">
             <Suspense fallback={<HeroSkeleton />}>
               {shouldRender3D ? (
@@ -1268,12 +1234,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ✅ Code Showcase - NO background, uses unified system */}
-        <section id="code-showcase" className="scroll-section relative min-h-screen">
+        {/* ✅ Code Showcase - Clean theming */}
+        <section id="code-showcase" className="relative min-h-screen">
           <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
             <div className="text-center mb-16 max-w-4xl mx-auto">
               <motion.h2 
-                className="hero-title text-4xl md:text-6xl font-bold mb-6 gradient-text"
+                className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 dark:from-viva-magenta-400 dark:to-lux-gold-400 bg-clip-text text-transparent"
                 initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
@@ -1282,7 +1248,7 @@ export default function HomePage() {
                 Interactive Code Showcase
               </motion.h2>
               <motion.p 
-                className="text-xl text-lux-gray-600 dark:text-lux-gray-400"
+                className="text-xl text-gray-600 dark:text-gray-400"
                 initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -1292,7 +1258,6 @@ export default function HomePage() {
               </motion.p>
             </div>
             
-            {/* FIXED: Only show 3D on desktop when section is in view */}
             {sectionsInView.codeShowcase && !isMobile && (
               <Suspense fallback={<CodeBlocksSkeleton />}>
                 <FloatingCodeBlocks 
@@ -1305,7 +1270,7 @@ export default function HomePage() {
               </Suspense>
             )}
             
-            {/* ✅ Enhanced themed fallback with consistent styling */}
+            {/* ✅ Enhanced themed fallback */}
             {(!sectionsInView.codeShowcase || isMobile) && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 {techStack.map((tech, index) => {
@@ -1315,7 +1280,7 @@ export default function HomePage() {
                   return (
                     <motion.div
                       key={tech}
-                      className="group relative p-6 rounded-xl glass-card text-center cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-viva-magenta-500/20 dark:hover:shadow-viva-magenta-400/20"
+                      className="group relative p-6 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-center cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-viva-magenta-500/20 dark:hover:shadow-viva-magenta-400/20"
                       initial={{ opacity: 0, scale: 0.9, y: 20 }}
                       whileInView={{ opacity: 1, scale: 1, y: 0 }}
                       viewport={{ once: true }}
@@ -1333,28 +1298,25 @@ export default function HomePage() {
                       {/* Gradient overlay on hover */}
                       <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-viva-magenta-500/0 via-lux-gold-500/0 to-viva-magenta-600/0 group-hover:from-viva-magenta-500/10 group-hover:via-lux-gold-500/5 group-hover:to-viva-magenta-600/10 transition-all duration-500" />
                       
-                      {/* Icon container with proper theming */}
+                      {/* Icon container */}
                       <div className="relative flex justify-center mb-4">
                         <div className="p-4 rounded-lg bg-gradient-to-br from-viva-magenta-500/20 via-viva-magenta-600/15 to-lux-gold-500/20 group-hover:from-viva-magenta-400/30 group-hover:via-viva-magenta-500/25 group-hover:to-lux-gold-400/30 border border-viva-magenta-400/20 group-hover:border-viva-magenta-300/40 transition-all duration-500 group-hover:scale-110">
                           <IconComponent className="w-8 h-8 text-viva-magenta-600 dark:text-viva-magenta-400 group-hover:text-viva-magenta-500 dark:group-hover:text-viva-magenta-300 transition-all duration-300" />
                         </div>
                         
-                        {/* Animated background glow */}
                         <div className="absolute inset-0 rounded-lg bg-viva-magenta-500 opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500 scale-150" />
                       </div>
                       
-                      {/* Tech name with gradient text */}
+                      {/* Tech name */}
                       <div className="relative">
                         <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-gray-100 group-hover:bg-gradient-to-r group-hover:from-viva-magenta-600 group-hover:to-lux-gold-600 dark:group-hover:from-viva-magenta-400 dark:group-hover:to-lux-gold-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
                           {tech}
                         </h3>
                         
-                        {/* Proficiency level */}
                         <div className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors duration-300 mb-3">
                           {langData?.proficiency || 'Advanced'}
                         </div>
                         
-                        {/* Stats row */}
                         <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors duration-300">
                           <span className="flex items-center gap-1">
                             <Code className="w-3 h-3" />
@@ -1371,10 +1333,7 @@ export default function HomePage() {
                         </div>
                       </div>
                       
-                      {/* Subtle animated border */}
                       <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-viva-magenta-400/30 transition-all duration-500" />
-                      
-                      {/* Corner accent */}
                       <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-lux-gold-400 opacity-0 group-hover:opacity-60 transition-all duration-300 animate-pulse" />
                     </motion.div>
                   )
@@ -1384,8 +1343,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ✅ About Section - NO background, uses unified system */}
-        <section id="about" className="scroll-section relative py-20">
+        {/* ✅ About Section - Consistent theming */}
+        <section id="about" className="relative py-20">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               className="text-center mb-16"
@@ -1394,22 +1353,22 @@ export default function HomePage() {
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: shouldReduceMotion ? 0.1 : 0.6 }}
             >
-              <h2 className="hero-title text-4xl md:text-6xl font-bold text-lux-gray-900 dark:text-lux-offwhite mb-8">
-                About <span className="gradient-text">Me</span>
+              <h2 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-gray-100 mb-8">
+                About <span className="bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 dark:from-viva-magenta-400 dark:to-lux-gold-400 bg-clip-text text-transparent">Me</span>
               </h2>
               <div className="max-w-4xl mx-auto space-y-6">
-                <p className="text-xl text-lux-gray-700 dark:text-lux-gray-300 leading-relaxed">
+                <p className="text-xl text-gray-700 dark:text-gray-300 leading-relaxed">
                   Hi, I'm <span className="font-semibold text-viva-magenta-600 dark:text-viva-magenta-400">Juan A. Fernandez</span>, 
                   a Full-Stack Developer based in Miami, Florida. With over 2+ years of focused experience, 
                   I specialize in creating immersive digital experiences that blend cutting-edge technology 
                   with exceptional user experience.
                 </p>
-                <p className="text-lg text-lux-gray-600 dark:text-lux-gray-400 leading-relaxed">
+                <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
                   My background combines software development expertise with UX research and data analysis. 
                   This diverse experience allows me to approach problems from multiple angles, 
                   ensuring both technical excellence and user-centered design in every project.
                 </p>
-                <p className="text-lg text-lux-gray-600 dark:text-lux-gray-400 leading-relaxed">
+                <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
                   I'm passionate about emerging technologies like WebGL, Three.js, and modern React patterns, 
                   with a strong focus on accessibility, performance optimization, and scalable architecture.
                 </p>
@@ -1452,7 +1411,7 @@ export default function HomePage() {
                 return (
                   <motion.div
                     key={stat.label}
-                    className="relative p-6 text-center glass-card hover:border-viva-magenta-400/40 dark:hover:border-viva-magenta-400/40 transition-all duration-300 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-viva-magenta-500/20 dark:hover:shadow-viva-magenta-400/20"
+                    className="relative p-6 text-center bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-xl hover:border-viva-magenta-400/40 dark:hover:border-viva-magenta-400/40 transition-all duration-300 cursor-pointer group hover:scale-105 hover:shadow-xl hover:shadow-viva-magenta-500/20 dark:hover:shadow-viva-magenta-400/20"
                     initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.9 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
@@ -1467,7 +1426,7 @@ export default function HomePage() {
                         <IconComponent className="w-6 h-6 text-viva-magenta-600 dark:text-viva-magenta-400" />
                       </div>
                     </div>
-                    <div className="text-3xl font-bold mb-2 gradient-text">{stat.value}</div>
+                    <div className="text-3xl font-bold mb-2 bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 dark:from-viva-magenta-400 dark:to-lux-gold-400 bg-clip-text text-transparent">{stat.value}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 font-medium mb-1">{stat.label}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-500">{stat.description}</div>
                   </motion.div>
@@ -1483,12 +1442,12 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ duration: shouldReduceMotion ? 0.1 : 0.6, delay: shouldReduceMotion ? 0 : 0.3 }}
             >
-              <p className="text-lg text-lux-gray-600 dark:text-lux-gray-400 mb-6">
+              <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
                 Specialized in: {portfolioStats.topLanguages?.join(' • ')}
               </p>
               <motion.button
                 onClick={() => scrollToSection('languages')}
-                className="btn-secondary inline-flex items-center gap-2 px-6 py-3"
+                className="bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 hover:from-viva-magenta-600 hover:to-lux-gold-600 text-white font-semibold py-3 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 inline-flex items-center gap-2"
                 whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
                 whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
               >
@@ -1499,20 +1458,20 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ✅ Language Visualization - NO background, uses unified system */}
-        <section id="languages" className="scroll-section relative">
+        {/* ✅ Language Visualization */}
+        <section id="languages" className="relative">
           <div className="text-center py-16">
             <motion.h2 
-              className="hero-title text-4xl md:text-6xl font-bold mb-8"
+              className="text-4xl md:text-6xl font-bold mb-8"
               initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: shouldReduceMotion ? 0.1 : 0.6 }}
             >
-              Technology <span className="gradient-text">Mastery</span>
+              Technology <span className="bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 dark:from-viva-magenta-400 dark:to-lux-gold-400 bg-clip-text text-transparent">Mastery</span>
             </motion.h2>
             <motion.p 
-              className="text-xl text-lux-gray-600 dark:text-lux-gray-400 max-w-3xl mx-auto mb-8"
+              className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8"
               initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -1534,8 +1493,8 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* ✅ Projects Section - NO background, uses unified system */}
-        <section id="projects" className="scroll-section relative">
+        {/* ✅ Projects Section */}
+        <section id="projects" className="relative">
           {sectionsInView.projects && (
             <Suspense fallback={<ProjectsSkeleton />}>
               <ScrollTriggered3DSections 
@@ -1547,10 +1506,10 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* ✅ Game Section - Custom dark styling but NO individual background */}
-        <section id="game" className="scroll-section relative min-h-screen flex items-center justify-center">
+        {/* ✅ Game Section - Clean dark styling with unified theming */}
+        <section id="game" className="relative min-h-screen flex items-center justify-center">
           {/* Dark overlay for game section only */}
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-lux-black/90 to-gray-800/80 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-gray-900/90 to-gray-800/80 dark:from-gray-950/80 dark:via-gray-950/90 dark:to-gray-900/80 backdrop-blur-sm" />
           
           {/* Animated background elements - only render when section is visible */}
           {sectionsInView.game && (
@@ -1585,8 +1544,8 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ duration: shouldReduceMotion ? 0.1 : 0.6 }}
               >
-                <h2 className="hero-title text-4xl md:text-6xl font-bold mb-6 text-white">
-                  Ready to <span className="gradient-text">Battle?</span>
+                <h2 className="text-4xl md:text-6xl font-bold mb-6 text-white">
+                  Ready to <span className="bg-gradient-to-r from-viva-magenta-400 to-lux-gold-400 bg-clip-text text-transparent">Battle?</span>
                 </h2>
                 <p className="text-xl text-gray-300 mb-4 max-w-3xl mx-auto leading-relaxed">
                   Challenge yourself with this enhanced retro-inspired Rock 'Em Sock 'Em robot game!
@@ -1636,7 +1595,7 @@ export default function HomePage() {
                   <div className="absolute -inset-1 bg-gradient-to-r from-viva-magenta-500 via-lux-gold-500 to-viva-magenta-500 rounded-2xl blur opacity-30 animate-pulse" />
                   
                   {/* Game wrapper with proper error handling */}
-                  <div className="relative bg-gradient-to-br from-gray-900/95 via-lux-black/98 to-gray-800/95 backdrop-blur-xl rounded-2xl border border-gray-700/50 overflow-hidden shadow-2xl">
+                  <div className="relative bg-gradient-to-br from-gray-900/95 via-gray-900/98 to-gray-800/95 backdrop-blur-xl rounded-2xl border border-gray-700/50 overflow-hidden shadow-2xl">
                     {/* Top accent bar */}
                     <div className="h-1 bg-gradient-to-r from-viva-magenta-500 via-lux-gold-500 to-viva-magenta-500" />
                     
@@ -1696,7 +1655,7 @@ export default function HomePage() {
                 </p>
                 <motion.button
                   onClick={() => scrollToSection('contact')}
-                  className="btn-primary inline-flex items-center gap-3 px-8 py-4 text-lg font-semibold"
+                  className="bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 hover:from-viva-magenta-600 hover:to-lux-gold-600 text-white font-semibold py-4 px-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 inline-flex items-center gap-3 text-lg"
                   whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
                   whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
                 >
@@ -1710,7 +1669,7 @@ export default function HomePage() {
         </section>
 
         {/* ✅ ENHANCED: Contact Section with Visually Appealing Cards */}
-        <section id="contact" className="scroll-section relative py-20">
+        <section id="contact" className="relative py-20">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               className="text-center mb-16"
@@ -1719,14 +1678,14 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ duration: shouldReduceMotion ? 0.1 : 0.6 }}
             >
-              <h2 className="hero-title text-4xl md:text-6xl font-bold mb-8">
-                <span className="gradient-text">Get In Touch</span>
+              <h2 className="text-4xl md:text-6xl font-bold mb-8">
+                <span className="bg-gradient-to-r from-viva-magenta-600 to-lux-gold-600 dark:from-viva-magenta-400 dark:to-lux-gold-400 bg-clip-text text-transparent">Get In Touch</span>
               </h2>
-              <p className="text-xl text-lux-gray-700 dark:text-lux-gray-300 mb-8 max-w-3xl mx-auto">
+              <p className="text-xl text-gray-700 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
                 I'm always interested in new opportunities and collaborations. 
                 Let's discuss how we can work together.
               </p>
-              <div className="flex flex-wrap justify-center gap-4 text-sm text-lux-gray-600 dark:text-lux-gray-400">
+              <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                 <span className="flex items-center gap-2">
                   <Globe className="w-4 h-4" />
                   Remote & Local (Miami, FL)
@@ -1871,7 +1830,7 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                 <motion.a
                   href="mailto:jafernandez94@gmail.com?subject=Project Collaboration&body=Hi Juan, I'd like to discuss a project with you."
-                  className="group relative overflow-hidden btn-primary inline-flex items-center gap-3 px-10 py-5 text-lg font-semibold rounded-2xl"
+                  className="group relative overflow-hidden bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500 hover:from-viva-magenta-600 hover:to-lux-gold-600 text-white font-semibold py-5 px-10 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 inline-flex items-center gap-3 text-lg"
                   whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
                   whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
                 >
@@ -1903,7 +1862,7 @@ export default function HomePage() {
                   href="https://flowcv.com/resume/moac4k9d8767"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group relative overflow-hidden btn-secondary inline-flex items-center gap-3 px-10 py-5 text-lg font-semibold rounded-2xl"
+                  className="group relative overflow-hidden border-2 border-viva-magenta-500 text-viva-magenta-600 dark:text-viva-magenta-400 hover:bg-viva-magenta-50 dark:hover:bg-viva-magenta-900/20 font-semibold py-5 px-10 rounded-2xl transition-all duration-300 inline-flex items-center gap-3 text-lg"
                   whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
                   whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
                 >
@@ -1956,10 +1915,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ✅ Enhanced Footer - Uses dark styling but no competing background */}
+        {/* ✅ Enhanced Footer - Clean unified theming */}
         <footer className="relative py-16 text-center overflow-hidden">
           {/* Dark footer overlay */}
-          <div className="absolute inset-0 bg-lux-black/90 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-gray-900/90 dark:bg-gray-950/90 backdrop-blur-sm" />
           
           {/* Subtle footer background effects */}
           <div className="absolute inset-0 opacity-5">
@@ -1976,8 +1935,8 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ duration: shouldReduceMotion ? 0.1 : 0.6 }}
               >
-                <h3 className="text-2xl font-bold gradient-text mb-2">Juan Fernandez</h3>
-                <p className="text-lux-gray-400">Full-Stack Developer & 3D Web Specialist</p>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-viva-magenta-400 to-lux-gold-400 bg-clip-text text-transparent mb-2">Juan Fernandez</h3>
+                <p className="text-gray-400">Full-Stack Developer & 3D Web Specialist</p>
               </motion.div>
 
               <motion.div
@@ -1989,25 +1948,25 @@ export default function HomePage() {
               >
                 <button 
                   onClick={() => scrollToSection('about')}
-                  className="text-lux-gray-400 hover:text-lux-gray-300 transition-colors"
+                  className="text-gray-400 hover:text-gray-300 transition-colors"
                 >
                   About
                 </button>
                 <button 
                   onClick={() => scrollToSection('projects')}
-                  className="text-lux-gray-400 hover:text-lux-gray-300 transition-colors"
+                  className="text-gray-400 hover:text-gray-300 transition-colors"
                 >
                   Projects
                 </button>
                 <button 
                   onClick={() => scrollToSection('game')}
-                  className="text-lux-gray-400 hover:text-lux-gray-300 transition-colors"
+                  className="text-gray-400 hover:text-gray-300 transition-colors"
                 >
                   Game
                 </button>
                 <button 
                   onClick={() => scrollToSection('contact')}
-                  className="text-lux-gray-400 hover:text-lux-gray-300 transition-colors"
+                  className="text-gray-400 hover:text-gray-300 transition-colors"
                 >
                   Contact
                 </button>
@@ -2028,30 +1987,30 @@ export default function HomePage() {
                       href={social.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-3 bg-lux-gray-800 hover:bg-lux-gray-700 rounded-full transition-colors"
+                      className="p-3 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors"
                       whileHover={{ scale: shouldReduceMotion ? 1 : 1.1 }}
                       whileTap={{ scale: shouldReduceMotion ? 1 : 0.9 }}
                     >
-                      <IconComponent className="w-5 h-5 text-lux-gray-300" />
+                      <IconComponent className="w-5 h-5 text-gray-300" />
                     </motion.a>
                   )
                 })}
               </motion.div>
 
               <motion.div
-                className="border-t border-lux-gray-800 pt-8"
+                className="border-t border-gray-800 pt-8"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: shouldReduceMotion ? 0.1 : 0.6, delay: shouldReduceMotion ? 0 : 0.3 }}
               >
-                <p className="text-lux-gray-400 mb-2">
+                <p className="text-gray-400 mb-2">
                   © 2025 Juan Fernandez. Built with{' '}
                   <Heart className="w-4 h-4 inline-block text-red-500 mx-1" />
                   using Next.js, Three.js, and{' '}
                   <Coffee className="w-4 h-4 inline-block text-amber-600 mx-1" />
                 </p>
-                <p className="text-xs text-lux-gray-500">
+                <p className="text-xs text-gray-500">
                   Designed for performance, accessibility, and exceptional user experience
                 </p>
               </motion.div>
@@ -2067,7 +2026,7 @@ export default function HomePage() {
           {showScrollTop && (
             <motion.button
               onClick={scrollToTop}
-              className="p-3 glass-card hover:shadow-xl transition-all duration-300 group backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50"
+              className="p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-full hover:shadow-xl transition-all duration-300 group"
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0 }}

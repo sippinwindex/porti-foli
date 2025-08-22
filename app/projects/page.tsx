@@ -1,21 +1,17 @@
-// app/projects/page.tsx - FIXED: Load ALL repositories without limits
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import dynamic from 'next/dynamic'
-import { motion, AnimatePresence, useInView } from 'framer-motion'
+import { motion, AnimatePresence, useInView, useReducedMotion } from 'framer-motion'
+import { useTheme } from 'next-themes'
 import { 
   ExternalLink, Github, Filter, Grid, List, Star, GitFork, 
   Calendar, Code, Zap, Search, TrendingUp, Eye, Clock, Loader,
   Globe, AlertCircle, ChevronDown, Play, Pause, Rocket, Activity,
-  Users, CheckCircle, XCircle, RefreshCw
+  Users, CheckCircle, XCircle, RefreshCw, ArrowRight, Mail
 } from 'lucide-react'
 
-// Import utilities from our fixed files
-import { formatDate, getLanguageColor, toBoolean } from '@/lib/utils'
-import ThemeToggle from '@/components/ThemeToggle'
-
-// Lazy load heavy components
+// Dynamic imports with enhanced error handling (same pattern as homepage)
 const Navigation = dynamic(() => import('@/components/Navigation'), { 
   ssr: false,
   loading: () => <NavigationSkeleton />
@@ -31,7 +27,12 @@ const ParticleField = dynamic(() => import('@/components/3D/ParticleField'), {
   loading: () => null
 })
 
-// Types matching our fixed API response
+const FloatingCodeBlocks = dynamic(() => import('@/components/3D/FloatingCodeBlocks'), { 
+  ssr: false,
+  loading: () => null
+})
+
+// Types (keeping your existing structure)
 interface ProjectData {
   id: string
   name: string
@@ -78,7 +79,50 @@ interface PortfolioStats {
   }>
 }
 
-// FIXED: Custom hook to fetch ALL data from our API without limits
+// Enhanced theme-aware configuration with FIXED TYPES
+function useThemeAwareConfig() {
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  return React.useMemo(() => {
+    if (!mounted) return { 
+      isDark: false, 
+      particleConfig: {
+        particleCount: 30,
+        colorScheme: 'light-mode' as const,
+        animation: 'constellation' as const,
+        interactive: true,
+        speed: 0.4,
+        className: "w-full h-full"
+      }, 
+      backgroundClass: '' 
+    }
+    
+    const isDark = resolvedTheme === 'dark'
+    
+    return {
+      isDark,
+      // FIXED: Different particle theme for projects page - blue/teal theme with proper type casting
+      particleConfig: {
+        particleCount: 30,
+        colorScheme: (isDark ? 'brand' : 'light-mode') as 'cyberpunk' | 'synthwave' | 'cosmic' | 'aurora' | 'viva-magenta' | 'brand' | 'monochrome' | 'light-mode',
+        animation: 'constellation' as 'float' | 'drift' | 'spiral' | 'chaos' | 'constellation' | 'flow' | 'orbit',
+        interactive: true,
+        speed: 0.4,
+        className: "w-full h-full"
+      },
+      backgroundClass: isDark 
+        ? 'bg-gradient-to-br from-gray-900 via-blue-900/20 to-gray-900'
+        : 'bg-gradient-to-br from-white via-blue-50/30 to-cyan-50/20'
+    }
+  }, [resolvedTheme, mounted])
+}
+
+// Custom hook for projects data (keeping your existing logic)
 function useProjectsData() {
   const [projects, setProjects] = useState<ProjectData[]>([])
   const [stats, setStats] = useState<PortfolioStats | null>(null)
@@ -92,7 +136,6 @@ function useProjectsData() {
       
       console.log('🔄 Fetching ALL projects from API...')
       
-      // FIXED: Fetch ALL projects by not passing a limit parameter
       const response = await fetch('/api/projects?includeStats=true')
       
       if (!response.ok) {
@@ -106,7 +149,6 @@ function useProjectsData() {
       }
       
       console.log(`✅ Loaded ${data.projects?.length || 0} projects from API`)
-      console.log('📊 Debug info:', data._debug)
       
       setProjects(data.projects || [])
       setStats(data.stats || null)
@@ -131,15 +173,15 @@ function useProjectsData() {
   }
 }
 
-// Loading Skeletons
+// Loading Skeletons (enhanced with blue theme)
 function NavigationSkeleton() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-[1000] h-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50">
       <div className="container mx-auto h-full flex justify-between items-center px-4">
-        <div className="w-32 h-8 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+        <div className="w-32 h-8 bg-gradient-to-r from-blue-200 to-cyan-200 dark:from-blue-800 dark:to-cyan-800 rounded animate-pulse" />
         <div className="flex gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="w-20 h-8 bg-gray-200 dark:bg-gray-800 rounded animate-pulse" />
+            <div key={i} className="w-20 h-8 bg-blue-200 dark:bg-blue-800 rounded animate-pulse" />
           ))}
         </div>
       </div>
@@ -157,7 +199,64 @@ function FooterSkeleton() {
   )
 }
 
-// Enhanced Project Card using our API data structure
+function PageLoading() {
+  const [loadingText, setLoadingText] = useState('Initializing...')
+  const [progress, setProgress] = useState(0)
+  const shouldReduceMotion = useReducedMotion()
+  
+  useEffect(() => {
+    const messages = [
+      'Initializing...',
+      'Loading GitHub Data...',
+      'Fetching Project Details...',
+      'Preparing 3D Environment...',
+      'Almost Ready...'
+    ]
+    
+    let index = 0
+    const interval = setInterval(() => {
+      index = (index + 1) % messages.length
+      setLoadingText(messages[index])
+      setProgress((index + 1) * 20)
+    }, shouldReduceMotion ? 300 : 600)
+    
+    return () => clearInterval(interval)
+  }, [shouldReduceMotion])
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-white via-blue-50 to-cyan-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-gray-900 flex items-center justify-center z-50">
+      <div className="relative text-center max-w-md mx-auto px-4">
+        <div className="relative mb-8">
+          <div className="animate-spin rounded-full h-32 w-32 border-4 border-blue-500 border-t-transparent mx-auto"></div>
+          <div className="absolute inset-0 animate-pulse rounded-full h-32 w-32 border-2 border-cyan-400 opacity-30 mx-auto" />
+          <div className="absolute inset-4 flex items-center justify-center">
+            <Rocket className="w-8 h-8 text-blue-400 animate-pulse" />
+          </div>
+        </div>
+        
+        <motion.div
+          className="space-y-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <p className="text-gray-800 dark:text-gray-200 font-medium text-lg">{loadingText}</p>
+          <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"
+              initial={{ width: '0%' }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            />
+          </div>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">{progress}% Complete</p>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+// Enhanced Project Card with 3D effects
 function ProjectCardWrapper({ 
   project, 
   index, 
@@ -169,58 +268,93 @@ function ProjectCardWrapper({
   viewMode: 'grid' | 'list'
   onCardClick: (project: ProjectData) => void
 }) {
+  const shouldReduceMotion = useReducedMotion()
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ delay: index * 0.1 }}
-      className={`group relative glass-card border border-gray-200/50 dark:border-gray-700/50 rounded-2xl overflow-hidden transition-all duration-300 ${
+      className={`group relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-2xl overflow-hidden transition-all duration-500 ${
         viewMode === 'list' ? 'flex items-center' : 'flex flex-col'
-      } cursor-pointer hover-3d enhanced-glow-effect`}
+      } cursor-pointer`}
       onClick={() => onCardClick(project)}
       whileHover={{ 
-        y: viewMode === 'grid' ? -4 : 0,
-        boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+        y: shouldReduceMotion ? 0 : (viewMode === 'grid' ? -8 : 0),
+        scale: shouldReduceMotion ? 1 : 1.02,
+        boxShadow: '0 25px 50px rgba(59, 130, 246, 0.15)'
       }}
+      whileTap={{ scale: shouldReduceMotion ? 1 : 0.98 }}
     >
-      {/* Grid View Header */}
+      {/* Enhanced 3D Header for Grid View */}
       {viewMode === 'grid' && (
-        <div className="relative h-48 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.2)_0%,transparent_50%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.2)_0%,transparent_50%)]" />
+        <div className="relative h-48 bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-500 overflow-hidden">
+          {/* 3D Background Effects */}
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.3)_0%,transparent_50%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.2)_0%,transparent_50%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(59,130,246,0.1)_0%,transparent_50%,rgba(6,182,212,0.1)_100%)]" />
           </div>
           
+          {/* Floating elements */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <Code className="w-16 h-16 text-white opacity-90" />
+            <motion.div
+              className="relative"
+              whileHover={{ 
+                rotateY: shouldReduceMotion ? 0 : 15,
+                rotateX: shouldReduceMotion ? 0 : 5
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="w-20 h-20 bg-white/20 rounded-2xl backdrop-blur-sm border border-white/30 flex items-center justify-center">
+                <Code className="w-10 h-10 text-white" />
+              </div>
+              
+              {/* Floating tech indicators */}
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                <Zap className="w-3 h-3 text-white" />
+              </div>
+            </motion.div>
           </div>
 
           {/* Status badges */}
           <div className="absolute top-4 left-4 flex flex-col gap-2">
             {project.featured && (
-              <div className="flex items-center px-3 py-1 rounded-full bg-yellow-400 text-yellow-900 text-xs font-semibold shadow-lg">
+              <motion.div 
+                className="flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-semibold shadow-lg"
+                whileHover={{ scale: 1.1 }}
+              >
                 <Star className="w-3 h-3 mr-1 fill-current" />
                 Featured
-              </div>
+              </motion.div>
             )}
           </div>
 
           <div className="absolute top-4 right-4">
             <ProjectStatus project={project} />
           </div>
+
+          {/* Hover overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
       )}
 
       {/* Content */}
       <div className={`${viewMode === 'grid' ? 'p-6' : 'flex-1 p-6'} ${viewMode === 'list' ? 'flex items-center' : ''}`}>
         {viewMode === 'list' ? (
-          /* List View */
+          /* Enhanced List View */
           <div className="flex items-center w-full space-x-6">
             <div className="flex-shrink-0">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <motion.div 
+                className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg"
+                whileHover={{ 
+                  scale: shouldReduceMotion ? 1 : 1.1,
+                  rotate: shouldReduceMotion ? 0 : 5
+                }}
+              >
                 <Code className="w-8 h-8 text-white" />
-              </div>
+              </motion.div>
             </div>
 
             <div className="flex-1 min-w-0">
@@ -247,7 +381,7 @@ function ProjectCardWrapper({
             </div>
           </div>
         ) : (
-          /* Grid View */
+          /* Enhanced Grid View */
           <>
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
@@ -255,7 +389,7 @@ function ProjectCardWrapper({
                   {project.title}
                 </h3>
                 <div className="flex items-center space-x-2 mt-1">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 capitalize">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 capitalize">
                     {project.category}
                   </span>
                 </div>
@@ -266,15 +400,17 @@ function ProjectCardWrapper({
               {project.description}
             </p>
 
-            {/* Tech Stack */}
+            {/* Enhanced Tech Stack */}
             <div className="flex flex-wrap gap-1 mb-4">
-              {project.techStack.slice(0, 4).map((tech) => (
-                <span
+              {project.techStack.slice(0, 4).map((tech, techIndex) => (
+                <motion.span
                   key={tech}
-                  className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                  className="inline-flex items-center px-2 py-1 rounded text-xs bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 text-blue-700 dark:text-blue-300 border border-blue-200/50 dark:border-blue-700/50"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ delay: techIndex * 0.1 }}
                 >
                   {tech}
-                </span>
+                </motion.span>
               ))}
               {project.techStack.length > 4 && (
                 <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
@@ -285,32 +421,48 @@ function ProjectCardWrapper({
 
             <ProjectStats project={project} />
 
-            {/* Actions */}
+            {/* Enhanced Actions */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
               <div className="flex space-x-3">
                 {project.github.url && (
-                  <span className="inline-flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
+                  <motion.span 
+                    className="inline-flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400"
+                    whileHover={{ scale: 1.05, color: '#374151' }}
+                  >
                     <Github className="w-4 h-4" />
                     <span>Code</span>
-                  </span>
+                  </motion.span>
                 )}
                 
                 {project.vercel?.isLive && (
-                  <span className="inline-flex items-center space-x-1 text-sm text-green-600 dark:text-green-400">
+                  <motion.span 
+                    className="inline-flex items-center space-x-1 text-sm text-green-600 dark:text-green-400"
+                    whileHover={{ scale: 1.05 }}
+                  >
                     <Globe className="w-4 h-4" />
                     <span>Live</span>
-                  </span>
+                  </motion.span>
                 )}
               </div>
+              
+              <motion.div
+                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                whileHover={{ x: 5 }}
+              >
+                <ArrowRight className="w-4 h-4 text-blue-500" />
+              </motion.div>
             </div>
           </>
         )}
       </div>
+
+      {/* 3D Glow Effect */}
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/0 via-cyan-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-cyan-500/10 group-hover:to-blue-500/5 transition-all duration-500 pointer-events-none" />
     </motion.div>
   )
 }
 
-// Enhanced Project Stats Component
+// Project Stats (enhanced with animations)
 function ProjectStats({ project }: { project: ProjectData }) {
   const formatDateAgo = (dateString: string) => {
     const date = new Date(dateString)
@@ -326,18 +478,27 @@ function ProjectStats({ project }: { project: ProjectData }) {
 
   return (
     <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-      <div className="flex items-center gap-1">
+      <motion.div 
+        className="flex items-center gap-1"
+        whileHover={{ scale: 1.1, color: '#eab308' }}
+      >
         <Star className="w-4 h-4 text-yellow-500" />
         <span>{project.github.stars}</span>
-      </div>
-      <div className="flex items-center gap-1">
+      </motion.div>
+      <motion.div 
+        className="flex items-center gap-1"
+        whileHover={{ scale: 1.1, color: '#3b82f6' }}
+      >
         <GitFork className="w-4 h-4 text-blue-500" />
         <span>{project.github.forks}</span>
-      </div>
-      <div className="flex items-center gap-1">
+      </motion.div>
+      <motion.div 
+        className="flex items-center gap-1"
+        whileHover={{ scale: 1.1, color: '#10b981' }}
+      >
         <Activity className="w-4 h-4 text-green-500" />
         <span>{project.activityScore}/100</span>
-      </div>
+      </motion.div>
       <div className="flex items-center gap-1">
         <Clock className="w-4 h-4" />
         <span>Updated {formatDateAgo(project.github.lastUpdated)}</span>
@@ -346,10 +507,9 @@ function ProjectStats({ project }: { project: ProjectData }) {
   )
 }
 
-// Enhanced Project Status Component
+// Project Status (enhanced with blue theme)
 function ProjectStatus({ project }: { project: ProjectData }) {
   const getStatusInfo = () => {
-    // Check Vercel deployment first
     if (project.vercel?.isLive) {
       return {
         icon: <Globe className="w-4 h-4" />,
@@ -360,7 +520,6 @@ function ProjectStatus({ project }: { project: ProjectData }) {
       }
     }
     
-    // Check general live URL
     if (project.deploymentUrl) {
       const isVercel = project.deploymentUrl.includes('vercel.app')
       const isNetlify = project.deploymentUrl.includes('netlify.app')
@@ -380,28 +539,34 @@ function ProjectStatus({ project }: { project: ProjectData }) {
       }
     }
     
-    // GitHub repository status
     return {
       icon: <Github className="w-4 h-4" />,
       text: 'Repository',
-      color: 'text-gray-500',
-      bgColor: 'bg-gray-100 dark:bg-gray-700',
-      dotColor: 'bg-gray-500'
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+      dotColor: 'bg-blue-500'
     }
   }
 
   const status = getStatusInfo()
 
   return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${status.color} ${status.bgColor}`}>
-      <div className={`w-2 h-2 rounded-full ${status.dotColor}`} />
+    <motion.div 
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${status.color} ${status.bgColor}`}
+      whileHover={{ scale: 1.05 }}
+    >
+      <motion.div 
+        className={`w-2 h-2 rounded-full ${status.dotColor}`}
+        animate={{ scale: [1, 1.2, 1] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      />
       {status.icon}
       <span>{status.text}</span>
-    </div>
+    </motion.div>
   )
 }
 
-// Main Project Showcase Component
+// Main Project Showcase (keeping your logic, enhancing visuals)
 function ProjectShowcase() {
   const { projects, stats, loading, error, refetch } = useProjectsData()
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
@@ -410,23 +575,22 @@ function ProjectShowcase() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'stars' | 'updated' | 'featured'>('featured')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
-  const [visibleProjects, setVisibleProjects] = useState(12) // Start with 12, load more as needed
+  const [visibleProjects, setVisibleProjects] = useState(12)
   
   const containerRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(containerRef, { once: true })
+  const shouldReduceMotion = useReducedMotion()
 
-  // Update filtered projects when data changes
+  // Your existing filtering logic...
   useEffect(() => {
     if (!projects.length) return
 
     let filtered = [...projects]
 
-    // Filter by category
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(project => project.category === categoryFilter)
     }
 
-    // Filter by tag
     if (activeTag !== 'All') {
       filtered = filtered.filter(project => {
         const allTags = [
@@ -439,7 +603,6 @@ function ProjectShowcase() {
       })
     }
 
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(project =>
         project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -450,7 +613,6 @@ function ProjectShowcase() {
       )
     }
 
-    // Sort projects
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
@@ -461,7 +623,6 @@ function ProjectShowcase() {
           return new Date(b.github.lastUpdated).getTime() - new Date(a.github.lastUpdated).getTime()
         case 'featured':
         default:
-          // Featured first, then live deployments, then by stars
           if (a.featured && !b.featured) return -1
           if (!a.featured && b.featured) return 1
           
@@ -477,7 +638,6 @@ function ProjectShowcase() {
     setFilteredProjects(filtered)
   }, [projects, activeTag, searchTerm, sortBy, categoryFilter])
 
-  // Get all unique tags
   const allTags = React.useMemo(() => {
     const tagSet = new Set(['All'])
     projects.forEach(project => {
@@ -488,7 +648,6 @@ function ProjectShowcase() {
     return Array.from(tagSet).slice(0, 20)
   }, [projects])
 
-  // Get unique categories
   const categories = React.useMemo(() => {
     const categorySet = new Set(['all'])
     projects.forEach(project => {
@@ -499,14 +658,11 @@ function ProjectShowcase() {
     return Array.from(categorySet)
   }, [projects])
 
-  // Load more projects
   const loadMore = () => {
     setVisibleProjects(prev => prev + 12)
   }
 
-  // Handle card click
   const handleCardClick = useCallback((project: ProjectData) => {
-    // Priority 1: Live deployment
     if (project.vercel?.isLive && project.vercel.liveUrl) {
       window.open(project.vercel.liveUrl, '_blank', 'noopener,noreferrer')
       return
@@ -517,30 +673,13 @@ function ProjectShowcase() {
       return
     }
 
-    // Priority 2: GitHub repository
     if (project.github.url) {
       window.open(project.github.url, '_blank', 'noopener,noreferrer')
     }
   }, [])
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <motion.div
-            className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-2">
-            Loading All Projects
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Fetching all repositories from GitHub and deployment platforms...
-          </p>
-        </div>
-      </div>
-    )
+    return <PageLoading />
   }
 
   if (error) {
@@ -576,16 +715,16 @@ function ProjectShowcase() {
 
   return (
     <div ref={containerRef}>
-      {/* Success indicator with GitHub stats */}
+      {/* Success indicator with enhanced blue theme */}
       {projects.length > 0 && stats && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8 p-6 glass-card backdrop-blur-sm rounded-xl border border-green-200 dark:border-green-800 max-w-4xl mx-auto"
+          className="text-center mb-8 p-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-blue-200/50 dark:border-blue-700/50 max-w-4xl mx-auto shadow-lg"
         >
-          <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400 mb-4">
+          <div className="flex items-center justify-center gap-2 text-blue-600 dark:text-blue-400 mb-4">
             <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
+              animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
               ✅
@@ -595,53 +734,65 @@ function ProjectShowcase() {
             </span>
           </div>
           
-          {/* GitHub Stats Summary */}
+          {/* Enhanced Stats Summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-            <div className="text-center">
+            <motion.div 
+              className="text-center"
+              whileHover={{ scale: 1.05 }}
+            >
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {stats.totalStars}
               </div>
               <div className="text-xs text-gray-500">Total Stars</div>
-            </div>
-            <div className="text-center">
+            </motion.div>
+            <motion.div 
+              className="text-center"
+              whileHover={{ scale: 1.05 }}
+            >
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {stats.liveProjects}
               </div>
               <div className="text-xs text-gray-500">Live Projects</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            </motion.div>
+            <motion.div 
+              className="text-center"
+              whileHover={{ scale: 1.05 }}
+            >
+              <div className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
                 {stats.totalProjects}
               </div>
               <div className="text-xs text-gray-500">Total Projects</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+            </motion.div>
+            <motion.div 
+              className="text-center"
+              whileHover={{ scale: 1.05 }}
+            >
+              <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
                 {stats.topLanguages?.length || 0}
               </div>
               <div className="text-xs text-gray-500">Languages</div>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
       )}
 
-      {/* Enhanced Filters */}
+      {/* Enhanced Filters with blue theme */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="glass-hero backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 mb-12 glow-effect-enhanced"
+        className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 dark:border-gray-700/50 mb-12 shadow-lg"
       >
         {/* Search and Sort Row */}
         <div className="flex flex-col lg:flex-row gap-4 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400" />
             <input
               type="text"
               placeholder="Search projects, technologies, or descriptions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+              className="w-full pl-10 pr-4 py-3 bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
             />
           </div>
           
@@ -649,7 +800,7 @@ function ProjectShowcase() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize"
+              className="px-4 py-3 bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize"
             >
               {categories.map(category => (
                 <option key={category} value={category}>
@@ -661,7 +812,7 @@ function ProjectShowcase() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-3 bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="featured">Featured First</option>
               <option value="updated">Recently Updated</option>
@@ -674,8 +825,8 @@ function ProjectShowcase() {
                 onClick={() => setViewMode('grid')}
                 className={`p-3 rounded-xl transition-colors ${
                   viewMode === 'grid' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                    ? 'bg-blue-500 text-white shadow-lg' 
+                    : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -687,8 +838,8 @@ function ProjectShowcase() {
                 onClick={() => setViewMode('list')}
                 className={`p-3 rounded-xl transition-colors ${
                   viewMode === 'list' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                    ? 'bg-blue-500 text-white shadow-lg' 
+                    : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -700,9 +851,9 @@ function ProjectShowcase() {
           </div>
         </div>
 
-        {/* Tag filters */}
+        {/* Enhanced Tag filters */}
         <div className="flex flex-wrap gap-2 items-center">
-          <Filter className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0" />
+          <Filter className="w-5 h-5 mr-2 text-blue-400 flex-shrink-0" />
           <div className="flex flex-wrap gap-2">
             {allTags.map(tag => (
               <motion.button
@@ -710,11 +861,11 @@ function ProjectShowcase() {
                 onClick={() => setActiveTag(tag)}
                 className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
                   activeTag === tag
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
+                    : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/40'
                 }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+                whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
               >
                 {tag}
               </motion.button>
@@ -723,8 +874,8 @@ function ProjectShowcase() {
         </div>
         
         {/* Results summary */}
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-700">
+          <p className="text-sm text-blue-600 dark:text-blue-400">
             Showing {filteredProjects.slice(0, visibleProjects).length} of {filteredProjects.length} projects
             {activeTag !== 'All' && ` tagged with "${activeTag}"`}
             {categoryFilter !== 'all' && ` in ${categoryFilter} category`}
@@ -732,6 +883,28 @@ function ProjectShowcase() {
           </p>
         </div>
       </motion.div>
+
+      {/* Enhanced 3D Background Element */}
+      {isInView && !shouldReduceMotion && (
+        <div className="absolute inset-0 pointer-events-none">
+          <motion.div
+            className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl"
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.6, 0.3]
+            }}
+            transition={{ duration: 4, repeat: Infinity }}
+          />
+          <motion.div
+            className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-gradient-to-br from-teal-500/10 to-blue-500/10 rounded-full blur-2xl"
+            animate={{ 
+              scale: [1.2, 1, 1.2],
+              opacity: [0.4, 0.2, 0.4]
+            }}
+            transition={{ duration: 3, repeat: Infinity, delay: 1 }}
+          />
+        </div>
+      )}
 
       {/* Projects Grid/List */}
       <motion.div
@@ -755,7 +928,7 @@ function ProjectShowcase() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Load More Button */}
+      {/* Enhanced Load More Button */}
       {filteredProjects.length > visibleProjects && (
         <motion.div
           className="text-center mt-12"
@@ -764,9 +937,9 @@ function ProjectShowcase() {
         >
           <motion.button
             onClick={loadMore}
-            className="flex items-center gap-2 px-8 py-4 btn-viva-enhanced font-semibold mx-auto"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 mx-auto"
+            whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+            whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
           >
             <ChevronDown className="w-5 h-5" />
             Load More Projects ({filteredProjects.length - visibleProjects} remaining)
@@ -774,15 +947,15 @@ function ProjectShowcase() {
         </motion.div>
       )}
 
-      {/* Empty state */}
+      {/* Enhanced Empty state */}
       {filteredProjects.length === 0 && projects.length > 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-center py-16"
         >
-          <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Search className="w-12 h-12 text-gray-400" />
+          <div className="w-24 h-24 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Search className="w-12 h-12 text-blue-400" />
           </div>
           <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-2">
             No projects found
@@ -799,17 +972,17 @@ function ProjectShowcase() {
                 setCategoryFilter('all')
                 setSearchTerm('')
               }}
-              className="px-6 py-3 btn-viva-enhanced"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+              whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
             >
               Clear All Filters
             </motion.button>
             <motion.button
               onClick={refetch}
-              className="flex items-center gap-2 px-6 py-3 btn-secondary glass-card hover-lift"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg font-semibold border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300"
+              whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+              whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
             >
               <RefreshCw className="w-4 h-4" />
               Refresh Data
@@ -821,12 +994,13 @@ function ProjectShowcase() {
   )
 }
 
-// Main page component  
+// Main page component with enhanced theme
 export default function ProjectsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
+  const { isDark, particleConfig, backgroundClass } = useThemeAwareConfig()
+  const shouldReduceMotion = useReducedMotion()
 
-  // Check if mobile
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
     checkMobile()
@@ -834,52 +1008,47 @@ export default function ProjectsPage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Initial loading
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false)
-    }, 1000)
+    }, shouldReduceMotion ? 400 : 1000)
     return () => clearTimeout(timer)
-  }, [])
+  }, [shouldReduceMotion])
 
   if (isLoading) {
-    return (
-      <div className="fixed inset-0 bg-gradient-to-br from-white via-blue-50/20 to-purple-50/20 dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10 flex items-center justify-center z-[9999]">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-32 w-32 border-4 border-blue-500 border-t-transparent"></div>
-          <div className="absolute inset-0 animate-pulse rounded-full h-32 w-32 border-2 border-purple-400 opacity-30"></div>
-          <div className="absolute inset-4 flex items-center justify-center">
-            <Code className="w-8 h-8 text-blue-400 animate-pulse" />
-          </div>
-        </div>
-        <motion.p 
-          className="absolute bottom-20 text-gray-600 dark:text-gray-300 font-medium"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          Loading All Projects...
-        </motion.p>
-      </div>
-    )
+    return <PageLoading />
   }
 
   return (
-    <div className="relative min-h-screen unified-portfolio-background overflow-x-hidden">
-      {/* Enhanced Unified Background with your theme system */}
-      <div className="unified-portfolio-background">
-        <div className="particle-field-container">
-          {!isMobile && (
-            <Suspense>
-              <ParticleField 
-                colorScheme={isLoading ? 'light-mode' : 'brand'}
-                animation="constellation"
-                interactive={true}
-                speed={0.3}
-              />
-            </Suspense>
-          )}
+    <div className={`relative min-h-screen ${backgroundClass} transition-colors duration-500 overflow-x-hidden`}>
+      {/* Enhanced Unified Background with blue/cyan theme */}
+      <div className="fixed inset-0 z-0">
+        <div className={`absolute inset-0 transition-colors duration-500 ${backgroundClass}`} />
+        
+        <div className="absolute inset-0">
+          <div 
+            className={`absolute inset-0 transition-opacity duration-500 ${
+              isDark
+                ? 'bg-gradient-to-br from-blue-900/10 via-cyan-900/5 to-teal-900/10'
+                : 'bg-gradient-to-br from-blue-50/50 via-cyan-50/30 to-teal-50/40'
+            }`}
+          />
+          <div 
+            className={`absolute inset-0 transition-opacity duration-700 ${
+              isDark
+                ? 'bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.08)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(6,182,212,0.05)_0%,transparent_50%)]'
+                : 'bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.04)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(6,182,212,0.03)_0%,transparent_50%)]'
+            }`}
+          />
         </div>
+        
+        {!shouldReduceMotion && (
+          <Suspense fallback={null}>
+            <div className="absolute inset-0 z-1">
+              <ParticleField {...particleConfig} />
+            </div>
+          </Suspense>
+        )}
       </div>
 
       {/* Navigation */}
@@ -889,15 +1058,10 @@ export default function ProjectsPage() {
         </Suspense>
       </div>
 
-      {/* Theme Toggle */}
-      <div className="fixed top-4 right-4 z-[1001]">
-        <ThemeToggle variant="floating" size="md" />
-      </div>
-
       {/* Main Content */}
       <main className="relative z-10 pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-7xl">
-          {/* Page Header */}
+          {/* Enhanced Page Header */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -905,14 +1069,14 @@ export default function ProjectsPage() {
           >
             <motion.div
               className="inline-flex items-center justify-center p-3 bg-blue-100 dark:bg-blue-900/30 rounded-2xl mb-6"
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: shouldReduceMotion ? 1 : 1.05, rotate: shouldReduceMotion ? 0 : 5 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
               <Rocket className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             </motion.div>
             
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-gray-50 mb-6">
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent">
                 All Projects
               </span>
             </h1>
@@ -923,29 +1087,41 @@ export default function ProjectsPage() {
               to real-world problems.
             </p>
             
-            {/* Quick Stats */}
+            {/* Enhanced Quick Stats */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               className="flex flex-wrap items-center justify-center gap-8 mt-8 text-sm text-gray-500 dark:text-gray-400"
             >
-              <div className="flex items-center gap-2">
+              <motion.div 
+                className="flex items-center gap-2"
+                whileHover={{ scale: 1.1, color: '#3b82f6' }}
+              >
                 <Code className="w-4 h-4 text-blue-500" />
                 <span>Full-Stack Development</span>
-              </div>
-              <div className="flex items-center gap-2">
+              </motion.div>
+              <motion.div 
+                className="flex items-center gap-2"
+                whileHover={{ scale: 1.1, color: '#10b981' }}
+              >
                 <Globe className="w-4 h-4 text-green-500" />
                 <span>Live Deployments</span>
-              </div>
-              <div className="flex items-center gap-2">
+              </motion.div>
+              <motion.div 
+                className="flex items-center gap-2"
+                whileHover={{ scale: 1.1, color: '#8b5cf6' }}
+              >
                 <Github className="w-4 h-4 text-purple-500" />
                 <span>Open Source</span>
-              </div>
-              <div className="flex items-center gap-2">
+              </motion.div>
+              <motion.div 
+                className="flex items-center gap-2"
+                whileHover={{ scale: 1.1, color: '#f59e0b' }}
+              >
                 <TrendingUp className="w-4 h-4 text-orange-500" />
                 <span>Actively Maintained</span>
-              </div>
+              </motion.div>
             </motion.div>
           </motion.div>
 
