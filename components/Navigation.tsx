@@ -164,8 +164,8 @@ export default function Navigation() {
                   </span>
                   <div className={`text-xs font-medium tracking-widest transition-colors duration-300 ${
                     isDark 
-                      ? 'text-gray-400 group-hover:text-viva-magenta-400' 
-                      : 'text-gray-600 group-hover:text-viva-magenta-600'
+                      ? 'text-gray-300 group-hover:text-viva-magenta-400' 
+                      : 'text-gray-700 group-hover:text-viva-magenta-600'
                   }`}>
                     FULL-STACK DEVELOPER
                   </div>
@@ -193,8 +193,8 @@ export default function Navigation() {
                           isActive 
                             ? 'text-white shadow-lg scale-105 ring-2 ring-white/20' 
                             : isDark
-                              ? 'text-gray-300 hover:text-white hover:bg-gray-700/30 hover:ring-1 hover:ring-viva-magenta-500/30'
-                              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/50 hover:ring-1 hover:ring-viva-magenta-500/30'
+                              ? 'text-white hover:text-white hover:bg-gray-700/30 hover:ring-1 hover:ring-viva-magenta-500/30'
+                              : 'text-gray-900 hover:text-gray-900 hover:bg-gray-100/50 hover:ring-1 hover:ring-viva-magenta-500/30'
                         }`}
                         whileHover={{ 
                           scale: isActive ? 1.05 : 1.02,
@@ -209,8 +209,8 @@ export default function Navigation() {
                           isActive 
                             ? 'text-white' 
                             : isDark 
-                              ? 'text-gray-400 group-hover:text-viva-magenta-400' 
-                              : 'text-gray-500 group-hover:text-viva-magenta-600'
+                              ? 'text-white hover:text-viva-magenta-400' 
+                              : 'text-gray-900 hover:text-viva-magenta-600'
                         }`} />
                         <span className="hidden xl:block">{item.name}</span>
                         
@@ -260,8 +260,8 @@ export default function Navigation() {
                     rel="noopener noreferrer"
                     className={`w-10 h-10 flex items-center justify-center border rounded-xl transition-all duration-300 group relative overflow-hidden cursor-pointer ${
                       isDark
-                        ? 'bg-gray-800/60 hover:bg-gray-700/80 border-gray-700/60 text-gray-400 hover:text-white hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
-                        : 'bg-white/60 hover:bg-white/80 border-gray-200/60 text-gray-600 hover:text-gray-900 hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
+                        ? 'bg-gray-800/60 hover:bg-gray-700/80 border-gray-700/60 text-white hover:text-white hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
+                        : 'bg-white/60 hover:bg-white/80 border-gray-200/60 text-gray-900 hover:text-gray-900 hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
                     }`}
                     whileHover={{ 
                       scale: 1.05,
@@ -285,8 +285,8 @@ export default function Navigation() {
                 onClick={cycleTheme}
                 className={`w-10 h-10 flex items-center justify-center border rounded-xl transition-all duration-300 group relative overflow-hidden cursor-pointer ${
                   isDark
-                    ? 'bg-gray-800/60 hover:bg-gray-700/80 border-gray-700/60 text-gray-400 hover:text-white hover:border-lux-gold-500/50 hover:shadow-lg hover:shadow-lux-gold-500/20'
-                    : 'bg-white/60 hover:bg-white/80 border-gray-200/60 text-gray-600 hover:text-gray-900 hover:border-lux-gold-500/50 hover:shadow-lg hover:shadow-lux-gold-500/20'
+                    ? 'bg-gray-800/60 hover:bg-gray-700/80 border-gray-700/60 text-white hover:text-white hover:border-lux-gold-500/50 hover:shadow-lg hover:shadow-lux-gold-500/20'
+                    : 'bg-white/60 hover:bg-white/80 border-gray-200/60 text-gray-900 hover:text-gray-900 hover:border-lux-gold-500/50 hover:shadow-lg hover:shadow-lux-gold-500/20'
                 }`}
                 whileHover={{ 
                   scale: 1.05,
@@ -346,8 +346,8 @@ export default function Navigation() {
               <motion.button
                 className={`lg:hidden w-10 h-10 flex items-center justify-center border rounded-xl transition-all duration-300 ml-2 group relative overflow-hidden cursor-pointer ${
                   isDark
-                    ? 'bg-gray-800/60 hover:bg-gray-700/80 border-gray-700/60 text-gray-400 hover:text-white hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
-                    : 'bg-white/60 hover:bg-white/80 border-gray-200/60 text-gray-600 hover:text-gray-900 hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
+                    ? 'bg-gray-800/60 hover:bg-gray-700/80 border-gray-700/60 text-white hover:text-white hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
+                    : 'bg-white/60 hover:bg-white/80 border-gray-200/60 text-gray-900 hover:text-gray-900 hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
                 }`}
                 onClick={toggleMobileMenu}
                 whileHover={{ 
