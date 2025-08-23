@@ -27,6 +27,7 @@ export interface GitHubRepository {
   has_wiki: boolean
   has_pages: boolean
   has_downloads: boolean
+  size: number
   license?: {
     key: string
     name: string
@@ -92,69 +93,54 @@ const getHeaders = () => {
   return headers
 }
 
-// Enhanced repository filtering for portfolio
+// FIXED: More lenient repository filtering for portfolio
 function isPortfolioWorthy(repo: GitHubRepository): boolean {
   // Skip forks, archived, and disabled repos
   if (repo.fork || repo.archived || repo.disabled) return false
   
-  // Must have a description (relaxed requirement)
-  if (!repo.description || repo.description.length < 5) return false
+  // Accept any repo with a description (very lenient)
+  if (!repo.description) return false
   
-  // Skip common non-portfolio repo patterns
+  // Skip only very obvious non-portfolio repo patterns
   const skipPatterns = [
-    /^\./, // dotfiles
-    /readme$/i,
-    /profile$/i,
-    /config$/i,
-    /template$/i,
-    /test$/i,
-    /playground$/i,
-    /learning$/i,
-    /tutorial$/i,
-    /practice$/i
+    /^\.github$/i, // .github repo
+    /^config$/i,   // config only repos
+    /^test$/i,     // test only repos
   ]
   
   if (skipPatterns.some(pattern => pattern.test(repo.name))) return false
   
-  // Accept repos with good indicators OR recent activity
-  const hasGoodIndicators = repo.stargazers_count > 0 ||
-                           repo.has_pages ||
-                           Boolean(repo.homepage) ||
-                           repo.topics.length > 0 ||
-                           repo.description.toLowerCase().includes('project')
-  
-  const isRecentlyActive = new Date(repo.updated_at) > new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000) // 6 months
-  
-  return hasGoodIndicators || isRecentlyActive
+  // FIXED: Much more lenient criteria - accept almost everything with description
+  return true
 }
 
-// Calculate repository score for sorting
+// Calculate repository score for sorting (more generous)
 function calculateRepoScore(repo: GitHubRepository): number {
   let score = 0
   
-  // Stars and forks
+  // Stars and forks (main indicators)
   score += repo.stargazers_count * 3
   score += repo.forks_count * 2
   
-  // Recent activity
+  // Recent activity (more generous timeframe)
   const lastUpdate = new Date(repo.updated_at)
-  const monthsOld = (Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24 * 30)
-  score += Math.max(0, 20 - monthsOld) // Bonus for recent updates
+  const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
+  if (lastUpdate > oneYearAgo) score += 10 // Updated within a year
   
   // Quality indicators
-  if (repo.description && repo.description.length > 20) score += 10
-  if (repo.homepage) score += 15
-  if (repo.topics && repo.topics.length > 0) score += 5
-  if (repo.has_pages) score += 10
+  if (repo.description && repo.description.length > 10) score += 8
+  if (repo.homepage) score += 12
+  if (repo.topics && repo.topics.length > 0) score += repo.topics.length
+  if (repo.has_pages) score += 8
   
-  // Language bonus for popular web languages
-  const webLanguages = ['TypeScript', 'JavaScript', 'Python', 'HTML', 'CSS']
-  if (repo.language && webLanguages.includes(repo.language)) score += 8
+  // Language bonus for web technologies
+  const webLanguages = ['TypeScript', 'JavaScript', 'Python', 'HTML', 'CSS', 'Go', 'Rust']
+  if (repo.language && webLanguages.includes(repo.language)) score += 5
   
   return score
 }
 
-// FIXED: Fetch ALL GitHub repositories with pagination
+// FIXED: Fetch ALL GitHub repositories with pagination (no limits)
 async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
   try {
     console.log('🔄 Fetching ALL GitHub repositories with pagination...')
@@ -166,21 +152,23 @@ async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
     const allRepos: GitHubRepository[] = []
     let page = 1
     const perPage = 100 // Maximum allowed by GitHub API
+    let hasMorePages = true
     
-    while (true) {
+    while (hasMorePages && page <= 20) { // Safety limit of 20 pages (2000 repos max)
       console.log(`📄 Fetching page ${page} (${perPage} repos per page)...`)
       
       const response = await fetch(
         `${GITHUB_API_BASE}/users/${GITHUB_USERNAME}/repos?type=owner&sort=updated&per_page=${perPage}&page=${page}`,
         {
           headers: getHeaders(),
-          next: { revalidate: 3600 } // Cache for 1 hour
+          next: { revalidate: 1800 } // Cache for 30 minutes
         }
       )
 
       if (!response.ok) {
         const errorText = await response.text()
-        throw new Error(`GitHub API error on page ${page}: ${response.status} - ${errorText}`)
+        console.error(`❌ GitHub API error on page ${page}: ${response.status} - ${errorText}`)
+        break // Don't throw, just stop pagination
       }
 
       const repos: GitHubRepository[] = await response.json()
@@ -188,22 +176,16 @@ async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
       
       if (repos.length === 0) {
         console.log('✅ No more repositories found, pagination complete')
-        break // No more repositories
-      }
-      
-      allRepos.push(...repos)
-      page++
-      
-      // Safety check to prevent infinite loops
-      if (page > 10) {
-        console.warn('⚠️ Stopped pagination at page 10 to prevent infinite loops')
-        break
+        hasMorePages = false
+      } else {
+        allRepos.push(...repos)
+        page++
       }
     }
     
     console.log(`📊 Total repositories fetched: ${allRepos.length}`)
     
-    // Filter for portfolio-worthy repos with more lenient criteria
+    // FIXED: Much more lenient filtering - keep almost everything
     const portfolioRepos = allRepos
       .filter(isPortfolioWorthy)
       .map(repo => ({
@@ -214,9 +196,10 @@ async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
       .map(({ _score, ...repo }) => repo) // Remove score from final output
     
     console.log(`✨ Portfolio repositories after filtering: ${portfolioRepos.length}`)
+    console.log(`📈 Acceptance rate: ${Math.round((portfolioRepos.length / allRepos.length) * 100)}%`)
     
-    // Debug: Log top 5 repos by score
-    portfolioRepos.slice(0, 5).forEach((repo, index) => {
+    // Debug: Log top 10 repos by score
+    portfolioRepos.slice(0, 10).forEach((repo, index) => {
       console.log(`${index + 1}. ${repo.name} (⭐${repo.stargazers_count}, 🔧${repo.forks_count}) - ${repo.description?.slice(0, 50)}...`)
     })
     
@@ -299,7 +282,7 @@ async function generateGitHubStats(): Promise<GitHubStats | null> {
       }
     }
 
-    console.log(`✅ Generated stats: ${repositories.length} repos, ${totalStars} stars`)
+    console.log(`✅ Generated stats: ${repositories.length} repos, ${totalStars} stars, ${totalForks} forks`)
     return stats
   } catch (error) {
     console.error('❌ Error generating GitHub stats:', error)
@@ -307,13 +290,13 @@ async function generateGitHubStats(): Promise<GitHubStats | null> {
   }
 }
 
-// FIXED: Update cached functions to use unlimited fetching
+// FIXED: Update cached functions
 export const getCachedRepositories = unstable_cache(
   fetchGitHubRepositories,
-  ['github-repositories-all'],
+  ['github-repositories-all-unlimited'],
   {
     tags: ['github-repos'],
-    revalidate: 1800 // 30 minutes for more frequent updates
+    revalidate: 1800 // 30 minutes
   }
 )
 
@@ -328,14 +311,14 @@ export const getCachedGitHubUser = unstable_cache(
 
 export const getCachedGitHubStats = unstable_cache(
   generateGitHubStats,
-  ['github-stats-all'],
+  ['github-stats-all-unlimited'],
   {
     tags: ['github-stats'],
-    revalidate: 1800 // 30 minutes for more frequent updates
+    revalidate: 1800 // 30 minutes
   }
 )
 
-// Export non-cached versions as well for direct use
+// Export non-cached versions as well
 export { 
   fetchGitHubRepositories, 
   fetchGitHubUser, 

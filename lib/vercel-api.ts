@@ -1,4 +1,4 @@
-// lib/vercel-api.ts - FIXED: Complete Vercel API integration
+// lib/vercel-api.ts - COMPLETE Vercel API integration
 import { unstable_cache } from 'next/cache'
 
 export interface VercelProject {
@@ -82,6 +82,7 @@ function isVercelAvailable(): boolean {
 // Fetch Vercel projects
 async function fetchVercelProjects(): Promise<VercelProject[]> {
   if (!isVercelAvailable()) {
+    console.log('🔧 Vercel not configured - skipping Vercel projects')
     return []
   }
 
@@ -95,13 +96,20 @@ async function fetchVercelProjects(): Promise<VercelProject[]> {
 
     if (!response.ok) {
       const errorText = await response.text()
-      throw new Error(`Vercel API error: ${response.status} - ${errorText}`)
+      console.error(`❌ Vercel API error: ${response.status} - ${errorText}`)
+      return []
     }
 
     const data = await response.json()
     const projects: VercelProject[] = data.projects || []
     
     console.log(`📦 Found ${projects.length} Vercel projects`)
+    
+    // Debug: Log project names
+    projects.forEach((project, index) => {
+      console.log(`${index + 1}. ${project.name} (ID: ${project.id})`)
+    })
+    
     return projects
   } catch (error) {
     console.error('❌ Error fetching Vercel projects:', error)
@@ -180,13 +188,17 @@ async function fetchProjectsWithStatus(): Promise<ProjectWithStatus[]> {
           }
         }
 
-        return {
+        const projectWithStatus: ProjectWithStatus = {
           project,
           status: deployment || undefined,
           liveUrl,
           isLive,
           lastDeployment: deployment || undefined
         }
+
+        console.log(`📊 ${project.name}: ${isLive ? '🟢 Live' : '🔴 Not Live'} ${liveUrl ? `(${liveUrl})` : ''}`)
+
+        return projectWithStatus
       })
 
       const batchResults = await Promise.all(statusPromises)
@@ -199,7 +211,7 @@ async function fetchProjectsWithStatus(): Promise<ProjectWithStatus[]> {
     }
 
     const liveProjectsCount = projectsWithStatus.filter(p => p.isLive).length
-    console.log(`✅ Processed ${projectsWithStatus.length} projects, ${liveProjectsCount} live`)
+    console.log(`✅ Processed ${projectsWithStatus.length} Vercel projects, ${liveProjectsCount} are live`)
     
     return projectsWithStatus
   } catch (error) {
@@ -208,32 +220,87 @@ async function fetchProjectsWithStatus(): Promise<ProjectWithStatus[]> {
   }
 }
 
-// Match GitHub repo with Vercel project
+// ENHANCED: Match GitHub repo with Vercel project using multiple strategies
 export function matchGitHubRepoWithVercel(
   repoName: string, 
   vercelProjects: ProjectWithStatus[]
 ): ProjectWithStatus | undefined {
-  // Try exact name match first
+  if (!vercelProjects || vercelProjects.length === 0) {
+    return undefined
+  }
+
+  console.log(`🔍 Matching GitHub repo "${repoName}" with ${vercelProjects.length} Vercel projects...`)
+  
+  // Strategy 1: Exact name match (case-insensitive)
   let match = vercelProjects.find(vp => 
     vp.project.name.toLowerCase() === repoName.toLowerCase()
   )
   
-  if (match) return match
+  if (match) {
+    console.log(`✅ Exact match: ${repoName} → ${match.project.name}`)
+    return match
+  }
   
-  // Try partial matches
-  match = vercelProjects.find(vp => 
-    vp.project.name.toLowerCase().includes(repoName.toLowerCase()) ||
-    repoName.toLowerCase().includes(vp.project.name.toLowerCase())
-  )
+  // Strategy 2: Remove common prefixes/suffixes and try again
+  const cleanRepoName = repoName
+    .replace(/^(my-|the-|a-)/i, '') // Remove common prefixes
+    .replace(/-?(app|project|website|site|portfolio|demo)$/i, '') // Remove common suffixes
   
-  if (match) return match
+  if (cleanRepoName !== repoName) {
+    match = vercelProjects.find(vp => 
+      vp.project.name.toLowerCase() === cleanRepoName.toLowerCase()
+    )
+    
+    if (match) {
+      console.log(`✅ Clean name match: ${repoName} → ${match.project.name} (via "${cleanRepoName}")`)
+      return match
+    }
+  }
   
-  // Try matching GitHub repo link
+  // Strategy 3: Partial matches (contains)
+  match = vercelProjects.find(vp => {
+    const projectName = vp.project.name.toLowerCase()
+    const repoLower = repoName.toLowerCase()
+    
+    return projectName.includes(repoLower) || repoLower.includes(projectName)
+  })
+  
+  if (match) {
+    console.log(`✅ Partial match: ${repoName} → ${match.project.name}`)
+    return match
+  }
+  
+  // Strategy 4: GitHub repo link match
   match = vercelProjects.find(vp => 
     vp.project.link?.repo?.toLowerCase() === repoName.toLowerCase()
   )
   
-  return match
+  if (match) {
+    console.log(`✅ GitHub link match: ${repoName} → ${match.project.name}`)
+    return match
+  }
+  
+  // Strategy 5: Fuzzy matching with common transformations
+  const repoTransforms = [
+    repoName.replace(/-/g, ''), // Remove dashes
+    repoName.replace(/_/g, ''), // Remove underscores  
+    repoName.replace(/[-_]/g, ''), // Remove all separators
+    repoName.replace(/[-_]/g, '-'), // Normalize to dashes
+  ]
+  
+  for (const transform of repoTransforms) {
+    match = vercelProjects.find(vp => 
+      vp.project.name.toLowerCase() === transform.toLowerCase()
+    )
+    
+    if (match) {
+      console.log(`✅ Transform match: ${repoName} → ${match.project.name} (via "${transform}")`)
+      return match
+    }
+  }
+  
+  console.log(`⚠️ No match found for: ${repoName}`)
+  return undefined
 }
 
 // Get deployment URL priority order
@@ -274,11 +341,15 @@ function isValidDeploymentUrl(url: string): boolean {
       'surge.sh',
       'firebase.app',
       'web.app',
-      'railway.app'
+      'railway.app',
+      'render.com',
+      'fly.dev'
     ]
     
-    return deploymentPlatforms.some(platform => hostname.includes(platform)) ||
-           !hostname.includes('github.com') // Not a GitHub repo URL
+    const isDeploymentPlatform = deploymentPlatforms.some(platform => hostname.includes(platform))
+    const isNotGitHub = !hostname.includes('github.com')
+    
+    return isDeploymentPlatform || (isNotGitHub && !hostname.includes('localhost'))
   } catch {
     return false
   }
@@ -294,6 +365,39 @@ export const getCachedProjectsWithStatus = unstable_cache(
   }
 )
 
+// Debug function to test Vercel integration
+async function debugVercelIntegration() {
+  console.log('🔧 DEBUG: Testing Vercel integration...')
+  console.log(`🔑 Vercel token present: ${!!VERCEL_TOKEN}`)
+  
+  if (!VERCEL_TOKEN) {
+    console.log('❌ No Vercel token - integration disabled')
+    return { success: false, reason: 'No token' }
+  }
+  
+  try {
+    const projects = await fetchVercelProjects()
+    console.log(`📊 Debug results: ${projects.length} projects found`)
+    
+    // Test fetching status for first project
+    if (projects.length > 0) {
+      const firstProject = projects[0]
+      console.log(`🧪 Testing deployment fetch for: ${firstProject.name}`)
+      const deployment = await fetchLatestDeployment(firstProject.id)
+      console.log(`📦 Deployment result:`, {
+        found: !!deployment,
+        state: deployment?.state,
+        url: deployment?.url
+      })
+    }
+    
+    return { success: true, projects: projects.length }
+  } catch (error) {
+    console.error('❌ Debug error:', error)
+    return { success: false, reason: error instanceof Error ? error.message : 'Unknown error' }
+  }
+}
+
 // Export functions
 export {
   fetchVercelProjects,
@@ -301,5 +405,6 @@ export {
   fetchProjectsWithStatus,
   isVercelAvailable,
   getLiveUrl,
-  isValidDeploymentUrl
+  isValidDeploymentUrl,
+  debugVercelIntegration
 }

@@ -1,4 +1,4 @@
-// pages/api/projects.ts - FIXED: Remove 3-repository limit
+// pages/api/projects.ts - FIXED: Show ALL repositories without any limits
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getEnhancedProjects, getPortfolioStats, type EnhancedProject, type PortfolioStats } from '@/lib/portfolio-integration'
 
@@ -47,7 +47,7 @@ interface ErrorAPIResponse {
   }
 }
 
-// Transform enhanced project to API response format for compatibility
+// Transform enhanced project to API response format
 function transformToAPIFormat(project: EnhancedProject) {
   return {
     id: project.id,
@@ -128,27 +128,27 @@ export default async function handler(
   }
 
   try {
-    console.log('🔄 Projects API: Fetching ALL enhanced projects (NO LIMITS)...')
+    console.log('🚀 Projects API: Fetching ALL projects with NO LIMITS...')
     
-    // FIXED: Get query parameters - default to NO LIMIT
+    // Get query parameters
     const limit = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit
     const featured = Array.isArray(req.query.featured) ? req.query.featured[0] : req.query.featured || 'false'
     const category = Array.isArray(req.query.category) ? req.query.category[0] : req.query.category || 'all'
     const sort = Array.isArray(req.query.sort) ? req.query.sort[0] : req.query.sort || 'featured'
     const includeStats = Array.isArray(req.query.includeStats) ? req.query.includeStats[0] : req.query.includeStats || 'false'
 
-    // FIXED: Only apply limit if explicitly requested AND greater than 0
-    const limitNum = limit && parseInt(limit as string) > 0 ? parseInt(limit as string) : null // null means NO LIMIT
+    // FIXED: Default to NO LIMIT unless explicitly requested
+    const limitNum = limit && parseInt(limit as string) > 0 ? parseInt(limit as string) : null
 
-    console.log(`📊 Query params: limit=${limitNum || 'NO LIMIT'}, featured=${featured}, category=${category}, sort=${sort}`)
+    console.log(`📊 Query params: limit=${limitNum || 'UNLIMITED'}, featured=${featured}, category=${category}, sort=${sort}`)
 
-    // Fetch enhanced projects from integration layer
+    // Fetch ALL enhanced projects from integration layer
     const allProjects = await getEnhancedProjects()
     
-    console.log(`📦 Raw projects from integration: ${allProjects.length}`)
+    console.log(`📦 Fetched ${allProjects.length} total projects from GitHub/Vercel integration`)
     
     if (allProjects.length === 0) {
-      console.warn('⚠️ No projects found from integration layer')
+      console.warn('⚠️ No projects found - check GitHub token and API access')
       return res.status(200).json({
         success: true,
         projects: [],
@@ -174,7 +174,7 @@ export default async function handler(
     let filteredProjects = [...allProjects]
     console.log(`🔽 Starting with ${filteredProjects.length} projects`)
 
-    // Filter by featured
+    // Filter by featured status
     if (featured === 'true') {
       filteredProjects = filteredProjects.filter(project => project.featured)
       console.log(`⭐ After featured filter: ${filteredProjects.length} projects`)
@@ -209,26 +209,32 @@ export default async function handler(
 
     console.log(`🔄 After sorting by ${sort}: ${filteredProjects.length} projects`)
 
-    // FIXED: Only apply limit if explicitly specified AND greater than 0
-    if (limitNum && limitNum > 0 && limitNum < filteredProjects.length) {
-      console.log(`✂️ Applying explicit limit of ${limitNum} projects`)
-      filteredProjects = filteredProjects.slice(0, limitNum)
-      console.log(`✂️ After limit (${limitNum}): ${filteredProjects.length} projects`)
+    // FIXED: Only apply limit if explicitly requested and reasonable
+    const finalProjects = limitNum && limitNum > 0 && limitNum < 100 
+      ? filteredProjects.slice(0, limitNum)
+      : filteredProjects // NO LIMIT - return ALL filtered projects
+
+    if (limitNum && limitNum > 0) {
+      console.log(`✂️ Applied explicit limit of ${limitNum}: showing ${finalProjects.length} projects`)
     } else {
-      console.log(`🚀 NO LIMIT APPLIED - Returning ALL ${filteredProjects.length} projects`)
+      console.log(`🌟 NO LIMIT APPLIED: Returning ALL ${finalProjects.length} projects`)
     }
 
     // Transform to API format
-    const transformedProjects = filteredProjects.map(transformToAPIFormat)
+    const transformedProjects = finalProjects.map(transformToAPIFormat)
 
     // Calculate metadata
+    const liveProjectsCount = transformedProjects.filter(p => 
+      p.vercel?.isLive || p.deploymentUrl
+    ).length
+
     const meta = {
       total: transformedProjects.length,
       featured: transformedProjects.filter(p => p.featured).length,
-      live: transformedProjects.filter(p => p.vercel?.isLive || p.deploymentUrl).length,
+      live: liveProjectsCount,
       categories: [...new Set(transformedProjects.map(p => p.category))],
       totalStars: transformedProjects.reduce((sum, p) => sum + (p.github?.stars || 0), 0),
-      source: 'integration',
+      source: 'integration-unlimited',
       timestamp: new Date().toISOString(),
       filters: {
         featured: featured === 'true',
@@ -243,12 +249,14 @@ export default async function handler(
     if (includeStats === 'true') {
       try {
         stats = await getPortfolioStats()
+        console.log(`📊 Portfolio stats: ${stats.totalProjects} projects, ${stats.totalStars} stars`)
       } catch (error) {
         console.warn('⚠️ Could not fetch portfolio stats:', error)
       }
     }
 
-    console.log(`✅ Projects API: Successfully returning ${transformedProjects.length} projects`)
+    console.log(`✅ SUCCESS: Returning ${transformedProjects.length} projects`)
+    console.log(`📈 Project breakdown: ${meta.featured} featured, ${meta.live} live, ${meta.totalStars} total stars`)
 
     // Set cache headers for performance
     res.setHeader('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=3600')
@@ -272,15 +280,12 @@ export default async function handler(
     console.error('❌ Projects API error:', error)
     
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-    const isAPIError = errorMessage.includes('API')
-    const isNetworkError = errorMessage.includes('fetch')
     
     return res.status(500).json({
       success: false,
       error: 'Failed to fetch projects',
       message: errorMessage,
       details: {
-        type: isAPIError ? 'api_error' : isNetworkError ? 'network_error' : 'server_error',
         hasGitHubToken: !!process.env.GITHUB_TOKEN,
         hasVercelToken: !!process.env.VERCEL_TOKEN,
         timestamp: new Date().toISOString()
