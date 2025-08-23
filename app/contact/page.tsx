@@ -34,19 +34,11 @@ import {
 } from 'lucide-react'
 
 // Lazy load heavy components
-const Navigation = dynamic(
-  () => import('@/components/Navigation'),
-  { 
-    ssr: false,
-    loading: () => <NavigationSkeleton />
-  }
-)
-
 const Footer = dynamic(
   () => import('@/components/Footer'),
   { 
     ssr: false,
-    loading: () => <FooterSkeleton />
+    loading: () => null
   }
 )
 
@@ -57,55 +49,6 @@ const ParticleField = dynamic(
     loading: () => null
   }
 )
-
-// Loading Skeletons using your theme
-function NavigationSkeleton() {
-  return (
-    <nav className="fixed top-0 left-0 right-0 z-40 px-4 py-4 glass border-b border-gray-200/50 dark:border-gray-700/50">
-      <div className="container mx-auto flex justify-between items-center">
-        <div className="w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-        <div className="flex gap-4">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-          ))}
-        </div>
-      </div>
-    </nav>
-  )
-}
-
-function FooterSkeleton() {
-  return (
-    <footer className="bg-lux-black py-8">
-      <div className="container mx-auto px-4">
-        <div className="w-64 h-4 bg-lux-gray rounded mx-auto animate-pulse" />
-      </div>
-    </footer>
-  )
-}
-
-// Enhanced Page Loading Component using your theme
-function PageLoading() {
-  return (
-    <div className="fixed inset-0 bg-gradient-hero flex items-center justify-center z-50">
-      <div className="relative">
-        <div className="animate-spin rounded-full h-32 w-32 border-4 border-viva-magenta-500 border-t-transparent"></div>
-        <div className="absolute inset-0 animate-pulse rounded-full h-32 w-32 border-2 border-lux-gold-400 opacity-30"></div>
-        <div className="absolute inset-4 flex items-center justify-center">
-          <Mail className="w-8 h-8 text-viva-magenta-400 animate-pulse" />
-        </div>
-      </div>
-      <motion.p 
-        className="absolute bottom-20 text-lux-gray-300 font-medium"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-      >
-        Loading Contact Page...
-      </motion.p>
-    </div>
-  )
-}
 
 // Enhanced form types
 interface FormData {
@@ -132,12 +75,11 @@ interface ContactMethod {
   value: string
   href: string
   description: string
-  gradientClass: string
   available: boolean
   responseTime?: string
 }
 
-// Animation variants using your theme
+// Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -161,7 +103,7 @@ const itemVariants = {
   }
 }
 
-// Enhanced Contact Methods using your theme
+// ✅ FIXED: Contact Method Card with proper theme support
 function ContactMethodCard({ method, index, onCopy }: { 
   method: ContactMethod
   index: number
@@ -172,7 +114,7 @@ function ContactMethodCard({ method, index, onCopy }: {
   return (
     <motion.div
       variants={itemVariants}
-      className="card-3d-enhanced group relative"
+      className="relative group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -180,10 +122,10 @@ function ContactMethodCard({ method, index, onCopy }: {
         href={method.href}
         target={method.href.startsWith('http') ? '_blank' : '_self'}
         rel={method.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-        className="block h-full transform-gpu hover-3d"
+        className="block h-full p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-viva-magenta dark:hover:border-viva-magenta transition-all duration-300 hover:shadow-lg dark:hover:shadow-xl group-hover:-translate-y-1"
       >
         <div className="flex items-start justify-between mb-4">
-          <div className={`p-3 rounded-xl bg-gradient-to-br ${method.gradientClass} shadow-luxury`}>
+          <div className="p-3 rounded-xl bg-gradient-to-br from-viva-magenta to-lux-gold shadow-lg">
             <method.icon className="w-6 h-6 text-white" />
           </div>
           
@@ -195,37 +137,37 @@ function ContactMethodCard({ method, index, onCopy }: {
           )}
         </div>
 
-        <h3 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-2">
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
           {method.label}
         </h3>
         
-        <p className="text-sm text-lux-gray-600 dark:text-lux-gray-400 mb-3">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
           {method.description}
         </p>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-viva-magenta-600 dark:text-viva-magenta-400">
+          <span className="text-sm font-medium text-viva-magenta">
             {method.value}
           </span>
           
           {method.responseTime && (
-            <span className="px-2 py-1 rounded-full bg-viva-magenta-50 dark:bg-viva-magenta-900/30 text-viva-magenta-700 dark:text-viva-magenta-300 text-xs font-medium border border-viva-magenta-200 dark:border-viva-magenta-800">
+            <span className="px-2 py-1 rounded-full bg-viva-magenta/10 text-viva-magenta text-xs font-medium border border-viva-magenta/20">
               {method.responseTime}
             </span>
           )}
         </div>
 
-        {/* Copy button for email using your theme */}
+        {/* Copy button for email */}
         {method.id === 'email' && (
           <button
             onClick={(e) => {
               e.preventDefault()
               onCopy(method.value)
             }}
-            className="absolute top-4 right-4 p-2 rounded-lg bg-lux-gray-100 dark:bg-lux-gray-700 opacity-0 group-hover:opacity-100 hover-scale focus-ring-viva"
+            className="absolute top-4 right-4 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 opacity-0 group-hover:opacity-100 hover:scale-105 transition-all duration-200"
             title="Copy email"
           >
-            <Copy className="w-4 h-4 text-lux-gray-600 dark:text-lux-gray-400" />
+            <Copy className="w-4 h-4 text-gray-600 dark:text-gray-400" />
           </button>
         )}
       </a>
@@ -233,13 +175,13 @@ function ContactMethodCard({ method, index, onCopy }: {
   )
 }
 
-// Enhanced Stats Section using your theme
+// ✅ FIXED: Stats Section with proper theme support
 function StatsSection() {
   const stats = [
-    { icon: Star, label: 'Client Satisfaction', value: '100%', color: 'text-lux-gold-500' },
-    { icon: Users, label: 'Projects Completed', value: '50+', color: 'text-viva-magenta-500' },
-    { icon: Coffee, label: 'Cups of Coffee', value: '∞', color: 'text-lux-sage-500' },
-    { icon: Code2, label: 'Lines of Code', value: '100K+', color: 'text-lux-teal-500' },
+    { icon: Star, label: 'Client Satisfaction', value: '100%' },
+    { icon: Users, label: 'Projects Completed', value: '50+' },
+    { icon: Coffee, label: 'Cups of Coffee', value: '∞' },
+    { icon: Code2, label: 'Lines of Code', value: '100K+' },
   ]
 
   return (
@@ -251,17 +193,17 @@ function StatsSection() {
         <motion.div
           key={stat.label}
           variants={itemVariants}
-          className="card-enhanced text-center"
+          className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-viva-magenta dark:hover:border-viva-magenta transition-all duration-300 hover:shadow-lg"
         >
           <div className="flex justify-center mb-3">
-            <div className="p-3 bg-gradient-to-br from-viva-magenta-100 to-lux-gold-100 dark:from-viva-magenta-900/30 dark:to-lux-gold-900/30 rounded-full">
-              <stat.icon className={`w-6 h-6 ${stat.color}`} />
+            <div className="p-3 bg-gradient-to-br from-viva-magenta/10 to-lux-gold/10 rounded-full border border-viva-magenta/20">
+              <stat.icon className="w-6 h-6 text-viva-magenta" />
             </div>
           </div>
-          <div className="text-2xl font-bold gradient-text-luxury mb-1">
+          <div className="text-2xl font-bold bg-gradient-to-r from-viva-magenta to-lux-gold bg-clip-text text-transparent mb-1">
             {stat.value}
           </div>
-          <div className="text-sm text-lux-gray-600 dark:text-lux-gray-400">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
             {stat.label}
           </div>
         </motion.div>
@@ -270,7 +212,7 @@ function StatsSection() {
   )
 }
 
-// Enhanced FAQ Section using your theme
+// ✅ FIXED: FAQ Section with proper theme support
 function FAQSection() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null)
 
@@ -303,7 +245,7 @@ function FAQSection() {
       variants={containerVariants}
     >
       <motion.h3 
-        className="text-2xl font-bold text-center mb-8 gradient-text-luxury"
+        className="text-2xl font-bold text-center mb-8 bg-gradient-to-r from-viva-magenta to-lux-gold bg-clip-text text-transparent"
         variants={itemVariants}
       >
         Frequently Asked Questions
@@ -314,20 +256,20 @@ function FAQSection() {
           <motion.div
             key={index}
             variants={itemVariants}
-            className="glass-card rounded-xl overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
           >
             <button
               onClick={() => setOpenFAQ(openFAQ === index ? null : index)}
-              className="w-full p-6 text-left flex items-center justify-between hover-lift focus-ring-viva"
+              className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors duration-200"
             >
-              <span className="font-medium text-lux-gray-900 dark:text-lux-offwhite">
+              <span className="font-medium text-gray-900 dark:text-gray-100">
                 {faq.question}
               </span>
               <motion.div
                 animate={{ rotate: openFAQ === index ? 180 : 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <ArrowRight className="w-5 h-5 text-viva-magenta-500" />
+                <ArrowRight className="w-5 h-5 text-viva-magenta" />
               </motion.div>
             </button>
             
@@ -340,7 +282,7 @@ function FAQSection() {
                   transition={{ duration: 0.3 }}
                   className="overflow-hidden"
                 >
-                  <div className="px-6 pb-6 text-lux-gray-600 dark:text-lux-gray-300">
+                  <div className="px-6 pb-6 text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700">
                     {faq.answer}
                   </div>
                 </motion.div>
@@ -353,7 +295,7 @@ function FAQSection() {
   )
 }
 
-// Enhanced Form Component using your theme
+// ✅ FIXED: Contact Form with proper theme support
 function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
   onSubmit: (data: FormData) => Promise<void>
   isSubmitting: boolean
@@ -441,10 +383,10 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
   }
 
   return (
-    <div className="glass-card rounded-2xl p-8 shadow-luxury">
-      {/* Progress indicator using your theme */}
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-200 dark:border-gray-700 shadow-lg">
+      {/* Progress indicator */}
       <div className="flex items-center justify-between mb-8">
-        <h3 className="text-xl font-semibold gradient-text-luxury">
+        <h3 className="text-xl font-semibold bg-gradient-to-r from-viva-magenta to-lux-gold bg-clip-text text-transparent">
           Send a Message
         </h3>
         <div className="flex items-center gap-2">
@@ -453,25 +395,25 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
               key={index}
               className={`w-3 h-3 rounded-full transition-all duration-300 ${
                 index + 1 <= currentStep
-                  ? 'bg-gradient-to-r from-viva-magenta-500 to-lux-gold-500'
-                  : 'bg-lux-gray-300 dark:bg-lux-gray-600'
+                  ? 'bg-gradient-to-r from-viva-magenta to-lux-gold'
+                  : 'bg-gray-300 dark:bg-gray-600'
               }`}
             />
           ))}
         </div>
       </div>
 
-      {/* Success/Error Messages using your theme */}
+      {/* Success/Error Messages */}
       <AnimatePresence>
         {submitStatus === 'success' && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mb-6 p-4 bg-lux-sage-50 dark:bg-lux-sage-900/20 border border-lux-sage-200 dark:border-lux-sage-800 rounded-lg flex items-center gap-2"
+            className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-2"
           >
-            <CheckCircle className="w-5 h-5 text-lux-sage-600 dark:text-lux-sage-400" />
-            <span className="text-lux-sage-800 dark:text-lux-sage-200">Message sent successfully! I'll get back to you soon.</span>
+            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <span className="text-green-800 dark:text-green-200">Message sent successfully! I'll get back to you soon.</span>
           </motion.div>
         )}
 
@@ -501,7 +443,7 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
             >
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-2 text-lux-gray-700 dark:text-lux-gray-300">
+                  <label htmlFor="name" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     Name *
                   </label>
                   <input
@@ -510,8 +452,10 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className={`input focus-ring-viva ${
-                      errors.name ? 'border-red-500' : ''
+                    className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-200 ${
+                      errors.name 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 dark:border-gray-600 focus:border-viva-magenta focus:ring-viva-magenta'
                     }`}
                     placeholder="Your full name"
                   />
@@ -519,7 +463,7 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-2 text-lux-gray-700 dark:text-lux-gray-300">
+                  <label htmlFor="email" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     Email *
                   </label>
                   <input
@@ -528,8 +472,10 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className={`input focus-ring-viva ${
-                      errors.email ? 'border-red-500' : ''
+                    className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-200 ${
+                      errors.email 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 dark:border-gray-600 focus:border-viva-magenta focus:ring-viva-magenta'
                     }`}
                     placeholder="your.email@example.com"
                   />
@@ -539,7 +485,7 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="company" className="block text-sm font-medium mb-2 text-lux-gray-700 dark:text-lux-gray-300">
+                  <label htmlFor="company" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     Company (Optional)
                   </label>
                   <input
@@ -548,13 +494,13 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
                     name="company"
                     value={formData.company}
                     onChange={handleChange}
-                    className="input focus-ring-viva"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-viva-magenta focus:ring-viva-magenta transition-colors duration-200"
                     placeholder="Your company"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium mb-2 text-lux-gray-700 dark:text-lux-gray-300">
+                  <label htmlFor="phone" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     Phone (Optional)
                   </label>
                   <input
@@ -563,14 +509,14 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="input focus-ring-viva"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-viva-magenta focus:ring-viva-magenta transition-colors duration-200"
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="subject" className="block text-sm font-medium mb-2 text-lux-gray-700 dark:text-lux-gray-300">
+                <label htmlFor="subject" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                   Subject *
                 </label>
                 <input
@@ -579,8 +525,10 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
                   name="subject"
                   value={formData.subject}
                   onChange={handleChange}
-                  className={`input focus-ring-viva ${
-                    errors.subject ? 'border-red-500' : ''
+                  className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-200 ${
+                    errors.subject 
+                      ? 'border-red-500 focus:ring-red-500' 
+                      : 'border-gray-300 dark:border-gray-600 focus:border-viva-magenta focus:ring-viva-magenta'
                   }`}
                   placeholder="What's this about?"
                 />
@@ -599,7 +547,7 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
               className="space-y-6"
             >
               <div>
-                <label htmlFor="message" className="block text-sm font-medium mb-2 text-lux-gray-700 dark:text-lux-gray-300">
+                <label htmlFor="message" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                   Message *
                 </label>
                 <textarea
@@ -608,8 +556,10 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
                   value={formData.message}
                   onChange={handleChange}
                   rows={6}
-                  className={`textarea focus-ring-viva ${
-                    errors.message ? 'border-red-500' : ''
+                  className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors duration-200 resize-none ${
+                    errors.message 
+                      ? 'border-red-500 focus:ring-red-500' 
+                      : 'border-gray-300 dark:border-gray-600 focus:border-viva-magenta focus:ring-viva-magenta'
                   }`}
                   placeholder="Tell me about your project or just say hello! Include any specific requirements, goals, or questions you have."
                 />
@@ -617,7 +567,7 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
               </div>
 
               <div>
-                <label htmlFor="projectType" className="block text-sm font-medium mb-2 text-lux-gray-700 dark:text-lux-gray-300">
+                <label htmlFor="projectType" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                   Project Type
                 </label>
                 <select
@@ -625,7 +575,7 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
                   name="projectType"
                   value={formData.projectType}
                   onChange={handleChange}
-                  className="input focus-ring-viva"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-viva-magenta focus:ring-viva-magenta transition-colors duration-200"
                 >
                   <option value="web-dev">Web Development</option>
                   <option value="mobile-app">Mobile App</option>
@@ -648,7 +598,7 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
             >
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="budget" className="block text-sm font-medium mb-2 text-lux-gray-700 dark:text-lux-gray-300">
+                  <label htmlFor="budget" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     Budget Range
                   </label>
                   <select
@@ -656,7 +606,7 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
                     name="budget"
                     value={formData.budget}
                     onChange={handleChange}
-                    className="input focus-ring-viva"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-viva-magenta focus:ring-viva-magenta transition-colors duration-200"
                   >
                     <option value="under-5k">Under $5,000</option>
                     <option value="5k-15k">$5,000 - $15,000</option>
@@ -667,7 +617,7 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
                 </div>
 
                 <div>
-                  <label htmlFor="timeline" className="block text-sm font-medium mb-2 text-lux-gray-700 dark:text-lux-gray-300">
+                  <label htmlFor="timeline" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     Timeline
                   </label>
                   <select
@@ -675,7 +625,7 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
                     name="timeline"
                     value={formData.timeline}
                     onChange={handleChange}
-                    className="input focus-ring-viva"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-viva-magenta focus:ring-viva-magenta transition-colors duration-200"
                   >
                     <option value="asap">ASAP</option>
                     <option value="1-month">Within 1 month</option>
@@ -687,7 +637,7 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-3 text-lux-gray-700 dark:text-lux-gray-300">
+                <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
                   Preferred Contact Method
                 </label>
                 <div className="grid grid-cols-3 gap-3">
@@ -698,10 +648,10 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
                   ].map((method) => (
                     <label
                       key={method.value}
-                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer transition-all duration-200 hover-scale ${
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:scale-105 ${
                         formData.preferredContact === method.value
-                          ? 'border-viva-magenta-500 bg-viva-magenta-50 dark:bg-viva-magenta-900/20 text-viva-magenta-700 dark:text-viva-magenta-300'
-                          : 'border-lux-gray-300 dark:border-lux-gray-600 hover:border-lux-gray-400 dark:hover:border-lux-gray-500'
+                          ? 'border-viva-magenta bg-viva-magenta/10 text-viva-magenta'
+                          : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                     >
                       <input
@@ -722,13 +672,13 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
           )}
         </AnimatePresence>
 
-        {/* Navigation buttons using your theme */}
+        {/* Navigation buttons */}
         <div className="flex justify-between items-center mt-8">
           <button
             type="button"
             onClick={handlePrev}
             disabled={currentStep === 1}
-            className="btn-ghost disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
             Previous
           </button>
@@ -738,7 +688,7 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
               <motion.button
                 type="button"
                 onClick={handleNext}
-                className="btn-viva-enhanced"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-viva-magenta to-lux-gold text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -749,7 +699,7 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
               <motion.button
                 type="submit"
                 disabled={isSubmitting}
-                className="btn-viva-enhanced"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-viva-magenta to-lux-gold text-white rounded-lg font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
                 whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
               >
@@ -773,9 +723,8 @@ function ContactForm({ onSubmit, isSubmitting, submitStatus }: {
   )
 }
 
-// Main Contact Page Component using your theme
+// ✅ FIXED: Main Contact Page Component with proper theme support
 export default function ContactPage() {
-  const [isLoading, setIsLoading] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
@@ -792,24 +741,15 @@ export default function ContactPage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Initial loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 800)
-    return () => clearTimeout(timer)
-  }, [])
-
-  // Contact methods using your theme
+  // Contact methods
   const contactMethods: ContactMethod[] = [
     {
       id: 'email',
       icon: Mail,
       label: 'Email',
-      value: 'stormblazdesign@gmail.com',
-      href: 'mailto:stormblazdesign@gmail.com',
+      value: 'jafernandez94@gmail.com',
+      href: 'mailto:jafernandez94@gmail.com',
       description: 'Send me an email for detailed discussions',
-      gradientClass: 'from-viva-magenta-500 to-viva-magenta-600',
       available: true,
       responseTime: '< 24h'
     },
@@ -820,7 +760,6 @@ export default function ContactPage() {
       value: 'github.com/sippinwindex',
       href: 'https://github.com/sippinwindex',
       description: 'Check out my latest projects and code',
-      gradientClass: 'from-lux-gray-700 to-lux-gray-800',
       available: true
     },
     {
@@ -830,7 +769,6 @@ export default function ContactPage() {
       value: 'Professional Profile',
       href: 'https://www.linkedin.com/in/juan-fernandez-fullstack/',
       description: 'Connect with me professionally',
-      gradientClass: 'from-lux-teal-600 to-lux-teal-700',
       available: true,
       responseTime: '< 48h'
     },
@@ -838,10 +776,9 @@ export default function ContactPage() {
       id: 'twitter',
       icon: Twitter,
       label: 'Twitter',
-      value: '@juan_dev',
-      href: 'https://twitter.com/juan_dev',
+      value: '@FullyStackedUp',
+      href: 'https://x.com/FullyStackedUp',
       description: 'Follow for tech updates and insights',
-      gradientClass: 'from-lux-sage-400 to-lux-sage-500',
       available: true
     }
   ]
@@ -877,29 +814,23 @@ export default function ContactPage() {
     }
   }
 
-  if (isLoading) {
-    return <PageLoading />
-  }
-
   return (
-    <div className="relative min-h-screen bg-gradient-hero transition-colors duration-300 overflow-x-hidden">
+    <div className="relative min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 overflow-x-hidden">
       
       {/* Skip to content for accessibility */}
       <a 
         href="#main-content" 
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 btn-viva-enhanced z-50"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-viva-magenta text-white px-4 py-2 rounded-lg z-50 font-medium"
       >
         Skip to main content
       </a>
-
-      <Navigation />
 
       {/* ✅ FIXED: Particle Field Background with correct props */}
       {!isMobile && (
         <div className="fixed inset-0 z-0">
           <ParticleField 
             particleCount={25}
-            colorScheme="viva-magenta"
+            colorScheme="light-mode"
             animation="constellation"
             interactive={false}
             speed={0.2}
@@ -907,39 +838,10 @@ export default function ContactPage() {
         </div>
       )}
 
-      {/* Animated background elements using your theme */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-br from-viva-magenta-400/10 to-lux-gold-400/10 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3]
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <motion.div
-          className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-br from-lux-teal-400/10 to-lux-sage-400/10 rounded-full blur-3xl"
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.2, 0.4, 0.2]
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 2
-          }}
-        />
-      </div>
-
       <main id="main-content" ref={containerRef} className="relative z-10 pt-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
           
-          {/* Enhanced Header using your theme */}
+          {/* ✅ FIXED: Header with proper theme support */}
           <motion.header
             className="text-center mb-20"
             variants={containerVariants}
@@ -947,41 +849,41 @@ export default function ContactPage() {
             animate={isInView ? "visible" : "hidden"}
           >
             <motion.div
-              className="inline-flex items-center gap-2 px-4 py-2 glass rounded-full border border-gray-200/50 dark:border-gray-700/50 mb-6"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700 mb-6"
               variants={itemVariants}
             >
-              <Zap className="w-4 h-4 text-viva-magenta-500" />
-              <span className="text-sm font-medium text-lux-gray-700 dark:text-lux-gray-300">
+              <Zap className="w-4 h-4 text-viva-magenta" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Let's Build Something Amazing
               </span>
             </motion.div>
 
             <motion.h1 
-              className="text-5xl md:text-7xl font-bold mb-6"
+              className="text-5xl md:text-7xl font-bold mb-6 text-gray-900 dark:text-gray-100"
               variants={itemVariants}
             >
               Get In{' '}
-              <span className="gradient-text-luxury">
+              <span className="bg-gradient-to-r from-viva-magenta to-lux-gold bg-clip-text text-transparent">
                 Touch
               </span>
             </motion.h1>
             
             <motion.p 
-              className="text-xl md:text-2xl text-lux-gray-600 dark:text-lux-gray-300 max-w-3xl mx-auto mb-8 leading-relaxed"
+              className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8 leading-relaxed"
               variants={itemVariants}
             >
               Have a project in mind or just want to chat? I'd love to hear from you. 
               Let's discuss how we can bring your ideas to life.
             </motion.p>
 
-            {/* Copy email notification using your theme */}
+            {/* Copy email notification */}
             <AnimatePresence>
               {copiedEmail && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="fixed top-20 right-4 bg-lux-sage-500 text-white px-4 py-2 rounded-lg shadow-luxury flex items-center gap-2 z-50"
+                  className="fixed top-20 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50"
                 >
                   <Check className="w-4 h-4" />
                   Email copied to clipboard!
@@ -990,10 +892,10 @@ export default function ContactPage() {
             </AnimatePresence>
           </motion.header>
 
-          {/* Stats Section using your theme */}
+          {/* Stats Section */}
           <StatsSection />
 
-          {/* Contact Methods Grid using your theme */}
+          {/* Contact Methods Grid */}
           <motion.section
             className="mb-20"
             variants={containerVariants}
@@ -1001,7 +903,7 @@ export default function ContactPage() {
             animate={isInView ? "visible" : "hidden"}
           >
             <motion.h2 
-              className="text-3xl font-bold text-center mb-12 gradient-text-luxury"
+              className="text-3xl font-bold text-center mb-12 bg-gradient-to-r from-viva-magenta to-lux-gold bg-clip-text text-transparent"
               variants={itemVariants}
             >
               Multiple Ways to Connect
@@ -1019,29 +921,29 @@ export default function ContactPage() {
             </div>
           </motion.section>
 
-          {/* Main Contact Section using your theme */}
+          {/* Main Contact Section */}
           <div className="grid lg:grid-cols-2 gap-16 mb-20">
             
-            {/* Enhanced Contact Info using your theme */}
+            {/* ✅ FIXED: Contact Info with proper theme support */}
             <motion.div
               variants={containerVariants}
               initial="hidden"
               animate={isInView ? "visible" : "hidden"}
             >
               <motion.div
-                className="glass-card rounded-2xl p-8 shadow-luxury h-full"
+                className="bg-white dark:bg-gray-800 rounded-2xl p-8 border border-gray-200 dark:border-gray-700 shadow-lg h-full"
                 variants={itemVariants}
               >
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-gradient-to-br from-viva-magenta-100 to-lux-gold-100 dark:from-viva-magenta-900/30 dark:to-lux-gold-900/30 rounded-xl">
-                    <MessageSquare className="w-6 h-6 text-viva-magenta-600 dark:text-viva-magenta-400" />
+                  <div className="p-3 bg-gradient-to-br from-viva-magenta/10 to-lux-gold/10 rounded-xl border border-viva-magenta/20">
+                    <MessageSquare className="w-6 h-6 text-viva-magenta" />
                   </div>
-                  <h2 className="text-2xl font-bold gradient-text-luxury">
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-viva-magenta to-lux-gold bg-clip-text text-transparent">
                     Let's Connect
                   </h2>
                 </div>
 
-                <p className="text-lux-gray-600 dark:text-lux-gray-300 mb-8 text-lg leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg leading-relaxed">
                   I'm always open to discussing new opportunities, interesting projects, 
                   or just having a chat about technology and development. Whether you're 
                   a startup looking to build your MVP or an established company seeking 
@@ -1050,41 +952,41 @@ export default function ContactPage() {
 
                 <div className="space-y-6">
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-gradient-to-br from-lux-sage-100 to-lux-sage-200 dark:from-lux-sage-900/30 dark:to-lux-sage-800/30 rounded-lg">
-                      <Clock className="w-5 h-5 text-lux-sage-600 dark:text-lux-sage-400" />
+                    <div className="p-2 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 rounded-lg">
+                      <Clock className="w-5 h-5 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
-                      <div className="font-medium text-lux-gray-900 dark:text-lux-offwhite">Response Time</div>
-                      <div className="text-sm text-lux-gray-600 dark:text-lux-gray-400">Usually within 24 hours</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">Response Time</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Usually within 24 hours</div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-gradient-to-br from-lux-teal-100 to-lux-teal-200 dark:from-lux-teal-900/30 dark:to-lux-teal-800/30 rounded-lg">
-                      <Globe className="w-5 h-5 text-lux-teal-600 dark:text-lux-teal-400" />
+                    <div className="p-2 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg">
+                      <Globe className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <div className="font-medium text-lux-gray-900 dark:text-lux-offwhite">Location</div>
-                      <div className="text-sm text-lux-gray-600 dark:text-lux-gray-400">Miami Gardens, Florida, US</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">Location</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Miami Gardens, Florida, US</div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-gradient-to-br from-lux-gold-100 to-lux-gold-200 dark:from-lux-gold-900/30 dark:to-lux-gold-800/30 rounded-lg">
-                      <Briefcase className="w-5 h-5 text-lux-gold-600 dark:text-lux-gold-400" />
+                    <div className="p-2 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 rounded-lg">
+                      <Briefcase className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     </div>
                     <div>
-                      <div className="font-medium text-lux-gray-900 dark:text-lux-offwhite">Availability</div>
-                      <div className="text-sm text-lux-gray-600 dark:text-lux-gray-400">Open for new projects</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">Availability</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Open for new projects</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Quick action buttons using your theme */}
+                {/* Quick action buttons */}
                 <div className="flex gap-3 mt-8">
                   <motion.a
-                    href="mailto:stormblazdesign@gmail.com"
-                    className="btn-viva-enhanced"
+                    href="mailto:jafernandez94@gmail.com"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-viva-magenta to-lux-gold text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -1093,9 +995,10 @@ export default function ContactPage() {
                   </motion.a>
                   
                   <motion.a
-                    href="/resume.pdf"
-                    download
-                    className="btn-secondary"
+                    href="https://flowcv.com/resume/moac4k9d8767"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 text-viva-magenta border-2 border-viva-magenta rounded-lg font-medium hover:bg-viva-magenta/10 dark:hover:bg-viva-magenta/10 transition-all duration-200"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -1106,7 +1009,7 @@ export default function ContactPage() {
               </motion.div>
             </motion.div>
 
-            {/* Enhanced Contact Form using your theme */}
+            {/* Contact Form */}
             <motion.div
               variants={containerVariants}
               initial="hidden"
@@ -1120,10 +1023,10 @@ export default function ContactPage() {
             </motion.div>
           </div>
 
-          {/* FAQ Section using your theme */}
+          {/* FAQ Section */}
           <FAQSection />
 
-          {/* Call to Action using your theme */}
+          {/* ✅ FIXED: Call to Action with proper theme support */}
           <motion.section
             className="text-center"
             variants={containerVariants}
@@ -1131,7 +1034,7 @@ export default function ContactPage() {
             animate={isInView ? "visible" : "hidden"}
           >
             <motion.div
-              className="bg-gradient-luxury rounded-2xl p-12 text-white shadow-luxury"
+              className="bg-gradient-to-r from-viva-magenta to-lux-gold rounded-2xl p-12 text-white shadow-lg"
               variants={itemVariants}
             >
               <h3 className="text-3xl font-bold mb-4">
@@ -1142,8 +1045,8 @@ export default function ContactPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <motion.a
-                  href="mailto:stormblazdesign@gmail.com"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-white text-viva-magenta-600 rounded-lg font-semibold hover:bg-lux-offwhite transition-colors duration-200 shadow-lg"
+                  href="mailto:jafernandez94@gmail.com"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-white text-viva-magenta rounded-lg font-semibold hover:bg-gray-50 transition-colors duration-200 shadow-lg"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -1154,7 +1057,7 @@ export default function ContactPage() {
                   href="https://calendly.com/juan-fernandez"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-viva-magenta-600 transition-colors duration-200"
+                  className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-viva-magenta transition-colors duration-200"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >

@@ -57,6 +57,7 @@ interface GameProps {
   isVisible?: boolean;
   onGameStart?: () => void;
   onGameEnd?: (winner: 'player' | 'npc', stats: any) => void;
+  theme?: 'light' | 'dark';
 }
 
 const initialState: GameState = {
@@ -91,6 +92,131 @@ const initialState: GameState = {
   blockedAttacks: 0,
   frameRate: 60,
   inputLag: 0,
+};
+
+// Animated Background Particles Component
+const BackgroundParticles: React.FC<{ theme?: 'light' | 'dark' }> = ({ theme = 'dark' }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  type Particle = {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    size: number;
+    color: string;
+    opacity: number;
+  };
+  
+  const particlesRef = useRef<Particle[]>([]);
+  const animationRef = useRef<number>();
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resizeCanvas = () => {
+      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      ctx.canvas.style.width = canvas.offsetWidth + 'px';
+      ctx.canvas.style.height = canvas.offsetHeight + 'px';
+    };
+
+    const createParticles = () => {
+      const particles: Particle[] = [];
+      const particleCount = 60;
+      
+      // Theme-appropriate colors
+      const colors = theme === 'light' 
+        ? ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4']
+        : ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#8e24aa', '#d81b60'];
+
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({
+          x: Math.random() * canvas.offsetWidth,
+          y: Math.random() * canvas.offsetHeight,
+          vx: (Math.random() - 0.5) * 1,
+          vy: (Math.random() - 0.5) * 1,
+          size: Math.random() * 3 + 1,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          opacity: Math.random() * 0.5 + 0.2,
+        });
+      }
+      
+      particlesRef.current = particles;
+    };
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+
+      particlesRef.current.forEach((particle, i) => {
+        // Update position
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+
+        // Bounce off edges
+        if (particle.x < 0 || particle.x > canvas.offsetWidth) particle.vx *= -1;
+        if (particle.y < 0 || particle.y > canvas.offsetHeight) particle.vy *= -1;
+
+        // Draw particle
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fillStyle = particle.color;
+        ctx.globalAlpha = particle.opacity;
+        ctx.fill();
+
+        // Draw connections
+        for (let j = i + 1; j < particlesRef.current.length; j++) {
+          const other = particlesRef.current[j];
+          const distance = Math.sqrt(
+            Math.pow(particle.x - other.x, 2) + Math.pow(particle.y - other.y, 2)
+          );
+
+          if (distance < 120) {
+            ctx.beginPath();
+            ctx.moveTo(particle.x, particle.y);
+            ctx.lineTo(other.x, other.y);
+            ctx.strokeStyle = particle.color;
+            ctx.globalAlpha = (1 - distance / 120) * 0.2;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      });
+
+      ctx.globalAlpha = 1;
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    resizeCanvas();
+    createParticles();
+    animate();
+
+    const handleResize = () => {
+      resizeCanvas();
+      createParticles();
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [theme]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none opacity-40"
+      style={{ zIndex: 0 }}
+    />
+  );
 };
 
 // Optimized sound system with Web Audio API pooling
@@ -183,7 +309,7 @@ class SoundManager {
   }
 }
 
-// Enhanced Robot Component with better performance
+// Enhanced Robot Component with theme support
 const PixelRobot: React.FC<{
   color: 'blue' | 'red';
   action: 'standing' | 'punch' | 'hit' | 'dead' | 'winner' | 'block';
@@ -194,7 +320,8 @@ const PixelRobot: React.FC<{
   isBlocking: boolean;
   stunned: boolean;
   combo?: number;
-}> = React.memo(({ color, action, health, maxHealth, stamina, maxStamina, isBlocking, stunned, combo = 0 }) => {
+  theme?: 'light' | 'dark';
+}> = React.memo(({ color, action, health, maxHealth, stamina, maxStamina, isBlocking, stunned, combo = 0, theme = 'dark' }) => {
   const baseColor = color === 'blue' ? '#3b82f6' : '#ef4444';
   const lightColor = color === 'blue' ? '#93c5fd' : '#fca5a5';
   const darkColor = color === 'blue' ? '#1d4ed8' : '#b91c1c';
@@ -231,10 +358,14 @@ const PixelRobot: React.FC<{
     return transform;
   };
 
+  const barBg = theme === 'light' ? 'bg-gray-200' : 'bg-gray-800';
+  const textColor = theme === 'light' ? 'text-gray-800' : 'text-white';
+  const subTextColor = theme === 'light' ? 'text-gray-600' : 'text-gray-400';
+
   return (
     <div className="flex flex-col items-center space-y-3">
       {/* Enhanced Health Bar */}
-      <div className="relative w-24 h-3 bg-gray-800 rounded-full border border-gray-600 overflow-hidden">
+      <div className={`relative w-24 h-3 ${barBg} rounded-full border ${theme === 'light' ? 'border-gray-300' : 'border-gray-600'} overflow-hidden`}>
         <div 
           className={`h-full bg-gradient-to-r ${getHealthBarColor()} transition-all duration-300 ease-out relative`}
           style={{ width: `${healthPercentage}%` }}
@@ -245,7 +376,7 @@ const PixelRobot: React.FC<{
       </div>
       
       {/* Enhanced Stamina Bar */}
-      <div className="w-24 h-2 bg-gray-800 rounded-full border border-gray-600 overflow-hidden">
+      <div className={`w-24 h-2 ${barBg} rounded-full border ${theme === 'light' ? 'border-gray-300' : 'border-gray-600'} overflow-hidden`}>
         <div 
           className="h-full bg-gradient-to-r from-blue-400 to-blue-500 transition-all duration-200 ease-out"
           style={{ width: `${staminaPercentage}%` }}
@@ -275,7 +406,7 @@ const PixelRobot: React.FC<{
 
         {/* Robot Body */}
         <div 
-          className="relative w-24 h-24 rounded-lg border-2 border-gray-700 transition-all duration-200 ease-out"
+          className={`relative w-24 h-24 rounded-lg border-2 ${theme === 'light' ? 'border-gray-300' : 'border-gray-700'} transition-all duration-200 ease-out`}
           style={{ 
             background: `linear-gradient(145deg, ${lightColor}, ${baseColor}, ${darkColor})`,
             transform: getRobotTransform(),
@@ -285,7 +416,7 @@ const PixelRobot: React.FC<{
         >
           {/* Head */}
           <div 
-            className="absolute top-2 left-1/2 transform -translate-x-1/2 w-14 h-8 rounded-md border border-gray-600"
+            className={`absolute top-2 left-1/2 transform -translate-x-1/2 w-14 h-8 rounded-md border ${theme === 'light' ? 'border-gray-300' : 'border-gray-600'}`}
             style={{ backgroundColor: baseColor }}
           >
             {/* Eyes */}
@@ -305,7 +436,7 @@ const PixelRobot: React.FC<{
           {/* Body Core */}
           <div className="absolute top-12 left-1/2 transform -translate-x-1/2 w-8 h-6">
             <div 
-              className="w-full h-full border border-gray-600 rounded"
+              className={`w-full h-full border ${theme === 'light' ? 'border-gray-300' : 'border-gray-600'} rounded`}
               style={{ backgroundColor: darkColor }}
             >
               <div className="flex justify-center items-center h-full">
@@ -315,22 +446,22 @@ const PixelRobot: React.FC<{
           </div>
 
           {/* Arms with better positioning */}
-          <div className="absolute top-10 -left-3 w-5 h-4 rounded border border-gray-600"
+          <div className={`absolute top-10 -left-3 w-5 h-4 rounded border ${theme === 'light' ? 'border-gray-300' : 'border-gray-600'}`}
                style={{ backgroundColor: baseColor }}>
-            <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-3 h-3 rounded border border-gray-600"
+            <div className={`absolute -right-1 top-1/2 transform -translate-y-1/2 w-3 h-3 rounded border ${theme === 'light' ? 'border-gray-300' : 'border-gray-600'}`}
                  style={{ backgroundColor: lightColor }} />
           </div>
           
-          <div className="absolute top-10 -right-3 w-5 h-4 rounded border border-gray-600"
+          <div className={`absolute top-10 -right-3 w-5 h-4 rounded border ${theme === 'light' ? 'border-gray-300' : 'border-gray-600'}`}
                style={{ backgroundColor: baseColor }}>
-            <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 w-3 h-3 rounded border border-gray-600"
+            <div className={`absolute -left-1 top-1/2 transform -translate-y-1/2 w-3 h-3 rounded border ${theme === 'light' ? 'border-gray-300' : 'border-gray-600'}`}
                  style={{ backgroundColor: lightColor }} />
           </div>
 
           {/* Legs */}
-          <div className="absolute bottom-2 left-1/3 w-3 h-5 rounded-b border border-gray-600"
+          <div className={`absolute bottom-2 left-1/3 w-3 h-5 rounded-b border ${theme === 'light' ? 'border-gray-300' : 'border-gray-600'}`}
                style={{ backgroundColor: baseColor }} />
-          <div className="absolute bottom-2 right-1/3 w-3 h-5 rounded-b border border-gray-600"
+          <div className={`absolute bottom-2 right-1/3 w-3 h-5 rounded-b border ${theme === 'light' ? 'border-gray-300' : 'border-gray-600'}`}
                style={{ backgroundColor: baseColor }} />
 
           {/* Action Effects */}
@@ -350,13 +481,13 @@ const PixelRobot: React.FC<{
 
       {/* Robot Stats */}
       <div className="text-center">
-        <div className={`font-mono text-sm font-bold ${color === 'blue' ? 'text-blue-400' : 'text-red-400'}`}>
+        <div className={`font-mono text-sm font-bold ${color === 'blue' ? 'text-blue-600' : 'text-red-600'}`}>
           {color === 'blue' ? 'PLAYER' : 'CPU'}
         </div>
-        <div className="text-xs text-gray-400">
+        <div className={`text-xs ${textColor}`}>
           HP: {Math.ceil(health)}/{maxHealth}
         </div>
-        <div className="text-xs text-gray-500">
+        <div className={`text-xs ${subTextColor}`}>
           SP: {Math.ceil(stamina)}/{maxStamina}
         </div>
       </div>
@@ -369,7 +500,8 @@ PixelRobot.displayName = 'PixelRobot';
 const EnhancedRockEmSockEm: React.FC<GameProps> = ({ 
   isVisible = true, 
   onGameStart, 
-  onGameEnd 
+  onGameEnd,
+  theme = 'dark'
 }) => {
   const [gameState, setGameState] = useState<GameState>(initialState);
   const [inputState, setInputState] = useState({ punch: false, block: false });
@@ -385,6 +517,19 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
   // Sound manager
   const soundManagerRef = useRef<SoundManager>(new SoundManager());
 
+  // Theme-aware styling
+  const bgClass = theme === 'light' 
+    ? 'bg-white/95 backdrop-blur-md border-gray-200/50' 
+    : 'bg-gray-900/95 backdrop-blur-md border-gray-700/50';
+  
+  const cardBgClass = theme === 'light'
+    ? 'bg-white/90 backdrop-blur-sm border-gray-200/50'
+    : 'bg-gray-900/80 backdrop-blur-sm border-gray-700/50';
+  
+  const textClass = theme === 'light' ? 'text-gray-900' : 'text-white';
+  const subTextClass = theme === 'light' ? 'text-gray-600' : 'text-gray-400';
+  const mutedTextClass = theme === 'light' ? 'text-gray-500' : 'text-gray-500';
+
   // Memoized difficulty settings
   const difficultySettings = useMemo(() => ({
     easy: { 
@@ -393,7 +538,7 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
       attackFrequency: 0.2,
       accuracy: 0.6,
       name: 'Rookie',
-      color: 'text-green-400',
+      color: 'text-green-500',
       description: 'Perfect for beginners'
     },
     medium: { 
@@ -402,7 +547,7 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
       attackFrequency: 0.4,
       accuracy: 0.75,
       name: 'Fighter',
-      color: 'text-yellow-400',
+      color: 'text-yellow-500',
       description: 'Balanced challenge'
     },
     hard: { 
@@ -411,7 +556,7 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
       attackFrequency: 0.6,
       accuracy: 0.9,
       name: 'Champion',
-      color: 'text-red-400',
+      color: 'text-red-500',
       description: 'Ultimate challenge'
     },
   }), []);
@@ -718,21 +863,24 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
 
   // Performance indicator component
   const PerformanceIndicator = () => (
-    <div className="text-xs text-gray-500 font-mono">
+    <div className={`text-xs ${mutedTextClass} font-mono`}>
       FPS: {gameState.frameRate} | Lag: {gameState.inputLag.toFixed(1)}ms
     </div>
   );
 
   return (
-    <div className="relative w-full bg-gradient-to-br from-gray-900 via-purple-900/80 to-gray-900 rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
+    <div className={`relative w-full ${bgClass} rounded-2xl border shadow-2xl overflow-hidden`}>
+      {/* Animated Background */}
+      <BackgroundParticles theme={theme} />
+      
       {/* Header with enhanced controls */}
-      <div className="bg-gradient-to-r from-purple-800/90 to-pink-800/90 p-4 relative">
+      <div className="bg-gradient-to-r from-pink-600/90 via-purple-600/90 to-indigo-600/90 p-4 relative z-10">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-white font-mono tracking-wider">
               ROCK 'EM SOCK 'EM ROBOTS
             </h1>
-            <p className="text-purple-200 text-sm">Enhanced Real-Time Combat System</p>
+            <p className="text-purple-100 text-sm">Enhanced Real-Time Combat System</p>
           </div>
           
           <div className="flex items-center gap-2">
@@ -772,8 +920,8 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
         
         {/* Settings Panel */}
         {showSettings && (
-          <div className="absolute top-full left-0 right-0 bg-gray-800 border-t border-gray-600 p-4 z-10">
-            <div className="flex items-center justify-between text-white text-sm">
+          <div className={`absolute top-full left-0 right-0 ${cardBgClass} border-t p-4 z-10`}>
+            <div className={`flex items-center justify-between ${textClass} text-sm`}>
               <PerformanceIndicator />
               <span>Input Lag: {gameState.inputLag < 16 ? 'Good' : 'High'}</span>
             </div>
@@ -782,7 +930,7 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
       </div>
 
       {/* Game Content */}
-      <div className="p-4 md:p-6">
+      <div className="p-4 md:p-6 relative z-10">
         {/* Pause overlay */}
         {gameState.gamePaused && (
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-20">
@@ -803,7 +951,7 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
         {/* Difficulty Selector */}
         {!gameState.gameStarted && (
           <div className="text-center mb-6">
-            <h3 className="text-white text-xl mb-4 font-bold">Choose Your Challenge</h3>
+            <h3 className={`${textClass} text-xl mb-4 font-bold`}>Choose Your Challenge</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
               {(['easy', 'medium', 'hard'] as const).map((diff) => {
                 const info = difficultySettings[diff];
@@ -813,7 +961,9 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
                     className={`p-4 rounded-lg font-mono text-sm transition-all border-2 ${
                       gameState.difficulty === diff 
                         ? 'bg-purple-600 border-purple-400 text-white shadow-lg scale-105' 
-                        : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500'
+                        : theme === 'light'
+                          ? 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200 hover:border-gray-400'
+                          : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500'
                     }`}
                     onClick={() => setGameState(prev => ({ ...prev, difficulty: diff }))}
                   >
@@ -831,37 +981,37 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
 
         {/* Enhanced Game Stats */}
         {gameState.gameStarted && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4 bg-gray-900/70 rounded-lg p-4 backdrop-blur-sm">
+          <div className={`grid grid-cols-2 md:grid-cols-5 gap-3 mb-4 ${cardBgClass} rounded-lg p-4 border`}>
             <div className="text-center">
-              <div className="text-xs text-gray-400 font-mono flex items-center justify-center gap-1">
+              <div className={`text-xs ${subTextClass} font-mono flex items-center justify-center gap-1`}>
                 <Swords className="w-3 h-3" />
                 ROUND
               </div>
-              <div className="text-lg font-bold text-yellow-400">{gameState.playerScore + gameState.npcScore + 1}</div>
+              <div className="text-lg font-bold text-yellow-500">{gameState.playerScore + gameState.npcScore + 1}</div>
             </div>
             <div className="text-center">
-              <div className="text-xs text-gray-400 font-mono flex items-center justify-center gap-1">
+              <div className={`text-xs ${subTextClass} font-mono flex items-center justify-center gap-1`}>
                 <Trophy className="w-3 h-3" />
                 SCORE
               </div>
-              <div className="text-lg font-bold text-white">{gameState.playerScore} - {gameState.npcScore}</div>
+              <div className={`text-lg font-bold ${textClass}`}>{gameState.playerScore} - {gameState.npcScore}</div>
             </div>
             <div className="text-center">
-              <div className="text-xs text-gray-400 font-mono flex items-center justify-center gap-1">
+              <div className={`text-xs ${subTextClass} font-mono flex items-center justify-center gap-1`}>
                 <Zap className="w-3 h-3" />
                 COMBO
               </div>
-              <div className="text-lg font-bold text-orange-400">{gameState.combo}</div>
+              <div className="text-lg font-bold text-orange-500">{gameState.combo}</div>
             </div>
             <div className="text-center">
-              <div className="text-xs text-gray-400 font-mono flex items-center justify-center gap-1">
+              <div className={`text-xs ${subTextClass} font-mono flex items-center justify-center gap-1`}>
                 <Award className="w-3 h-3" />
                 PERFECT
               </div>
-              <div className="text-lg font-bold text-green-400">{gameState.perfectHits}</div>
+              <div className="text-lg font-bold text-green-500">{gameState.perfectHits}</div>
             </div>
             <div className="text-center">
-              <div className="text-xs text-gray-400 font-mono flex items-center justify-center gap-1">
+              <div className={`text-xs ${subTextClass} font-mono flex items-center justify-center gap-1`}>
                 <Target className="w-3 h-3" />
                 DIFFICULTY
               </div>
@@ -875,13 +1025,13 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
         {/* Enhanced Combo Message */}
         {gameState.combo > 2 && !gameState.gameOver && (
           <div className="text-center mb-4">
-            <div className="text-xl md:text-2xl font-bold text-yellow-400 animate-pulse flex items-center justify-center gap-2">
+            <div className="text-xl md:text-2xl font-bold text-yellow-500 animate-pulse flex items-center justify-center gap-2">
               <Zap className="w-5 h-5 md:w-6 md:h-6" />
               {gameState.combo}x COMBO! {getComboMessage(gameState.combo)}
               <Zap className="w-5 h-5 md:w-6 md:h-6" />
             </div>
             {gameState.perfectHits > 0 && (
-              <div className="text-sm text-green-400 mt-1">
+              <div className="text-sm text-green-500 mt-1">
                 Perfect Hits: {gameState.perfectHits}
               </div>
             )}
@@ -889,7 +1039,7 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
         )}
 
         {/* Enhanced Robots Arena */}
-        <div className="bg-gray-900/70 rounded-xl p-4 md:p-6 mb-4 backdrop-blur-sm border border-gray-700/50">
+        <div className={`${cardBgClass} rounded-xl p-4 md:p-6 mb-4 border`}>
           <div className="flex justify-center items-center gap-8 md:gap-16">
             <PixelRobot 
               color="blue" 
@@ -901,18 +1051,19 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
               isBlocking={gameState.playerBlocking}
               stunned={gameState.stunned}
               combo={gameState.combo}
+              theme={theme}
             />
 
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-yellow-400 animate-pulse mb-2">VS</div>
+              <div className="text-3xl md:text-4xl font-bold text-yellow-500 animate-pulse mb-2">VS</div>
               {gameState.gameStarted && !gameState.gameOver && (
-                <div className="text-xs font-mono text-gray-400 space-y-1">
-                  <div className="text-blue-400 flex items-center justify-center gap-1">
-                    <span className="w-1 h-1 bg-blue-400 rounded-full animate-pulse" />
+                <div className={`text-xs font-mono ${subTextClass} space-y-1`}>
+                  <div className="text-blue-500 flex items-center justify-center gap-1">
+                    <span className="w-1 h-1 bg-blue-500 rounded-full animate-pulse" />
                     REAL-TIME
                   </div>
                   {gameState.roundTime > 0 && (
-                    <div className="text-gray-500">
+                    <div className={mutedTextClass}>
                       {(gameState.roundTime / 1000).toFixed(1)}s
                     </div>
                   )}
@@ -929,6 +1080,7 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
               maxStamina={gameState.maxStamina}
               isBlocking={gameState.npcBlocking}
               stunned={false}
+              theme={theme}
             />
           </div>
         </div>
@@ -972,9 +1124,9 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
 
         {/* Enhanced Game Over Screen */}
         {gameState.gameOver && (
-          <div className="text-center mb-6 p-6 bg-gradient-to-r from-purple-900/70 to-pink-900/70 rounded-xl border border-purple-500/50 backdrop-blur-sm">
+          <div className={`text-center mb-6 p-6 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-indigo-600/20 rounded-xl border ${theme === 'light' ? 'border-purple-200' : 'border-purple-500/50'} backdrop-blur-sm`}>
             <div className={`text-3xl md:text-4xl font-bold mb-4 flex items-center justify-center gap-4 ${
-              gameState.winner === 'player' ? 'text-green-400' : 'text-red-400'
+              gameState.winner === 'player' ? 'text-green-500' : 'text-red-500'
             }`}>
               {gameState.winner === 'player' ? (
                 <>
@@ -993,20 +1145,20 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
               <div>
-                <div className="text-gray-400">Final Score</div>
-                <div className="text-white font-bold">{gameState.playerScore} - {gameState.npcScore}</div>
+                <div className={subTextClass}>Final Score</div>
+                <div className={`${textClass} font-bold`}>{gameState.playerScore} - {gameState.npcScore}</div>
               </div>
               <div>
-                <div className="text-gray-400">Max Combo</div>
-                <div className="text-yellow-400 font-bold">{gameState.maxCombo}</div>
+                <div className={subTextClass}>Max Combo</div>
+                <div className="text-yellow-500 font-bold">{gameState.maxCombo}</div>
               </div>
               <div>
-                <div className="text-gray-400">Perfect Hits</div>
-                <div className="text-green-400 font-bold">{gameState.perfectHits}</div>
+                <div className={subTextClass}>Perfect Hits</div>
+                <div className="text-green-500 font-bold">{gameState.perfectHits}</div>
               </div>
               <div>
-                <div className="text-gray-400">Time</div>
-                <div className="text-blue-400 font-bold">{(gameState.roundTime / 1000).toFixed(1)}s</div>
+                <div className={subTextClass}>Time</div>
+                <div className="text-blue-500 font-bold">{(gameState.roundTime / 1000).toFixed(1)}s</div>
               </div>
             </div>
           </div>
@@ -1052,16 +1204,16 @@ const EnhancedRockEmSockEm: React.FC<GameProps> = ({
 
         {/* Enhanced Instructions */}
         <div className="text-center mt-6">
-          <div className="text-sm text-gray-400 max-w-2xl mx-auto bg-gray-900/50 rounded-lg p-4 backdrop-blur-sm">
+          <div className={`text-sm ${subTextClass} max-w-2xl mx-auto ${cardBgClass} rounded-lg p-4 border backdrop-blur-sm`}>
             <div className="flex items-center justify-center gap-2 mb-3">
-              <Lightbulb className="w-4 h-4 text-yellow-400" />
-              <strong className="text-white">Enhanced Controls & Features:</strong>
+              <Lightbulb className="w-4 h-4 text-yellow-500" />
+              <strong className={textClass}>Enhanced Controls & Features:</strong>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
               <div className="space-y-1">
-                <div><kbd className="bg-gray-700 px-1 rounded">SPACE</kbd> = Punch (20 stamina)</div>
-                <div><kbd className="bg-gray-700 px-1 rounded">X/S</kbd> = Block (reduces damage)</div>
-                <div><kbd className="bg-gray-700 px-1 rounded">P</kbd> = Pause/Resume</div>
+                <div><kbd className={`${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'} px-1 rounded`}>SPACE</kbd> = Punch (20 stamina)</div>
+                <div><kbd className={`${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'} px-1 rounded`}>X/S</kbd> = Block (reduces damage)</div>
+                <div><kbd className={`${theme === 'light' ? 'bg-gray-200' : 'bg-gray-700'} px-1 rounded`}>P</kbd> = Pause/Resume</div>
               </div>
               <div className="space-y-1">
                 <div>• High combos can stun enemies</div>

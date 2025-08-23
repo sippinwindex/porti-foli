@@ -1,4 +1,4 @@
-// Enhanced About Page - Fixed Layout, Theme Integration, and 3D Effects
+// Enhanced About Page - Consistent with Navigation Theme System
 'use client'
 
 import { Suspense, useState, useEffect, useRef, useMemo } from 'react'
@@ -29,9 +29,6 @@ import {
   Heart,
   Coffee
 } from 'lucide-react'
-
-// Import your theme components
-import ThemeToggle from '@/components/ThemeToggle'
 
 // Enhanced Dynamic imports with better error handling
 const Navigation = dynamic(
@@ -74,7 +71,7 @@ function NavigationSkeleton() {
 
 function FooterSkeleton() {
   return (
-    <footer className="bg-lux-black py-16 relative mt-20">
+    <footer className="bg-lux-black dark:bg-lux-gray-900 py-16 relative mt-20">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="space-y-4">
@@ -428,16 +425,11 @@ export default function AboutPage() {
 
   return (
     <div className="relative min-h-screen bg-lux-offwhite dark:bg-lux-black text-lux-gray-900 dark:text-lux-offwhite transition-colors duration-300 overflow-x-hidden">
-      {/* Enhanced Navigation */}
-      <div className="fixed top-0 left-0 right-0 z-[1000]">
+      {/* Navigation - Let it handle its own theme toggle */}
+      <div className="relative z-[1000]">
         <Suspense fallback={<NavigationSkeleton />}>
           <Navigation />
         </Suspense>
-      </div>
-      
-      {/* Theme Toggle */}
-      <div className="fixed top-4 right-4 z-[1001]">
-        <ThemeToggle />
       </div>
 
       {/* Enhanced Background Elements */}
@@ -580,255 +572,245 @@ export default function AboutPage() {
               </section>
 
               {/* Enhanced About Section */}
-              {sectionsInView.has('about') && (
-                <section id="about">
-                  <Card3D className="mb-16" delay={0.2}>
-                    <div className="glass-card p-8 rounded-2xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 shadow-xl">
-                      <motion.h2 
-                        className="text-3xl font-bold text-lux-gray-900 dark:text-lux-offwhite mb-6"
-                        variants={itemVariants}
-                      >
-                        About Me
-                      </motion.h2>
-                      <motion.div 
-                        className="prose prose-lg dark:prose-invert max-w-none text-lux-gray-600 dark:text-lux-gray-300 space-y-4"
-                        variants={itemVariants}
-                      >
-                        <p>
-                          Hi, I'm Juan A. Fernandez, a Full-Stack Developer based in Miami, Florida. With a strong foundation in software development and UI/UX design, I blend analytical precision from my background as a healthcare data analyst with creative, user-centered design from UX research. I'm passionate about creating seamless digital experiences that prioritize accessibility and performance.
-                        </p>
-                        
-                        <p>
-                          My journey began in UX/UI design and research, evolving into full-stack development through dedicated certifications and practical projects. I recently graduated from 4Geeks Academy's Full-Stack Development program in July 2025, where I honed my skills in modern web technologies. Currently, I'm actively pursuing courses in Large Language Models (LLM) and AI to obtain specialized certifications.
-                        </p>
-                      </motion.div>
-                    </div>
-                  </Card3D>
-                </section>
-              )}
-
-              {/* Enhanced Skills Section */}
-              {sectionsInView.has('skills') && (
-                <section id="skills">
-                  <motion.div 
-                    className="mb-16"
-                    variants={itemVariants}
-                  >
+              <section id="about">
+                <Card3D className="mb-16" delay={0.2}>
+                  <div className="glass-card p-8 rounded-2xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 shadow-xl">
                     <motion.h2 
-                      className="text-3xl font-bold text-center text-lux-gray-900 dark:text-lux-offwhite mb-12"
+                      className="text-3xl font-bold text-lux-gray-900 dark:text-lux-offwhite mb-6"
                       variants={itemVariants}
                     >
-                      Technical Expertise
+                      About Me
                     </motion.h2>
-                    
-                    <div className="grid md:grid-cols-3 gap-8">
-                      <Card3D delay={0.1}>
-                        <div className="glass-card p-6 rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 h-full">
-                          <h3 className="text-xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-4 flex items-center gap-2">
-                            <Code2 className="w-5 h-5 text-viva-magenta" />
-                            Frontend
-                          </h3>
-                          <div className="space-y-3">
-                            {skills.frontend.map((item, index) => (
-                              <SkillBadge key={index} {...item} />
-                            ))}
-                          </div>
-                        </div>
-                      </Card3D>
+                    <motion.div 
+                      className="prose prose-lg dark:prose-invert max-w-none text-lux-gray-600 dark:text-lux-gray-300 space-y-4"
+                      variants={itemVariants}
+                    >
+                      <p>
+                        Hi, I'm Juan A. Fernandez, a Full-Stack Developer based in Miami, Florida. With a strong foundation in software development and UI/UX design, I blend analytical precision from my background as a healthcare data analyst with creative, user-centered design from UX research. I'm passionate about creating seamless digital experiences that prioritize accessibility and performance.
+                      </p>
+                      
+                      <p>
+                        My journey began in UX/UI design and research, evolving into full-stack development through dedicated certifications and practical projects. I recently graduated from 4Geeks Academy's Full-Stack Development program in July 2025, where I honed my skills in modern web technologies. Currently, I'm actively pursuing courses in Large Language Models (LLM) and AI to obtain specialized certifications.
+                      </p>
+                    </motion.div>
+                  </div>
+                </Card3D>
+              </section>
 
-                      <Card3D delay={0.2}>
-                        <div className="glass-card p-6 rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 h-full">
-                          <h3 className="text-xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-4 flex items-center gap-2">
-                            <Database className="w-5 h-5 text-lux-teal" />
-                            Backend
-                          </h3>
-                          <div className="space-y-3">
-                            {skills.backend.map((item, index) => (
-                              <SkillBadge key={index} {...item} />
-                            ))}
-                          </div>
-                        </div>
-                      </Card3D>
-
-                      <Card3D delay={0.3}>
-                        <div className="glass-card p-6 rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 h-full">
-                          <h3 className="text-xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-4 flex items-center gap-2">
-                            <Cloud className="w-5 h-5 text-lux-gold" />
-                            Tools & DevOps
-                          </h3>
-                          <div className="space-y-3">
-                            {skills.tools.map((item, index) => (
-                              <SkillBadge key={index} {...item} />
-                            ))}
-                          </div>
-                        </div>
-                      </Card3D>
-                    </div>
-                  </motion.div>
-                </section>
-              )}
-
-              {/* Enhanced Experience & Education */}
-              {sectionsInView.has('experience') && (
-                <section id="experience">
-                  <div className="grid lg:grid-cols-2 gap-8 mb-16">
+              {/* Enhanced Skills Section */}
+              <section id="skills">
+                <motion.div 
+                  className="mb-16"
+                  variants={itemVariants}
+                >
+                  <motion.h2 
+                    className="text-3xl font-bold text-center text-lux-gray-900 dark:text-lux-offwhite mb-12"
+                    variants={itemVariants}
+                  >
+                    Technical Expertise
+                  </motion.h2>
+                  
+                  <div className="grid md:grid-cols-3 gap-8">
                     <Card3D delay={0.1}>
                       <div className="glass-card p-6 rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 h-full">
-                        <h3 className="text-2xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-6 flex items-center gap-2">
-                          <Briefcase className="w-6 h-6 text-viva-magenta" />
-                          Experience
+                        <h3 className="text-xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-4 flex items-center gap-2">
+                          <Code2 className="w-5 h-5 text-viva-magenta" />
+                          Frontend
                         </h3>
-                        <div className="space-y-6">
-                          <div className="border-l-4 border-viva-magenta pl-4">
-                            <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">Full-Stack Instructor Assistant (TA)</h4>
-                            <p className="text-viva-magenta font-medium">4Geeks Academy • Present</p>
-                            <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
-                              Supporting full-stack students with debugging, mentorship, and code reviews using React, Flask, and PostgreSQL.
-                            </p>
-                          </div>
-                          <div className="border-l-4 border-lux-teal pl-4">
-                            <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">Healthcare Data Analyst</h4>
-                            <p className="text-lux-teal font-medium">Group 1001 • 2022 – 2025</p>
-                          </div>
-                          <div className="border-l-4 border-lux-gold pl-4">
-                            <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">UX/UI Researcher</h4>
-                            <p className="text-lux-gold font-medium">What Is Hot • 2017 – 2019</p>
-                            <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
-                              Drove 32% increase in user engagement through data-driven UX design and A/B testing.
-                            </p>
-                          </div>
+                        <div className="space-y-3">
+                          {skills.frontend.map((item, index) => (
+                            <SkillBadge key={index} {...item} />
+                          ))}
                         </div>
                       </div>
                     </Card3D>
 
                     <Card3D delay={0.2}>
                       <div className="glass-card p-6 rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 h-full">
-                        <h3 className="text-2xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-6 flex items-center gap-2">
-                          <GraduationCap className="w-6 h-6 text-lux-teal" />
-                          Education
+                        <h3 className="text-xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-4 flex items-center gap-2">
+                          <Database className="w-5 h-5 text-lux-teal" />
+                          Backend
                         </h3>
-                        <div className="space-y-6">
-                          <div className="border-l-4 border-viva-magenta pl-4">
-                            <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">Full-Stack Development Certification</h4>
-                            <p className="text-viva-magenta font-medium">4Geeks Academy • 2025</p>
-                            <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
-                              Comprehensive program covering React, Flask, PostgreSQL, and modern development practices.
-                            </p>
-                          </div>
-                          <div className="border-l-4 border-lux-gold pl-4">
-                            <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">UX/UI Certification</h4>
-                            <p className="text-lux-gold font-medium">Thinkful • 2021 – 2022</p>
-                            <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
-                              User-centered design, usability testing, and accessibility principles.
-                            </p>
-                          </div>
-                          <div className="border-l-4 border-lux-teal pl-4">
-                            <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">Upcoming Certifications</h4>
-                            <p className="text-lux-teal font-medium">Azure & AWS • 2025</p>
-                            <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
-                              Cloud computing and DevOps specializations in progress.
-                            </p>
-                          </div>
+                        <div className="space-y-3">
+                          {skills.backend.map((item, index) => (
+                            <SkillBadge key={index} {...item} />
+                          ))}
+                        </div>
+                      </div>
+                    </Card3D>
+
+                    <Card3D delay={0.3}>
+                      <div className="glass-card p-6 rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 h-full">
+                        <h3 className="text-xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-4 flex items-center gap-2">
+                          <Cloud className="w-5 h-5 text-lux-gold" />
+                          Tools & DevOps
+                        </h3>
+                        <div className="space-y-3">
+                          {skills.tools.map((item, index) => (
+                            <SkillBadge key={index} {...item} />
+                          ))}
                         </div>
                       </div>
                     </Card3D>
                   </div>
-                </section>
-              )}
+                </motion.div>
+              </section>
 
-              {/* Enhanced Featured Projects */}
-              {(sectionsInView.has('projects') || sectionsInView.has('hero')) && (
-                <section id="projects">
-                  <Card3D className="mb-16" delay={0.3}>
-                    <div className="glass-card p-8 rounded-2xl border border-lux-gray-200/50 dark:border-lux-gray-700/50">
-                      <h2 className="text-3xl font-bold text-lux-gray-900 dark:text-lux-offwhite mb-8 flex items-center gap-2">
-                        <Rocket className="w-8 h-8 text-viva-magenta" />
-                        Featured Projects
-                      </h2>
-                      
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <motion.div 
-                          className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-viva-magenta to-lux-gold p-6 text-lux-offwhite"
-                          whileHover={{ scale: shouldReduceMotion ? 1 : 1.02 }}
-                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        >
-                          <h3 className="text-xl font-semibold mb-2">GameGraft</h3>
-                          <p className="text-lux-offwhite/80 mb-4">Game Discovery App with real-time API integration</p>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            <span className="px-2 py-1 bg-white/20 rounded-md text-xs">React.js</span>
-                            <span className="px-2 py-1 bg-white/20 rounded-md text-xs">Flask</span>
-                            <span className="px-2 py-1 bg-white/20 rounded-md text-xs">PostgreSQL</span>
-                          </div>
-                          <motion.button
-                            className="flex items-center gap-2 text-sm font-medium hover:underline"
-                            whileHover={{ x: shouldReduceMotion ? 0 : 5 }}
-                          >
-                            View Project <ExternalLink className="w-4 h-4" />
-                          </motion.button>
-                        </motion.div>
-
-                        <motion.div 
-                          className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-lux-teal to-lux-sage p-6 text-lux-offwhite"
-                          whileHover={{ scale: shouldReduceMotion ? 1 : 1.02 }}
-                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        >
-                          <h3 className="text-xl font-semibold mb-2">SquadUp</h3>
-                          <p className="text-lux-offwhite/80 mb-4">Gaming Collaboration App with real-time features</p>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            <span className="px-2 py-1 bg-white/20 rounded-md text-xs">React</span>
-                            <span className="px-2 py-1 bg-white/20 rounded-md text-xs">Flask</span>
-                            <span className="px-2 py-1 bg-white/20 rounded-md text-xs">JWT</span>
-                          </div>
-                          <motion.button
-                            className="flex items-center gap-2 text-sm font-medium hover:underline"
-                            whileHover={{ x: shouldReduceMotion ? 0 : 5 }}
-                          >
-                            View Project <ExternalLink className="w-4 h-4" />
-                          </motion.button>
-                        </motion.div>
+              {/* Enhanced Experience & Education */}
+              <section id="experience">
+                <div className="grid lg:grid-cols-2 gap-8 mb-16">
+                  <Card3D delay={0.1}>
+                    <div className="glass-card p-6 rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 h-full">
+                      <h3 className="text-2xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-6 flex items-center gap-2">
+                        <Briefcase className="w-6 h-6 text-viva-magenta" />
+                        Experience
+                      </h3>
+                      <div className="space-y-6">
+                        <div className="border-l-4 border-viva-magenta pl-4">
+                          <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">Full-Stack Instructor Assistant (TA)</h4>
+                          <p className="text-viva-magenta font-medium">4Geeks Academy • Present</p>
+                          <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
+                            Supporting full-stack students with debugging, mentorship, and code reviews using React, Flask, and PostgreSQL.
+                          </p>
+                        </div>
+                        <div className="border-l-4 border-lux-teal pl-4">
+                          <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">Healthcare Data Analyst</h4>
+                          <p className="text-lux-teal font-medium">Group 1001 • 2022 – 2025</p>
+                        </div>
+                        <div className="border-l-4 border-lux-gold pl-4">
+                          <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">UX/UI Researcher</h4>
+                          <p className="text-lux-gold font-medium">What Is Hot • 2017 – 2019</p>
+                          <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
+                            Drove 32% increase in user engagement through data-driven UX design and A/B testing.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </Card3D>
-                </section>
-              )}
 
-              {/* Enhanced CTA Section */}
-              {(sectionsInView.has('cta') || sectionsInView.has('hero')) && (
-                <section id="cta">
-                  <motion.div 
-                    className="text-center"
-                    variants={itemVariants}
-                  >
-                    <Card3D delay={0.4}>
-                      <div className="bg-gradient-to-r from-viva-magenta to-lux-gold rounded-2xl p-8 text-lux-offwhite">
-                        <h2 className="text-3xl font-bold mb-4">Let's Build Something Amazing</h2>
-                        <p className="text-xl text-lux-offwhite/80 mb-8 max-w-2xl mx-auto">
-                          Ready to bring your ideas to life? I'm available for freelance projects and full-time opportunities.
-                        </p>
-                        <div className="flex flex-wrap justify-center gap-4">
-                          {contactOptions.map((option, index) => {
-                            const IconComponent = option.icon
-                            return (
-                              <motion.a
-                                key={option.title}
-                                href={option.href}
-                                target={option.title !== 'Email' ? '_blank' : undefined}
-                                rel={option.title !== 'Email' ? 'noopener noreferrer' : undefined}
-                                className="flex items-center gap-2 px-6 py-3 bg-lux-offwhite/20 backdrop-blur-sm border border-lux-offwhite/30 text-lux-offwhite rounded-lg font-semibold hover:bg-lux-offwhite/30 transition-colors duration-200"
-                                whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
-                                whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
-                              >
-                                <IconComponent className="w-4 h-4" />
-                                {option.title}
-                              </motion.a>
-                            )
-                          })}
+                  <Card3D delay={0.2}>
+                    <div className="glass-card p-6 rounded-xl border border-lux-gray-200/50 dark:border-lux-gray-700/50 h-full">
+                      <h3 className="text-2xl font-semibold text-lux-gray-900 dark:text-lux-offwhite mb-6 flex items-center gap-2">
+                        <GraduationCap className="w-6 h-6 text-lux-teal" />
+                        Education
+                      </h3>
+                      <div className="space-y-6">
+                        <div className="border-l-4 border-viva-magenta pl-4">
+                          <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">Full-Stack Development Certification</h4>
+                          <p className="text-viva-magenta font-medium">4Geeks Academy • 2025</p>
+                          <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
+                            Comprehensive program covering React, Flask, PostgreSQL, and modern development practices.
+                          </p>
+                        </div>
+                        <div className="border-l-4 border-lux-gold pl-4">
+                          <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">UX/UI Certification</h4>
+                          <p className="text-lux-gold font-medium">Thinkful • 2021 – 2022</p>
+                          <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
+                            User-centered design, usability testing, and accessibility principles.
+                          </p>
+                        </div>
+                        <div className="border-l-4 border-lux-teal pl-4">
+                          <h4 className="font-semibold text-lux-gray-900 dark:text-lux-offwhite">Upcoming Certifications</h4>
+                          <p className="text-lux-teal font-medium">Azure & AWS • 2025</p>
+                          <p className="text-lux-gray-600 dark:text-lux-gray-400 text-sm mt-2">
+                            Cloud computing and DevOps specializations in progress.
+                          </p>
                         </div>
                       </div>
-                    </Card3D>
-                  </motion.div>
-                </section>
-              )}
+                    </div>
+                  </Card3D>
+                </div>
+              </section>
+
+              {/* Enhanced Featured Projects */}
+              <section id="projects">
+                <Card3D className="mb-16" delay={0.3}>
+                  <div className="glass-card p-8 rounded-2xl border border-lux-gray-200/50 dark:border-lux-gray-700/50">
+                    <h2 className="text-3xl font-bold text-lux-gray-900 dark:text-lux-offwhite mb-8 flex items-center gap-2">
+                      <Rocket className="w-8 h-8 text-viva-magenta" />
+                      Featured Projects
+                    </h2>
+                    
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <motion.div 
+                        className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-viva-magenta to-lux-gold p-6 text-lux-offwhite"
+                        whileHover={{ scale: shouldReduceMotion ? 1 : 1.02 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      >
+                        <h3 className="text-xl font-semibold mb-2">GameGraft</h3>
+                        <p className="text-lux-offwhite/80 mb-4">Game Discovery App with real-time API integration</p>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <span className="px-2 py-1 bg-white/20 rounded-md text-xs">React.js</span>
+                          <span className="px-2 py-1 bg-white/20 rounded-md text-xs">Flask</span>
+                          <span className="px-2 py-1 bg-white/20 rounded-md text-xs">PostgreSQL</span>
+                        </div>
+                        <motion.button
+                          className="flex items-center gap-2 text-sm font-medium hover:underline"
+                          whileHover={{ x: shouldReduceMotion ? 0 : 5 }}
+                        >
+                          View Project <ExternalLink className="w-4 h-4" />
+                        </motion.button>
+                      </motion.div>
+
+                      <motion.div 
+                        className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-lux-teal to-lux-sage p-6 text-lux-offwhite"
+                        whileHover={{ scale: shouldReduceMotion ? 1 : 1.02 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      >
+                        <h3 className="text-xl font-semibold mb-2">SquadUp</h3>
+                        <p className="text-lux-offwhite/80 mb-4">Gaming Collaboration App with real-time features</p>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <span className="px-2 py-1 bg-white/20 rounded-md text-xs">React</span>
+                          <span className="px-2 py-1 bg-white/20 rounded-md text-xs">Flask</span>
+                          <span className="px-2 py-1 bg-white/20 rounded-md text-xs">JWT</span>
+                        </div>
+                        <motion.button
+                          className="flex items-center gap-2 text-sm font-medium hover:underline"
+                          whileHover={{ x: shouldReduceMotion ? 0 : 5 }}
+                        >
+                          View Project <ExternalLink className="w-4 h-4" />
+                        </motion.button>
+                      </motion.div>
+                    </div>
+                  </div>
+                </Card3D>
+              </section>
+
+              {/* Enhanced CTA Section */}
+              <section id="cta">
+                <motion.div 
+                  className="text-center"
+                  variants={itemVariants}
+                >
+                  <Card3D delay={0.4}>
+                    <div className="bg-gradient-to-r from-viva-magenta to-lux-gold rounded-2xl p-8 text-lux-offwhite">
+                      <h2 className="text-3xl font-bold mb-4">Let's Build Something Amazing</h2>
+                      <p className="text-xl text-lux-offwhite/80 mb-8 max-w-2xl mx-auto">
+                        Ready to bring your ideas to life? I'm available for freelance projects and full-time opportunities.
+                      </p>
+                      <div className="flex flex-wrap justify-center gap-4">
+                        {contactOptions.map((option, index) => {
+                          const IconComponent = option.icon
+                          return (
+                            <motion.a
+                              key={option.title}
+                              href={option.href}
+                              target={option.title !== 'Email' ? '_blank' : undefined}
+                              rel={option.title !== 'Email' ? 'noopener noreferrer' : undefined}
+                              className="flex items-center gap-2 px-6 py-3 bg-lux-offwhite/20 backdrop-blur-sm border border-lux-offwhite/30 text-lux-offwhite rounded-lg font-semibold hover:bg-lux-offwhite/30 transition-colors duration-200"
+                              whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
+                              whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
+                            >
+                              <IconComponent className="w-4 h-4" />
+                              {option.title}
+                            </motion.a>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </Card3D>
+                </motion.div>
+              </section>
             </motion.div>
           </motion.div>
         </div>

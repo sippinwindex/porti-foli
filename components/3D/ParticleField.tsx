@@ -1,4 +1,4 @@
-// Enhanced ParticleField with Support for Existing Color Schemes
+// Enhanced ParticleField with Crisp Particles and Spider-web Connections
 'use client'
 
 import { useEffect, useRef, useCallback, useMemo, useState } from 'react'
@@ -15,6 +15,7 @@ interface Particle {
   color: string
   scale: number
   baseOpacity: number
+  pulsePhase: number
 }
 
 interface ParticleFieldProps {
@@ -77,40 +78,40 @@ export default function EnhancedParticleField({
       primary: '#BE3455',
       secondary: '#D4AF37',
       accent: '#98A869',
-      opacity: 0.4,
-      mixBlendMode: 'multiply' as const,
-      glowIntensity: 0.3,
-      connectionOpacity: 0.1
+      opacity: 0.7,
+      connectionOpacity: 0.25,
+      maxConnections: 4,
+      connectionDistance: 120
     },
     cyberpunk: {
       colors: ['#00FFFF', '#FF00FF', '#FFFF00', '#00FF00'],
       primary: '#00FFFF',
       secondary: '#FF00FF',
       accent: '#FFFF00',
-      opacity: 0.7,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.8,
-      connectionOpacity: 0.2
+      opacity: 0.8,
+      connectionOpacity: 0.4,
+      maxConnections: 5,
+      connectionDistance: 140
     },
     synthwave: {
       colors: ['#FF1493', '#8A2BE2', '#00FFFF', '#FF6347'],
       primary: '#FF1493',
       secondary: '#8A2BE2', 
       accent: '#00FFFF',
-      opacity: 0.6,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.7,
-      connectionOpacity: 0.15
+      opacity: 0.7,
+      connectionOpacity: 0.35,
+      maxConnections: 4,
+      connectionDistance: 130
     },
     cosmic: {
       colors: ['#4B0082', '#8A2BE2', '#FFD700', '#FF69B4'],
       primary: '#4B0082',
       secondary: '#8A2BE2',
       accent: '#FFD700',
-      opacity: 0.6,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.6,
-      connectionOpacity: 0.15
+      opacity: 0.7,
+      connectionOpacity: 0.3,
+      maxConnections: 4,
+      connectionDistance: 130
     },
     aurora: {
       colors: [
@@ -123,40 +124,40 @@ export default function EnhancedParticleField({
       primary: '#FF6B8A',
       secondary: '#FFD700',
       accent: '#40E0D0',
-      opacity: 0.7,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.8,
-      connectionOpacity: 0.2
+      opacity: 0.8,
+      connectionOpacity: 0.4,
+      maxConnections: 5,
+      connectionDistance: 140
     },
     'viva-magenta': {
       colors: ['#BE3455', '#D4AF37', '#98A869', '#008080'],
       primary: '#BE3455',
       secondary: '#D4AF37',
       accent: '#98A869',
-      opacity: 0.6,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.8,
-      connectionOpacity: 0.15
+      opacity: 0.7,
+      connectionOpacity: 0.35,
+      maxConnections: 4,
+      connectionDistance: 130
     },
     brand: {
       colors: ['#BE3455', '#D4AF37', '#98A869'],
       primary: '#BE3455',
       secondary: '#D4AF37',
       accent: '#98A869',
-      opacity: 0.6,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.6,
-      connectionOpacity: 0.15
+      opacity: 0.7,
+      connectionOpacity: 0.3,
+      maxConnections: 4,
+      connectionDistance: 120
     },
     monochrome: {
       colors: ['#ffffff', '#f0f0f0', '#e0e0e0', '#d0d0d0'],
       primary: '#ffffff',
       secondary: '#f0f0f0',
       accent: '#e0e0e0',
-      opacity: 0.5,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.4,
-      connectionOpacity: 0.1
+      opacity: 0.6,
+      connectionOpacity: 0.2,
+      maxConnections: 3,
+      connectionDistance: 100
     }
   }), [])
 
@@ -189,12 +190,12 @@ export default function EnhancedParticleField({
       const b = parseInt(hex.substr(4, 2), 16)
       
       // Slightly darken colors for light mode visibility
-      const factor = 0.8
+      const factor = 0.85
       const rAdjusted = Math.floor(r * factor)
       const gAdjusted = Math.floor(g * factor)
       const bAdjusted = Math.floor(b * factor)
       
-      return `rgb(${rAdjusted}, ${gAdjusted}, ${bAdjusted})`
+      return `#${rAdjusted.toString(16).padStart(2, '0')}${gAdjusted.toString(16).padStart(2, '0')}${bAdjusted.toString(16).padStart(2, '0')}`
     }
     
     return baseColor
@@ -216,8 +217,8 @@ export default function EnhancedParticleField({
         const selectedColor = colors[Math.floor(Math.random() * colors.length)]
         particle.color = processColor(selectedColor, isLightMode)
         particle.baseOpacity = isLightMode ? 
-          Math.random() * 0.3 + 0.15 : 
-          Math.random() * 0.5 + 0.2
+          Math.random() * 0.4 + 0.3 : 
+          Math.random() * 0.5 + 0.4
       })
       return
     }
@@ -230,17 +231,18 @@ export default function EnhancedParticleField({
       return {
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * speed * 0.3,
-        vy: (Math.random() - 0.5) * speed * 0.3,
-        radius: Math.random() * 1.5 + 0.5,
-        opacity: Math.random() * 0.4 + 0.2,
+        vx: (Math.random() - 0.5) * speed * 0.4,
+        vy: (Math.random() - 0.5) * speed * 0.4,
+        radius: Math.random() * 2 + 1.5, // Slightly larger for visibility
+        opacity: Math.random() * 0.5 + 0.5,
         life: 0,
-        maxLife: Math.random() * 200 + 100,
+        maxLife: Math.random() * 300 + 200,
         color: selectedColor,
-        scale: Math.random() * 0.8 + 0.2,
+        scale: Math.random() * 0.8 + 0.4,
         baseOpacity: isLightMode ? 
-          Math.random() * 0.3 + 0.15 : 
-          Math.random() * 0.5 + 0.2
+          Math.random() * 0.4 + 0.3 : 
+          Math.random() * 0.5 + 0.4,
+        pulsePhase: Math.random() * Math.PI * 2
       }
     })
   }, [particleCount, speed, currentColorScheme, processColor, isLightMode, isMobile, mounted])
@@ -259,10 +261,13 @@ export default function EnhancedParticleField({
     const time = now * 0.001 * speed * 0.5
     
     particlesRef.current.forEach((particle, i) => {
+      // Update pulse phase for subtle breathing effect
+      particle.pulsePhase += 0.02
+
       switch (animation) {
         case 'drift':
-          particle.x += particle.vx * speed * 0.5
-          particle.y += particle.vy * speed * 0.5
+          particle.x += particle.vx * speed * 0.6
+          particle.y += particle.vy * speed * 0.6
           break
           
         case 'spiral':
@@ -270,41 +275,41 @@ export default function EnhancedParticleField({
             const centerX = width / 2
             const centerY = height / 2
             const angle = particle.life * 0.01
-            const distance = 30 + particle.life * 0.2
+            const distance = 40 + particle.life * 0.3
             particle.x = centerX + Math.cos(angle) * distance
             particle.y = centerY + Math.sin(angle) * distance
           }
           break
           
         case 'chaos':
-          particle.vx += (Math.random() - 0.5) * 0.03
-          particle.vy += (Math.random() - 0.5) * 0.03
-          particle.vx = Math.max(-1, Math.min(1, particle.vx))
-          particle.vy = Math.max(-1, Math.min(1, particle.vy))
-          particle.x += particle.vx * speed * 0.5
-          particle.y += particle.vy * speed * 0.5
+          particle.vx += (Math.random() - 0.5) * 0.04
+          particle.vy += (Math.random() - 0.5) * 0.04
+          particle.vx = Math.max(-1.2, Math.min(1.2, particle.vx))
+          particle.vy = Math.max(-1.2, Math.min(1.2, particle.vy))
+          particle.x += particle.vx * speed * 0.6
+          particle.y += particle.vy * speed * 0.6
           break
           
         case 'constellation':
-          particle.y += particle.vy * speed * 0.1
-          particle.x += Math.sin(time + i * 0.2) * 0.1
+          particle.y += particle.vy * speed * 0.15
+          particle.x += Math.sin(time + i * 0.3) * 0.15
           break
           
         case 'flow':
-          particle.x += Math.sin(time * 0.3 + i * 0.1) * 0.001 * speed
-          particle.y += Math.cos(time * 0.2 + i * 0.05) * 0.001 * speed
+          particle.x += Math.sin(time * 0.4 + i * 0.15) * 0.2 * speed
+          particle.y += Math.cos(time * 0.3 + i * 0.1) * 0.2 * speed
           break
           
         case 'orbit':
-          const radius = 0.3 + Math.sin(i * 0.1) * 0.2
-          particle.x += Math.cos(time + i * 0.1) * radius * 0.0005 * speed
-          particle.y += Math.sin(time + i * 0.1) * radius * 0.0005 * speed
+          const radius = 0.4 + Math.sin(i * 0.15) * 0.3
+          particle.x += Math.cos(time + i * 0.15) * radius * 0.3 * speed
+          particle.y += Math.sin(time + i * 0.15) * radius * 0.3 * speed
           break
           
         case 'float':
         default:
-          particle.y += particle.vy * speed * 0.1
-          particle.x += Math.sin(particle.life * 0.01) * 0.2
+          particle.y += particle.vy * speed * 0.15
+          particle.x += Math.sin(particle.life * 0.015) * 0.25
           break
       }
 
@@ -314,24 +319,27 @@ export default function EnhancedParticleField({
         const dy = mouseRef.current.y - particle.y
         const distanceSquared = dx * dx + dy * dy
         
-        if (distanceSquared < 22500 && distanceSquared > 0) {
-          const force = (22500 - distanceSquared) / 22500 * 0.003
+        if (distanceSquared < 30000 && distanceSquared > 0) {
+          const force = (30000 - distanceSquared) / 30000 * 0.004
           particle.vx += dx * force
           particle.vy += dy * force
           
-          if (distanceSquared < 2500) {
-            const repulsion = (2500 - distanceSquared) / 2500 * 0.005
+          if (distanceSquared < 4000) {
+            const repulsion = (4000 - distanceSquared) / 4000 * 0.008
             particle.vx -= dx * repulsion
             particle.vy -= dy * repulsion
           }
           
-          particle.radius = particle.scale * (hovered ? 1.3 : 1.0)
-          particle.opacity = particle.baseOpacity * (hovered ? 1.4 : 1.0)
+          particle.radius = particle.scale * (hovered ? 1.5 : 1.2)
+          particle.opacity = particle.baseOpacity * (hovered ? 1.3 : 1.1)
+        } else {
+          particle.radius = particle.scale
+          particle.opacity = particle.baseOpacity
         }
       }
 
       // Boundary wrapping
-      const buffer = 20
+      const buffer = 30
       if (particle.x > width + buffer) particle.x = -buffer
       if (particle.x < -buffer) particle.x = width + buffer
       if (particle.y > height + buffer) particle.y = -buffer
@@ -344,6 +352,7 @@ export default function EnhancedParticleField({
         particle.x = Math.random() * width
         particle.y = Math.random() * height
         particle.opacity = particle.baseOpacity
+        particle.pulsePhase = Math.random() * Math.PI * 2
         
         // Refresh color for theme changes
         const colors = currentColorScheme.colors
@@ -351,21 +360,37 @@ export default function EnhancedParticleField({
         particle.color = processColor(newColor, isLightMode)
       }
 
-      // Enhanced opacity lifecycle
+      // Enhanced opacity lifecycle with subtle pulse
       const lifeCycle = particle.life / particle.maxLife
-      if (lifeCycle < 0.15) {
-        particle.opacity = particle.baseOpacity * (lifeCycle / 0.15)
-      } else if (lifeCycle > 0.85) {
-        particle.opacity = particle.baseOpacity * ((1 - lifeCycle) / 0.15)
+      const pulseMultiplier = 1 + Math.sin(particle.pulsePhase) * 0.1
+      
+      if (lifeCycle < 0.1) {
+        particle.opacity = particle.baseOpacity * (lifeCycle / 0.1) * pulseMultiplier
+      } else if (lifeCycle > 0.9) {
+        particle.opacity = particle.baseOpacity * ((1 - lifeCycle) / 0.1) * pulseMultiplier
       } else {
-        particle.opacity = particle.baseOpacity
+        particle.opacity = particle.baseOpacity * pulseMultiplier
       }
       
       particle.opacity = Math.max(0, Math.min(1, particle.opacity))
     })
   }, [animation, speed, interactive, currentColorScheme, hovered, processColor, isLightMode, isMobile, mounted])
 
-  // Enhanced rendering with better theme support
+  // Helper function to parse color
+  const parseColor = useCallback((colorStr: string) => {
+    if (colorStr.startsWith('#')) {
+      const hex = colorStr.replace('#', '')
+      return {
+        r: parseInt(hex.substr(0, 2), 16),
+        g: parseInt(hex.substr(2, 2), 16),
+        b: parseInt(hex.substr(4, 2), 16)
+      }
+    }
+    // Default fallback
+    return { r: 255, g: 255, b: 255 }
+  }, [])
+
+  // Enhanced rendering with crisp particles and elegant connections
   const render = useCallback(() => {
     if (!mounted) return
     
@@ -377,150 +402,121 @@ export default function EnhancedParticleField({
 
     const { width, height } = dimensionsRef.current
 
-    // Enhanced background clearing based on theme
-    if (isLightMode) {
-      ctx.fillStyle = 'rgba(250, 250, 250, 0.02)' // lux-offwhite with transparency
-    } else {
-      ctx.fillStyle = 'rgba(18, 18, 18, 0.02)' // lux-black with transparency
-    }
-    ctx.fillRect(0, 0, width, height)
+    // Clear canvas completely for crisp rendering
+    ctx.clearRect(0, 0, width, height)
 
-    // Set blend mode
-    ctx.globalCompositeOperation = currentColorScheme.mixBlendMode
-    
-    // Render particles with enhanced effects
-    particlesRef.current.forEach(particle => {
-      if (!isFinite(particle.x) || !isFinite(particle.y) || 
-          !isFinite(particle.radius) || particle.radius <= 0) {
-        return
-      }
-
-      const safeRadius = Math.max(0.5, Math.min(3, particle.radius))
-      const safeOpacity = Math.max(0, Math.min(1, particle.opacity * currentColorScheme.opacity))
-      
-      try {
-        // Enhanced glow effects for better visibility
-        if (!isMobile && currentColorScheme.glowIntensity > 0.5) {
-          const gradient = ctx.createRadialGradient(
-            particle.x, particle.y, 0,
-            particle.x, particle.y, safeRadius * 2.5
-          )
-
-          // Parse color for gradient
-          let r, g, b
-          if (particle.color.startsWith('rgb')) {
-            const match = particle.color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
-            if (match) {
-              r = parseInt(match[1])
-              g = parseInt(match[2])
-              b = parseInt(match[3])
-            } else {
-              r = g = b = isLightMode ? 0 : 255
-            }
-          } else {
-            const hex = particle.color.replace('#', '')
-            r = parseInt(hex.substr(0, 2), 16)
-            g = parseInt(hex.substr(2, 2), 16)
-            b = parseInt(hex.substr(4, 2), 16)
-          }
-
-          const glowMultiplier = currentColorScheme.glowIntensity
-          gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${safeOpacity})`)
-          gradient.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, ${safeOpacity * 0.6 * glowMultiplier})`)
-          gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
-
-          ctx.fillStyle = gradient
-          ctx.beginPath()
-          ctx.arc(particle.x, particle.y, safeRadius * 1.5, 0, Math.PI * 2)
-          ctx.fill()
-        } else {
-          // Simple particle for mobile or low intensity
-          let r, g, b
-          if (particle.color.startsWith('rgb')) {
-            const match = particle.color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
-            if (match) {
-              r = parseInt(match[1])
-              g = parseInt(match[2])
-              b = parseInt(match[3])
-            } else {
-              r = g = b = isLightMode ? 0 : 255
-            }
-          } else {
-            const hex = particle.color.replace('#', '')
-            r = parseInt(hex.substr(0, 2), 16)
-            g = parseInt(hex.substr(2, 2), 16)
-            b = parseInt(hex.substr(4, 2), 16)
-          }
-
-          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${safeOpacity})`
-          ctx.beginPath()
-          ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
-          ctx.fill()
-        }
-      } catch (error) {
-        // Fallback rendering
-        ctx.fillStyle = particle.color
-        ctx.globalAlpha = safeOpacity
-        ctx.beginPath()
-        ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.globalAlpha = 1
-      }
-    })
-
-    // Enhanced constellation connections
-    if (animation === 'constellation' && !isMobile && particlesRef.current.length < 30) {
+    // Render spider-web connections first (behind particles)
+    if (particlesRef.current.length > 1) {
       ctx.save()
       
-      const lineOpacity = currentColorScheme.connectionOpacity
-      const maxConnections = 3
+      const maxConnections = currentColorScheme.maxConnections
+      const connectionDistance = currentColorScheme.connectionDistance
+      const baseConnectionOpacity = currentColorScheme.connectionOpacity
       
-      // Use primary color for connections
-      const primaryColor = currentColorScheme.primary
-      let r, g, b
-      if (primaryColor.startsWith('rgb')) {
-        const match = primaryColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
-        if (match) {
-          r = parseInt(match[1])
-          g = parseInt(match[2])
-          b = parseInt(match[3])
-        } else {
-          r = g = b = isLightMode ? 0 : 255
-        }
-      } else {
-        const hex = primaryColor.replace('#', '')
-        r = parseInt(hex.substr(0, 2), 16)
-        g = parseInt(hex.substr(2, 2), 16)
-        b = parseInt(hex.substr(4, 2), 16)
-      }
-      
-      ctx.globalCompositeOperation = isLightMode ? 'multiply' : 'screen'
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${lineOpacity})`
-      ctx.lineWidth = isLightMode ? 0.8 : 0.5
-      
+      // Create gradient connections using multiple colors
       for (let i = 0; i < particlesRef.current.length; i++) {
         let connectionsCount = 0
+        const particle1 = particlesRef.current[i]
+        
         for (let j = i + 1; j < particlesRef.current.length && connectionsCount < maxConnections; j++) {
-          const p1 = particlesRef.current[i]
-          const p2 = particlesRef.current[j]
-          const dx = p1.x - p2.x
-          const dy = p1.y - p2.y
+          const particle2 = particlesRef.current[j]
+          const dx = particle1.x - particle2.x
+          const dy = particle1.y - particle2.y
           const distance = Math.sqrt(dx * dx + dy * dy)
           
-          if (distance < 90) {
-            const opacity = (90 - distance) / 90 * lineOpacity
-            ctx.globalAlpha = opacity
+          if (distance < connectionDistance) {
+            // Calculate opacity based on distance
+            const distanceOpacity = (connectionDistance - distance) / connectionDistance
+            const finalOpacity = baseConnectionOpacity * distanceOpacity * Math.min(particle1.opacity, particle2.opacity)
+            
+            // Create gradient line between particles
+            const gradient = ctx.createLinearGradient(particle1.x, particle1.y, particle2.x, particle2.y)
+            
+            const color1 = parseColor(particle1.color)
+            const color2 = parseColor(particle2.color)
+            
+            gradient.addColorStop(0, `rgba(${color1.r}, ${color1.g}, ${color1.b}, ${finalOpacity})`)
+            gradient.addColorStop(0.5, `rgba(${Math.floor((color1.r + color2.r) / 2)}, ${Math.floor((color1.g + color2.g) / 2)}, ${Math.floor((color1.b + color2.b) / 2)}, ${finalOpacity * 0.8})`)
+            gradient.addColorStop(1, `rgba(${color2.r}, ${color2.g}, ${color2.b}, ${finalOpacity})`)
+            
+            ctx.strokeStyle = gradient
+            ctx.lineWidth = isLightMode ? 0.8 : 1.2
+            ctx.lineCap = 'round'
+            
+            // Add slight glow effect for connections in dark mode
+            if (!isLightMode && finalOpacity > 0.2) {
+              ctx.shadowColor = `rgba(${Math.floor((color1.r + color2.r) / 2)}, ${Math.floor((color1.g + color2.g) / 2)}, ${Math.floor((color1.b + color2.b) / 2)}, 0.3)`
+              ctx.shadowBlur = 3
+            }
+            
             ctx.beginPath()
-            ctx.moveTo(p1.x, p1.y)
-            ctx.lineTo(p2.x, p2.y)
+            ctx.moveTo(particle1.x, particle1.y)
+            ctx.lineTo(particle2.x, particle2.y)
             ctx.stroke()
+            
+            // Reset shadow
+            ctx.shadowBlur = 0
+            
             connectionsCount++
           }
         }
       }
       ctx.restore()
     }
-  }, [animation, isLightMode, currentColorScheme, isMobile, mounted])
+    
+    // Render crisp particles on top
+    particlesRef.current.forEach(particle => {
+      if (!isFinite(particle.x) || !isFinite(particle.y) || 
+          !isFinite(particle.radius) || particle.radius <= 0) {
+        return
+      }
+
+      const safeRadius = Math.max(0.8, Math.min(4, particle.radius))
+      const safeOpacity = Math.max(0, Math.min(1, particle.opacity * currentColorScheme.opacity))
+      
+      const color = parseColor(particle.color)
+      
+      ctx.save()
+      
+      // Create subtle glow for particles in dark mode
+      if (!isLightMode && safeOpacity > 0.3) {
+        ctx.shadowColor = `rgba(${color.r}, ${color.g}, ${color.b}, 0.4)`
+        ctx.shadowBlur = 4
+      }
+      
+      // Main particle circle - crisp and clean
+      ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${safeOpacity})`
+      ctx.beginPath()
+      ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
+      ctx.fill()
+      
+      // Add inner bright core for better definition
+      const coreOpacity = Math.min(1, safeOpacity * 1.5)
+      const coreRadius = safeRadius * 0.4
+      ctx.fillStyle = `rgba(${Math.min(255, color.r + 40)}, ${Math.min(255, color.g + 40)}, ${Math.min(255, color.b + 40)}, ${coreOpacity})`
+      ctx.beginPath()
+      ctx.arc(particle.x, particle.y, coreRadius, 0, Math.PI * 2)
+      ctx.fill()
+      
+      // Add outer ring for particles under mouse interaction
+      if (interactive && !isMobile && hovered) {
+        const dx = mouseRef.current.x - particle.x
+        const dy = mouseRef.current.y - particle.y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+        
+        if (distance < 100) {
+          const ringOpacity = (100 - distance) / 100 * 0.3
+          ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${ringOpacity})`
+          ctx.lineWidth = 1.5
+          ctx.beginPath()
+          ctx.arc(particle.x, particle.y, safeRadius * 1.8, 0, Math.PI * 2)
+          ctx.stroke()
+        }
+      }
+      
+      ctx.restore()
+    })
+  }, [isLightMode, currentColorScheme, interactive, isMobile, hovered, parseColor, mounted])
 
   const animate = useCallback(() => {
     if (prefersReducedMotion || !mounted) return
@@ -536,7 +532,7 @@ export default function EnhancedParticleField({
     if (!interactive || isMobile || !mounted) return
     
     const now = performance.now()
-    if (now - lastMouseUpdate.current < 50) return
+    if (now - lastMouseUpdate.current < 40) return
     lastMouseUpdate.current = now
     
     const canvas = canvasRef.current
@@ -583,6 +579,8 @@ export default function EnhancedParticleField({
       const ctx = canvas.getContext('2d')
       if (ctx) {
         ctx.scale(dpr, dpr)
+        ctx.imageSmoothingEnabled = true
+        ctx.imageSmoothingQuality = 'high'
       }
 
       dimensionsRef.current = { width, height }
@@ -651,9 +649,8 @@ export default function EnhancedParticleField({
       style={{
         width: '100%',
         height: '100%',
-        opacity: isMobile ? 0.4 : (isLightMode ? 0.6 : 0.7),
-        mixBlendMode: currentColorScheme.mixBlendMode,
-        transition: 'opacity 0.3s ease, mix-blend-mode 0.3s ease'
+        opacity: isMobile ? 0.5 : (isLightMode ? 0.8 : 0.9),
+        transition: 'opacity 0.3s ease'
       }}
       aria-hidden="true"
     />
