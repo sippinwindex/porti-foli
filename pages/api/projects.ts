@@ -1,4 +1,4 @@
-// pages/api/projects.ts - FIXED: Complete repository loading
+// pages/api/projects.ts - FIXED: Remove 3-repository limit
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { getEnhancedProjects, getPortfolioStats, type EnhancedProject, type PortfolioStats } from '@/lib/portfolio-integration'
 
@@ -18,7 +18,7 @@ interface ProjectAPIResponse {
       featured: boolean
       category: string
       sort: string
-      limit: number
+      limit: number | null
     }
   }
   stats?: PortfolioStats
@@ -128,19 +128,19 @@ export default async function handler(
   }
 
   try {
-    console.log('🔄 Projects API: Fetching enhanced projects...')
+    console.log('🔄 Projects API: Fetching ALL enhanced projects (NO LIMITS)...')
     
-    // FIXED: Get query parameters with proper defaults for unlimited loading
+    // FIXED: Get query parameters - default to NO LIMIT
     const limit = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit
     const featured = Array.isArray(req.query.featured) ? req.query.featured[0] : req.query.featured || 'false'
     const category = Array.isArray(req.query.category) ? req.query.category[0] : req.query.category || 'all'
     const sort = Array.isArray(req.query.sort) ? req.query.sort[0] : req.query.sort || 'featured'
     const includeStats = Array.isArray(req.query.includeStats) ? req.query.includeStats[0] : req.query.includeStats || 'false'
 
-    // FIXED: Default to showing ALL projects (no limit) unless specifically requested
-    const limitNum = limit ? parseInt(limit as string) : 0 // 0 means no limit
+    // FIXED: Only apply limit if explicitly requested AND greater than 0
+    const limitNum = limit && parseInt(limit as string) > 0 ? parseInt(limit as string) : null // null means NO LIMIT
 
-    console.log(`📊 Query params: limit=${limitNum || 'unlimited'}, featured=${featured}, category=${category}, sort=${sort}`)
+    console.log(`📊 Query params: limit=${limitNum || 'NO LIMIT'}, featured=${featured}, category=${category}, sort=${sort}`)
 
     // Fetch enhanced projects from integration layer
     const allProjects = await getEnhancedProjects()
@@ -209,10 +209,13 @@ export default async function handler(
 
     console.log(`🔄 After sorting by ${sort}: ${filteredProjects.length} projects`)
 
-    // FIXED: Apply limit only if specified and greater than 0
-    if (limitNum > 0 && limitNum < filteredProjects.length) {
+    // FIXED: Only apply limit if explicitly specified AND greater than 0
+    if (limitNum && limitNum > 0 && limitNum < filteredProjects.length) {
+      console.log(`✂️ Applying explicit limit of ${limitNum} projects`)
       filteredProjects = filteredProjects.slice(0, limitNum)
       console.log(`✂️ After limit (${limitNum}): ${filteredProjects.length} projects`)
+    } else {
+      console.log(`🚀 NO LIMIT APPLIED - Returning ALL ${filteredProjects.length} projects`)
     }
 
     // Transform to API format
@@ -245,7 +248,7 @@ export default async function handler(
       }
     }
 
-    console.log(`✅ Projects API: Returning ${transformedProjects.length} projects`)
+    console.log(`✅ Projects API: Successfully returning ${transformedProjects.length} projects`)
 
     // Set cache headers for performance
     res.setHeader('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=3600')

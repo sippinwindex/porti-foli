@@ -1,3 +1,4 @@
+// app/projects/page.tsx - FIXED: Remove hardcoded limits and show ALL projects
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react'
@@ -11,7 +12,7 @@ import {
   Users, CheckCircle, XCircle, RefreshCw, ArrowRight, Mail
 } from 'lucide-react'
 
-// Dynamic imports with enhanced error handling (same pattern as homepage)
+// Dynamic imports with enhanced error handling
 const Navigation = dynamic(() => import('@/components/Navigation'), { 
   ssr: false,
   loading: () => <NavigationSkeleton />
@@ -23,11 +24,6 @@ const Footer = dynamic(() => import('@/components/Footer'), {
 })
 
 const ParticleField = dynamic(() => import('@/components/3D/ParticleField'), { 
-  ssr: false,
-  loading: () => null
-})
-
-const FloatingCodeBlocks = dynamic(() => import('@/components/3D/FloatingCodeBlocks'), { 
   ssr: false,
   loading: () => null
 })
@@ -79,7 +75,7 @@ interface PortfolioStats {
   }>
 }
 
-// Enhanced theme-aware configuration with FIXED TYPES
+// Enhanced theme-aware configuration
 function useThemeAwareConfig() {
   const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -106,7 +102,6 @@ function useThemeAwareConfig() {
     
     return {
       isDark,
-      // FIXED: Different particle theme for projects page - blue/teal theme with proper type casting
       particleConfig: {
         particleCount: 30,
         colorScheme: (isDark ? 'brand' : 'light-mode') as 'cyberpunk' | 'synthwave' | 'cosmic' | 'aurora' | 'viva-magenta' | 'brand' | 'monochrome' | 'light-mode',
@@ -122,7 +117,7 @@ function useThemeAwareConfig() {
   }, [resolvedTheme, mounted])
 }
 
-// Custom hook for projects data (keeping your existing logic)
+// FIXED: Updated hook to fetch ALL projects without limits
 function useProjectsData() {
   const [projects, setProjects] = useState<ProjectData[]>([])
   const [stats, setStats] = useState<PortfolioStats | null>(null)
@@ -134,8 +129,9 @@ function useProjectsData() {
       setLoading(true)
       setError(null)
       
-      console.log('🔄 Fetching ALL projects from API...')
+      console.log('🔄 Fetching ALL projects from API (NO LIMITS)...')
       
+      // FIXED: Remove any limit parameter to get ALL projects
       const response = await fetch('/api/projects?includeStats=true')
       
       if (!response.ok) {
@@ -149,6 +145,7 @@ function useProjectsData() {
       }
       
       console.log(`✅ Loaded ${data.projects?.length || 0} projects from API`)
+      console.log(`📊 Stats: ${data.stats?.totalProjects || 0} total, ${data.stats?.liveProjects || 0} live`)
       
       setProjects(data.projects || [])
       setStats(data.stats || null)
@@ -173,7 +170,7 @@ function useProjectsData() {
   }
 }
 
-// Loading Skeletons (enhanced with blue theme)
+// Loading Skeletons
 function NavigationSkeleton() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-[1000] h-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50">
@@ -207,7 +204,7 @@ function PageLoading() {
   useEffect(() => {
     const messages = [
       'Initializing...',
-      'Loading GitHub Data...',
+      'Loading ALL GitHub repositories...',
       'Fetching Project Details...',
       'Preparing 3D Environment...',
       'Almost Ready...'
@@ -566,7 +563,7 @@ function ProjectStatus({ project }: { project: ProjectData }) {
   )
 }
 
-// Main Project Showcase (keeping your logic, enhancing visuals)
+// FIXED: Main Project Showcase - Remove visibleProjects limit
 function ProjectShowcase() {
   const { projects, stats, loading, error, refetch } = useProjectsData()
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
@@ -575,7 +572,7 @@ function ProjectShowcase() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'stars' | 'updated' | 'featured'>('featured')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
-  const [visibleProjects, setVisibleProjects] = useState(12)
+  // FIXED: Remove visibleProjects limit - show ALL projects
   
   const containerRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(containerRef, { once: true })
@@ -657,10 +654,6 @@ function ProjectShowcase() {
     })
     return Array.from(categorySet)
   }, [projects])
-
-  const loadMore = () => {
-    setVisibleProjects(prev => prev + 12)
-  }
 
   const handleCardClick = useCallback((project: ProjectData) => {
     if (project.vercel?.isLive && project.vercel.liveUrl) {
@@ -876,7 +869,7 @@ function ProjectShowcase() {
         {/* Results summary */}
         <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-700">
           <p className="text-sm text-blue-600 dark:text-blue-400">
-            Showing {filteredProjects.slice(0, visibleProjects).length} of {filteredProjects.length} projects
+            Showing {filteredProjects.length} of {projects.length} projects
             {activeTag !== 'All' && ` tagged with "${activeTag}"`}
             {categoryFilter !== 'all' && ` in ${categoryFilter} category`}
             {searchTerm && ` matching "${searchTerm}"`}
@@ -906,7 +899,7 @@ function ProjectShowcase() {
         </div>
       )}
 
-      {/* Projects Grid/List */}
+      {/* FIXED: Projects Grid/List - Show ALL projects */}
       <motion.div
         layout
         className={`grid gap-8 ${
@@ -916,7 +909,8 @@ function ProjectShowcase() {
         }`}
       >
         <AnimatePresence mode="popLayout">
-          {filteredProjects.slice(0, visibleProjects).map((project, index) => (
+          {/* FIXED: Show ALL filtered projects, not just a limited number */}
+          {filteredProjects.map((project, index) => (
             <ProjectCardWrapper
               key={project.id}
               project={project}
@@ -928,24 +922,8 @@ function ProjectShowcase() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Enhanced Load More Button */}
-      {filteredProjects.length > visibleProjects && (
-        <motion.div
-          className="text-center mt-12"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <motion.button
-            onClick={loadMore}
-            className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 mx-auto"
-            whileHover={{ scale: shouldReduceMotion ? 1 : 1.05 }}
-            whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
-          >
-            <ChevronDown className="w-5 h-5" />
-            Load More Projects ({filteredProjects.length - visibleProjects} remaining)
-          </motion.button>
-        </motion.div>
-      )}
+      {/* FIXED: Remove Load More Button since we show ALL projects */}
+      {/* No more load more button needed */}
 
       {/* Enhanced Empty state */}
       {filteredProjects.length === 0 && projects.length > 0 && (

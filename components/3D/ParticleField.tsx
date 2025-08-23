@@ -1,4 +1,4 @@
-// SSR Safe Enhanced ParticleField.tsx - Perfect Light/Dark Mode + Major Performance Improvements
+// Enhanced ParticleField with Support for Existing Color Schemes
 'use client'
 
 import { useEffect, useRef, useCallback, useMemo, useState } from 'react'
@@ -10,7 +10,6 @@ interface Particle {
   vy: number
   radius: number
   opacity: number
-  hue: number
   life: number
   maxLife: number
   color: string
@@ -27,7 +26,7 @@ interface ParticleFieldProps {
   className?: string
 }
 
-export default function ParticleField({
+export default function EnhancedParticleField({
   particleCount = 25,
   colorScheme = 'light-mode',
   animation = 'constellation',
@@ -41,11 +40,129 @@ export default function ParticleField({
   const mouseRef = useRef({ x: 0, y: 0 })
   const dimensionsRef = useRef({ width: 0, height: 0 })
   
-  // ✅ SSR SAFETY: Add mounted state
   const [mounted, setMounted] = useState(false)
   const [hovered, setHovered] = useState(false)
 
-  // ✅ SSR SAFE: Detect reduced motion and mobile with mounted check
+  // Enhanced theme detection with your color system
+  const isLightMode = useMemo(() => {
+    if (typeof window === 'undefined' || !mounted) return colorScheme === 'light-mode'
+    
+    if (colorScheme === 'light-mode') return true
+    if (colorScheme === 'aurora' || colorScheme === 'cyberpunk' || colorScheme === 'synthwave' || colorScheme === 'cosmic') return false
+    
+    try {
+      const htmlElement = document.documentElement
+      const hasExplicitDarkClass = htmlElement.classList.contains('dark')
+      const hasExplicitLightClass = htmlElement.classList.contains('light')
+      
+      if (hasExplicitDarkClass) return false
+      if (hasExplicitLightClass) return true
+      
+      return !window.matchMedia('(prefers-color-scheme: dark)').matches
+    } catch (error) {
+      return true
+    }
+  }, [colorScheme, mounted])
+
+  // Enhanced color schemes - supporting both existing and new schemes
+  const colorSchemes = useMemo(() => ({
+    'light-mode': {
+      colors: [
+        '#BE3455', // viva-magenta
+        '#D4AF37', // lux-gold  
+        '#98A869', // lux-sage
+        '#008080', // lux-teal
+        '#4A2C2A'  // lux-brown (subtle)
+      ],
+      primary: '#BE3455',
+      secondary: '#D4AF37',
+      accent: '#98A869',
+      opacity: 0.4,
+      mixBlendMode: 'multiply' as const,
+      glowIntensity: 0.3,
+      connectionOpacity: 0.1
+    },
+    cyberpunk: {
+      colors: ['#00FFFF', '#FF00FF', '#FFFF00', '#00FF00'],
+      primary: '#00FFFF',
+      secondary: '#FF00FF',
+      accent: '#FFFF00',
+      opacity: 0.7,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.8,
+      connectionOpacity: 0.2
+    },
+    synthwave: {
+      colors: ['#FF1493', '#8A2BE2', '#00FFFF', '#FF6347'],
+      primary: '#FF1493',
+      secondary: '#8A2BE2', 
+      accent: '#00FFFF',
+      opacity: 0.6,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.7,
+      connectionOpacity: 0.15
+    },
+    cosmic: {
+      colors: ['#4B0082', '#8A2BE2', '#FFD700', '#FF69B4'],
+      primary: '#4B0082',
+      secondary: '#8A2BE2',
+      accent: '#FFD700',
+      opacity: 0.6,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.6,
+      connectionOpacity: 0.15
+    },
+    aurora: {
+      colors: [
+        '#FF6B8A', // Brighter viva-magenta for dark
+        '#FFD700', // Brighter gold for dark
+        '#B8D687', // Brighter sage for dark
+        '#40E0D0', // Brighter teal for dark
+        '#8B5A5A'  // Brighter brown for dark
+      ],
+      primary: '#FF6B8A',
+      secondary: '#FFD700',
+      accent: '#40E0D0',
+      opacity: 0.7,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.8,
+      connectionOpacity: 0.2
+    },
+    'viva-magenta': {
+      colors: ['#BE3455', '#D4AF37', '#98A869', '#008080'],
+      primary: '#BE3455',
+      secondary: '#D4AF37',
+      accent: '#98A869',
+      opacity: 0.6,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.8,
+      connectionOpacity: 0.15
+    },
+    brand: {
+      colors: ['#BE3455', '#D4AF37', '#98A869'],
+      primary: '#BE3455',
+      secondary: '#D4AF37',
+      accent: '#98A869',
+      opacity: 0.6,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.6,
+      connectionOpacity: 0.15
+    },
+    monochrome: {
+      colors: ['#ffffff', '#f0f0f0', '#e0e0e0', '#d0d0d0'],
+      primary: '#ffffff',
+      secondary: '#f0f0f0',
+      accent: '#e0e0e0',
+      opacity: 0.5,
+      mixBlendMode: 'screen' as const,
+      glowIntensity: 0.4,
+      connectionOpacity: 0.1
+    }
+  }), [])
+
+  const currentColorScheme = colorSchemes[colorScheme]
+
+  // Enhanced reduced motion detection
   const prefersReducedMotion = useMemo(() => {
     if (typeof window === 'undefined' || !mounted) return false
     try {
@@ -60,119 +177,30 @@ export default function ParticleField({
     return window.innerWidth < 768
   }, [mounted])
 
-  // Color schemes remain the same...
-  const colorSchemes = useMemo(() => ({
-    'light-mode': {
-      colors: ['#BE3455', '#D4AF37', '#98A869', '#008080'],
-      primary: '#BE3455',
-      secondary: '#D4AF37',
-      accent: '#98A869',
-      opacity: 0.4,
-      mixBlendMode: 'multiply' as const,
-      glowIntensity: 0.3
-    },
-    cyberpunk: {
-      colors: ['#00FFFF', '#FF00FF', '#FFFF00', '#00FF00'],
-      primary: '#00FFFF',
-      secondary: '#FF00FF',
-      accent: '#FFFF00',
-      opacity: 0.7,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.8
-    },
-    synthwave: {
-      colors: ['#FF1493', '#8A2BE2', '#00FFFF', '#FF6347'],
-      primary: '#FF1493',
-      secondary: '#8A2BE2', 
-      accent: '#00FFFF',
-      opacity: 0.6,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.7
-    },
-    cosmic: {
-      colors: ['#4B0082', '#8A2BE2', '#FFD700', '#FF69B4'],
-      primary: '#4B0082',
-      secondary: '#8A2BE2',
-      accent: '#FFD700',
-      opacity: 0.6,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.6
-    },
-    aurora: {
-      colors: ['#BE3455', '#D4AF37', '#98A869', '#008080'],
-      primary: '#BE3455',
-      secondary: '#D4AF37',
-      accent: '#98A869',
-      opacity: 0.6,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.7
-    },
-    'viva-magenta': {
-      colors: ['#BE3455', '#D4AF37', '#98A869', '#008080'],
-      primary: '#BE3455',
-      secondary: '#D4AF37',
-      accent: '#98A869',
-      opacity: 0.6,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.8
-    },
-    brand: {
-      colors: ['#BE3455', '#D4AF37', '#98A869'],
-      primary: '#BE3455',
-      secondary: '#D4AF37',
-      accent: '#98A869',
-      opacity: 0.6,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.6
-    },
-    monochrome: {
-      colors: ['#ffffff', '#f0f0f0', '#e0e0e0', '#d0d0d0'],
-      primary: '#ffffff',
-      secondary: '#f0f0f0',
-      accent: '#e0e0e0',
-      opacity: 0.5,
-      mixBlendMode: 'screen' as const,
-      glowIntensity: 0.4
-    }
-  }), [])
-
-  const currentColorScheme = colorSchemes[colorScheme]
-
+  // Enhanced color processing
   const processColor = useCallback((baseColor: string, isLightMode: boolean) => {
     if (!isLightMode) return baseColor
 
-    const hex = baseColor.replace('#', '')
-    const r = parseInt(hex.substr(0, 2), 16)
-    const g = parseInt(hex.substr(2, 2), 16)
-    const b = parseInt(hex.substr(4, 2), 16)
-    
-    const factor = 0.7
-    const rAdjusted = Math.floor(r * factor)
-    const gAdjusted = Math.floor(g * factor)
-    const bAdjusted = Math.floor(b * factor)
-    
-    return `rgb(${rAdjusted}, ${gAdjusted}, ${bAdjusted})`
-  }, [])
-
-  // ✅ SSR SAFE: Theme detection with mounted check
-  const isLightMode = useMemo(() => {
-    if (typeof window === 'undefined' || !mounted) return colorScheme === 'light-mode'
-    
-    try {
-      const htmlElement = document.documentElement
-      const hasExplicitDarkClass = htmlElement.classList.contains('dark')
-      const hasExplicitLightClass = htmlElement.classList.contains('light')
+    // For light mode, we might want to adjust colors for better visibility
+    if (colorScheme === 'light-mode') {
+      const hex = baseColor.replace('#', '')
+      const r = parseInt(hex.substr(0, 2), 16)
+      const g = parseInt(hex.substr(2, 2), 16)  
+      const b = parseInt(hex.substr(4, 2), 16)
       
-      if (hasExplicitDarkClass) return false
-      if (hasExplicitLightClass) return true
+      // Slightly darken colors for light mode visibility
+      const factor = 0.8
+      const rAdjusted = Math.floor(r * factor)
+      const gAdjusted = Math.floor(g * factor)
+      const bAdjusted = Math.floor(b * factor)
       
-      return colorScheme === 'light-mode'
-    } catch (error) {
-      return colorScheme === 'light-mode'
+      return `rgb(${rAdjusted}, ${gAdjusted}, ${bAdjusted})`
     }
-  }, [colorScheme, mounted])
+    
+    return baseColor
+  }, [colorScheme])
 
-  // Initialize particles safely
+  // Initialize particles with enhanced color system
   const initializeParticles = useCallback(() => {
     if (!mounted) return
     
@@ -182,10 +210,14 @@ export default function ParticleField({
     const actualCount = isMobile ? Math.min(particleCount, 15) : particleCount
 
     if (particlesRef.current.length === actualCount) {
+      // Update existing particle colors for theme changes
       particlesRef.current.forEach(particle => {
         const colors = currentColorScheme.colors
         const selectedColor = colors[Math.floor(Math.random() * colors.length)]
         particle.color = processColor(selectedColor, isLightMode)
+        particle.baseOpacity = isLightMode ? 
+          Math.random() * 0.3 + 0.15 : 
+          Math.random() * 0.5 + 0.2
       })
       return
     }
@@ -202,16 +234,18 @@ export default function ParticleField({
         vy: (Math.random() - 0.5) * speed * 0.3,
         radius: Math.random() * 1.5 + 0.5,
         opacity: Math.random() * 0.4 + 0.2,
-        hue: 0,
         life: 0,
         maxLife: Math.random() * 200 + 100,
         color: selectedColor,
         scale: Math.random() * 0.8 + 0.2,
-        baseOpacity: isLightMode ? Math.random() * 0.3 + 0.1 : Math.random() * 0.4 + 0.1
+        baseOpacity: isLightMode ? 
+          Math.random() * 0.3 + 0.15 : 
+          Math.random() * 0.5 + 0.2
       }
     })
   }, [particleCount, speed, currentColorScheme, processColor, isLightMode, isMobile, mounted])
 
+  // Enhanced particle update logic
   const lastTime = useRef(0)
   const updateParticles = useCallback(() => {
     if (!mounted) return
@@ -219,7 +253,7 @@ export default function ParticleField({
     const { width, height } = dimensionsRef.current
     const now = performance.now()
     
-    if (now - lastTime.current < 33) return
+    if (now - lastTime.current < 33) return // 30fps cap
     lastTime.current = now
 
     const time = now * 0.001 * speed * 0.5
@@ -274,6 +308,7 @@ export default function ParticleField({
           break
       }
 
+      // Enhanced mouse interaction
       if (interactive && !isMobile) {
         const dx = mouseRef.current.x - particle.x
         const dy = mouseRef.current.y - particle.y
@@ -291,32 +326,37 @@ export default function ParticleField({
           }
           
           particle.radius = particle.scale * (hovered ? 1.3 : 1.0)
-          particle.opacity = particle.baseOpacity * (hovered ? 1.2 : 1.0)
+          particle.opacity = particle.baseOpacity * (hovered ? 1.4 : 1.0)
         }
       }
 
+      // Boundary wrapping
       const buffer = 20
       if (particle.x > width + buffer) particle.x = -buffer
       if (particle.x < -buffer) particle.x = width + buffer
       if (particle.y > height + buffer) particle.y = -buffer
       if (particle.y < -buffer) particle.y = height + buffer
 
+      // Enhanced lifecycle
       particle.life++
       if (particle.life > particle.maxLife) {
         particle.life = 0
         particle.x = Math.random() * width
         particle.y = Math.random() * height
         particle.opacity = particle.baseOpacity
+        
+        // Refresh color for theme changes
         const colors = currentColorScheme.colors
         const newColor = colors[Math.floor(Math.random() * colors.length)]
         particle.color = processColor(newColor, isLightMode)
       }
 
+      // Enhanced opacity lifecycle
       const lifeCycle = particle.life / particle.maxLife
-      if (lifeCycle < 0.1) {
-        particle.opacity = particle.baseOpacity * (lifeCycle / 0.1)
-      } else if (lifeCycle > 0.9) {
-        particle.opacity = particle.baseOpacity * ((1 - lifeCycle) / 0.1)
+      if (lifeCycle < 0.15) {
+        particle.opacity = particle.baseOpacity * (lifeCycle / 0.15)
+      } else if (lifeCycle > 0.85) {
+        particle.opacity = particle.baseOpacity * ((1 - lifeCycle) / 0.15)
       } else {
         particle.opacity = particle.baseOpacity
       }
@@ -325,6 +365,7 @@ export default function ParticleField({
     })
   }, [animation, speed, interactive, currentColorScheme, hovered, processColor, isLightMode, isMobile, mounted])
 
+  // Enhanced rendering with better theme support
   const render = useCallback(() => {
     if (!mounted) return
     
@@ -336,15 +377,18 @@ export default function ParticleField({
 
     const { width, height } = dimensionsRef.current
 
+    // Enhanced background clearing based on theme
     if (isLightMode) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.02)'
+      ctx.fillStyle = 'rgba(250, 250, 250, 0.02)' // lux-offwhite with transparency
     } else {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.02)'
+      ctx.fillStyle = 'rgba(18, 18, 18, 0.02)' // lux-black with transparency
     }
     ctx.fillRect(0, 0, width, height)
 
+    // Set blend mode
     ctx.globalCompositeOperation = currentColorScheme.mixBlendMode
     
+    // Render particles with enhanced effects
     particlesRef.current.forEach(particle => {
       if (!isFinite(particle.x) || !isFinite(particle.y) || 
           !isFinite(particle.radius) || particle.radius <= 0) {
@@ -355,7 +399,42 @@ export default function ParticleField({
       const safeOpacity = Math.max(0, Math.min(1, particle.opacity * currentColorScheme.opacity))
       
       try {
-        if (isMobile || currentColorScheme.glowIntensity < 0.5) {
+        // Enhanced glow effects for better visibility
+        if (!isMobile && currentColorScheme.glowIntensity > 0.5) {
+          const gradient = ctx.createRadialGradient(
+            particle.x, particle.y, 0,
+            particle.x, particle.y, safeRadius * 2.5
+          )
+
+          // Parse color for gradient
+          let r, g, b
+          if (particle.color.startsWith('rgb')) {
+            const match = particle.color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
+            if (match) {
+              r = parseInt(match[1])
+              g = parseInt(match[2])
+              b = parseInt(match[3])
+            } else {
+              r = g = b = isLightMode ? 0 : 255
+            }
+          } else {
+            const hex = particle.color.replace('#', '')
+            r = parseInt(hex.substr(0, 2), 16)
+            g = parseInt(hex.substr(2, 2), 16)
+            b = parseInt(hex.substr(4, 2), 16)
+          }
+
+          const glowMultiplier = currentColorScheme.glowIntensity
+          gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${safeOpacity})`)
+          gradient.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, ${safeOpacity * 0.6 * glowMultiplier})`)
+          gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
+
+          ctx.fillStyle = gradient
+          ctx.beginPath()
+          ctx.arc(particle.x, particle.y, safeRadius * 1.5, 0, Math.PI * 2)
+          ctx.fill()
+        } else {
+          // Simple particle for mobile or low intensity
           let r, g, b
           if (particle.color.startsWith('rgb')) {
             const match = particle.color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
@@ -377,57 +456,47 @@ export default function ParticleField({
           ctx.beginPath()
           ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
           ctx.fill()
-        } else {
-          const gradient = ctx.createRadialGradient(
-            particle.x, particle.y, 0,
-            particle.x, particle.y, safeRadius * 1.5
-          )
-
-          let r, g, b
-          if (particle.color.startsWith('rgb')) {
-            const match = particle.color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
-            if (match) {
-              r = parseInt(match[1])
-              g = parseInt(match[2])
-              b = parseInt(match[3])
-            } else {
-              r = g = b = isLightMode ? 0 : 255
-            }
-          } else {
-            const hex = particle.color.replace('#', '')
-            r = parseInt(hex.substr(0, 2), 16)
-            g = parseInt(hex.substr(2, 2), 16)
-            b = parseInt(hex.substr(4, 2), 16)
-          }
-
-          const glowMultiplier = currentColorScheme.glowIntensity * 0.7
-          gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${safeOpacity})`)
-          gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${safeOpacity * 0.4 * glowMultiplier})`)
-          gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
-
-          ctx.fillStyle = gradient
-          ctx.beginPath()
-          ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
-          ctx.fill()
         }
       } catch (error) {
-        const alpha = Math.floor(safeOpacity * 255).toString(16).padStart(2, '0')
-        ctx.fillStyle = `${particle.color}${alpha}`
+        // Fallback rendering
+        ctx.fillStyle = particle.color
+        ctx.globalAlpha = safeOpacity
         ctx.beginPath()
         ctx.arc(particle.x, particle.y, safeRadius, 0, Math.PI * 2)
         ctx.fill()
+        ctx.globalAlpha = 1
       }
     })
 
+    // Enhanced constellation connections
     if (animation === 'constellation' && !isMobile && particlesRef.current.length < 30) {
       ctx.save()
       
-      const lineOpacity = isLightMode ? 0.1 : 0.2
+      const lineOpacity = currentColorScheme.connectionOpacity
       const maxConnections = 3
       
-      ctx.globalCompositeOperation = isLightMode ? 'multiply' : 'soft-light'
-      ctx.strokeStyle = currentColorScheme.primary + Math.floor(lineOpacity * 255).toString(16).padStart(2, '0')
-      ctx.lineWidth = 0.5
+      // Use primary color for connections
+      const primaryColor = currentColorScheme.primary
+      let r, g, b
+      if (primaryColor.startsWith('rgb')) {
+        const match = primaryColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
+        if (match) {
+          r = parseInt(match[1])
+          g = parseInt(match[2])
+          b = parseInt(match[3])
+        } else {
+          r = g = b = isLightMode ? 0 : 255
+        }
+      } else {
+        const hex = primaryColor.replace('#', '')
+        r = parseInt(hex.substr(0, 2), 16)
+        g = parseInt(hex.substr(2, 2), 16)
+        b = parseInt(hex.substr(4, 2), 16)
+      }
+      
+      ctx.globalCompositeOperation = isLightMode ? 'multiply' : 'screen'
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${lineOpacity})`
+      ctx.lineWidth = isLightMode ? 0.8 : 0.5
       
       for (let i = 0; i < particlesRef.current.length; i++) {
         let connectionsCount = 0
@@ -438,8 +507,8 @@ export default function ParticleField({
           const dy = p1.y - p2.y
           const distance = Math.sqrt(dx * dx + dy * dy)
           
-          if (distance < 70) {
-            const opacity = (70 - distance) / 70 * lineOpacity
+          if (distance < 90) {
+            const opacity = (90 - distance) / 90 * lineOpacity
             ctx.globalAlpha = opacity
             ctx.beginPath()
             ctx.moveTo(p1.x, p1.y)
@@ -461,6 +530,7 @@ export default function ParticleField({
     animationRef.current = requestAnimationFrame(animate)
   }, [updateParticles, render, prefersReducedMotion, mounted])
 
+  // Enhanced mouse interaction
   const lastMouseUpdate = useRef(0)
   const handleMouseMove = useCallback((event: MouseEvent) => {
     if (!interactive || isMobile || !mounted) return
@@ -487,6 +557,7 @@ export default function ParticleField({
     if (interactive && !isMobile && mounted) setHovered(false)
   }, [interactive, isMobile, mounted])
 
+  // Enhanced resize handling
   const resizeTimeout = useRef<NodeJS.Timeout>()
   const handleResize = useCallback(() => {
     if (!mounted) return
@@ -519,7 +590,7 @@ export default function ParticleField({
     }, 100)
   }, [initializeParticles, mounted])
 
-  // ✅ SSR SAFE: Setup with mounted check
+  // Setup effect
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -563,17 +634,14 @@ export default function ParticleField({
     }
   }, [handleResize, handleMouseMove, handleMouseEnter, handleMouseLeave, animate, interactive, isMobile, prefersReducedMotion, mounted])
 
+  // Update colors when theme changes
   useEffect(() => {
     if (mounted && particlesRef.current.length > 0) {
-      particlesRef.current.forEach(particle => {
-        const colors = currentColorScheme.colors
-        const newColor = colors[Math.floor(Math.random() * colors.length)]
-        particle.color = processColor(newColor, isLightMode)
-      })
+      initializeParticles() // Reinitialize with new colors
     }
-  }, [currentColorScheme, mounted, processColor, isLightMode])
+  }, [currentColorScheme, mounted, initializeParticles])
 
-  // ✅ SSR SAFE: Return null during SSR and if reduced motion
+  // Don't render during SSR or if reduced motion
   if (!mounted || prefersReducedMotion) return null
 
   return (
@@ -583,72 +651,11 @@ export default function ParticleField({
       style={{
         width: '100%',
         height: '100%',
-        opacity: isMobile ? 0.4 : (isLightMode ? 0.6 : 0.5),
-        mixBlendMode: currentColorScheme.mixBlendMode
+        opacity: isMobile ? 0.4 : (isLightMode ? 0.6 : 0.7),
+        mixBlendMode: currentColorScheme.mixBlendMode,
+        transition: 'opacity 0.3s ease, mix-blend-mode 0.3s ease'
       }}
       aria-hidden="true"
     />
   )
-}
-
-// ✅ SSR SAFE: Hooks with mounted checks
-export function useParticleField(theme?: 'light' | 'dark') {
-  const [mounted, setMounted] = useState(false)
-  
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const detectedTheme = useMemo(() => {
-    if (theme) return theme
-    if (!mounted || typeof window === 'undefined') return 'light'
-    
-    try {
-      const htmlElement = document.documentElement
-      const hasExplicitDarkClass = htmlElement.classList.contains('dark')
-      const hasExplicitLightClass = htmlElement.classList.contains('light')
-      
-      if (hasExplicitDarkClass) return 'dark'
-      if (hasExplicitLightClass) return 'light'
-      
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    } catch (error) {
-      return 'light'
-    }
-  }, [theme, mounted])
-
-  return useMemo(() => {
-    const isMobile = mounted && typeof window !== 'undefined' && window.innerWidth < 768
-    
-    return {
-      particleCount: isMobile ? 15 : 25,
-      colorScheme: detectedTheme === 'light' ? 'light-mode' as const : 'aurora' as const,
-      animation: 'constellation' as const,
-      interactive: !isMobile,
-      speed: 0.3
-    }
-  }, [detectedTheme, mounted])
-}
-
-export function getParticleConfig(theme: 'light' | 'dark', colorScheme?: string) {
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
-  
-  const baseConfig = {
-    particleCount: isMobile ? 15 : 25,
-    interactive: !isMobile,
-    speed: 0.3,
-    animation: 'constellation' as const
-  }
-
-  if (colorScheme) {
-    return {
-      ...baseConfig,
-      colorScheme: colorScheme as any
-    }
-  }
-
-  return {
-    ...baseConfig,
-    colorScheme: theme === 'light' ? 'light-mode' as const : 'aurora' as const
-  }
 }
