@@ -126,12 +126,12 @@ export default function Navigation() {
 
   return (
     <>
-      {/* ✅ FIXED: Theme-aware navbar with proper backgrounds and height */}
+      {/* Fixed Navigation Bar with proper z-index */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
-        className={`fixed top-0 left-0 right-0 w-full h-20 z-[1000] transition-all duration-300 will-change-auto ${
+        className={`fixed top-0 left-0 right-0 w-full h-20 z-50 transition-all duration-300 ${
           isDark
             ? scrolled 
               ? 'bg-gray-900/90 backdrop-blur-md border-b border-gray-800 shadow-lg' 
@@ -141,25 +141,23 @@ export default function Navigation() {
               : 'bg-white/70 backdrop-blur-sm border-b border-gray-200/50'
         }`}
       >
-        {/* ✅ FIXED: Enhanced Container with Better Spacing */}
+        {/* Container with proper spacing */}
         <div className="h-full mx-auto px-6 sm:px-8 lg:px-10 max-w-7xl">
           <div className="flex items-center justify-between h-full">
             
-            {/* ✅ FIXED: Enhanced Logo Section with Better Styling */}
+            {/* Logo Section */}
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex items-center flex-shrink-0"
+              className="flex items-center flex-shrink-0 relative z-10"
             >
               <Link 
                 href="/"
                 className="flex items-center space-x-4 group"
               >
-                {/* ✅ FIXED: Added initials to the logo box with proper theming */}
                 <div className="w-10 h-10 bg-gradient-to-br from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-700 dark:from-viva-magenta-500 dark:via-lux-gold-400 dark:to-viva-magenta-600 rounded-xl flex items-center justify-center font-bold text-base text-white shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
                   JF
                 </div>
-                {/* ✅ FIXED: Enhanced name styling with gradient and better typography */}
                 <div className="hidden sm:block">
                   <span className="font-bold text-xl tracking-wide bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-lux-teal-600 dark:from-viva-magenta-400 dark:via-lux-gold-400 dark:to-lux-teal-400 bg-clip-text text-transparent group-hover:from-lux-gold-500 group-hover:via-viva-magenta-500 group-hover:to-lux-teal-500 dark:group-hover:from-lux-gold-400 dark:group-hover:via-viva-magenta-400 dark:group-hover:to-lux-teal-400 transition-all duration-300">
                     Juan Fernandez
@@ -175,8 +173,8 @@ export default function Navigation() {
               </Link>
             </motion.div>
 
-            {/* ✅ FIXED: Center Navigation Pills with Better Styling */}
-            <div className="hidden lg:flex items-center mx-8">
+            {/* Center Navigation Pills */}
+            <div className="hidden lg:flex items-center mx-8 relative z-10">
               <div className={`flex items-center backdrop-blur-sm border rounded-full p-2 shadow-lg transition-all duration-300 ${
                 isDark 
                   ? 'bg-gray-800/50 border-gray-700/50 hover:bg-gray-800/70 hover:border-gray-600/50'
@@ -191,7 +189,7 @@ export default function Navigation() {
                       className="relative mx-1"
                     >
                       <motion.div
-                        className={`flex items-center space-x-2 px-5 py-3 rounded-full font-medium text-sm transition-all duration-200 whitespace-nowrap relative ${
+                        className={`flex items-center space-x-2 px-5 py-3 rounded-full font-medium text-sm transition-all duration-200 whitespace-nowrap relative cursor-pointer ${
                           isActive 
                             ? 'text-white shadow-lg scale-105 ring-2 ring-white/20' 
                             : isDark
@@ -216,7 +214,7 @@ export default function Navigation() {
                         }`} />
                         <span className="hidden xl:block">{item.name}</span>
                         
-                        {/* ✅ FIXED: Active Background with Enhanced Styling */}
+                        {/* Active Background */}
                         {isActive && (
                           <motion.div
                             layoutId="navbar-active"
@@ -233,7 +231,7 @@ export default function Navigation() {
                           />
                         )}
                         
-                        {/* ✅ ENHANCED: Hover glow effect */}
+                        {/* Hover glow effect */}
                         {!isActive && (
                           <motion.div
                             className="absolute inset-0 bg-gradient-to-r from-viva-magenta-500/10 via-lux-gold-500/10 to-viva-magenta-500/10 rounded-full opacity-0"
@@ -249,10 +247,10 @@ export default function Navigation() {
               </div>
             </div>
 
-            {/* ✅ FIXED: Right Actions with Better Spacing */}
-            <div className="flex items-center space-x-4">
+            {/* Right Actions */}
+            <div className="flex items-center space-x-4 relative z-10">
               
-              {/* ✅ FIXED: Enhanced Social Links */}
+              {/* Social Links */}
               <div className="hidden md:flex items-center space-x-3">
                 {socialLinks.map((link) => (
                   <motion.a
@@ -260,7 +258,7 @@ export default function Navigation() {
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`w-10 h-10 flex items-center justify-center border rounded-xl transition-all duration-300 group relative overflow-hidden ${
+                    className={`w-10 h-10 flex items-center justify-center border rounded-xl transition-all duration-300 group relative overflow-hidden cursor-pointer ${
                       isDark
                         ? 'bg-gray-800/60 hover:bg-gray-700/80 border-gray-700/60 text-gray-400 hover:text-white hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
                         : 'bg-white/60 hover:bg-white/80 border-gray-200/60 text-gray-600 hover:text-gray-900 hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
@@ -272,7 +270,6 @@ export default function Navigation() {
                     whileTap={{ scale: 0.95 }}
                     title={link.name}
                   >
-                    {/* ✅ ENHANCED: Gradient background on hover */}
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-br from-viva-magenta-500/20 via-lux-gold-500/20 to-viva-magenta-500/20 rounded-xl opacity-0"
                       whileHover={{ opacity: 1 }}
@@ -283,10 +280,10 @@ export default function Navigation() {
                 ))}
               </div>
 
-              {/* ✅ FIXED: Enhanced Theme Toggle */}
+              {/* Theme Toggle */}
               <motion.button
                 onClick={cycleTheme}
-                className={`w-10 h-10 flex items-center justify-center border rounded-xl transition-all duration-300 group relative overflow-hidden ${
+                className={`w-10 h-10 flex items-center justify-center border rounded-xl transition-all duration-300 group relative overflow-hidden cursor-pointer ${
                   isDark
                     ? 'bg-gray-800/60 hover:bg-gray-700/80 border-gray-700/60 text-gray-400 hover:text-white hover:border-lux-gold-500/50 hover:shadow-lg hover:shadow-lux-gold-500/20'
                     : 'bg-white/60 hover:bg-white/80 border-gray-200/60 text-gray-600 hover:text-gray-900 hover:border-lux-gold-500/50 hover:shadow-lg hover:shadow-lux-gold-500/20'
@@ -301,7 +298,6 @@ export default function Navigation() {
                 type="button"
                 aria-label={`Switch theme (current: ${theme || 'system'})`}
               >
-                {/* ✅ ENHANCED: Theme-appropriate gradient background on hover */}
                 <motion.div
                   className={`absolute inset-0 rounded-xl opacity-0 ${
                     theme === 'light' 
@@ -325,20 +321,9 @@ export default function Navigation() {
                     {getThemeIcon()}
                   </motion.div>
                 </AnimatePresence>
-                
-                {/* ✅ ACCESSIBILITY: Focus ring */}
-                <motion.div 
-                  className="absolute inset-0 rounded-xl border-2 border-transparent"
-                  whileFocus={{ 
-                    borderColor: isDark ? 'rgb(212, 175, 55)' : 'rgb(190, 52, 85)',
-                    boxShadow: isDark 
-                      ? '0 0 0 3px rgba(212, 175, 55, 0.2)' 
-                      : '0 0 0 3px rgba(190, 52, 85, 0.2)'
-                  }}
-                />
               </motion.button>
 
-              {/* ✅ FIXED: Enhanced Contact Button */}
+              {/* Contact Button */}
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -346,9 +331,8 @@ export default function Navigation() {
               >
                 <Link
                   href="/contact"
-                  className="flex items-center space-x-2 bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-600 dark:from-viva-magenta-500 dark:via-lux-gold-400 dark:to-viva-magenta-500 text-white px-5 py-3 rounded-full font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:from-lux-gold-500 hover:via-viva-magenta-600 hover:to-lux-gold-500 dark:hover:from-lux-gold-400 dark:hover:via-viva-magenta-500 dark:hover:to-lux-gold-400 group relative overflow-hidden"
+                  className="flex items-center space-x-2 bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-600 dark:from-viva-magenta-500 dark:via-lux-gold-400 dark:to-viva-magenta-500 text-white px-5 py-3 rounded-full font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:from-lux-gold-500 hover:via-viva-magenta-600 hover:to-lux-gold-500 dark:hover:from-lux-gold-400 dark:hover:via-viva-magenta-500 dark:hover:to-lux-gold-400 group relative overflow-hidden cursor-pointer"
                 >
-                  {/* ✅ ENHANCED: Animated background shimmer */}
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"
                     style={{ width: '50%' }}
@@ -358,9 +342,9 @@ export default function Navigation() {
                 </Link>
               </motion.div>
 
-              {/* ✅ FIXED: Enhanced Mobile Menu Button */}
+              {/* Mobile Menu Button */}
               <motion.button
-                className={`lg:hidden w-10 h-10 flex items-center justify-center border rounded-xl transition-all duration-300 ml-2 group relative overflow-hidden ${
+                className={`lg:hidden w-10 h-10 flex items-center justify-center border rounded-xl transition-all duration-300 ml-2 group relative overflow-hidden cursor-pointer ${
                   isDark
                     ? 'bg-gray-800/60 hover:bg-gray-700/80 border-gray-700/60 text-gray-400 hover:text-white hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
                     : 'bg-white/60 hover:bg-white/80 border-gray-200/60 text-gray-600 hover:text-gray-900 hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
@@ -375,7 +359,6 @@ export default function Navigation() {
                 aria-expanded={isOpen}
                 type="button"
               >
-                {/* ✅ ENHANCED: Gradient background on hover */}
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-br from-viva-magenta-500/20 via-lux-gold-500/20 to-viva-magenta-500/20 rounded-xl opacity-0"
                   whileHover={{ opacity: 1 }}
@@ -410,19 +393,22 @@ export default function Navigation() {
             </div>
           </div>
         </div>
+      </motion.nav>
 
-        {/* ✅ FIXED: Progress Bar with Proper Positioning and Visibility */}
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 z-[1001]">
+      {/* Progress Bar - positioned separately with lower z-index */}
+      <div className="fixed top-0 left-0 right-0 z-40 pointer-events-none">
+        <div className="h-20 w-full"></div>
+        <div className="h-1 w-full">
           <ScrollProgress 
             className="w-full h-full"
-            height="2px"
+            height="4px"
             color="linear-gradient(90deg, rgb(190, 52, 85) 0%, rgb(212, 175, 55) 50%, rgb(0, 128, 128) 100%)"
             smooth={true}
           />
         </div>
-      </motion.nav>
+      </div>
 
-      {/* ✅ FIXED: Enhanced Mobile Menu */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
           <>
@@ -431,17 +417,17 @@ export default function Navigation() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999]"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
               onClick={() => setIsOpen(false)}
             />
 
-            {/* ✅ FIXED: Mobile Menu Panel with Enhanced Styling */}
+            {/* Mobile Menu Panel */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] backdrop-blur-xl border-l z-[1000] shadow-2xl ${
+              className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] backdrop-blur-xl border-l z-50 shadow-2xl ${
                 isDark
                   ? 'bg-gray-900/95 border-gray-700'
                   : 'bg-white/95 border-gray-300'
@@ -449,7 +435,7 @@ export default function Navigation() {
             >
               <div className="flex flex-col h-full">
                 
-                {/* ✅ FIXED: Mobile Menu Header */}
+                {/* Mobile Menu Header */}
                 <div className={`flex items-center justify-between p-6 border-b ${
                   isDark ? 'border-gray-700' : 'border-gray-200'
                 }`} style={{ marginTop: '5rem' }}>
@@ -460,7 +446,7 @@ export default function Navigation() {
                   </h2>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
+                    className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all cursor-pointer ${
                       isDark
                         ? 'text-gray-400 hover:text-white hover:bg-gray-800'
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
@@ -470,7 +456,7 @@ export default function Navigation() {
                   </button>
                 </div>
 
-                {/* ✅ FIXED: Enhanced Mobile Navigation Items */}
+                {/* Mobile Navigation Items */}
                 <div className="flex-1 px-6 py-6 space-y-2">
                   {navigationItems.map((item, index) => {
                     const isActive = pathname === item.href
@@ -483,7 +469,7 @@ export default function Navigation() {
                       >
                         <Link
                           href={item.href}
-                          className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all group relative overflow-hidden ${
+                          className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all group relative overflow-hidden cursor-pointer ${
                             isActive 
                               ? 'bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-600 dark:from-viva-magenta-500 dark:via-lux-gold-400 dark:to-viva-magenta-500 text-white shadow-lg' 
                               : isDark
@@ -492,7 +478,6 @@ export default function Navigation() {
                           }`}
                           onClick={() => setIsOpen(false)}
                         >
-                          {/* ✅ ENHANCED: Hover gradient background for non-active items */}
                           {!isActive && (
                             <motion.div
                               className="absolute inset-0 bg-gradient-to-r from-viva-magenta-500/10 via-lux-gold-500/10 to-viva-magenta-500/10 rounded-xl opacity-0"
@@ -517,12 +502,12 @@ export default function Navigation() {
                   })}
                 </div>
 
-                {/* ✅ FIXED: Enhanced Mobile Footer Actions */}
+                {/* Mobile Footer Actions */}
                 <div className={`px-6 py-6 border-t space-y-6 ${
                   isDark ? 'border-gray-700' : 'border-gray-200'
                 }`}>
                   
-                  {/* Enhanced Theme Toggle Row */}
+                  {/* Theme Toggle Row */}
                   <div className="flex items-center justify-between">
                     <span className={`text-sm font-medium ${
                       isDark ? 'text-gray-300' : 'text-gray-600'
@@ -533,14 +518,13 @@ export default function Navigation() {
                       onClick={cycleTheme}
                       disabled={!mounted}
                       type="button"
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all disabled:opacity-50 group relative overflow-hidden ${
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all disabled:opacity-50 group relative overflow-hidden cursor-pointer ${
                         isDark
                           ? 'bg-gray-800/70 hover:bg-gray-700/80 text-gray-300 hover:text-white border border-gray-700/50 hover:border-lux-gold-500/50'
                           : 'bg-white/70 hover:bg-white/90 text-gray-600 hover:text-gray-900 border border-gray-200/50 hover:border-lux-gold-500/50'
                       }`}
                       aria-label={`Switch theme (current: ${theme || 'system'})`}
                     >
-                      {/* ✅ ENHANCED: Theme-appropriate hover background */}
                       <motion.div
                         className={`absolute inset-0 rounded-lg opacity-0 ${
                           theme === 'light' 
@@ -559,7 +543,7 @@ export default function Navigation() {
                     </button>
                   </div>
 
-                  {/* Enhanced Social Links Row */}
+                  {/* Social Links Row */}
                   <div className="flex items-center justify-center space-x-4">
                     {socialLinks.map((link) => (
                       <motion.a
@@ -567,7 +551,7 @@ export default function Navigation() {
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all group relative overflow-hidden ${
+                        className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all group relative overflow-hidden cursor-pointer ${
                           isDark
                             ? 'bg-gray-800/70 text-gray-400 hover:text-white hover:bg-gray-700/80 border border-gray-700/50 hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
                             : 'bg-white/70 text-gray-600 hover:text-gray-900 hover:bg-white/90 border border-gray-200/50 hover:border-viva-magenta-500/50 hover:shadow-lg hover:shadow-viva-magenta-500/20'
@@ -576,7 +560,6 @@ export default function Navigation() {
                         whileTap={{ scale: 0.95 }}
                         title={link.name}
                       >
-                        {/* ✅ ENHANCED: Gradient hover background */}
                         <motion.div
                           className="absolute inset-0 bg-gradient-to-br from-viva-magenta-500/20 via-lux-gold-500/20 to-viva-magenta-500/20 rounded-xl opacity-0"
                           whileHover={{ opacity: 1 }}
@@ -587,13 +570,12 @@ export default function Navigation() {
                     ))}
                   </div>
 
-                  {/* Enhanced Contact Button */}
+                  {/* Contact Button */}
                   <Link
                     href="/contact"
-                    className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-600 dark:from-viva-magenta-500 dark:via-lux-gold-400 dark:to-viva-magenta-500 text-white px-4 py-3 rounded-xl font-medium hover:shadow-lg transition-all hover:from-lux-gold-500 hover:via-viva-magenta-600 hover:to-lux-gold-500 dark:hover:from-lux-gold-400 dark:hover:via-viva-magenta-500 dark:hover:to-lux-gold-400 group relative overflow-hidden"
+                    className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-viva-magenta-600 via-lux-gold-500 to-viva-magenta-600 dark:from-viva-magenta-500 dark:via-lux-gold-400 dark:to-viva-magenta-500 text-white px-4 py-3 rounded-xl font-medium hover:shadow-lg transition-all hover:from-lux-gold-500 hover:via-viva-magenta-600 hover:to-lux-gold-500 dark:hover:from-lux-gold-400 dark:hover:via-viva-magenta-500 dark:hover:to-lux-gold-400 group relative overflow-hidden cursor-pointer"
                     onClick={() => setIsOpen(false)}
                   >
-                    {/* ✅ ENHANCED: Animated shimmer effect */}
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"
                       style={{ width: '50%' }}
