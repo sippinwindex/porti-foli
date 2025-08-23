@@ -395,18 +395,15 @@ export default function Navigation() {
         </div>
       </motion.nav>
 
-      {/* Progress Bar - positioned separately with lower z-index */}
-      <div className="fixed top-0 left-0 right-0 z-40 pointer-events-none">
-        <div className="h-20 w-full"></div>
-        <div className="h-1 w-full">
+        {/* Progress Bar positioned at the bottom of navbar */}
+        <div className="absolute bottom-0 left-0 right-0" style={{ zIndex: 1001 }}>
           <ScrollProgress 
-            className="w-full h-full"
-            height="4px"
+            className="w-full"
+            height="3px"
             color="linear-gradient(90deg, rgb(190, 52, 85) 0%, rgb(212, 175, 55) 50%, rgb(0, 128, 128) 100%)"
             smooth={true}
           />
         </div>
-      </div>
 
       {/* Mobile Menu */}
       <AnimatePresence>

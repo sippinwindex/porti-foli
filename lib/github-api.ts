@@ -93,24 +93,19 @@ const getHeaders = () => {
   return headers
 }
 
-// FIXED: More lenient repository filtering for portfolio
+// FIXED: ULTRA-LENIENT repository filtering - show EVERYTHING
 function isPortfolioWorthy(repo: GitHubRepository): boolean {
-  // Skip forks, archived, and disabled repos
-  if (repo.fork || repo.archived || repo.disabled) return false
+  // Only skip forks and disabled repos - keep everything else including archived
+  if (repo.fork || repo.disabled) return false
   
-  // Accept any repo with a description (very lenient)
-  if (!repo.description) return false
-  
-  // Skip only very obvious non-portfolio repo patterns
+  // Skip only the most obvious system repos
   const skipPatterns = [
-    /^\.github$/i, // .github repo
-    /^config$/i,   // config only repos
-    /^test$/i,     // test only repos
+    /^\.github$/i, // Only skip .github repo
   ]
   
   if (skipPatterns.some(pattern => pattern.test(repo.name))) return false
   
-  // FIXED: Much more lenient criteria - accept almost everything with description
+  // ACCEPT EVERYTHING ELSE - no description requirement, no other filtering
   return true
 }
 
@@ -198,9 +193,13 @@ async function fetchGitHubRepositories(): Promise<GitHubRepository[]> {
     console.log(`✨ Portfolio repositories after filtering: ${portfolioRepos.length}`)
     console.log(`📈 Acceptance rate: ${Math.round((portfolioRepos.length / allRepos.length) * 100)}%`)
     
-    // Debug: Log top 10 repos by score
-    portfolioRepos.slice(0, 10).forEach((repo, index) => {
-      console.log(`${index + 1}. ${repo.name} (⭐${repo.stargazers_count}, 🔧${repo.forks_count}) - ${repo.description?.slice(0, 50)}...`)
+    // Debug: Log ALL repos to see what we're keeping/filtering
+    console.log('🔍 REPOSITORY ANALYSIS:')
+    allRepos.forEach((repo, index) => {
+      const kept = isPortfolioWorthy(repo)
+      const status = kept ? '✅ KEPT' : '❌ FILTERED'
+      const reason = repo.fork ? '(fork)' : repo.disabled ? '(disabled)' : repo.name === '.github' ? '(.github)' : ''
+      console.log(`${index + 1}. ${repo.name} ${status} ${reason}`)
     })
     
     return portfolioRepos

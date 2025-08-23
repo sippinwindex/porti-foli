@@ -209,8 +209,8 @@ export default async function handler(
 
     console.log(`🔄 After sorting by ${sort}: ${filteredProjects.length} projects`)
 
-    // FIXED: Only apply limit if explicitly requested and reasonable
-    const finalProjects = limitNum && limitNum > 0 && limitNum < 100 
+    // FIXED: Default to showing ALL projects unless explicitly limited
+    const finalProjects = limitNum && limitNum > 0 && limitNum < 1000 
       ? filteredProjects.slice(0, limitNum)
       : filteredProjects // NO LIMIT - return ALL filtered projects
 
