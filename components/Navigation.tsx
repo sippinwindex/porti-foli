@@ -29,7 +29,7 @@ const navigationItems = [
   { name: 'Projects', href: '/projects', icon: Briefcase },
   { name: 'Blog', href: '/blog', icon: BookOpen },
   { name: 'Contact', href: '/contact', icon: Mail },
-  { name: 'Game', href: '/dino-game', icon: Gamepad2 }, // ✅ FIXED: Correct route
+  { name: 'Game', href: '/dino-game', icon: Gamepad2 },
   { name: 'Admin', href: '/admin', icon: Settings }
 ] as const
 
@@ -126,12 +126,12 @@ export default function Navigation() {
 
   return (
     <>
-      {/* ✅ FIXED: Theme-aware navbar with proper backgrounds */}
+      {/* ✅ FIXED: Theme-aware navbar with proper backgrounds and height */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
-        className={`fixed top-0 left-0 right-0 w-full h-16 z-[1000] transition-all duration-300 will-change-auto ${
+        className={`fixed top-0 left-0 right-0 w-full h-20 z-[1000] transition-all duration-300 will-change-auto ${
           isDark
             ? scrolled 
               ? 'bg-gray-900/90 backdrop-blur-md border-b border-gray-800 shadow-lg' 
@@ -141,11 +141,11 @@ export default function Navigation() {
               : 'bg-white/70 backdrop-blur-sm border-b border-gray-200/50'
         }`}
       >
-        {/* ✅ FIXED: Proper Container with Better Spacing */}
-        <div className="h-full mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+        {/* ✅ FIXED: Enhanced Container with Better Spacing */}
+        <div className="h-full mx-auto px-6 sm:px-8 lg:px-10 max-w-7xl">
           <div className="flex items-center justify-between h-full">
             
-            {/* ✅ FIXED: Logo Section with Better Spacing */}
+            {/* ✅ FIXED: Enhanced Logo Section with Better Styling */}
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -153,43 +153,48 @@ export default function Navigation() {
             >
               <Link 
                 href="/"
-                className="flex items-center space-x-3 group"
+                className="flex items-center space-x-4 group"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-viva-magenta to-lux-gold rounded-lg flex items-center justify-center font-bold text-sm text-white shadow-lg group-hover:shadow-xl transition-shadow">
+                {/* ✅ FIXED: Added initials to the logo box */}
+                <div className="w-10 h-10 bg-gradient-to-br from-viva-magenta to-lux-gold rounded-xl flex items-center justify-center font-bold text-base text-white shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
                   JF
                 </div>
-                <span className={`font-semibold text-lg tracking-tight hidden sm:block group-hover:text-viva-magenta transition-colors ${
-                  isDark ? 'text-white' : 'text-gray-900'
-                }`}>
-                  Juan Fernandez
-                </span>
+                {/* ✅ FIXED: Enhanced name styling with gradient and better typography */}
+                <div className="hidden sm:block">
+                  <span className={`font-bold text-xl tracking-wide bg-gradient-to-r from-viva-magenta via-lux-gold to-lux-teal bg-clip-text text-transparent group-hover:from-lux-gold group-hover:via-viva-magenta group-hover:to-lux-teal transition-all duration-300`}>
+                    Juan Fernandez
+                  </span>
+                  <div className={`text-xs font-medium tracking-widest ${isDark ? 'text-gray-400' : 'text-gray-500'} group-hover:text-viva-magenta transition-colors duration-300`}>
+                    FULL-STACK DEVELOPER
+                  </div>
+                </div>
               </Link>
             </motion.div>
 
-            {/* ✅ FIXED: Center Navigation Pills with Proper Theme Support */}
-            <div className="hidden lg:flex items-center">
-              <div className={`flex items-center backdrop-blur-sm border rounded-full p-1.5 shadow-lg ${
+            {/* ✅ FIXED: Center Navigation Pills with Better Spacing */}
+            <div className="hidden lg:flex items-center mx-8">
+              <div className={`flex items-center backdrop-blur-sm border rounded-full p-2 shadow-lg transition-all duration-300 ${
                 isDark 
-                  ? 'bg-gray-800/40 border-gray-700'
-                  : 'bg-gray-100/40 border-gray-300'
+                  ? 'bg-gray-800/40 border-gray-700 hover:bg-gray-800/60'
+                  : 'bg-gray-100/40 border-gray-300 hover:bg-gray-100/60'
               }`}>
-                {navigationItems.map((item) => {
+                {navigationItems.map((item, index) => {
                   const isActive = pathname === item.href
                   return (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="relative"
+                      className="relative mx-1"
                     >
                       <motion.div
-                        className={`flex items-center space-x-2 px-4 py-2.5 rounded-full font-medium text-sm transition-all duration-200 whitespace-nowrap ${
+                        className={`flex items-center space-x-2 px-5 py-3 rounded-full font-medium text-sm transition-all duration-200 whitespace-nowrap ${
                           isActive 
-                            ? 'text-white shadow-lg' 
+                            ? 'text-white shadow-lg scale-105' 
                             : isDark
                               ? 'text-gray-300 hover:text-white hover:bg-gray-700/50'
                               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
                         }`}
-                        whileHover={{ scale: 1.02 }}
+                        whileHover={{ scale: isActive ? 1.05 : 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
                         <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -212,21 +217,21 @@ export default function Navigation() {
               </div>
             </div>
 
-            {/* ✅ FIXED: Right Actions with Better Theme Support */}
-            <div className="flex items-center space-x-3">
+            {/* ✅ FIXED: Right Actions with Better Spacing */}
+            <div className="flex items-center space-x-4">
               
-              {/* ✅ FIXED: Social Links with Theme Support */}
-              <div className="hidden md:flex items-center space-x-2">
+              {/* ✅ FIXED: Social Links with Better Spacing */}
+              <div className="hidden md:flex items-center space-x-3">
                 {socialLinks.map((link) => (
                   <motion.a
                     key={link.name}
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`w-9 h-9 flex items-center justify-center border rounded-lg transition-all ${
+                    className={`w-10 h-10 flex items-center justify-center border rounded-xl transition-all duration-300 ${
                       isDark
-                        ? 'bg-gray-800/50 hover:bg-gray-700 border-gray-700 text-gray-400 hover:text-white'
-                        : 'bg-gray-100/50 hover:bg-gray-200 border-gray-300 text-gray-600 hover:text-gray-900'
+                        ? 'bg-gray-800/50 hover:bg-gray-700 border-gray-700 text-gray-400 hover:text-white hover:border-gray-600'
+                        : 'bg-gray-100/50 hover:bg-gray-200 border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400'
                     }`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -237,31 +242,42 @@ export default function Navigation() {
                 ))}
               </div>
 
-              {/* ✅ FIXED: Theme Toggle with Better Styling */}
+              {/* ✅ FIXED: Theme Toggle with Better Styling and No Radio Button */}
               <motion.button
                 onClick={cycleTheme}
-                className={`w-9 h-9 flex items-center justify-center border rounded-lg transition-all ${
+                className={`w-10 h-10 flex items-center justify-center border rounded-xl transition-all duration-300 ${
                   isDark
-                    ? 'bg-gray-800/50 hover:bg-gray-700 border-gray-700 text-gray-400 hover:text-white'
-                    : 'bg-gray-100/50 hover:bg-gray-200 border-gray-300 text-gray-600 hover:text-gray-900'
+                    ? 'bg-gray-800/50 hover:bg-gray-700 border-gray-700 text-gray-400 hover:text-white hover:border-gray-600'
+                    : 'bg-gray-100/50 hover:bg-gray-200 border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400'
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 disabled={!mounted}
-                title={`Current theme: ${theme}`}
+                title={`Current theme: ${theme || 'system'}`}
+                type="button"
               >
-                {getThemeIcon()}
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={theme}
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    exit={{ scale: 0, rotate: 180 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {getThemeIcon()}
+                  </motion.div>
+                </AnimatePresence>
               </motion.button>
 
               {/* ✅ FIXED: Contact Button - Better Responsive Behavior */}
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="hidden lg:block"
+                className="hidden lg:block ml-2"
               >
                 <Link
                   href="/contact"
-                  className="flex items-center space-x-2 bg-gradient-to-r from-viva-magenta to-lux-gold text-white px-4 py-2.5 rounded-full font-medium text-sm shadow-lg hover:shadow-xl transition-all"
+                  className="flex items-center space-x-2 bg-gradient-to-r from-viva-magenta to-lux-gold text-white px-5 py-3 rounded-full font-medium text-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:from-lux-gold hover:to-viva-magenta"
                 >
                   <Mail className="w-4 h-4" />
                   <span>Contact</span>
@@ -270,15 +286,16 @@ export default function Navigation() {
 
               {/* ✅ FIXED: Mobile Menu Button with Theme Support */}
               <motion.button
-                className={`lg:hidden w-9 h-9 flex items-center justify-center border rounded-lg transition-all ${
+                className={`lg:hidden w-10 h-10 flex items-center justify-center border rounded-xl transition-all duration-300 ml-2 ${
                   isDark
-                    ? 'bg-gray-800/50 hover:bg-gray-700 border-gray-700 text-gray-400 hover:text-white'
-                    : 'bg-gray-100/50 hover:bg-gray-200 border-gray-300 text-gray-600 hover:text-gray-900'
+                    ? 'bg-gray-800/50 hover:bg-gray-700 border-gray-700 text-gray-400 hover:text-white hover:border-gray-600'
+                    : 'bg-gray-100/50 hover:bg-gray-200 border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400'
                 }`}
                 onClick={toggleMobileMenu}
                 whileTap={{ scale: 0.9 }}
                 aria-label="Toggle mobile menu"
                 aria-expanded={isOpen}
+                type="button"
               >
                 <AnimatePresence mode="wait" initial={false}>
                   {isOpen ? (
@@ -308,9 +325,9 @@ export default function Navigation() {
           </div>
         </div>
 
-        {/* ✅ FIXED: Progress Bar with Proper Positioning */}
+        {/* ✅ FIXED: Progress Bar with Proper Positioning UNDER the navbar */}
         <ScrollProgress 
-          className="absolute bottom-0 left-0 right-0"
+          className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-viva-magenta via-lux-gold to-lux-teal"
           height="2px"
           color="linear-gradient(90deg, #BE3455 0%, #D4AF37 50%, #008080 100%)"
           smooth={true}
@@ -347,7 +364,7 @@ export default function Navigation() {
                 {/* ✅ FIXED: Mobile Menu Header */}
                 <div className={`flex items-center justify-between p-6 border-b ${
                   isDark ? 'border-gray-700' : 'border-gray-200'
-                }`} style={{ marginTop: '4rem' }}>
+                }`} style={{ marginTop: '5rem' }}>
                   <h2 className={`text-lg font-semibold ${
                     isDark ? 'text-white' : 'text-gray-900'
                   }`}>
@@ -417,6 +434,7 @@ export default function Navigation() {
                     <button
                       onClick={cycleTheme}
                       disabled={!mounted}
+                      type="button"
                       className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all disabled:opacity-50 ${
                         isDark
                           ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'

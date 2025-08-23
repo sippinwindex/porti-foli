@@ -362,28 +362,34 @@ export default function AboutPage() {
     }
   }, [])
 
-  // Enhanced skills data with your theme colors
+  // Enhanced skills data with your theme colors - Updated from FlowCV
   const skills = useMemo(() => ({
     frontend: [
       { icon: Code2, skill: "React/Next.js", level: "Expert", color: "primary" },
       { icon: Code2, skill: "TypeScript", level: "Advanced", color: "viva-magenta" },
       { icon: Palette, skill: "Tailwind CSS", level: "Expert", color: "lux-teal" },
       { icon: Sparkles, skill: "Framer Motion", level: "Advanced", color: "lux-gold" },
-      { icon: Code2, skill: "Three.js", level: "Intermediate", color: "lux-sage" }
+      { icon: Code2, skill: "Angular", level: "Intermediate", color: "lux-sage" },
+      { icon: Code2, skill: "Svelte", level: "Intermediate", color: "viva-magenta" },
+      { icon: Sparkles, skill: "GSAP", level: "Advanced", color: "lux-gold" }
     ],
     backend: [
       { icon: Database, skill: "Flask/Python", level: "Advanced", color: "lux-sage" },
-      { icon: Database, skill: "Node.js", level: "Intermediate", color: "lux-teal" },
-      { icon: Database, skill: "PostgreSQL", level: "Advanced", color: "primary" },
       { icon: Code2, skill: "RESTful APIs", level: "Expert", color: "viva-magenta" },
-      { icon: Database, skill: "MongoDB", level: "Intermediate", color: "lux-brown" }
+      { icon: Database, skill: "PostgreSQL", level: "Advanced", color: "primary" },
+      { icon: Database, skill: "SQLite", level: "Advanced", color: "lux-teal" },
+      { icon: Code2, skill: "SQLAlchemy", level: "Advanced", color: "lux-gold" },
+      { icon: Database, skill: "TypeORM & Prisma", level: "Intermediate", color: "lux-sage" },
+      { icon: Code2, skill: "JWT Authentication", level: "Expert", color: "viva-magenta" }
     ],
     tools: [
       { icon: Cloud, skill: "AWS", level: "Intermediate", color: "lux-gold" },
-      { icon: Cloud, skill: "Docker", level: "Intermediate", color: "primary" },
+      { icon: Cloud, skill: "Docker", level: "Advanced", color: "primary" },
+      { icon: Cloud, skill: "Kubernetes", level: "Intermediate", color: "lux-teal" },
       { icon: Code2, skill: "Git/GitHub", level: "Expert", color: "lux-gray" },
       { icon: Palette, skill: "Figma", level: "Expert", color: "viva-magenta" },
-      { icon: Code2, skill: "Vercel", level: "Advanced", color: "lux-teal" }
+      { icon: Code2, skill: "Vercel", level: "Advanced", color: "lux-teal" },
+      { icon: Code2, skill: "Vite", level: "Advanced", color: "lux-sage" }
     ]
   }), [])
 
@@ -414,7 +420,7 @@ export default function AboutPage() {
       icon: Download,
       title: 'Resume',
       description: 'Download my CV',
-      href: 'https://flowcv.com/resume/moac4k9d8767',
+      href: 'https://flowcv.com/resume/ga77jnpdjre2',
       color: 'from-lux-teal to-lux-sage'
     }
   ], [])
@@ -547,7 +553,7 @@ export default function AboutPage() {
                     variants={itemVariants}
                   >
                     <motion.a
-                      href="https://flowcv.com/resume/moac4k9d8767"
+                      href="https://flowcv.com/resume/ga77jnpdjre2"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-primary inline-flex items-center gap-2 px-6 py-3"

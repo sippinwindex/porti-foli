@@ -783,18 +783,54 @@ export default function ContactPage() {
     }
   ]
 
-  // Handle form submission
+  // Handle form submission using Web3Forms
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true)
     setSubmitStatus('idle')
 
     try {
-      // Simulate API call - replace with your actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // For now, just simulate success
-      console.log('Form submitted:', formData)
-      setSubmitStatus('success')
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          access_key: '3029abe4-7a5f-4668-ae7b-6e05f51b35f6',
+          name: formData.name,
+          email: formData.email,
+          subject: `Portfolio Contact: ${formData.subject}`,
+          message: `
+Name: ${formData.name}
+Email: ${formData.email}
+Company: ${formData.company || 'Not provided'}
+Phone: ${formData.phone || 'Not provided'}
+Project Type: ${formData.projectType}
+Budget: ${formData.budget}
+Timeline: ${formData.timeline}
+Preferred Contact: ${formData.preferredContact}
+
+Message:
+${formData.message}
+          `.trim(),
+          // Additional fields for better organization
+          company: formData.company,
+          phone: formData.phone,
+          project_type: formData.projectType,
+          budget: formData.budget,
+          timeline: formData.timeline,
+          preferred_contact: formData.preferredContact
+        })
+      })
+
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        setSubmitStatus('success')
+      } else {
+        throw new Error(result.message || 'Form submission failed')
+      }
+
     } catch (error) {
       console.error('Form submission error:', error)
       setSubmitStatus('error')
@@ -995,7 +1031,7 @@ export default function ContactPage() {
                   </motion.a>
                   
                   <motion.a
-                    href="https://flowcv.com/resume/moac4k9d8767"
+                    href="https://flowcv.com/resume/ga77jnpdjre2"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 text-viva-magenta border-2 border-viva-magenta rounded-lg font-medium hover:bg-viva-magenta/10 dark:hover:bg-viva-magenta/10 transition-all duration-200"
